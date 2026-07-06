@@ -1,0 +1,32 @@
+{
+  "name": "@seltriva/generator",
+  "version": "0.1.0",
+  "description": "Atlas code generator — scaffold complete plugin projects from templates",
+  "keywords": ["seltriva", "atlas", "generator", "scaffolding"],
+  "license": "MIT",
+  "private": false,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@seltriva/plugin-sdk": "workspace:*",
+    "@seltriva/templates": "workspace:*",
+    "mustache": "^4.2.0",
+    "glob": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/mustache": "^4.2.5",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

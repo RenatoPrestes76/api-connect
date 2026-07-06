@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --color-hub-bg:        #f8fafc;
+  --color-hub-sidebar:   #0f172a;
+  --color-hub-border:    #e2e8f0;
+  --color-hub-accent:    #4f46e5;
+  --color-hub-accent-fg: #ffffff;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+               Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+               "Courier New", monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  border-color: var(--color-hub-border);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-hub-bg);
+  color: #0f172a;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Tabular numbers for metric values */
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Dark mode base */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #020617;
+    color: #f1f5f9;
+  }
+  ::-webkit-scrollbar-thumb { background: #334155; }
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-hub-accent);
+  outline-offset: 2px;
+}

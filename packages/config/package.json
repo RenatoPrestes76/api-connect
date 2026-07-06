@@ -1,0 +1,19 @@
+{
+  "name": "@seltriva/config",
+  "version": "0.1.0",
+  "description": "Seltriva Connect Config - Environment and configuration management",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.ts",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write src"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.5"
+  }
+}

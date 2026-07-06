@@ -1,0 +1,37 @@
+version: '3.9'
+
+# PostgreSQL test container for Atlas Connect connector integration tests.
+#
+# Usage:
+#   docker compose -f docker-compose.test.yml up -d
+#   pnpm test
+#   docker compose -f docker-compose.test.yml down -v
+#
+# The init script (seed.sql) runs automatically on first startup.
+
+services:
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: atlas-connect-pg-test
+    environment:
+      POSTGRES_USER:     atlas_test
+      POSTGRES_PASSWORD: atlas_test_secret
+      POSTGRES_DB:       atlas_test
+    ports:
+      - "5433:5432"           # port 5433 avoids conflict with local Postgres
+    volumes:
+      - ./seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+      - pg_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas_test -d atlas_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    command: >
+      postgres
+        -c log_min_duration_statement=200
+        -c shared_preload_libraries=pg_stat_statements
+        -c pg_stat_statements.track=all
+
+volumes:
+  pg_test_data:

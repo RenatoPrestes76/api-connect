@@ -1,0 +1,646 @@
+// Seltriva Connect Cloud — Prisma Schema
+// Atlas Cloud Control Plane — Database Model
+// PostgreSQL via Supabase
+//
+// Conventions:
+//   - All IDs use CUID2 (@default(cuid()))
+//   - Soft deletes via deletedAt DateTime?
+//   - All tables have createdAt/updatedAt
+//   - Enums are UPPER_SNAKE_CASE
+//   - Relations use explicit field/references
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "relationJoins"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── ENUMS ────────────────────────────────────────────────────────────────
+
+enum OrganizationTier {
+  FREE
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+  DELETED
+}
+
+enum WorkspaceStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+enum EnvironmentKind {
+  DEVELOPMENT
+  STAGING
+  PRODUCTION
+}
+
+enum EnvironmentStatus {
+  ACTIVE
+  INACTIVE
+  DELETED
+}
+
+enum AgentStatus {
+  ONLINE
+  OFFLINE
+  DEGRADED
+  UNRESPONSIVE
+  RETIRED
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  DEVELOPER
+  VIEWER
+}
+
+enum LicenseStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  TRIAL
+  PENDING
+}
+
+enum PluginStatus {
+  PUBLISHED
+  DRAFT
+  DEPRECATED
+  ARCHIVED
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+  RETRYING
+}
+
+enum JobKind {
+  SCHEMA_SYNC
+  INCREMENTAL_SYNC
+  HEALTH_CHECK
+  TELEMETRY_FLUSH
+  NOTIFICATION
+  AUDIT_EXPORT
+  REPORT_GENERATION
+  CUSTOM
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  WEBHOOK
+  SLACK
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  READ
+}
+
+enum AuditAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  INVITE
+  ACCEPT_INVITE
+  REVOKE_ACCESS
+  ACTIVATE
+  SUSPEND
+  ROTATE_KEY
+  INSTALL_PLUGIN
+  UNINSTALL_PLUGIN
+  REGISTER_AGENT
+  DEREGISTER_AGENT
+  APPLY_UPDATE
+}
+
+enum AuditOutcome {
+  SUCCESS
+  FAILURE
+  PARTIAL
+}
+
+enum ApiKeyStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+enum FeatureFlagKind {
+  BOOLEAN
+  PERCENTAGE
+  VARIANT
+}
+
+// ─── ORGANIZATIONS ────────────────────────────────────────────────────────
+
+model Organization {
+  id       String             @id @default(cuid())
+  slug     String             @unique
+  name     String
+  tier     OrganizationTier   @default(FREE)
+  status   OrganizationStatus @default(ACTIVE)
+  logoUrl  String?
+  metadata Json?
+  settings Json?
+
+  members      OrganizationMember[]
+  workspaces   Workspace[]
+  licenses     License[]
+  agents       Agent[]
+  plugins      OrganizationPlugin[]
+  apiKeys      ApiKey[]
+  auditEntries AuditEntry[]
+  notifications Notification[]
+  featureFlags FeatureFlag[]
+  jobs         Job[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([slug])
+  @@index([status])
+  @@index([tier])
+}
+
+// ─── USERS ────────────────────────────────────────────────────────────────
+
+model User {
+  id            String  @id @default(cuid())
+  supabaseId    String  @unique
+  email         String  @unique
+  displayName   String?
+  avatarUrl     String?
+  emailVerified Boolean @default(false)
+  metadata      Json?
+
+  memberships       OrganizationMember[]
+  auditEntriesActor AuditEntry[]         @relation("AuditActor")
+  notifications     Notification[]       @relation("NotificationRecipient")
+  apiKeys           ApiKey[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([email])
+  @@index([supabaseId])
+}
+
+model OrganizationMember {
+  id             String     @id @default(cuid())
+  organizationId String
+  userId         String
+  role           MemberRole @default(VIEWER)
+  invitedAt      DateTime   @default(now())
+  joinedAt       DateTime?
+  inviteToken    String?    @unique
+  inviteExpiry   DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+// ─── WORKSPACES ───────────────────────────────────────────────────────────
+
+model Workspace {
+  id             String          @id @default(cuid())
+  organizationId String
+  name           String
+  slug           String
+  description    String?
+  status         WorkspaceStatus @default(ACTIVE)
+  metadata       Json?
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  environments   Environment[]
+  configurations Configuration[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+}
+
+// ─── ENVIRONMENTS ─────────────────────────────────────────────────────────
+
+model Environment {
+  id          String            @id @default(cuid())
+  workspaceId String
+  name        String
+  slug        String
+  kind        EnvironmentKind   @default(DEVELOPMENT)
+  status      EnvironmentStatus @default(ACTIVE)
+  metadata    Json?
+
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  agents       Agent[]
+  featureFlags FeatureFlag[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId])
+  @@index([kind])
+}
+
+// ─── AGENTS ───────────────────────────────────────────────────────────────
+
+model Agent {
+  id             String      @id @default(cuid())
+  organizationId String
+  environmentId  String
+  name           String
+  version        String
+  status         AgentStatus @default(OFFLINE)
+  lastSeenAt     DateTime?
+  registeredAt   DateTime    @default(now())
+  hostname       String?
+  ipAddress      String?
+  platform       String?
+  arch           String?
+  nodeVersion    String?
+  capabilities   String[]
+  metadata       Json?
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  environment  Environment       @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  heartbeats   AgentHeartbeat[]
+  telemetry    AgentTelemetryLog[]
+  commands     AgentCommand[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  retiredAt DateTime?
+
+  @@index([organizationId])
+  @@index([environmentId])
+  @@index([status])
+  @@index([lastSeenAt])
+}
+
+model AgentHeartbeat {
+  id        String      @id @default(cuid())
+  agentId   String
+  status    AgentStatus
+  cpuPct    Float?
+  memPct    Float?
+  diskPct   Float?
+  latencyMs Int?
+  version   String?
+  metadata  Json?
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  receivedAt DateTime @default(now())
+
+  @@index([agentId])
+  @@index([receivedAt])
+}
+
+model AgentTelemetryLog {
+  id       String  @id @default(cuid())
+  agentId  String
+  kind     String
+  payload  Json
+  sizeBytes Int    @default(0)
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  receivedAt DateTime @default(now())
+
+  @@index([agentId])
+  @@index([kind])
+  @@index([receivedAt])
+}
+
+model AgentCommand {
+  id          String  @id @default(cuid())
+  agentId     String
+  commandType String
+  payload     Json
+  issuedAt    DateTime @default(now())
+  expiresAt   DateTime?
+  acknowledgedAt DateTime?
+  result      Json?
+  error       String?
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([commandType])
+  @@index([issuedAt])
+}
+
+// ─── PLUGINS ──────────────────────────────────────────────────────────────
+
+model Plugin {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  name        String
+  description String
+  version     String
+  publisherId String
+  status      PluginStatus @default(DRAFT)
+  category    String
+  tags        String[]
+  homepage    String?
+  repository  String?
+  iconUrl     String?
+  readme      String?
+  manifest    Json
+  schema      Json?
+  metadata    Json?
+
+  publisher       User                 @relation(fields: [publisherId], references: [id])
+  organizations   OrganizationPlugin[]
+  versions        PluginVersion[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([slug])
+  @@index([status])
+  @@index([category])
+}
+
+model PluginVersion {
+  id        String @id @default(cuid())
+  pluginId  String
+  version   String
+  changelog String?
+  manifest  Json
+  published Boolean @default(false)
+
+  plugin    Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@unique([pluginId, version])
+  @@index([pluginId])
+}
+
+model OrganizationPlugin {
+  id             String @id @default(cuid())
+  organizationId String
+  pluginId       String
+  version        String
+  config         Json?
+  enabled        Boolean @default(true)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plugin       Plugin       @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
+  installedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([organizationId, pluginId])
+  @@index([organizationId])
+  @@index([pluginId])
+}
+
+// ─── LICENSES ─────────────────────────────────────────────────────────────
+
+model License {
+  id             String        @id @default(cuid())
+  organizationId String
+  key            String        @unique
+  tier           OrganizationTier
+  status         LicenseStatus @default(ACTIVE)
+  maxAgents      Int           @default(5)
+  maxWorkspaces  Int           @default(3)
+  maxUsers       Int           @default(10)
+  features       String[]
+  activatedAt    DateTime?
+  expiresAt      DateTime?
+  metadata       Json?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+// ─── FEATURE FLAGS ────────────────────────────────────────────────────────
+
+model FeatureFlag {
+  id             String          @id @default(cuid())
+  organizationId String?
+  environmentId  String?
+  key            String
+  kind           FeatureFlagKind @default(BOOLEAN)
+  enabled        Boolean         @default(false)
+  rolloutPercent Int?
+  variants       Json?
+  description    String?
+  expiresAt      DateTime?
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  environment  Environment?  @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([organizationId, environmentId, key])
+  @@index([key])
+  @@index([organizationId])
+  @@index([environmentId])
+}
+
+// ─── CONFIGURATION ────────────────────────────────────────────────────────
+
+model Configuration {
+  id          String  @id @default(cuid())
+  workspaceId String
+  key         String
+  value       String
+  encrypted   Boolean @default(false)
+  description String?
+  metadata    Json?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([workspaceId, key])
+  @@index([workspaceId])
+  @@index([key])
+}
+
+// ─── JOBS ─────────────────────────────────────────────────────────────────
+
+model Job {
+  id             String    @id @default(cuid())
+  organizationId String?
+  kind           JobKind
+  name           String
+  status         JobStatus @default(PENDING)
+  payload        Json?
+  result         Json?
+  error          String?
+  attempt        Int       @default(0)
+  maxAttempts    Int       @default(3)
+  scheduledAt    DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  expiresAt      DateTime?
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([kind])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────────
+
+model Notification {
+  id             String              @id @default(cuid())
+  organizationId String?
+  recipientId    String?
+  channel        NotificationChannel
+  status         NotificationStatus  @default(PENDING)
+  title          String
+  body           String
+  data           Json?
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  readAt         DateTime?
+  failureReason  String?
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  recipient    User?         @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([recipientId])
+  @@index([channel])
+  @@index([status])
+}
+
+// ─── AUDIT LOG ────────────────────────────────────────────────────────────
+
+model AuditEntry {
+  id             String       @id @default(cuid())
+  organizationId String?
+  actorId        String?
+  action         AuditAction
+  outcome        AuditOutcome @default(SUCCESS)
+  resource       String
+  resourceId     String?
+  ipAddress      String?
+  userAgent      String?
+  before         Json?
+  after          Json?
+  metadata       Json?
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  actor        User?         @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  occurredAt DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([actorId])
+  @@index([action])
+  @@index([resource])
+  @@index([occurredAt])
+}
+
+// ─── API KEYS ─────────────────────────────────────────────────────────────
+
+model ApiKey {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String?
+  name           String
+  keyHash        String       @unique
+  keyPrefix      String
+  status         ApiKeyStatus @default(ACTIVE)
+  scopes         String[]
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  metadata       Json?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  revokedAt DateTime?
+
+  @@index([organizationId])
+  @@index([keyPrefix])
+  @@index([status])
+}
+
+// ─── METRICS SNAPSHOTS ────────────────────────────────────────────────────
+
+model MetricSnapshot {
+  id             String @id @default(cuid())
+  organizationId String
+  agentId        String?
+  kind           String
+  value          Float
+  unit           String?
+  labels         Json?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  recordedAt DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([agentId])
+  @@index([kind])
+  @@index([recordedAt])
+}

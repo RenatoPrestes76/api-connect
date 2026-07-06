@@ -1,0 +1,79 @@
+{
+  "name": "@seltriva/semantic-engine",
+  "version": "0.1.0",
+  "description": "Universal Semantic Mapping Engine (USME) — maps data structures to canonical business language",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./business-language": {
+      "import": "./dist/business-language/index.js",
+      "types": "./dist/business-language/index.d.ts"
+    },
+    "./canonical-model": {
+      "import": "./dist/canonical-model/index.js",
+      "types": "./dist/canonical-model/index.d.ts"
+    },
+    "./semantic-analyzer": {
+      "import": "./dist/semantic-analyzer/index.js",
+      "types": "./dist/semantic-analyzer/index.d.ts"
+    },
+    "./mapping-engine": {
+      "import": "./dist/mapping-engine/index.js",
+      "types": "./dist/mapping-engine/index.d.ts"
+    },
+    "./knowledge-graph": {
+      "import": "./dist/knowledge-graph/index.js",
+      "types": "./dist/knowledge-graph/index.d.ts"
+    },
+    "./confidence-engine": {
+      "import": "./dist/confidence-engine/index.js",
+      "types": "./dist/confidence-engine/index.d.ts"
+    },
+    "./learning": {
+      "import": "./dist/learning/index.js",
+      "types": "./dist/learning/index.d.ts"
+    },
+    "./validation": {
+      "import": "./dist/validation/index.js",
+      "types": "./dist/validation/index.d.ts"
+    },
+    "./dictionary": {
+      "import": "./dist/dictionary/index.js",
+      "types": "./dist/dictionary/index.d.ts"
+    },
+    "./profiles": {
+      "import": "./dist/profiles/index.js",
+      "types": "./dist/profiles/index.d.ts"
+    },
+    "./registry": {
+      "import": "./dist/registry/index.js",
+      "types": "./dist/registry/index.d.ts"
+    },
+    "./rules": {
+      "import": "./dist/rules/index.js",
+      "types": "./dist/rules/index.d.ts"
+    },
+    "./suggestions": {
+      "import": "./dist/suggestions/index.js",
+      "types": "./dist/suggestions/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@seltriva/core": "workspace:*",
+    "@seltriva/types": "workspace:*",
+    "@seltriva/schema-intelligence": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  },
+  "sideEffects": false
+}

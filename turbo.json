@@ -1,0 +1,50 @@
+{
+  "version": "2",
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    "**/.env.local",
+    "**/.eslintrc.cjs",
+    "**/tsconfig.json"
+  ],
+  "tasks": {
+    "build": {
+      "description": "Build application",
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "dist/**", "build/**"],
+      "hashAlgorithm": "sha256"
+    },
+    "dev": {
+      "description": "Start development server",
+      "cache": false,
+      "interactive": true
+    },
+    "lint": {
+      "description": "Run ESLint",
+      "outputs": ["node_modules/.cache/.eslintcache"],
+      "hashAlgorithm": "sha256"
+    },
+    "type-check": {
+      "description": "Run TypeScript type check",
+      "outputs": ["node_modules/.tsbuildinfo"],
+      "hashAlgorithm": "sha256"
+    },
+    "test": {
+      "description": "Run tests",
+      "outputs": ["coverage/**"],
+      "hashAlgorithm": "sha256"
+    },
+    "test:watch": {
+      "description": "Run tests in watch mode",
+      "cache": false,
+      "interactive": true
+    },
+    "db:push": {
+      "description": "Push database schema",
+      "cache": false
+    },
+    "db:generate": {
+      "description": "Generate Prisma client",
+      "cache": false
+    }
+  }
+}

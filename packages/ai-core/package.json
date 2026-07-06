@@ -1,0 +1,100 @@
+{
+  "name": "@seltriva/ai-core",
+  "version": "0.1.0",
+  "description": "ATHENA — Enterprise AI Core for intelligent integration decisions",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./providers": {
+      "import": "./dist/providers/index.js",
+      "types": "./dist/providers/index.d.ts"
+    },
+    "./agents": {
+      "import": "./dist/agents/index.js",
+      "types": "./dist/agents/index.d.ts"
+    },
+    "./decision-engine": {
+      "import": "./dist/decision-engine/index.js",
+      "types": "./dist/decision-engine/index.d.ts"
+    },
+    "./context-builder": {
+      "import": "./dist/context-builder/index.js",
+      "types": "./dist/context-builder/index.d.ts"
+    },
+    "./memory": {
+      "import": "./dist/memory/index.js",
+      "types": "./dist/memory/index.d.ts"
+    },
+    "./learning": {
+      "import": "./dist/learning/index.js",
+      "types": "./dist/learning/index.d.ts"
+    },
+    "./prompt-registry": {
+      "import": "./dist/prompt-registry/index.js",
+      "types": "./dist/prompt-registry/index.d.ts"
+    },
+    "./feedback": {
+      "import": "./dist/feedback/index.js",
+      "types": "./dist/feedback/index.d.ts"
+    },
+    "./reasoning": {
+      "import": "./dist/reasoning/index.js",
+      "types": "./dist/reasoning/index.d.ts"
+    },
+    "./explainability": {
+      "import": "./dist/explainability/index.js",
+      "types": "./dist/explainability/index.d.ts"
+    },
+    "./recommendations": {
+      "import": "./dist/recommendations/index.js",
+      "types": "./dist/recommendations/index.d.ts"
+    },
+    "./validation": {
+      "import": "./dist/validation/index.js",
+      "types": "./dist/validation/index.d.ts"
+    },
+    "./security": {
+      "import": "./dist/security/index.js",
+      "types": "./dist/security/index.d.ts"
+    },
+    "./performance": {
+      "import": "./dist/performance/index.js",
+      "types": "./dist/performance/index.d.ts"
+    },
+    "./erp-recognition": {
+      "import": "./dist/erp-recognition/index.js",
+      "types": "./dist/erp-recognition/index.d.ts"
+    },
+    "./schema-analysis": {
+      "import": "./dist/schema-analysis/index.js",
+      "types": "./dist/schema-analysis/index.d.ts"
+    },
+    "./mapping-analysis": {
+      "import": "./dist/mapping-analysis/index.js",
+      "types": "./dist/mapping-analysis/index.d.ts"
+    },
+    "./sync-analysis": {
+      "import": "./dist/sync-analysis/index.js",
+      "types": "./dist/sync-analysis/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@seltriva/core": "workspace:*",
+    "@seltriva/types": "workspace:*",
+    "@seltriva/schema-intelligence": "workspace:*",
+    "@seltriva/semantic-engine": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  },
+  "sideEffects": false
+}

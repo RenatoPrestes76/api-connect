@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "packages/ui/src/globals.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@seltriva/ui/components",
+    "utils": "@seltriva/ui/utils",
+    "ui": "@seltriva/ui",
+    "lib": "@seltriva/ui/lib",
+    "hooks": "@seltriva/ui/hooks"
+  }
+}

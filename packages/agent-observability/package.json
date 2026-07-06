@@ -1,0 +1,30 @@
+{
+  "name": "@seltriva/agent-observability",
+  "version": "0.1.0",
+  "description": "SENTINEL — Atlas Agent Observability. Health detection, dashboard metrics, heartbeat and sync history.",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@seltriva/agent-identity": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.8"
+  }
+}

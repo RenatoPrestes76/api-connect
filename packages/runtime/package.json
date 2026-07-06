@@ -1,0 +1,98 @@
+{
+  "name": "@seltriva/runtime",
+  "version": "0.1.0",
+  "description": "Connect Runtime Platform (CRP) — operating core for Seltriva Connect",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./kernel": {
+      "import": "./dist/kernel/index.js",
+      "types": "./dist/kernel/index.d.ts"
+    },
+    "./bootstrap": {
+      "import": "./dist/bootstrap/index.js",
+      "types": "./dist/bootstrap/index.d.ts"
+    },
+    "./lifecycle": {
+      "import": "./dist/lifecycle/index.js",
+      "types": "./dist/lifecycle/index.d.ts"
+    },
+    "./plugin-manager": {
+      "import": "./dist/plugin-manager/index.js",
+      "types": "./dist/plugin-manager/index.d.ts"
+    },
+    "./module-loader": {
+      "import": "./dist/module-loader/index.js",
+      "types": "./dist/module-loader/index.d.ts"
+    },
+    "./service-registry": {
+      "import": "./dist/service-registry/index.js",
+      "types": "./dist/service-registry/index.d.ts"
+    },
+    "./scheduler": {
+      "import": "./dist/scheduler/index.js",
+      "types": "./dist/scheduler/index.d.ts"
+    },
+    "./worker-pool": {
+      "import": "./dist/worker-pool/index.js",
+      "types": "./dist/worker-pool/index.d.ts"
+    },
+    "./event-bus": {
+      "import": "./dist/event-bus/index.js",
+      "types": "./dist/event-bus/index.d.ts"
+    },
+    "./command-bus": {
+      "import": "./dist/command-bus/index.js",
+      "types": "./dist/command-bus/index.d.ts"
+    },
+    "./configuration": {
+      "import": "./dist/configuration/index.js",
+      "types": "./dist/configuration/index.d.ts"
+    },
+    "./telemetry": {
+      "import": "./dist/telemetry/index.js",
+      "types": "./dist/telemetry/index.d.ts"
+    },
+    "./health": {
+      "import": "./dist/health/index.js",
+      "types": "./dist/health/index.d.ts"
+    },
+    "./diagnostics": {
+      "import": "./dist/diagnostics/index.js",
+      "types": "./dist/diagnostics/index.d.ts"
+    },
+    "./resilience": {
+      "import": "./dist/resilience/index.js",
+      "types": "./dist/resilience/index.d.ts"
+    },
+    "./sandbox": {
+      "import": "./dist/sandbox/index.js",
+      "types": "./dist/sandbox/index.d.ts"
+    },
+    "./permissions": {
+      "import": "./dist/permissions/index.js",
+      "types": "./dist/permissions/index.d.ts"
+    },
+    "./orchestration": {
+      "import": "./dist/orchestration/index.js",
+      "types": "./dist/orchestration/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@seltriva/core": "workspace:*",
+    "@seltriva/types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  },
+  "sideEffects": false
+}

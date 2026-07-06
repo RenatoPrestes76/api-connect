@@ -1,0 +1,168 @@
+// @seltriva/database — Prisma Schema
+// Atlas Agent Identity & Provisioning
+// PostgreSQL
+//
+// Conventions:
+//   - All IDs use CUID2 (@default(cuid()))
+//   - Soft deletes via deletedAt DateTime?
+//   - All tables have createdAt/updatedAt
+//   - Enums are UPPER_SNAKE_CASE
+//   - Column names match Prisma field names (camelCase)
+//
+// After adding or changing models, run:
+//   pnpm --filter @seltriva/database db:generate
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── ENUMS ────────────────────────────────────────────────────────────────────
+
+enum AtlasAgentStatus {
+  REGISTERING
+  ONLINE
+  OFFLINE
+  SYNCING
+  ERROR
+  DISABLED
+}
+
+// ─── ATLAS AGENT ─────────────────────────────────────────────────────────────
+//
+// Represents a Runtime Agent instance installed on a customer's infrastructure.
+// Each agent is uniquely identified by its machineId (hardware fingerprint).
+
+model AtlasAgent {
+  id                  String           @id @default(cuid())
+  companyId           String
+  name                String
+  machineId           String           @unique
+  hostname            String
+  connectorType       String
+  version             String
+  status              AtlasAgentStatus @default(REGISTERING)
+  lastHeartbeat       DateTime?
+  lastSynchronization DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([status])
+  @@index([companyId, status])
+}
+
+// ─── AGENT ACCESS TOKEN ──────────────────────────────────────────────────────
+//
+// Short-lived Bearer credential issued to an AtlasAgent upon provisioning.
+// Raw tokens are NEVER stored — only their SHA-256 hash.
+// tokenPrefix holds the first 12 chars of the raw token for fast lookup.
+
+model AgentAccessToken {
+  id          String    @id @default(cuid())
+  agentId     String
+  tokenHash   String    @unique
+  tokenPrefix String
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  lastUsedAt  DateTime?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([agentId])
+  @@index([tokenPrefix])
+}
+
+// ─── PROVISIONING TOKEN ───────────────────────────────────────────────────────
+//
+// One-time or long-lived tokens that authorise a Runtime Agent to self-register.
+// Raw tokens are NEVER stored — only their SHA-256 hash.
+// tokenPrefix holds the first 12 chars of the raw token for fast lookup.
+
+model ProvisioningToken {
+  id          String    @id @default(cuid())
+  companyId   String
+  tokenHash   String    @unique
+  tokenPrefix String
+  description String
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  lastUsedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([tokenPrefix])
+}
+
+// ─── HEARTBEAT HISTORY ────────────────────────────────────────────────────────
+//
+// Rolling history of heartbeat pings from each Runtime Agent.
+// Keep only the last N records per agent (default 500) via application-level cleanup.
+
+model AtlasAgentHeartbeat {
+  id          String   @id @default(cuid())
+  agentId     String
+  receivedAt  DateTime @default(now())
+  version     String
+  hostname    String
+  memoryUsage Int?
+  uptime      Int?
+  queueSize   Int?
+  status      String   // computed HealthStatus (ONLINE/STALE/OFFLINE) at receipt time
+
+  @@index([agentId])
+  @@index([agentId, receivedAt])
+  @@index([receivedAt])
+}
+
+// ─── SYNC HISTORY ─────────────────────────────────────────────────────────────
+//
+// Record of each synchronisation run per Runtime Agent.
+// Keep only the last N records per agent (default 500) via application-level cleanup.
+
+model AtlasAgentSyncHistory {
+  id               String   @id @default(cuid())
+  agentId          String
+  startedAt        DateTime
+  finishedAt       DateTime
+  durationMs       Int
+  recordsSent      Int
+  recordsFailed    Int
+  bytesTransferred Int
+  compressionRatio Float?
+  result           String   // SUCCESS | PARTIAL | FAILED
+
+  @@index([agentId])
+  @@index([agentId, finishedAt])
+  @@index([finishedAt])
+}
+
+// ─── ACTIVATION TOKEN ─────────────────────────────────────────────────────────
+//
+// One-time human-readable token (ATLAS-XXXX-XXXX-XXXX) emitted by the Control
+// Plane so a technician can install an Atlas Runtime without editing files.
+// Discarded (usedAt set) the moment the installer consumes it.
+
+model ActivationToken {
+  id          String    @id
+  token       String    @unique
+  companyId   String
+  environment String
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+  createdBy   String?
+
+  @@index([token])
+  @@index([companyId])
+  @@index([expiresAt])
+}

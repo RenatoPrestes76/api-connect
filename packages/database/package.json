@@ -1,0 +1,28 @@
+{
+  "name": "@seltriva/database",
+  "version": "0.1.0",
+  "description": "Seltriva Connect Database Layer - Prisma ORM integration",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.ts",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio",
+    "lint": "eslint . --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write src"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.12.0",
+    "@seltriva/types": "workspace:*",
+    "@seltriva/logger": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "prisma": "^5.12.0",
+    "typescript": "^5.4.5"
+  }
+}

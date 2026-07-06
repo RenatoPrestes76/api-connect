@@ -1,0 +1,37 @@
+{
+  "name": "@seltriva/api",
+  "version": "0.1.0",
+  "description": "Seltriva Connect API - Core backend services",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "node --watch --loader ts-node/esm src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "lint": "eslint . --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write src"
+  },
+  "dependencies": {
+    "@seltriva/activation": "workspace:*",
+    "@seltriva/agent-identity": "workspace:*",
+    "@seltriva/agent-observability": "workspace:*",
+    "@seltriva/agent-provisioning": "workspace:*",
+    "@seltriva/database": "workspace:*",
+    "@seltriva/database-intelligence": "workspace:*",
+    "@seltriva/database-sdk": "workspace:*",
+    "@seltriva/types": "workspace:*",
+    "@seltriva/logger": "workspace:*",
+    "@seltriva/config": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.8"
+  }
+}

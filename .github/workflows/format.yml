@@ -1,0 +1,45 @@
+name: Format & Lint Auto-fix
+
+on:
+  push:
+    branches: [main, develop]
+
+jobs:
+  format:
+    name: Auto Format & Fix
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format code
+        run: pnpm format
+
+      - name: Lint and fix
+        run: pnpm lint:fix
+        continue-on-error: true
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: auto format and lint fixes'
+          commit_options: '--no-verify'
+          file_pattern: '**/*.{ts,tsx,js,jsx,json,md,yml,yaml}'

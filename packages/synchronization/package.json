@@ -1,0 +1,52 @@
+{
+  "name": "@seltriva/synchronization",
+  "version": "0.1.0",
+  "description": "HERMES — Intelligent Synchronization Engine for Atlas Connect",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./engine": {
+      "types": "./src/engine/index.ts",
+      "default": "./src/engine/index.ts"
+    },
+    "./pipeline": {
+      "types": "./src/pipeline/index.ts",
+      "default": "./src/pipeline/index.ts"
+    },
+    "./checkpoint": {
+      "types": "./src/checkpoint/index.ts",
+      "default": "./src/checkpoint/index.ts"
+    },
+    "./telemetry": {
+      "types": "./src/telemetry/index.ts",
+      "default": "./src/telemetry/index.ts"
+    },
+    "./metrics": {
+      "types": "./src/metrics/index.ts",
+      "default": "./src/metrics/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@seltriva/core": "workspace:*",
+    "@seltriva/connectors": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.8"
+  }
+}

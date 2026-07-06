@@ -1,0 +1,73 @@
+import type { ConfigSchema } from '@seltriva/connector-sdk';
+
+export const ERP_CONFIG_SCHEMA: ConfigSchema = [
+  {
+    key:         'host',
+    type:        'string',
+    label:       'Host',
+    description: 'ERP server hostname or IP address',
+    required:    true,
+  },
+  {
+    key:         'port',
+    type:        'number',
+    label:       'Port',
+    description: 'PostgreSQL port (default 5432)',
+    required:    true,
+    default:     5432,
+  },
+  {
+    key:         'database',
+    type:        'string',
+    label:       'Database',
+    description: 'Target ERP database or tenant name',
+    required:    true,
+  },
+  {
+    key:         'username',
+    type:        'string',
+    label:       'Username',
+    description: 'ERP service account username',
+    required:    true,
+  },
+  {
+    key:         'password',
+    type:        'secret',
+    label:       'Password',
+    description: 'ERP service account password',
+    required:    true,
+    sensitive:   true,
+  },
+  {
+    key:         'dbSchema',
+    type:        'string',
+    label:       'DB Schema',
+    description: 'PostgreSQL schema name (default: public)',
+    required:    false,
+    default:     'public',
+  },
+  {
+    key:         'ssl',
+    type:        'boolean',
+    label:       'Use SSL',
+    description: 'Enable TLS/SSL for the database connection',
+    required:    false,
+    default:     false,
+  },
+  {
+    key:         'timeout',
+    type:        'number',
+    label:       'Timeout (ms)',
+    description: 'Connection and query timeout in milliseconds',
+    required:    false,
+    default:     5000,
+  },
+  {
+    key:         'pollingInterval',
+    type:        'number',
+    label:       'Polling Interval (ms)',
+    description: 'How often (ms) the sync engine polls for new data',
+    required:    false,
+    default:     60_000,
+  },
+] as const;

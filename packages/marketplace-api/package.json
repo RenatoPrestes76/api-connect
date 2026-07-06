@@ -1,0 +1,29 @@
+{
+  "name": "@seltriva/marketplace-api",
+  "version": "0.1.0",
+  "description": "Atlas Marketplace API — plugin marketplace contracts for publishers and consumers",
+  "keywords": ["seltriva", "atlas", "marketplace", "plugin"],
+  "license": "MIT",
+  "private": false,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@seltriva/plugin-sdk": "workspace:*",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

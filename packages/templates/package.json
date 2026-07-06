@@ -1,0 +1,26 @@
+{
+  "name": "@seltriva/templates",
+  "version": "0.1.0",
+  "description": "Atlas plugin project templates — complete ready-to-build scaffolds",
+  "keywords": ["seltriva", "atlas", "templates", "plugin"],
+  "license": "MIT",
+  "private": false,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@seltriva/plugin-sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.7.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

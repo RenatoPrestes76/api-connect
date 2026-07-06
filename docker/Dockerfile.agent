@@ -1,0 +1,24 @@
+FROM node:20-alpine as base
+RUN apk add --no-cache libc6-compat
+RUN npm install -g pnpm
+WORKDIR /app
+
+FROM base as dependencies
+COPY pnpm-lock.yaml .
+COPY package.json .
+RUN pnpm install --prod --frozen-lockfile
+
+FROM base as build
+COPY pnpm-lock.yaml .
+COPY package.json .
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm build --filter=./apps/agent
+
+FROM base
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=build /app/apps/agent/dist ./dist
+COPY --from=build /app/packages ./packages
+
+EXPOSE 3003
+CMD ["node", "dist/index.js"]

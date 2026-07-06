@@ -1,0 +1,91 @@
+{
+  "name": "@seltriva/connectors",
+  "version": "0.1.0",
+  "description": "Seltriva Connect — Universal Data Connector Framework (UDCF)",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./core": {
+      "types": "./src/core/index.ts",
+      "default": "./src/core/index.ts"
+    },
+    "./capabilities": {
+      "types": "./src/capabilities/index.ts",
+      "default": "./src/capabilities/index.ts"
+    },
+    "./metadata": {
+      "types": "./src/metadata/index.ts",
+      "default": "./src/metadata/index.ts"
+    },
+    "./discovery": {
+      "types": "./src/discovery/index.ts",
+      "default": "./src/discovery/index.ts"
+    },
+    "./health": {
+      "types": "./src/health/index.ts",
+      "default": "./src/health/index.ts"
+    },
+    "./registry": {
+      "types": "./src/registry/index.ts",
+      "default": "./src/registry/index.ts"
+    },
+    "./factory": {
+      "types": "./src/factory/index.ts",
+      "default": "./src/factory/index.ts"
+    },
+    "./sdk": {
+      "types": "./src/sdk/index.ts",
+      "default": "./src/sdk/index.ts"
+    },
+    "./connectors/database": {
+      "types": "./src/connectors/database/index.ts",
+      "default": "./src/connectors/database/index.ts"
+    },
+    "./connectors/api": {
+      "types": "./src/connectors/api/index.ts",
+      "default": "./src/connectors/api/index.ts"
+    },
+    "./connectors/file": {
+      "types": "./src/connectors/file/index.ts",
+      "default": "./src/connectors/file/index.ts"
+    },
+    "./connectors/cloud": {
+      "types": "./src/connectors/cloud/index.ts",
+      "default": "./src/connectors/cloud/index.ts"
+    },
+    "./connectors/queue": {
+      "types": "./src/connectors/queue/index.ts",
+      "default": "./src/connectors/queue/index.ts"
+    },
+    "./postgresql": {
+      "types": "./src/postgresql/index.ts",
+      "default": "./src/postgresql/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write src",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@seltriva/core": "workspace:*",
+    "@seltriva/types": "workspace:*",
+    "@seltriva/logger": "workspace:*",
+    "pg": "^8.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/pg": "^8.11.6",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.8"
+  }
+}

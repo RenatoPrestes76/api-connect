@@ -1,0 +1,52 @@
+{
+  "name": "@seltriva/database-intelligence",
+  "version": "0.1.0",
+  "description": "ATHENA DB AI — Database Intelligence Engine for Atlas Connect",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./engine": {
+      "types": "./src/engine/index.ts",
+      "default": "./src/engine/index.ts"
+    },
+    "./classifier": {
+      "types": "./src/classifier/index.ts",
+      "default": "./src/classifier/index.ts"
+    },
+    "./scoring": {
+      "types": "./src/scoring/index.ts",
+      "default": "./src/scoring/index.ts"
+    },
+    "./knowledge-graph": {
+      "types": "./src/knowledge-graph/index.ts",
+      "default": "./src/knowledge-graph/index.ts"
+    },
+    "./report": {
+      "types": "./src/report/index.ts",
+      "default": "./src/report/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@seltriva/connectors": "workspace:*",
+    "@seltriva/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.8"
+  }
+}

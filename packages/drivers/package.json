@@ -1,0 +1,24 @@
+{
+  "name": "@seltriva/drivers",
+  "version": "0.1.0",
+  "description": "Seltriva Connect Drivers - External service integrations and connectors",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.ts",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write src"
+  },
+  "dependencies": {
+    "@seltriva/types": "workspace:*",
+    "@seltriva/logger": "workspace:*",
+    "@seltriva/config": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.5"
+  }
+}

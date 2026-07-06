@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "useDefineForClassFields": true,
+    "lib": ["ES2020"],
+    "target": "ES2020",
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "moduleResolution": "bundler",
+    "incremental": true,
+    "paths": {
+      "@seltriva/*": ["./packages/*/src"],
+      "@seltriva/ui/*": ["./packages/ui/src/*"],
+      "@seltriva/core": ["./packages/core/src"],
+      "@seltriva/database": ["./packages/database/src"],
+      "@seltriva/auth": ["./packages/auth/src"],
+      "@seltriva/drivers": ["./packages/drivers/src"],
+      "@seltriva/logger": ["./packages/logger/src"],
+      "@seltriva/config": ["./packages/config/src"],
+      "@seltriva/types": ["./packages/types/src"],
+      "@seltriva/shared": ["./packages/shared/src"],
+      "@seltriva/sdk": ["./packages/sdk/src"],
+      "@seltriva/ai": ["./packages/ai/src"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["**/node_modules", "**/.next", "**/dist", "**/build"]
+}

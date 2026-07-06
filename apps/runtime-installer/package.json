@@ -1,0 +1,30 @@
+{
+  "name": "@seltriva/runtime-installer",
+  "version": "0.1.0",
+  "description": "ATLAS Runtime Installer — bootstraps an Atlas runtime agent on a target machine.",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "atlas-install": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "dev":        "node --loader ts-node/esm src/index.ts",
+    "build":      "tsc",
+    "type-check": "tsc --noEmit",
+    "test":       "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@seltriva/activation": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node":           "^20.14.0",
+    "@vitest/coverage-v8":   "^2.1.8",
+    "typescript":            "^5.4.5",
+    "vitest":                "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

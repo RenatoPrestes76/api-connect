@@ -1,0 +1,93 @@
+{
+  "name": "@seltriva/core",
+  "version": "0.1.0",
+  "description": "Seltriva Connect Core — Enterprise Architecture Foundation (interfaces only)",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./interfaces": {
+      "types": "./src/interfaces/index.ts",
+      "default": "./src/interfaces/index.ts"
+    },
+    "./events": {
+      "types": "./src/events/index.ts",
+      "default": "./src/events/index.ts"
+    },
+    "./commands": {
+      "types": "./src/commands/index.ts",
+      "default": "./src/commands/index.ts"
+    },
+    "./drivers": {
+      "types": "./src/drivers/index.ts",
+      "default": "./src/drivers/index.ts"
+    },
+    "./plugins": {
+      "types": "./src/plugins/index.ts",
+      "default": "./src/plugins/index.ts"
+    },
+    "./configuration": {
+      "types": "./src/configuration/index.ts",
+      "default": "./src/configuration/index.ts"
+    },
+    "./discovery": {
+      "types": "./src/discovery/index.ts",
+      "default": "./src/discovery/index.ts"
+    },
+    "./mapping": {
+      "types": "./src/mapping/index.ts",
+      "default": "./src/mapping/index.ts"
+    },
+    "./sync": {
+      "types": "./src/sync/index.ts",
+      "default": "./src/sync/index.ts"
+    },
+    "./registry": {
+      "types": "./src/registry/index.ts",
+      "default": "./src/registry/index.ts"
+    },
+    "./abstractions": {
+      "types": "./src/abstractions/index.ts",
+      "default": "./src/abstractions/index.ts"
+    },
+    "./services": {
+      "types": "./src/services/index.ts",
+      "default": "./src/services/index.ts"
+    },
+    "./factories": {
+      "types": "./src/factories/index.ts",
+      "default": "./src/factories/index.ts"
+    },
+    "./decorators": {
+      "types": "./src/decorators/index.ts",
+      "default": "./src/decorators/index.ts"
+    },
+    "./constants": {
+      "types": "./src/constants/index.ts",
+      "default": "./src/constants/index.ts"
+    },
+    "./exceptions": {
+      "types": "./src/exceptions/index.ts",
+      "default": "./src/exceptions/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write src"
+  },
+  "dependencies": {
+    "@seltriva/types": "workspace:*",
+    "@seltriva/logger": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.5"
+  }
+}
