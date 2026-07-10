@@ -2,22 +2,61 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Plug, Server, Database, Search,
-  RefreshCw, Activity, ScrollText, Settings, Users, Zap,
+  LayoutDashboard,
+  Plug,
+  Server,
+  Database,
+  Search,
+  RefreshCw,
+  Activity,
+  ScrollText,
+  Settings,
+  Users,
+  Zap,
+  GitBranch,
+  Eye,
+  BarChart2,
+  AlertTriangle,
+  ClipboardList,
+  GitCommit,
+  Bell,
+  Shield,
+  Flame,
+  Bot,
+  LayoutTemplate,
+  Store,
+  Package,
+  ArrowUpCircle,
+  Code2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ICONS: Record<string, typeof LayoutDashboard> = {
-  '/dashboard':  LayoutDashboard,
+  '/dashboard': LayoutDashboard,
   '/connectors': Plug,
-  '/agents':     Server,
-  '/databases':  Database,
-  '/discovery':  Search,
-  '/sync':       RefreshCw,
-  '/health':     Activity,
-  '/logs':       ScrollText,
-  '/settings':   Settings,
-  '/users':      Users,
+  '/agents': Server,
+  '/databases': Database,
+  '/discovery': Search,
+  '/workflows': GitBranch,
+  '/workflows/templates': LayoutTemplate,
+  '/marketplace': Store,
+  '/marketplace/installed': Package,
+  '/marketplace/updates': ArrowUpCircle,
+  '/marketplace/developer': Code2,
+  '/sync': RefreshCw,
+  '/health': Activity,
+  '/logs': ScrollText,
+  '/settings': Settings,
+  '/users': Users,
+  '/observatory': Eye,
+  '/metrics': BarChart2,
+  '/incidents': AlertTriangle,
+  '/audit': ClipboardList,
+  '/timeline': GitCommit,
+  '/alert-rules': Bell,
+  '/sla': Shield,
+  '/heatmaps': Flame,
+  '/copilot': Bot,
 };
 
 const GROUPS = [
@@ -31,7 +70,29 @@ const GROUPS = [
   },
   {
     label: 'Intelligence',
-    items: ['/discovery'],
+    items: ['/discovery', '/workflows', '/workflows/templates', '/copilot'],
+  },
+  {
+    label: 'Marketplace',
+    items: [
+      '/marketplace',
+      '/marketplace/installed',
+      '/marketplace/updates',
+      '/marketplace/developer',
+    ],
+  },
+  {
+    label: 'Observatory',
+    items: [
+      '/observatory',
+      '/metrics',
+      '/incidents',
+      '/audit',
+      '/timeline',
+      '/alert-rules',
+      '/sla',
+      '/heatmaps',
+    ],
   },
   {
     label: 'Operations',
@@ -44,16 +105,31 @@ const GROUPS = [
 ];
 
 const LABELS: Record<string, string> = {
-  '/dashboard':  'Dashboard',
+  '/dashboard': 'Dashboard',
   '/connectors': 'Connectors',
-  '/agents':     'Agents',
-  '/databases':  'Databases',
-  '/discovery':  'Discovery',
-  '/sync':       'Sync Center',
-  '/health':     'Health',
-  '/logs':       'Logs',
-  '/settings':   'Settings',
-  '/users':      'Users',
+  '/agents': 'Agents',
+  '/databases': 'Databases',
+  '/discovery': 'Discovery',
+  '/workflows': 'Workflows',
+  '/workflows/templates': 'WF Templates',
+  '/marketplace': 'Descobrir',
+  '/marketplace/installed': 'Instalados',
+  '/marketplace/updates': 'Atualizações',
+  '/marketplace/developer': 'Desenvolvedores',
+  '/sync': 'Sync Center',
+  '/health': 'Health',
+  '/logs': 'Logs',
+  '/settings': 'Settings',
+  '/users': 'Users',
+  '/observatory': 'Observatory',
+  '/metrics': 'Metrics',
+  '/incidents': 'Incidents',
+  '/audit': 'Audit Trail',
+  '/timeline': 'Timeline',
+  '/alert-rules': 'Alert Center',
+  '/sla': 'SLA Monitor',
+  '/heatmaps': 'Heatmaps',
+  '/copilot': 'AI Copilot',
 };
 
 export function Sidebar() {
@@ -68,7 +144,7 @@ export function Sidebar() {
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-white leading-tight truncate">Atlas Hub</p>
-          <p className="text-[10px] text-slate-500 leading-tight">Sprint 28</p>
+          <p className="text-[10px] text-slate-500 leading-tight">Sprint 33</p>
         </div>
       </div>
 
@@ -81,8 +157,8 @@ export function Sidebar() {
             </p>
             <div className="space-y-0.5">
               {group.items.map((href) => {
-                const Icon   = ICONS[href] ?? LayoutDashboard;
-                const label  = LABELS[href] ?? href;
+                const Icon = ICONS[href] ?? LayoutDashboard;
+                const label = LABELS[href] ?? href;
                 const active = pathname === href || pathname.startsWith(`${href}/`);
                 return (
                   <Link
@@ -92,7 +168,7 @@ export function Sidebar() {
                       'flex items-center gap-2.5 rounded px-3 py-2 text-sm font-medium transition-colors',
                       active
                         ? 'bg-slate-800 text-white'
-                        : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200',
+                        : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" aria-hidden />
@@ -107,7 +183,7 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="shrink-0 border-t border-slate-800 px-4 py-3">
-        <p className="text-[11px] text-slate-600">ATLAS HUB — Phase 2</p>
+        <p className="text-[11px] text-slate-600">ATLAS HUB — Sprint 33</p>
       </div>
     </aside>
   );

@@ -1,10 +1,10 @@
 /**
  * Seltriva Connect API — Entry Point
  */
+import 'dotenv/config';
 import { createLogger } from '@seltriva/logger';
 import { getConfig } from '@seltriva/config';
 import { createApiServer } from './server.js';
-import { connectDB, disconnectDB } from './services/prisma.js';
 
 const logger = createLogger('api');
 
@@ -16,15 +16,21 @@ async function main(): Promise<void> {
     port: config.api.port,
   });
 
-  // Connect to database
+  // Connect to database (optional in dev — all sprint modules use in-memory stores)
+  let disconnectDB: (() => Promise<void>) | undefined;
   try {
-    await connectDB();
+    const prismaService = await import('./services/prisma.js');
+    await prismaService.connectDB();
+    disconnectDB = prismaService.disconnectDB;
     logger.info('Database connected');
   } catch (err) {
-    logger.error('Database connection failed', {
-      error: err instanceof Error ? err.message : String(err),
-    });
-    process.exit(1);
+    const msg = err instanceof Error ? err.message : String(err);
+    if (config.env === 'production') {
+      logger.error('Database connection failed', { error: msg });
+      process.exit(1);
+    } else {
+      logger.warn('Database unavailable — running with in-memory stores only', { error: msg });
+    }
   }
 
   // Start HTTP server
@@ -52,7 +58,7 @@ async function main(): Promise<void> {
   const shutdown = async (signal: string) => {
     logger.info(`Received ${signal} — shutting down`);
     server.close(async () => {
-      await disconnectDB();
+      await disconnectDB?.();
       logger.info('API server stopped');
       process.exit(0);
     });
@@ -65,7 +71,7 @@ async function main(): Promise<void> {
   };
 
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
-  process.on('SIGINT',  () => void shutdown('SIGINT'));
+  process.on('SIGINT', () => void shutdown('SIGINT'));
   process.on('uncaughtException', (err) => {
     logger.error('Uncaught exception', { error: err.message, stack: err.stack });
     process.exit(1);

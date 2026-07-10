@@ -12,18 +12,35 @@ import { registerAdminRoutes } from './routes/v1/admin/index.js';
 import type { AdminInfrastructureDeps } from './routes/v1/admin/index.js';
 import { registerDiscoveryRoutes } from './routes/v1/discovery/index.js';
 import { registerHubRoutes } from './routes/v1/hub/index.js';
+import { registerOrchestratorRoutes } from './routes/v1/orchestrator/index.js';
+import { registerObservatoryRoutes } from './routes/v1/observatory/index.js';
+import { registerCopilotRoutes } from './routes/v1/copilot/index.js';
+import { registerWorkflowBuilderRoutes } from './routes/v1/workflow-builder/index.js';
+import { registerMarketplaceRoutes } from './routes/v1/marketplace/index.js';
 import { healthHandler } from './routes/health.js';
 import {
-  listOrganizations, getOrganization, createOrganization,
-  updateOrganization, deleteOrganization, listOrgWorkspaces, listOrgMembers,
+  listOrganizations,
+  getOrganization,
+  createOrganization,
+  updateOrganization,
+  deleteOrganization,
+  listOrgWorkspaces,
+  listOrgMembers,
 } from './routes/v1/organizations.js';
 import {
-  listAgents, getAgent, registerAgent,
-  agentHeartbeat, getAgentHeartbeats, retireAgent,
+  listAgents,
+  getAgent,
+  registerAgent,
+  agentHeartbeat,
+  getAgentHeartbeats,
+  retireAgent,
 } from './routes/v1/agents.js';
 import {
-  listPlugins, getPlugin,
-  listInstalledPlugins, installPlugin, uninstallPlugin,
+  listPlugins,
+  getPlugin,
+  listInstalledPlugins,
+  installPlugin,
+  uninstallPlugin,
 } from './routes/v1/plugins.js';
 
 // ─── Request Logger ─────────────────────────────────────────────────────────
@@ -32,14 +49,16 @@ function requestLogger(
   _ctx: Parameters<Parameters<Router['use']>[0]>[0],
   req: IncomingMessage,
   _res: ServerResponse,
-  next: () => Promise<void>,
+  next: () => Promise<void>
 ): Promise<void> {
   const start = Date.now();
   const result = next();
-  result.then(() => {
-    const ms = Date.now() - start;
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} — ${ms}ms`);
-  }).catch(() => undefined);
+  result
+    .then(() => {
+      const ms = Date.now() - start;
+      console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} — ${ms}ms`);
+    })
+    .catch(() => undefined);
   return result;
 }
 
@@ -48,7 +67,7 @@ function requestLogger(
 async function withErrorBoundary(
   req: IncomingMessage,
   res: ServerResponse,
-  handler: () => Promise<void>,
+  handler: () => Promise<void>
 ): Promise<void> {
   try {
     await handler();
@@ -78,7 +97,10 @@ export interface ApiServerDeps {
   admin?: AdminInfrastructureDeps;
 }
 
-export function createApiServer(atlasDeps?: AtlasInfrastructureDeps, adminDeps?: AdminInfrastructureDeps) {
+export function createApiServer(
+  atlasDeps?: AtlasInfrastructureDeps,
+  adminDeps?: AdminInfrastructureDeps
+) {
   const router = new Router();
 
   // Middleware
@@ -131,6 +153,21 @@ export function createApiServer(atlasDeps?: AtlasInfrastructureDeps, adminDeps?:
 
   // ATLAS HUB Control Plane
   registerHubRoutes(router);
+
+  // ORCHESTRATOR — Sprint 29
+  registerOrchestratorRoutes(router);
+
+  // OBSERVATORY — Sprint 30
+  registerObservatoryRoutes(router);
+
+  // AI COPILOT — Sprint 31
+  registerCopilotRoutes(router);
+
+  // WORKFLOW BUILDER IA — Sprint 32
+  registerWorkflowBuilderRoutes(router);
+
+  // MARKETPLACE DE CONNECTORS — Sprint 33
+  registerMarketplaceRoutes(router);
 
   const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
     withErrorBoundary(req, res, () => router.dispatch(req, res));
