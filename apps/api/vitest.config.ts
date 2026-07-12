@@ -4,6 +4,9 @@ export default defineConfig({
   test: {
     globals: false,
     environment: 'node',
+    env: {
+      SUPABASE_JWT_SECRET: 'test-only-secret-do-not-use-in-prod',
+    },
     coverage: {
       provider: 'v8',
       include: [

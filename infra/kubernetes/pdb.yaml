@@ -1,0 +1,22 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: atlas-api-pdb
+  namespace: atlas-connect
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: atlas-api
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: atlas-worker-pdb
+  namespace: atlas-connect
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: atlas-worker

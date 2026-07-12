@@ -28,6 +28,47 @@ import {
   Package,
   ArrowUpCircle,
   Code2,
+  CreditCard,
+  Layers,
+  FileText,
+  BarChart3,
+  ShieldCheck,
+  TrendingUp,
+  Lock,
+  KeyRound,
+  ListChecks,
+  ClipboardCheck,
+  CheckCircle2,
+  Cpu,
+  ToggleLeft,
+  DatabaseZap,
+  HeartPulse,
+  Gauge,
+  Globe,
+  Ticket,
+  Key,
+  UserCog,
+  Wifi,
+  Rocket,
+  ListTodo,
+  History,
+  GraduationCap,
+  Wand2,
+  Network,
+  ServerCog,
+  Globe2,
+  ShieldAlert,
+  Scale,
+  TriangleAlert,
+  GitPullRequest,
+  Activity as ActivityIcon,
+  Telescope,
+  BrainCircuit,
+  Zap as ZapIcon,
+  Radio,
+  GitMerge,
+  BookOpen,
+  ShieldCheck as ShieldCheckIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -43,6 +84,46 @@ const ICONS: Record<string, typeof LayoutDashboard> = {
   '/marketplace/installed': Package,
   '/marketplace/updates': ArrowUpCircle,
   '/marketplace/developer': Code2,
+  '/billing': CreditCard,
+  '/billing/plans': Layers,
+  '/billing/invoices': FileText,
+  '/billing/usage': BarChart3,
+  '/billing/admin': TrendingUp,
+  '/security': ShieldCheck,
+  '/security/secrets': Lock,
+  '/security/policies': ListChecks,
+  '/security/audit': ClipboardCheck,
+  '/security/compliance': CheckCircle2,
+  '/security/sso': KeyRound,
+  '/ops': Cpu,
+  '/ops/queues': DatabaseZap,
+  '/ops/feature-flags': ToggleLeft,
+  '/ops/slo': Gauge,
+  '/ops/dr': HeartPulse,
+  '/portal': Globe,
+  '/portal/support': Ticket,
+  '/portal/api-keys': Key,
+  '/portal/users': UserCog,
+  '/portal/connectors': Wifi,
+  '/release': Rocket,
+  '/release/checklist': ListTodo,
+  '/release/changelog': History,
+  '/academy': GraduationCap,
+  '/setup': Wand2,
+  '/operations': Network,
+  '/infrastructure': ServerCog,
+  '/global': Globe2,
+  '/governance': ShieldAlert,
+  '/governance/audit': ScrollText,
+  '/governance/compliance': Scale,
+  '/governance/risk': TriangleAlert,
+  '/governance/changes': GitPullRequest,
+  '/prometheus': Telescope,
+  '/prometheus/incidents': BrainCircuit,
+  '/prometheus/copilot': ActivityIcon,
+  '/helios': Radio,
+  '/helios/catalog': BookOpen,
+  '/helios/governance': ShieldCheckIcon,
   '/sync': RefreshCw,
   '/health': Activity,
   '/logs': ScrollText,
@@ -82,6 +163,25 @@ const GROUPS = [
     ],
   },
   {
+    label: 'Billing',
+    items: ['/billing', '/billing/plans', '/billing/invoices', '/billing/usage', '/billing/admin'],
+  },
+  {
+    label: 'Security',
+    items: [
+      '/security',
+      '/security/secrets',
+      '/security/policies',
+      '/security/audit',
+      '/security/compliance',
+      '/security/sso',
+    ],
+  },
+  {
+    label: 'Production',
+    items: ['/ops', '/ops/queues', '/ops/feature-flags', '/ops/slo', '/ops/dr'],
+  },
+  {
     label: 'Observatory',
     items: [
       '/observatory',
@@ -95,12 +195,48 @@ const GROUPS = [
     ],
   },
   {
+    label: 'Customer Portal',
+    items: [
+      '/portal',
+      '/portal/support',
+      '/portal/api-keys',
+      '/portal/users',
+      '/portal/connectors',
+    ],
+  },
+  {
+    label: 'GA Release',
+    items: ['/release', '/release/checklist', '/release/changelog', '/academy'],
+  },
+  {
+    label: 'Enterprise',
+    items: ['/operations', '/infrastructure', '/global'],
+  },
+  {
+    label: 'Governance',
+    items: [
+      '/governance',
+      '/governance/audit',
+      '/governance/compliance',
+      '/governance/risk',
+      '/governance/changes',
+    ],
+  },
+  {
+    label: 'AIOps',
+    items: ['/prometheus', '/prometheus/incidents', '/prometheus/copilot'],
+  },
+  {
+    label: 'Event Mesh',
+    items: ['/helios', '/helios/catalog', '/helios/governance'],
+  },
+  {
     label: 'Operations',
     items: ['/sync', '/health', '/logs'],
   },
   {
     label: 'Administration',
-    items: ['/settings', '/users'],
+    items: ['/settings', '/users', '/setup'],
   },
 ];
 
@@ -116,6 +252,31 @@ const LABELS: Record<string, string> = {
   '/marketplace/installed': 'Instalados',
   '/marketplace/updates': 'Atualizações',
   '/marketplace/developer': 'Desenvolvedores',
+  '/billing': 'Overview',
+  '/billing/plans': 'Plans',
+  '/billing/invoices': 'Invoices',
+  '/billing/usage': 'Usage',
+  '/billing/admin': 'Admin Dashboard',
+  '/security': 'Dashboard',
+  '/security/secrets': 'Secrets',
+  '/security/policies': 'Policies',
+  '/security/audit': 'Audit Chain',
+  '/security/compliance': 'Compliance',
+  '/security/sso': 'SSO & MFA',
+  '/ops': 'Dashboard',
+  '/ops/queues': 'Worker Queues',
+  '/ops/feature-flags': 'Feature Flags',
+  '/ops/slo': 'SLO / SLA',
+  '/ops/dr': 'Disaster Recovery',
+  '/portal': 'Dashboard',
+  '/portal/support': 'Suporte',
+  '/portal/api-keys': 'Chaves de API',
+  '/portal/users': 'Usuários',
+  '/portal/connectors': 'Conectores',
+  '/release': 'Go-Live Center',
+  '/release/checklist': 'Checklist GA',
+  '/release/changelog': 'Changelog',
+  '/academy': 'Atlas Academy',
   '/sync': 'Sync Center',
   '/health': 'Health',
   '/logs': 'Logs',
@@ -130,6 +291,21 @@ const LABELS: Record<string, string> = {
   '/sla': 'SLA Monitor',
   '/heatmaps': 'Heatmaps',
   '/copilot': 'AI Copilot',
+  '/setup': 'Setup Wizard',
+  '/operations': 'Operations Center',
+  '/infrastructure': 'Infrastructure HA',
+  '/global': 'Global Edge',
+  '/governance': 'Governance',
+  '/governance/audit': 'Audit Trail',
+  '/governance/compliance': 'Compliance',
+  '/governance/risk': 'Risk Register',
+  '/governance/changes': 'Change Mgmt',
+  '/prometheus': 'PROMETHEUS',
+  '/prometheus/incidents': 'Incidents & RCA',
+  '/prometheus/copilot': 'AIOps Center',
+  '/helios': 'Event Studio',
+  '/helios/catalog': 'Catalog & Schema',
+  '/helios/governance': 'Governance',
 };
 
 export function Sidebar() {
@@ -144,7 +320,7 @@ export function Sidebar() {
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-white leading-tight truncate">Atlas Hub</p>
-          <p className="text-[10px] text-slate-500 leading-tight">Sprint 33</p>
+          <p className="text-[10px] text-slate-500 leading-tight">Sprint 44 — PROMETHEUS</p>
         </div>
       </div>
 
@@ -183,7 +359,7 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="shrink-0 border-t border-slate-800 px-4 py-3">
-        <p className="text-[11px] text-slate-600">ATLAS HUB — Sprint 33</p>
+        <p className="text-[11px] text-slate-600">ATLAS CONNECT v1.0 — Sprint 45</p>
       </div>
     </aside>
   );

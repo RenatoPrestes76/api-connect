@@ -30,6 +30,11 @@
     "@seltriva/database-sdk": "workspace:*",
     "@seltriva/logger": "workspace:*",
     "@seltriva/types": "workspace:*",
+    "@seltriva/billing": "workspace:*",
+    "@seltriva/aegis": "workspace:*",
+    "@seltriva/titan": "workspace:*",
+    "@seltriva/release": "workspace:*",
+    "@seltriva/atlasctl": "workspace:*",
     "@seltriva/connector-registry": "workspace:*",
     "@seltriva/workflow-builder": "workspace:*"
   },

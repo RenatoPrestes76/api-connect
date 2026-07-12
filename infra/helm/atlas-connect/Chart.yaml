@@ -1,0 +1,18 @@
+apiVersion: v2
+name: atlas-connect
+description: Atlas Connect — enterprise integration platform Helm chart
+type: application
+version: 36.0.0
+appVersion: '36.0.0'
+keywords:
+  - atlas
+  - integration
+  - api
+  - workflow
+home: https://atlas-connect.io
+sources:
+  - https://github.com/seltriva/atlas-connect
+maintainers:
+  - name: Seltriva Platform Team
+    email: platform@seltriva.io
+dependencies: []

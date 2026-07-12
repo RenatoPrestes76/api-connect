@@ -1,0 +1,27 @@
+{
+  "name": "@seltriva/titan",
+  "version": "0.1.0",
+  "description": "Sprint 36 — TITAN: Production Hardening — Redis simulation, circuit breaker, feature flags, health checks, distributed tracing, metrics.",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.8"
+  }
+}

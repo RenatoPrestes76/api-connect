@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atlas-worker
+  namespace: atlas-connect
+  labels:
+    app: atlas-worker
+    component: worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: atlas-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: atlas-worker
+        component: worker
+    spec:
+      terminationGracePeriodSeconds: 120
+      containers:
+        - name: atlas-worker
+          image: ghcr.io/seltriva/atlas-worker:latest
+          imagePullPolicy: Always
+          command: ['node', 'dist/worker.js']
+          envFrom:
+            - configMapRef:
+                name: atlas-config
+            - secretRef:
+                name: atlas-secrets
+          env:
+            - name: WORKER_CONCURRENCY
+              value: '4'
+            - name: QUEUE_PRIORITIES
+              value: 'high,normal,low'
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '512Mi'
+            limits:
+              cpu: '2000m'
+              memory: '2Gi'
+          livenessProbe:
+            exec:
+              command: ['node', '-e', 'process.exit(0)']
+            initialDelaySeconds: 30
+            periodSeconds: 30

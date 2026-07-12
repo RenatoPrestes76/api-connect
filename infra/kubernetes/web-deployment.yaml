@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atlas-web
+  namespace: atlas-connect
+  labels:
+    app: atlas-web
+    component: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: atlas-web
+  template:
+    metadata:
+      labels:
+        app: atlas-web
+    spec:
+      containers:
+        - name: atlas-web
+          image: ghcr.io/seltriva/atlas-web:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: atlas-config
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: 'https://api.atlas-connect.io'
+          resources:
+            requests:
+              cpu: '100m'
+              memory: '256Mi'
+            limits:
+              cpu: '500m'
+              memory: '512Mi'
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: atlas-web-service
+  namespace: atlas-connect
+spec:
+  selector:
+    app: atlas-web
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP

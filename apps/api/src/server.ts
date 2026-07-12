@@ -17,6 +17,18 @@ import { registerObservatoryRoutes } from './routes/v1/observatory/index.js';
 import { registerCopilotRoutes } from './routes/v1/copilot/index.js';
 import { registerWorkflowBuilderRoutes } from './routes/v1/workflow-builder/index.js';
 import { registerMarketplaceRoutes } from './routes/v1/marketplace/index.js';
+import { registerBillingRoutes } from './routes/v1/billing/index.js';
+import { registerSecurityRoutes } from './routes/v1/security/index.js';
+import { registerOpsRoutes } from './routes/v1/ops/index.js';
+import { registerPortalRoutes } from './routes/v1/portal/index.js';
+import { registerReleaseRoutes } from './routes/v1/release/index.js';
+import { registerSetupRoutes } from './routes/v1/setup/index.js';
+import { registerOperationsRoutes } from './routes/v1/operations/index.js';
+import { registerHaRoutes } from './routes/v1/ha/index.js';
+import { registerRegionsRoutes } from './routes/v1/regions/index.js';
+import { registerGovernanceRoutes } from './routes/v1/governance/index.js';
+import { registerPrometheusRoutes } from './routes/v1/prometheus/index.js';
+import { registerHeliosRoutes } from './routes/v1/helios/index.js';
 import { healthHandler } from './routes/health.js';
 import {
   listOrganizations,
@@ -82,7 +94,7 @@ async function withErrorBoundary(
       } else if (code === 'P2025') {
         apiError(res, 'Resource not found', 404, 'NOT_FOUND');
       } else {
-        apiError(res, message, 500, 'INTERNAL_ERROR');
+        apiError(res, 'Internal server error', 500, 'INTERNAL_ERROR');
       }
     }
   }
@@ -168,6 +180,40 @@ export function createApiServer(
 
   // MARKETPLACE DE CONNECTORS — Sprint 33
   registerMarketplaceRoutes(router);
+
+  // BILLING & LICENSING — Sprint 34
+  registerBillingRoutes(router);
+
+  // SECURITY & COMPLIANCE — Sprint 35
+  registerSecurityRoutes(router);
+
+  // TITAN — PRODUCTION HARDENING — Sprint 36
+  registerOpsRoutes(router);
+
+  // ODYSSEY — GA RELEASE — Sprint 37
+  registerPortalRoutes(router);
+  registerReleaseRoutes(router);
+
+  // ORION — FIRST RUN EXPERIENCE — Sprint 38
+  registerSetupRoutes(router);
+
+  // AURORA — ENTERPRISE OPERATIONS CENTER — Sprint 39
+  registerOperationsRoutes(router);
+
+  // NEBULA — HIGH AVAILABILITY & DISASTER RECOVERY — Sprint 40
+  registerHaRoutes(router);
+
+  // COSMOS — MULTI-REGION & GLOBAL EDGE — Sprint 41
+  registerRegionsRoutes(router);
+
+  // TITAN — ENTERPRISE GOVERNANCE & COMPLIANCE — Sprint 42
+  registerGovernanceRoutes(router);
+
+  // PROMETHEUS — AI OBSERVABILITY & AUTONOMOUS OPERATIONS — Sprint 44
+  registerPrometheusRoutes(router);
+
+  // HELIOS — ENTERPRISE DATA FABRIC & EVENT MESH — Sprint 45
+  registerHeliosRoutes(router);
 
   const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
     withErrorBoundary(req, res, () => router.dispatch(req, res));

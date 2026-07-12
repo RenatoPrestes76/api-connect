@@ -12,3 +12,6 @@ yarn.lock
 .env
 .env.local
 .env.*.local
+
+# Helm chart templates use Go templating syntax, not valid YAML on their own
+infra/helm/**/templates/**

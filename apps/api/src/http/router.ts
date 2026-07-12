@@ -22,16 +22,13 @@ export interface RouteContext {
   agentId?: string;
 }
 
-export type RouteHandler = (
-  ctx: RouteContext,
-  res: ServerResponse,
-) => Promise<void>;
+export type RouteHandler = (ctx: RouteContext, res: ServerResponse) => Promise<void>;
 
 export type Middleware = (
   ctx: RouteContext,
   req: IncomingMessage,
   res: ServerResponse,
-  next: () => Promise<void>,
+  next: () => Promise<void>
 ) => Promise<void>;
 
 interface Route {
@@ -66,15 +63,34 @@ function matchRoute(route: Route, method: string, pathname: string): Record<stri
 
 // ─── Body Parser ────────────────────────────────────────────────────────────
 
+const MAX_BODY_BYTES = 1024 * 1024; // 1MB
+
+export class PayloadTooLargeError extends Error {}
+
 export async function parseBody(req: IncomingMessage): Promise<unknown> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
-    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    let size = 0;
+    req.on('data', (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > MAX_BODY_BYTES) {
+        req.destroy();
+        reject(new PayloadTooLargeError('Request body exceeds maximum allowed size'));
+        return;
+      }
+      chunks.push(chunk);
+    });
     req.on('end', () => {
       const raw = Buffer.concat(chunks).toString('utf8');
-      if (!raw) { resolve(undefined); return; }
-      try { resolve(JSON.parse(raw)); }
-      catch { resolve(raw); }
+      if (!raw) {
+        resolve(undefined);
+        return;
+      }
+      try {
+        resolve(JSON.parse(raw));
+      } catch {
+        resolve(raw);
+      }
     });
     req.on('error', () => resolve(undefined));
   });
@@ -101,11 +117,21 @@ export class Router {
     return this;
   }
 
-  get(pattern: string, handler: RouteHandler): this { return this.add('GET', pattern, handler); }
-  post(pattern: string, handler: RouteHandler): this { return this.add('POST', pattern, handler); }
-  put(pattern: string, handler: RouteHandler): this { return this.add('PUT', pattern, handler); }
-  patch(pattern: string, handler: RouteHandler): this { return this.add('PATCH', pattern, handler); }
-  delete(pattern: string, handler: RouteHandler): this { return this.add('DELETE', pattern, handler); }
+  get(pattern: string, handler: RouteHandler): this {
+    return this.add('GET', pattern, handler);
+  }
+  post(pattern: string, handler: RouteHandler): this {
+    return this.add('POST', pattern, handler);
+  }
+  put(pattern: string, handler: RouteHandler): this {
+    return this.add('PUT', pattern, handler);
+  }
+  patch(pattern: string, handler: RouteHandler): this {
+    return this.add('PATCH', pattern, handler);
+  }
+  delete(pattern: string, handler: RouteHandler): this {
+    return this.add('DELETE', pattern, handler);
+  }
 
   async dispatch(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const rawUrl = req.url ?? '/';
@@ -120,7 +146,18 @@ export class Router {
       return;
     }
 
-    const body = ['POST', 'PUT', 'PATCH'].includes(method) ? await parseBody(req) : undefined;
+    let body: unknown;
+    if (['POST', 'PUT', 'PATCH'].includes(method)) {
+      try {
+        body = await parseBody(req);
+      } catch (err) {
+        if (err instanceof PayloadTooLargeError) {
+          json(res, { error: { code: 'PAYLOAD_TOO_LARGE', message: err.message } }, 413);
+          return;
+        }
+        throw err;
+      }
+    }
     const requestId = (req.headers['x-request-id'] as string) ?? crypto.randomUUID();
 
     let matchedRoute: Route | null = null;
@@ -193,7 +230,7 @@ export function apiError(
   res: ServerResponse,
   message: string,
   status = 500,
-  code = 'INTERNAL_ERROR',
+  code = 'INTERNAL_ERROR'
 ): void {
   json(res, { error: { code, message } }, status);
 }
@@ -203,7 +240,7 @@ export function paginated<T>(
   data: T[],
   total: number,
   page: number,
-  pageSize: number,
+  pageSize: number
 ): void {
   json(res, {
     data,
