@@ -1,6 +1,8 @@
+import { createHash } from 'node:crypto';
 import type {
   Region,
   RegionStatus,
+  RegionWithDistance,
   TenantRegion,
   ReplicationRecord,
   ReplicationStatus,
@@ -11,7 +13,10 @@ import type {
   GlobalOverview,
   RegionStatusSummary,
   ReplicationSummary,
+  FailoverResult,
+  ConfigReplicationResult,
 } from './types.js';
+import { haversineDistanceKm } from './geo.js';
 
 function genId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -47,6 +52,8 @@ function seedRegions(): Region[] {
       continent: 'Americas',
       flag: '🇧🇷',
       provider: 'aws',
+      latitude: -23.5505,
+      longitude: -46.6333,
       latencyMs: 45,
       capacityPct: 62,
       tenantsCount: 1,
@@ -61,6 +68,8 @@ function seedRegions(): Region[] {
       continent: 'Americas',
       flag: '🇺🇸',
       provider: 'aws',
+      latitude: 39.0438,
+      longitude: -77.4874,
       latencyMs: 12,
       capacityPct: 78,
       tenantsCount: 1,
@@ -75,6 +84,8 @@ function seedRegions(): Region[] {
       continent: 'Europe',
       flag: '🇮🇪',
       provider: 'aws',
+      latitude: 53.3498,
+      longitude: -6.2603,
       latencyMs: 28,
       capacityPct: 55,
       tenantsCount: 1,
@@ -89,6 +100,8 @@ function seedRegions(): Region[] {
       continent: 'Americas',
       flag: '🇺🇸',
       provider: 'aws',
+      latitude: 45.8399,
+      longitude: -119.7006,
       latencyMs: 18,
       capacityPct: 88,
       tenantsCount: 0,
@@ -103,6 +116,8 @@ function seedRegions(): Region[] {
       continent: 'Asia-Pacific',
       flag: '🇸🇬',
       provider: 'aws',
+      latitude: 1.3521,
+      longitude: 103.8198,
       latencyMs: 65,
       capacityPct: 40,
       tenantsCount: 0,
@@ -370,6 +385,32 @@ export class RegionsStore {
     };
   }
 
+  // ── Nearest-region selection (Sprint 47 / ATLAS FORTRESS) ───────────────────
+
+  /** Ranks eligible regions by real haversine distance from (lat, lon) — nearest first. */
+  nearestRegions(
+    lat: number,
+    lon: number,
+    options: { activeOnly?: boolean } = {}
+  ): RegionWithDistance[] {
+    const activeOnly = options.activeOnly ?? true;
+    return this.regions
+      .filter((r) => !activeOnly || r.status === 'active')
+      .map((r) => ({
+        ...r,
+        distanceKm: Math.round(haversineDistanceKm(lat, lon, r.latitude, r.longitude)),
+      }))
+      .sort((a, b) => a.distanceKm - b.distanceKm);
+  }
+
+  nearestRegion(
+    lat: number,
+    lon: number,
+    options: { activeOnly?: boolean } = {}
+  ): RegionWithDistance | null {
+    return this.nearestRegions(lat, lon, options)[0] ?? null;
+  }
+
   // ── Tenant regions ─────────────────────────────────────────────────────────
 
   getTenantPlacements(): TenantRegion[] {
@@ -438,6 +479,127 @@ export class RegionsStore {
       ? Math.round(active.reduce((s, r) => s + r.latencyMs, 0) / active.length)
       : 0;
     return { total: list.length, inSync, lagging, failed, paused, avgLatencyMs: avgLagMs };
+  }
+
+  /**
+   * Genuinely replicates config (compliance policies + tenant placements pinned to the source
+   * region) to a target region: real JSON payload, real byte size, real SHA-256 checksum, and an
+   * itemsReplicated count derived from actual records — not the fixed 24/9/147 placeholders this
+   * used to return. `latencyMs` is a distance-derived estimate (this sandbox has no real network
+   * link between regions to measure), consistent with how the existing latencyMs field is modeled.
+   */
+  replicateConfig(sourceRegion: string, targetRegion: string): ConfigReplicationResult {
+    const source = this.getRegionByCode(sourceRegion);
+    const target = this.getRegionByCode(targetRegion);
+    if (!source || !target) {
+      throw Object.assign(new Error('REGION_NOT_FOUND'), { code: 'REGION_NOT_FOUND' });
+    }
+
+    const policies = this.compliance.filter((p) => !p.region || p.region === sourceRegion);
+    const placements = this.tenantRegions.filter((t) => t.primaryRegion === sourceRegion);
+    const payload = JSON.stringify({
+      sourceRegion,
+      targetRegion,
+      policies,
+      placements,
+      replicatedAt: nowIso(),
+    });
+    const sizeBytes = Buffer.byteLength(payload, 'utf8');
+    const checksum = `sha256:${createHash('sha256').update(payload).digest('hex')}`;
+    const itemsReplicated = policies.length + placements.length;
+    const distanceKm = Math.round(
+      haversineDistanceKm(source.latitude, source.longitude, target.latitude, target.longitude)
+    );
+    const latencyMs = Math.abs(source.latencyMs - target.latencyMs) + Math.round(distanceKm / 20);
+
+    this.upsertReplication({
+      sourceRegion,
+      targetRegion,
+      status: 'in_sync',
+      latencyMs,
+      lastSynced: nowIso(),
+      itemsReplicated,
+      pendingItems: 0,
+    });
+
+    this.addGlobalEvent({
+      type: 'replication.completed',
+      region: sourceRegion,
+      severity: 'info',
+      message: `Config replicated: ${sourceRegion} → ${targetRegion} (${itemsReplicated} items, ${sizeBytes} bytes)`,
+      payload: { sourceRegion, targetRegion, itemsReplicated, sizeBytes, checksum },
+    });
+
+    return {
+      sourceRegion,
+      targetRegion,
+      itemsReplicated,
+      sizeBytes,
+      checksum,
+      latencyMs,
+      syncedAt: nowIso(),
+      message: `Replicated ${itemsReplicated} config item(s) (${sizeBytes} bytes) from ${sourceRegion} to ${targetRegion}`,
+    };
+  }
+
+  /**
+   * Automatic geographic failover: picks the nearest ACTIVE region to the tenant's current
+   * (failed) region — honoring an enabled data_residency policy's allowedRegions, if any — and
+   * moves the tenant there. This is the automatic counterpart to the caller-specified failover
+   * in routes/v1/regions/actions.ts.
+   */
+  automaticGeoFailover(
+    tenantId: string,
+    reason: string
+  ): FailoverResult | 'TENANT_NOT_FOUND' | 'NO_ELIGIBLE_REGION' {
+    const placement = this.getTenantPlacement(tenantId);
+    if (!placement) return 'TENANT_NOT_FOUND';
+
+    const fromRegion = this.getRegionByCode(placement.primaryRegion);
+    if (!fromRegion) return 'NO_ELIGIBLE_REGION';
+
+    const residency = this.compliance.find(
+      (p) => p.tenantId === tenantId && p.policy === 'data_residency' && p.enabled
+    );
+    const allowed = (residency?.details?.allowedRegions as string[] | undefined) ?? undefined;
+
+    const target = this.nearestRegions(fromRegion.latitude, fromRegion.longitude, {
+      activeOnly: true,
+    })
+      .filter((r) => r.code !== fromRegion.code)
+      .find((r) => !allowed || allowed.includes(r.code));
+
+    if (!target) return 'NO_ELIGIBLE_REGION';
+
+    this.updateTenantPlacement(tenantId, { primaryRegion: target.code, placement: 'pinned' });
+
+    this.addGlobalEvent({
+      type: 'region.failover.completed',
+      region: target.code,
+      tenantId,
+      severity: 'warning',
+      message: `Automatic geo-failover: tenant ${tenantId} moved from ${fromRegion.code} to nearest eligible region ${target.code} (${target.distanceKm}km) — ${reason}`,
+      payload: {
+        tenantId,
+        fromRegion: fromRegion.code,
+        toRegion: target.code,
+        distanceKm: target.distanceKm,
+        reason,
+      },
+    });
+
+    return {
+      success: true,
+      tenantId,
+      fromRegion: fromRegion.code,
+      toRegion: target.code,
+      reason,
+      failoveredAt: nowIso(),
+      complianceChecked: true,
+      automatic: true,
+      distanceKm: target.distanceKm,
+      message: `Tenant ${tenantId} automatically failed over from ${fromRegion.code} to nearest eligible active region ${target.code} (${target.distanceKm}km away)`,
+    };
   }
 
   // ── Compliance ─────────────────────────────────────────────────────────────

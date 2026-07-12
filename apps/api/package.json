@@ -18,7 +18,10 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
+    "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.7",
+    "jose": "^5.2.4",
+    "ws": "^8.18.0",
     "@prisma/client": "^5.12.0",
     "@seltriva/activation": "workspace:*",
     "@seltriva/agent-identity": "workspace:*",
@@ -39,7 +42,9 @@
     "@seltriva/workflow-builder": "workspace:*"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.14.0",
+    "@types/ws": "^8.5.10",
     "@vitest/coverage-v8": "^2.1.8",
     "tsx": "^4.19.3",
     "typescript": "^5.4.5",

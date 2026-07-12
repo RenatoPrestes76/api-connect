@@ -35,6 +35,12 @@ export interface SloDefinition {
   description: string;
 }
 
+// This DR contract (Backup/DrTest/DrConfig, backed by ops/dr.ts) predates Sprint 47 and is kept
+// as-is for backward compatibility with its existing routes/tests/consumers. The canonical, REAL
+// DR implementation — genuine disk-backed snapshots, real SHA-256 checksums, and a real
+// capture/mutate/restore/verify recovery test — now lives in modules/ha/backup-service.ts and
+// modules/ha/recovery-service.ts (Sprint 47 / ATLAS FORTRESS). New DR work should extend that
+// module; this one stays a lighter-weight, self-contained record used by the Titan dashboard.
 export interface Backup {
   id: string;
   type: 'full' | 'incremental' | 'snapshot';

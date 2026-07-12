@@ -16,3 +16,12 @@ export {
   ErrorRateTracker,
   metrics,
 } from './metrics-collector.js';
+export {
+  Bulkhead,
+  BulkheadRegistry,
+  BulkheadRejectedError,
+  BulkheadTimeoutError,
+  bulkheadRegistry,
+} from './bulkhead.js';
+export { withExponentialBackoff } from './retry.js';
+export { withTimeout } from './timeout.js';

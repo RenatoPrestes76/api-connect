@@ -26,11 +26,7 @@ import type {
   CapabilitySet,
 } from '../core/index.js';
 import { PostgreSQLConnectionManager } from './connection.js';
-import {
-  QueryRunner,
-  CircuitBreaker,
-  DEFAULT_QUERY_RUNNER_OPTIONS,
-} from './query-runner.js';
+import { QueryRunner, CircuitBreaker, DEFAULT_QUERY_RUNNER_OPTIONS } from './query-runner.js';
 import { SchemaDiscovery } from './schema-discovery.js';
 import { TableStatisticsEngine } from './statistics.js';
 import { MetadataAggregator } from './metadata.js';
@@ -43,9 +39,16 @@ import {
 // ─── Capability Set ───────────────────────────────────────────────────────────
 
 const PG_CAPS = [
-  'read', 'discover', 'schema-inference', 'health-check',
-  'statistics', 'data-profiling', 'ssl', 'connection-pooling',
-  'circuit-breaker', 'read-only',
+  'read',
+  'discover',
+  'schema-inference',
+  'health-check',
+  'statistics',
+  'data-profiling',
+  'ssl',
+  'connection-pooling',
+  'circuit-breaker',
+  'read-only',
 ] as const;
 
 function buildCapabilitySet(caps: readonly string[]): CapabilitySet {
@@ -67,7 +70,7 @@ function fail<T>(
   code: string,
   message: string,
   retryable = false,
-  err?: Error,
+  err?: Error
 ): ConnectorResult<T> {
   return {
     success: false,
@@ -80,14 +83,15 @@ function fail<T>(
 
 export class PostgreSQLConnector implements Connector {
   readonly descriptor: ConnectorDescriptor = {
-    id:          'seltriva.connectors.postgresql',
-    name:        'PostgreSQL Enterprise Connector',
-    version:     '0.1.0',
-    type:        'database',
-    subtype:     'postgresql',
-    vendor:      'Seltriva',
-    description: 'Enterprise PostgreSQL connector with schema discovery, statistics and data profiling',
-    tags:        ['postgresql', 'sql', 'relational', 'read-only', 'schema-discovery'],
+    id: 'seltriva.connectors.postgresql',
+    name: 'PostgreSQL Enterprise Connector',
+    version: '0.1.0',
+    type: 'database',
+    subtype: 'postgresql',
+    vendor: 'Seltriva',
+    description:
+      'Enterprise PostgreSQL connector with schema discovery, statistics and data profiling',
+    tags: ['postgresql', 'sql', 'relational', 'read-only', 'schema-discovery'],
   };
 
   private _state: ConnectorState = 'disconnected';
@@ -99,7 +103,9 @@ export class PostgreSQLConnector implements Connector {
   private _aggregator: MetadataAggregator | null = null;
   private _lastReport: PostgreSQLIntrospectionReport | null = null;
 
-  get state(): ConnectorState { return this._state; }
+  get state(): ConnectorState {
+    return this._state;
+  }
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -128,26 +134,28 @@ export class PostgreSQLConnector implements Connector {
       await conn.connect(pgConfig);
     } catch (err) {
       this._state = 'error';
-      const msg = err instanceof ConnectionError ? err.message : `Connection failed: ${String(err)}`;
+      const msg =
+        err instanceof ConnectionError ? err.message : `Connection failed: ${String(err)}`;
       return fail('CONNECTION_FAILED', msg, true, err as Error);
     }
 
     const circuitBreaker = new CircuitBreaker(DEFAULT_QUERY_RUNNER_OPTIONS.circuitBreaker);
     const runner = new QueryRunner(conn, circuitBreaker, {
       ...DEFAULT_QUERY_RUNNER_OPTIONS,
-      statementTimeoutMs: pgConfig.statementTimeoutMs ?? DEFAULT_QUERY_RUNNER_OPTIONS.statementTimeoutMs,
+      statementTimeoutMs:
+        pgConfig.statementTimeoutMs ?? DEFAULT_QUERY_RUNNER_OPTIONS.statementTimeoutMs,
     });
 
-    const discovery  = new SchemaDiscovery(runner);
+    const discovery = new SchemaDiscovery(runner);
     const statistics = new TableStatisticsEngine(runner);
     const aggregator = new MetadataAggregator(discovery, statistics);
 
-    this._conn        = conn;
-    this._runner      = runner;
-    this._discovery   = discovery;
-    this._statistics  = statistics;
-    this._aggregator  = aggregator;
-    this._state       = 'ready';
+    this._conn = conn;
+    this._runner = runner;
+    this._discovery = discovery;
+    this._statistics = statistics;
+    this._aggregator = aggregator;
+    this._state = 'ready';
 
     return ok(undefined, Date.now() - start);
   }
@@ -157,13 +165,13 @@ export class PostgreSQLConnector implements Connector {
 
     this._state = 'closing';
     await this._conn?.disconnect().catch(() => undefined);
-    this._conn        = null;
-    this._runner      = null;
-    this._discovery   = null;
-    this._statistics  = null;
-    this._aggregator  = null;
-    this._lastReport  = null;
-    this._state       = 'disconnected';
+    this._conn = null;
+    this._runner = null;
+    this._discovery = null;
+    this._statistics = null;
+    this._aggregator = null;
+    this._lastReport = null;
+    this._state = 'disconnected';
 
     return ok(undefined, 0);
   }
@@ -172,14 +180,17 @@ export class PostgreSQLConnector implements Connector {
 
   async health(): Promise<ConnectorResult<HealthReport>> {
     if (!this._conn) {
-      return ok<HealthReport>({
-        status: 'unhealthy',
-        latencyMs: 0,
-        connectionStatus: 'disconnected',
-        authStatus: 'unauthenticated',
-        warnings: ['Not connected'],
-        checkedAt: new Date(),
-      }, 0);
+      return ok<HealthReport>(
+        {
+          status: 'unhealthy',
+          latencyMs: 0,
+          connectionStatus: 'disconnected',
+          authStatus: 'unauthenticated',
+          warnings: ['Not connected'],
+          checkedAt: new Date(),
+        },
+        0
+      );
     }
 
     const start = Date.now();
@@ -187,24 +198,34 @@ export class PostgreSQLConnector implements Connector {
       const { latencyMs, serverVersion } = await this._conn.ping();
       const poolStats = this._conn.poolStats();
 
-      return ok<HealthReport>({
-        status: 'healthy',
-        latencyMs,
-        connectionStatus: 'connected',
-        authStatus: 'authenticated',
-        warnings: [],
-        serverInfo: { version: serverVersion, poolTotal: poolStats.total, poolIdle: poolStats.idle },
-        checkedAt: new Date(),
-      }, Date.now() - start);
+      return ok<HealthReport>(
+        {
+          status: 'healthy',
+          latencyMs,
+          connectionStatus: 'connected',
+          authStatus: 'authenticated',
+          warnings: [],
+          serverInfo: {
+            version: serverVersion,
+            poolTotal: poolStats.total,
+            poolIdle: poolStats.idle,
+          },
+          checkedAt: new Date(),
+        },
+        Date.now() - start
+      );
     } catch (err) {
-      return ok<HealthReport>({
-        status: 'unhealthy',
-        latencyMs: Date.now() - start,
-        connectionStatus: 'disconnected',
-        authStatus: 'unauthenticated',
-        warnings: [err instanceof Error ? err.message : 'Ping failed'],
-        checkedAt: new Date(),
-      }, Date.now() - start);
+      return ok<HealthReport>(
+        {
+          status: 'unhealthy',
+          latencyMs: Date.now() - start,
+          connectionStatus: 'disconnected',
+          authStatus: 'unauthenticated',
+          warnings: [err instanceof Error ? err.message : 'Ping failed'],
+          checkedAt: new Date(),
+        },
+        Date.now() - start
+      );
     }
   }
 
@@ -216,13 +237,13 @@ export class PostgreSQLConnector implements Connector {
     const start = Date.now();
     try {
       const schemas = await this._discovery.getSchemas();
-      const limit   = options?.limit ?? 200;
+      const limit = options?.limit ?? 200;
       const items: DiscoveredItem[] = [];
 
       for (const schema of schemas) {
         if (items.length >= limit) break;
         items.push({
-          id:   `schema:${schema.name}`,
+          id: `schema:${schema.name}`,
           name: String(schema.name),
           type: 'schema',
           path: String(schema.name),
@@ -233,27 +254,35 @@ export class PostgreSQLConnector implements Connector {
         for (const table of tables) {
           if (items.length >= limit) break;
           items.push({
-            id:   `table:${schema.name}.${table.name}`,
+            id: `table:${schema.name}.${table.name}`,
             name: String(table.name),
             type: 'table',
             path: `${schema.name}.${table.name}`,
             metadata: {
-              schema:        String(schema.name),
-              comment:       table.comment,
+              schema: String(schema.name),
+              comment: table.comment,
               isPartitioned: table.isPartitioned,
             },
           });
         }
       }
 
-      return ok<DiscoveryResult>({
-        items,
-        total:        items.length,
-        truncated:    items.length === limit,
-        discoveredAt: new Date(),
-      }, Date.now() - start);
+      return ok<DiscoveryResult>(
+        {
+          items,
+          total: items.length,
+          truncated: items.length === limit,
+          discoveredAt: new Date(),
+        },
+        Date.now() - start
+      );
     } catch (err) {
-      return fail('DISCOVERY_FAILED', err instanceof Error ? err.message : String(err), true, err as Error);
+      return fail(
+        'DISCOVERY_FAILED',
+        err instanceof Error ? err.message : String(err),
+        true,
+        err as Error
+      );
     }
   }
 
@@ -269,22 +298,34 @@ export class PostgreSQLConnector implements Connector {
       // Patch in connection details
       const fullReport: PostgreSQLIntrospectionReport = {
         ...report,
-        host:     this._pgConfig.host,
-        port:     this._pgConfig.port,
+        host: this._pgConfig.host,
+        port: this._pgConfig.port,
         database: this._pgConfig.database,
       };
 
       this._lastReport = fullReport;
 
-      return ok<ConnectorMetadata>({
-        connectorId:  this.descriptor.id,
-        source:       { host: this._pgConfig.host, port: this._pgConfig.port, database: this._pgConfig.database },
-        entities:     fullReport.schemas.flatMap((s) => s.tables),
-        report:       fullReport,
-        retrievedAt:  new Date(),
-      }, Date.now() - start);
+      return ok<ConnectorMetadata>(
+        {
+          connectorId: this.descriptor.id,
+          source: {
+            host: this._pgConfig.host,
+            port: this._pgConfig.port,
+            database: this._pgConfig.database,
+          },
+          entities: fullReport.schemas.flatMap((s) => s.tables),
+          introspectionReport: fullReport,
+          retrievedAt: new Date(),
+        } as ConnectorMetadata,
+        Date.now() - start
+      );
     } catch (err) {
-      return fail('METADATA_FAILED', err instanceof Error ? err.message : String(err), true, err as Error);
+      return fail(
+        'METADATA_FAILED',
+        err instanceof Error ? err.message : String(err),
+        true,
+        err as Error
+      );
     }
   }
 
@@ -295,21 +336,35 @@ export class PostgreSQLConnector implements Connector {
     const errors: { field: string; code: string; message: string }[] = [];
     const warnings: { field: string; code: string; message: string }[] = [];
 
-    if (!pg.host)     errors.push({ field: 'host',     code: 'REQUIRED', message: 'host is required' });
-    if (!pg.database) errors.push({ field: 'database', code: 'REQUIRED', message: 'database is required' });
-    if (!pg.user)     errors.push({ field: 'user',     code: 'REQUIRED', message: 'user is required' });
-    if (!pg.password) errors.push({ field: 'password', code: 'REQUIRED', message: 'password is required' });
+    if (!pg.host) errors.push({ field: 'host', code: 'REQUIRED', message: 'host is required' });
+    if (!pg.database)
+      errors.push({ field: 'database', code: 'REQUIRED', message: 'database is required' });
+    if (!pg.user) errors.push({ field: 'user', code: 'REQUIRED', message: 'user is required' });
+    if (!pg.password)
+      errors.push({ field: 'password', code: 'REQUIRED', message: 'password is required' });
 
     if (pg.port !== undefined && (pg.port < 1 || pg.port > 65535)) {
-      errors.push({ field: 'port', code: 'INVALID_RANGE', message: 'port must be between 1 and 65535' });
+      errors.push({
+        field: 'port',
+        code: 'INVALID_RANGE',
+        message: 'port must be between 1 and 65535',
+      });
     }
 
     if (pg.maxPoolSize !== undefined && pg.maxPoolSize < 1) {
-      errors.push({ field: 'maxPoolSize', code: 'INVALID_RANGE', message: 'maxPoolSize must be >= 1' });
+      errors.push({
+        field: 'maxPoolSize',
+        code: 'INVALID_RANGE',
+        message: 'maxPoolSize must be >= 1',
+      });
     }
 
-    if (pg.ssl === false) {
-      warnings.push({ field: 'ssl', code: 'SECURITY', message: 'SSL is disabled — not recommended for production' });
+    if (!pg.ssl) {
+      warnings.push({
+        field: 'ssl',
+        code: 'SECURITY',
+        message: 'SSL is not configured — not recommended for production',
+      });
     }
 
     return ok<ValidationReport>({ isValid: errors.length === 0, errors, warnings }, 0);
@@ -320,7 +375,10 @@ export class PostgreSQLConnector implements Connector {
   async authenticate(_credentials: ConnectorCredentials): Promise<ConnectorResult<AuthResult>> {
     // PostgreSQL authentication happens at connection time via the Pool credentials.
     // This method is a no-op unless called before connect() to override credentials.
-    return ok<AuthResult>({ authenticated: this._state === 'ready', identity: this._pgConfig?.user ?? 'unknown' }, 0);
+    return ok<AuthResult>(
+      { authenticated: this._state === 'ready', identity: this._pgConfig?.user ?? 'unknown' },
+      0
+    );
   }
 
   // ─── Capabilities ─────────────────────────────────────────────────────────
@@ -335,7 +393,9 @@ export class PostgreSQLConnector implements Connector {
    * Run a full introspection and return the structured report.
    * This is the primary data product of this connector.
    */
-  async introspect(filter?: PostgreSQLConnectorConfig['discovery']): Promise<PostgreSQLIntrospectionReport> {
+  async introspect(
+    filter?: PostgreSQLConnectorConfig['discovery']
+  ): Promise<PostgreSQLIntrospectionReport> {
     if (!this._aggregator || !this._pgConfig) {
       throw new ConnectionError('Not connected — call connect() first');
     }
@@ -343,8 +403,8 @@ export class PostgreSQLConnector implements Connector {
     const report = await this._aggregator.buildReport(filter ?? this._pgConfig.discovery ?? {});
     const fullReport: PostgreSQLIntrospectionReport = {
       ...report,
-      host:     this._pgConfig.host,
-      port:     this._pgConfig.port,
+      host: this._pgConfig.host,
+      port: this._pgConfig.port,
       database: this._pgConfig.database,
     };
 
@@ -368,11 +428,12 @@ export function createPostgreSQLConnector(): PostgreSQLConnector {
 }
 
 export const POSTGRESQL_CONNECTOR_DESCRIPTOR: ConnectorDescriptor = {
-  id:          'seltriva.connectors.postgresql',
-  name:        'PostgreSQL Enterprise Connector',
-  version:     '0.1.0',
-  type:        'database',
-  subtype:     'postgresql',
-  vendor:      'Seltriva',
-  description: 'Enterprise PostgreSQL connector with schema discovery, statistics and data profiling',
+  id: 'seltriva.connectors.postgresql',
+  name: 'PostgreSQL Enterprise Connector',
+  version: '0.1.0',
+  type: 'database',
+  subtype: 'postgresql',
+  vendor: 'Seltriva',
+  description:
+    'Enterprise PostgreSQL connector with schema discovery, statistics and data profiling',
 };

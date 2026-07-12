@@ -1,4 +1,5 @@
 import { registerSecretsRoutes } from './secrets.js';
+import { registerSecretRotationRoutes } from './rotation.js';
 import { registerMfaRoutes } from './mfa.js';
 import { registerSsoRoutes } from './sso.js';
 import { registerPoliciesRoutes } from './policies.js';
@@ -16,6 +17,7 @@ export function registerSecurityRoutes(router: {
   delete: Function;
 }): void {
   registerSecretsRoutes(router);
+  registerSecretRotationRoutes(router);
   registerMfaRoutes(router);
   registerSsoRoutes(router);
   registerPoliciesRoutes(router);

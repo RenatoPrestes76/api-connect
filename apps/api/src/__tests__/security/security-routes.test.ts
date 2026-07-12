@@ -91,6 +91,166 @@ describe('POST /api/v1/security/secrets + DELETE', () => {
     });
     expect(status).toBe(400);
   });
+
+  it('requires rotationIntervalDays when autoRotate is true', async () => {
+    const { status } = await post<any>(srv.baseUrl, `/api/v1/security/secrets${Q()}`, {
+      name: 'Auto-rotate without interval',
+      type: 'api_key',
+      provider: 'internal',
+      value: 'v',
+      autoRotate: true,
+    });
+    expect(status).toBe(400);
+  });
+
+  it('a secret created with provider=hashicorp_vault reports vaultStatus=not_configured (no live Vault in this sandbox)', async () => {
+    const { body } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets${Q('tenant-mutation-test')}`,
+      {
+        name: 'Vault-backed secret',
+        type: 'api_key',
+        provider: 'hashicorp_vault',
+        value: 'vault-value',
+        tags: [],
+      }
+    );
+    expect(body.secret.vaultStatus).toBe('not_configured');
+  });
+
+  it('an internal-provider secret has vaultStatus null', async () => {
+    const { body } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets${Q('tenant-mutation-test')}`,
+      {
+        name: 'Internal secret',
+        type: 'api_key',
+        provider: 'internal',
+        value: 'internal-value',
+        tags: [],
+      }
+    );
+    expect(body.secret.vaultStatus).toBeNull();
+  });
+});
+
+// ─── Secret-access auditing (Sprint 47 / ATLAS FORTRESS) ───────────────────────
+
+describe('Secrets — access auditing writes to the tamper-evident chain', () => {
+  it('decrypting a secret records a secret_accessed audit event', async () => {
+    await post<any>(srv.baseUrl, `/api/v1/security/secrets/sec-001/decrypt`, {});
+    const { body } = await get<any>(
+      srv.baseUrl,
+      `/api/v1/security/audit${Q()}&action=secret_accessed`
+    );
+    expect(body.entries.some((e: any) => e.event.resourceId === 'sec-001')).toBe(true);
+  });
+
+  it('creating, rotating, and deleting a secret each record their own audit action', async () => {
+    const created = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets${Q('tenant-mutation-test')}`,
+      {
+        name: 'Audited lifecycle secret',
+        type: 'api_key',
+        provider: 'internal',
+        value: 'v1',
+        tags: [],
+      }
+    );
+    const id = created.body.secret.id;
+
+    await post<any>(srv.baseUrl, `/api/v1/security/secrets/${id}/rotate`, { value: 'v2' });
+    await del<any>(srv.baseUrl, `/api/v1/security/secrets/${id}`);
+
+    const { body } = await get<any>(
+      srv.baseUrl,
+      `/api/v1/security/audit${Q('tenant-mutation-test')}`
+    );
+    const actions = body.entries
+      .filter((e: any) => e.event.resourceId === id)
+      .map((e: any) => e.event.action);
+    expect(actions).toContain('secret_created');
+    expect(actions).toContain('secret_rotated');
+    expect(actions).toContain('secret_deleted');
+  });
+
+  it('the audit chain still verifies as tamper-free after these new entries', async () => {
+    const { body } = await get<any>(srv.baseUrl, '/api/v1/security/audit/verify');
+    expect(body.valid).toBe(true);
+  });
+});
+
+// ─── Automatic secret rotation (Sprint 47 / ATLAS FORTRESS) ────────────────────
+
+describe('Secret rotation scheduler', () => {
+  it('rotate-now genuinely re-encrypts and bumps the version', async () => {
+    const before = await get<any>(srv.baseUrl, '/api/v1/security/secrets/sec-001');
+    const { status, body } = await post<any>(
+      srv.baseUrl,
+      '/api/v1/security/secrets/sec-001/rotate-now',
+      {}
+    );
+    expect(status).toBe(200);
+    expect(body.secretId).toBe('sec-001');
+    expect(body.newVersion).toBe(before.body.secret.version + 1);
+    expect(body.previousVersion).toBe(before.body.secret.version);
+  });
+
+  it('rotate-now returns 404 for an unknown secret', async () => {
+    const { status } = await post<any>(
+      srv.baseUrl,
+      '/api/v1/security/secrets/sec-does-not-exist/rotate-now',
+      {}
+    );
+    expect(status).toBe(404);
+  });
+
+  it('rotation history includes the forced rotation', async () => {
+    await post<any>(srv.baseUrl, '/api/v1/security/secrets/sec-004/rotate-now', {});
+    const { body } = await get<any>(
+      srv.baseUrl,
+      '/api/v1/security/secrets/rotation/history?secretId=sec-004'
+    );
+    expect(body.history.some((r: any) => r.secretId === 'sec-004')).toBe(true);
+  });
+
+  it('evaluate does not touch secrets whose expiry is far in the future', async () => {
+    // sec-005 is seeded with autoRotate=true but expiresAt ~315 days out — not due.
+    const before = await get<any>(srv.baseUrl, '/api/v1/security/secrets/sec-005');
+    await post<any>(srv.baseUrl, '/api/v1/security/secrets/rotation/evaluate', {});
+    const after = await get<any>(srv.baseUrl, '/api/v1/security/secrets/sec-005');
+    expect(after.body.secret.version).toBe(before.body.secret.version);
+  });
+
+  it('evaluate rotates a secret whose expiry falls inside the rotation lead window', async () => {
+    const created = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets${Q('tenant-mutation-test')}`,
+      {
+        name: 'Nearly-expired auto-rotate secret',
+        type: 'api_key',
+        provider: 'internal',
+        value: 'about-to-expire',
+        tags: [],
+        autoRotate: true,
+        rotationIntervalDays: 30,
+        expiresAt: new Date(Date.now() + 60_000).toISOString(), // 1 minute out — inside the 24h lead window
+      }
+    );
+    const id = created.body.secret.id;
+    expect(created.body.secret.version).toBe(1);
+
+    const { body } = await post<any>(srv.baseUrl, '/api/v1/security/secrets/rotation/evaluate', {});
+    expect(body.rotated.some((r: any) => r.secretId === id)).toBe(true);
+
+    const after = await get<any>(srv.baseUrl, `/api/v1/security/secrets/${id}`);
+    expect(after.body.secret.version).toBe(2);
+    // expiresAt should have been pushed forward by rotationIntervalDays, well past the 1-minute mark.
+    expect(new Date(after.body.secret.expiresAt).getTime()).toBeGreaterThan(
+      Date.now() + 20 * 24 * 60 * 60 * 1000
+    );
+  });
 });
 
 // ─── MFA ──────────────────────────────────────────────────────────────────────

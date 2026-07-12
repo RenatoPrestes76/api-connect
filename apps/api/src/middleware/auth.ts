@@ -34,9 +34,7 @@ function verifyJWT(token: string): JWTPayload | null {
   const [headerB64, payloadB64, sigB64] = parts as [string, string, string];
 
   const sig = Buffer.from(sigB64.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
-  const expected = createHmac('sha256', JWT_SECRET)
-    .update(`${headerB64}.${payloadB64}`)
-    .digest();
+  const expected = createHmac('sha256', JWT_SECRET).update(`${headerB64}.${payloadB64}`).digest();
 
   if (!sig.equals(expected)) return null;
 
@@ -63,13 +61,29 @@ const PUBLIC_PATHS = new Set([
   '/api/v1/atlas/openapi',
 ]);
 
+/**
+ * Path prefixes with their own dedicated auth scheme (the Atlas Control Plane
+ * admin-identity system — see middleware/admin-auth.ts) that must bypass
+ * Supabase auth entirely rather than being 401'd before reaching their handler.
+ */
+const PUBLIC_PATH_PREFIXES = [
+  '/admin/auth/',
+  '/admin/audit-log',
+  '/admin/control-plane/',
+  '/admin/fleet',
+  '/admin/chaos',
+];
+
 export const authMiddleware: Middleware = async (
   ctx: RouteContext,
   _req: IncomingMessage,
   res: ServerResponse,
-  next: () => Promise<void>,
+  next: () => Promise<void>
 ) => {
-  if (PUBLIC_PATHS.has(ctx.pathname)) {
+  if (
+    PUBLIC_PATHS.has(ctx.pathname) ||
+    PUBLIC_PATH_PREFIXES.some((p) => ctx.pathname.startsWith(p))
+  ) {
     return next();
   }
 
@@ -105,7 +119,9 @@ export const authMiddleware: Middleware = async (
         ctx.userId = payload.sub;
         ctx.orgId = payload.app_metadata?.organization_id;
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return next();
   }
 

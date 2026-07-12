@@ -64,4 +64,27 @@ export function registerRegionListRoutes(router: { get: Function }): void {
       })),
     });
   });
+
+  // GET /api/v1/regions/nearest?lat=..&lon=.. — real haversine-distance nearest-region selection.
+  router.get('/api/v1/regions/nearest', (ctx: RouteContext, res: ServerResponse) => {
+    const latParam = ctx.query.get('lat');
+    const lonParam = ctx.query.get('lon');
+    if (latParam === null || lonParam === null) {
+      return apiError(res, '"lat" and "lon" query parameters are required', 400, 'MISSING_FIELDS');
+    }
+    const lat = Number(latParam);
+    const lon = Number(lonParam);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      return apiError(res, '"lat" and "lon" must be numbers', 400, 'INVALID_COORDINATES');
+    }
+
+    const activeOnlyParam = ctx.query.get('activeOnly');
+    const activeOnly = activeOnlyParam === null ? true : activeOnlyParam !== 'false';
+
+    const ranked = regionsStore.nearestRegions(lat, lon, { activeOnly });
+    if (ranked.length === 0) {
+      return apiError(res, 'No eligible region found', 404, 'NO_ELIGIBLE_REGION');
+    }
+    json(res, { nearest: ranked[0], ranked });
+  });
 }

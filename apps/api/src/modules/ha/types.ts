@@ -132,3 +132,23 @@ export interface RestoreResult {
   estimatedDuration: string;
   message: string;
 }
+
+export type LoadBalancingStrategy = 'round_robin' | 'least_connections' | 'weighted';
+
+export interface RouteDecision {
+  nodeId: string;
+  hostname: string;
+  strategy: LoadBalancingStrategy;
+  activeConnections: number;
+  decidedAt: string;
+}
+
+export interface LoadBalancerTargetStats {
+  nodeId: string;
+  hostname: string;
+  role: NodeRole;
+  status: NodeStatus;
+  activeConnections: number;
+  totalRouted: number;
+  weight: number;
+}

@@ -34,5 +34,18 @@ export * from './users/index';
 // Test infrastructure (dev/test only — not imported in production bundles)
 export type * from './tests/index';
 
-export const CLOUD_VERSION  = '0.1.0';
+// The wildcard exports above collide on 3 names: the layer barrels (application/api/
+// infrastructure) each declare a lightweight DTO, while the corresponding domain module
+// (organizations/plugins/storage) declares a richer, branded-type view under the same
+// name. Both are intentional and kept — an explicit bare-name re-export is required to
+// resolve the ambiguity (TS2308); the domain module version wins under the bare name,
+// and the DTO version is exposed under an explicit alias.
+export type { OrganizationMemberView } from './organizations/index';
+export type { OrganizationMemberView as ApplicationOrganizationMemberView } from './application/index';
+export type { PluginListItem } from './plugins/index';
+export type { PluginListItem as ApiPluginListItem } from './api/index';
+export type { StoredFile } from './storage/index';
+export type { StoredFile as InfrastructureStoredFile } from './infrastructure/index';
+
+export const CLOUD_VERSION = '0.1.0';
 export const CLOUD_CODENAME = 'Atlas';

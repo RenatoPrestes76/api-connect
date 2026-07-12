@@ -166,3 +166,117 @@ model ActivationToken {
   @@index([companyId])
   @@index([expiresAt])
 }
+
+// ─── ATLAS CONTROL PLANE — ADMIN IDENTITY (Sprint 46.2) ───────────────────────
+//
+// Identity, RBAC, session, and audit tables for the Atlas Control Plane admin
+// portal (apps/admin) — distinct from AtlasAgent identity above. Declared here
+// as the durable schema; the running app currently backs this with an
+// in-memory store (see apps/api/src/modules/admin-identity), matching this
+// repo's convention of shipping feature-sprint modules DB-schema-first and
+// wiring real Prisma persistence in a dedicated migration sprint.
+
+model AtlasAdminRole {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String
+  isSystem    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users       AtlasAdminUser[]
+  permissions AtlasRolePermission[]
+}
+
+model AtlasPermission {
+  id          String @id @default(cuid())
+  resource    String
+  action      String
+  description String
+
+  createdAt DateTime @default(now())
+
+  roles AtlasRolePermission[]
+
+  @@unique([resource, action])
+}
+
+model AtlasRolePermission {
+  roleId       String
+  permissionId String
+
+  role       AtlasAdminRole  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission AtlasPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model AtlasAdminUser {
+  id                 String    @id @default(cuid())
+  name               String
+  email              String    @unique
+  passwordHash       String
+  roleId             String
+  status             String    @default("active") // active | suspended | disabled
+  mfaEnabled         Boolean   @default(false)
+  mustChangePassword Boolean   @default(false)
+  lastLogin          DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  role     AtlasAdminRole      @relation(fields: [roleId], references: [id])
+  sessions AtlasAdminSession[]
+
+  @@index([roleId])
+  @@index([email])
+}
+
+model AtlasAdminSession {
+  id               String    @id @default(cuid())
+  adminUserId      String
+  refreshTokenHash String    @unique
+  ip               String
+  userAgent        String
+  expiresAt        DateTime
+  revokedAt        DateTime?
+
+  createdAt DateTime @default(now())
+
+  adminUser AtlasAdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId])
+  @@index([refreshTokenHash])
+}
+
+model AtlasLoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ip        String
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([email, ip, createdAt])
+}
+
+// Audit trail for admin identity events (LOGIN/LOGOUT/etc.) and, in later
+// sprints, business actions (CREATE_COMPANY, UPDATE_RUNTIME, ...). Not one of
+// the six tables literally named in the Sprint 46.2 spec, but required by its
+// own "toda ação administrativa deve gerar registro" requirement.
+model AtlasAdminAuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  actorId    String?
+  actorEmail String
+  target     String?
+  ip         String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([action])
+  @@index([actorId])
+  @@index([createdAt])
+}

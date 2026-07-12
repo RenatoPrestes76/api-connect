@@ -4,6 +4,7 @@ import {
   generateTotpSecret,
   generateBackupCodes,
   appendEntry,
+  vaultAdapter,
   type EncryptedEnvelope,
 } from '@seltriva/aegis';
 import type {
@@ -86,6 +87,10 @@ class SecurityStore {
         rotatedAt: isoNow(-7),
         expiresAt: isoNow(83),
         tags: ['erp', 'connector'],
+        autoRotate: true,
+        rotationIntervalDays: 90,
+        vaultStatus: null,
+        vaultVersion: null,
         createdAt: isoNow(-90),
         updatedAt: isoNow(-7),
       },
@@ -100,6 +105,10 @@ class SecurityStore {
         rotatedAt: isoNow(-2),
         expiresAt: isoNow(28),
         tags: ['database', 'postgresql'],
+        autoRotate: true,
+        rotationIntervalDays: 30,
+        vaultStatus: 'not_configured',
+        vaultVersion: null,
         createdAt: isoNow(-180),
         updatedAt: isoNow(-2),
       },
@@ -114,6 +123,10 @@ class SecurityStore {
         rotatedAt: isoNow(-14),
         expiresAt: null,
         tags: ['ml', 'ai', 'openai'],
+        autoRotate: false,
+        rotationIntervalDays: null,
+        vaultStatus: 'not_configured',
+        vaultVersion: null,
         createdAt: isoNow(-60),
         updatedAt: isoNow(-14),
       },
@@ -128,6 +141,10 @@ class SecurityStore {
         rotatedAt: isoNow(-30),
         expiresAt: null,
         tags: ['slack', 'notification'],
+        autoRotate: false,
+        rotationIntervalDays: null,
+        vaultStatus: null,
+        vaultVersion: null,
         createdAt: isoNow(-30),
         updatedAt: isoNow(-30),
       },
@@ -142,6 +159,10 @@ class SecurityStore {
         rotatedAt: isoNow(-45),
         expiresAt: isoNow(315),
         tags: ['redis', 'cache'],
+        autoRotate: true,
+        rotationIntervalDays: 365,
+        vaultStatus: 'not_configured',
+        vaultVersion: null,
         createdAt: isoNow(-120),
         updatedAt: isoNow(-45),
       },
@@ -156,6 +177,10 @@ class SecurityStore {
         rotatedAt: isoNow(-180),
         expiresAt: isoNow(185),
         tags: ['jwt', 'auth', 'signing'],
+        autoRotate: false,
+        rotationIntervalDays: null,
+        vaultStatus: 'not_configured',
+        vaultVersion: null,
         createdAt: isoNow(-180),
         updatedAt: isoNow(-180),
       },
@@ -170,6 +195,10 @@ class SecurityStore {
         rotatedAt: isoNow(-3),
         expiresAt: isoNow(87),
         tags: ['atlas', 'signing', 'hmac'],
+        autoRotate: true,
+        rotationIntervalDays: 90,
+        vaultStatus: null,
+        vaultVersion: null,
         createdAt: isoNow(-365),
         updatedAt: isoNow(-3),
       },
@@ -1055,11 +1084,35 @@ class SecurityStore {
       .map(({ encryptedValue: _, ...rest }) => ({ ...rest, masked: maskSecret(rest.id) }));
   }
 
+  /** All secrets across all tenants — used internally by the rotation scheduler. */
+  listAllSecrets(): Secret[] {
+    return [...this.secrets.values()];
+  }
+
   getSecretById(id: string): Secret | undefined {
     return this.secrets.get(id);
   }
 
-  createSecret(
+  /** Attempts to sync a secret's plaintext to its declared external provider (Vault only, for now). */
+  private async syncToProvider(
+    provider: Secret['provider'],
+    path: string,
+    value: string
+  ): Promise<{
+    vaultStatus: Secret['vaultStatus'];
+    vaultVersion: number | null;
+  }> {
+    if (provider !== 'hashicorp_vault') return { vaultStatus: null, vaultVersion: null };
+    if (!vaultAdapter.isConfigured()) return { vaultStatus: 'not_configured', vaultVersion: null };
+    try {
+      const result = await vaultAdapter.write(path, { value });
+      return { vaultStatus: 'synced', vaultVersion: result.version };
+    } catch {
+      return { vaultStatus: 'error', vaultVersion: null };
+    }
+  }
+
+  async createSecret(
     tenantId: string,
     data: {
       name: string;
@@ -1069,10 +1122,17 @@ class SecurityStore {
       value: string;
       tags: string[];
       expiresAt: string | null;
+      autoRotate?: boolean;
+      rotationIntervalDays?: number | null;
     }
-  ): SecretMetadata {
+  ): Promise<SecretMetadata> {
     const id = `sec-${Date.now()}`;
     const now = new Date().toISOString();
+    const { vaultStatus, vaultVersion } = await this.syncToProvider(
+      data.provider,
+      `${tenantId}/${id}`,
+      data.value
+    );
     const secret: Secret = {
       id,
       tenantId,
@@ -1085,6 +1145,10 @@ class SecurityStore {
       rotatedAt: now,
       expiresAt: data.expiresAt,
       tags: data.tags,
+      autoRotate: data.autoRotate ?? false,
+      rotationIntervalDays: data.rotationIntervalDays ?? null,
+      vaultStatus,
+      vaultVersion,
       createdAt: now,
       updatedAt: now,
     };
@@ -1093,16 +1157,23 @@ class SecurityStore {
     return { ...rest, masked: maskSecret(id) };
   }
 
-  rotateSecret(id: string, newValue: string): SecretMetadata | undefined {
+  async rotateSecret(id: string, newValue: string): Promise<SecretMetadata | undefined> {
     const s = this.secrets.get(id);
     if (!s) return undefined;
     const now = new Date().toISOString();
+    const { vaultStatus, vaultVersion } = await this.syncToProvider(
+      s.provider,
+      `${s.tenantId}/${id}`,
+      newValue
+    );
     const updated: Secret = {
       ...s,
       encryptedValue: encrypt(newValue),
       version: s.version + 1,
       rotatedAt: now,
       updatedAt: now,
+      vaultStatus: s.provider === 'hashicorp_vault' ? vaultStatus : s.vaultStatus,
+      vaultVersion: s.provider === 'hashicorp_vault' ? vaultVersion : s.vaultVersion,
     };
     this.secrets.set(id, updated);
     const { encryptedValue: _, ...rest } = updated;
@@ -1111,6 +1182,15 @@ class SecurityStore {
 
   deleteSecret(id: string): boolean {
     return this.secrets.delete(id);
+  }
+
+  /** Extends a secret's expiry to start a new rotation cycle — used by the rotation scheduler. */
+  updateSecretExpiry(id: string, expiresAt: string | null): Secret | undefined {
+    const s = this.secrets.get(id);
+    if (!s) return undefined;
+    const updated: Secret = { ...s, expiresAt, updatedAt: new Date().toISOString() };
+    this.secrets.set(id, updated);
+    return updated;
   }
 
   // ─── MFA API ──────────────────────────────────────────────────────────────

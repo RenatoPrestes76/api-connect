@@ -128,6 +128,55 @@ export interface MetricsSnapshot {
   timestamp: string;
 }
 
+// ─── Bulkhead ─────────────────────────────────────────────────────────────────
+export interface BulkheadOptions {
+  maxConcurrent?: number;
+  maxQueue?: number;
+  queueTimeoutMs?: number;
+  clock?: () => number;
+}
+
+export interface BulkheadMetrics {
+  name: string;
+  maxConcurrent: number;
+  maxQueue: number;
+  active: number;
+  queued: number;
+  totalAccepted: number;
+  totalRejected: number;
+  totalTimedOut: number;
+  totalCompleted: number;
+}
+
+// ─── Retry / Timeout ────────────────────────────────────────────────────────
+export type JitterStrategy = 'none' | 'full' | 'equal';
+
+export interface RetryOptions {
+  maxAttempts?: number;
+  baseDelayMs?: number;
+  maxDelayMs?: number;
+  jitter?: JitterStrategy;
+  retryable?: (error: unknown) => boolean;
+  onAttempt?: (attempt: number, delayMs: number, error: unknown) => void;
+  clock?: () => number;
+  sleep?: (ms: number) => Promise<void>;
+}
+
+export interface RetryResult<T> {
+  value: T;
+  attempts: number;
+}
+
+export class TimeoutError extends Error {
+  constructor(
+    public readonly operationName: string,
+    public readonly timeoutMs: number
+  ) {
+    super(`Operation '${operationName}' timed out after ${timeoutMs}ms`);
+    this.name = 'TimeoutError';
+  }
+}
+
 // ─── Distributed Lock ─────────────────────────────────────────────────────────
 export interface LockAcquisition {
   resource: string;

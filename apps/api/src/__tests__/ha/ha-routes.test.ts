@@ -298,8 +298,9 @@ describe('POST /api/v1/ha/recovery-test', () => {
     });
     expect(status).toBe(201);
     expect(body.result).toBe('passed');
-    expect(body.rtoSeconds).toBe(12);
-    expect(body.rpoMinutes).toBe(5);
+    expect(typeof body.rtoSeconds).toBe('number');
+    expect(body.rtoSeconds).toBeGreaterThanOrEqual(0);
+    expect(body.rpoMinutes).toBe(0);
   });
 
   it('returns rtoSeconds and rpoMinutes in test result', async () => {
@@ -330,20 +331,32 @@ describe('POST /api/v1/ha/recovery-test', () => {
 
 describe('POST /api/v1/ha/restore', () => {
   it('initiates restore from a known backup', async () => {
+    const created = await post<any>(server.baseUrl, '/api/v1/ha/backup', {
+      tenantId: 'tenant-enterprise',
+      type: 'full',
+    });
+    const backupId = created.body.id;
+
     const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/restore', {
-      backupId: 'bk-001',
+      backupId,
       tenantId: 'tenant-enterprise',
       environment: 'staging',
     });
     expect(status).toBe(200);
     expect(body.success).toBe(true);
     expect(body.restoreId).toBeDefined();
-    expect(body.backupId).toBe('bk-001');
+    expect(body.backupId).toBe(backupId);
   });
 
   it('restore result contains estimatedDuration', async () => {
+    const created = await post<any>(server.baseUrl, '/api/v1/ha/backup', {
+      tenantId: 'tenant-professional',
+      type: 'incremental',
+    });
+    const backupId = created.body.id;
+
     const { body } = await post<any>(server.baseUrl, '/api/v1/ha/restore', {
-      backupId: 'bk-002',
+      backupId,
       tenantId: 'tenant-professional',
     });
     expect(body.estimatedDuration).toBeDefined();
@@ -359,8 +372,12 @@ describe('POST /api/v1/ha/restore', () => {
   });
 
   it('returns 400 when tenantId missing', async () => {
+    const created = await post<any>(server.baseUrl, '/api/v1/ha/backup', {
+      tenantId: 'tenant-enterprise',
+      type: 'full',
+    });
     const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/restore', {
-      backupId: 'bk-001',
+      backupId: created.body.id,
     });
     expect(status).toBe(400);
     expect(body.error.code).toBe('MISSING_FIELDS');

@@ -30,4 +30,11 @@ export function registerGlobalRoutes(router: { get: Function }): void {
       records,
     });
   });
+
+  // GET /api/v1/global/events
+  router.get('/api/v1/global/events', (ctx: RouteContext, res: ServerResponse) => {
+    const limit = Math.min(parseInt(ctx.query.get('limit') ?? '50', 10), 200);
+    const events = regionsStore.getGlobalEvents(limit);
+    json(res, { total: events.length, events });
+  });
 }

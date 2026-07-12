@@ -33,10 +33,17 @@ export interface Region {
   continent: string;
   flag: string;
   provider: string;
+  /** Real-world coordinates of the region's datacenter — basis for nearest-region selection (Sprint 47). */
+  latitude: number;
+  longitude: number;
   latencyMs: number;
   capacityPct: number;
   tenantsCount: number;
   createdAt: string;
+}
+
+export interface RegionWithDistance extends Region {
+  distanceKm: number;
 }
 
 export interface TenantRegion {
@@ -132,6 +139,20 @@ export interface FailoverResult {
   reason: string;
   failoveredAt: string;
   complianceChecked: boolean;
+  /** True when the target region was chosen automatically (nearest eligible active region), not specified by the caller. */
+  automatic: boolean;
+  distanceKm?: number;
+  message: string;
+}
+
+export interface ConfigReplicationResult {
+  sourceRegion: string;
+  targetRegion: string;
+  itemsReplicated: number;
+  sizeBytes: number;
+  checksum: string;
+  latencyMs: number;
+  syncedAt: string;
   message: string;
 }
 

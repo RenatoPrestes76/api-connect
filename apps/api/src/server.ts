@@ -3,8 +3,10 @@
  */
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { WebSocketServer } from 'ws';
 import { Router, apiError } from './http/router.js';
 import { authMiddleware } from './middleware/auth.js';
+import { securityHeaders } from './middleware/security-headers.js';
 import { createAgentAuthMiddleware } from './middleware/agent-auth.js';
 import { registerAtlasRoutes } from './routes/v1/atlas/index.js';
 import type { AtlasInfrastructureDeps } from './routes/v1/atlas/index.js';
@@ -29,6 +31,11 @@ import { registerRegionsRoutes } from './routes/v1/regions/index.js';
 import { registerGovernanceRoutes } from './routes/v1/governance/index.js';
 import { registerPrometheusRoutes } from './routes/v1/prometheus/index.js';
 import { registerHeliosRoutes } from './routes/v1/helios/index.js';
+import { registerAdminIdentityRoutes } from './routes/v1/admin-identity/index.js';
+import { registerControlPlaneRoutes } from './routes/v1/control-plane/index.js';
+import { registerFleetRoutes } from './routes/v1/fleet/index.js';
+import { registerChaosRoutes } from './routes/v1/chaos/index.js';
+import { wsHub } from './modules/fleet-ops/websocket-hub.js';
 import { healthHandler } from './routes/health.js';
 import {
   listOrganizations,
@@ -117,6 +124,7 @@ export function createApiServer(
 
   // Middleware
   router.use(requestLogger);
+  router.use(securityHeaders);
   router.use(authMiddleware);
   if (atlasDeps) {
     router.use(createAgentAuthMiddleware(atlasDeps.accessTokenRepo));
@@ -215,8 +223,41 @@ export function createApiServer(
   // HELIOS — ENTERPRISE DATA FABRIC & EVENT MESH — Sprint 45
   registerHeliosRoutes(router);
 
+  // ATLAS CONTROL PLANE — ADMIN IDENTITY & SECURITY — Sprint 46.2
+  registerAdminIdentityRoutes(router);
+
+  // ATLAS CONTROL PLANE — FUNCTIONAL MODULES — Sprint 46.3
+  registerControlPlaneRoutes(router);
+
+  // ATLAS CONTROL PLANE — OPERATIONS & FLEET MANAGEMENT — Sprint 46.4
+  registerFleetRoutes(router);
+
+  // ATLAS FORTRESS — HA & ENTERPRISE RESILIENCE — Sprint 47
+  registerChaosRoutes(router);
+
   const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
     withErrorBoundary(req, res, () => router.dispatch(req, res));
+  });
+
+  // Real-time notifications (Notification Engine's WEBSOCKET channel).
+  // Ticket-based auth: the browser mints a ticket via the authenticated REST
+  // endpoint POST /admin/fleet/notifications/ws-ticket, then connects here
+  // with ?ticket=... — a WS handshake can't carry an Authorization header.
+  const wss = new WebSocketServer({ noServer: true });
+  httpServer.on('upgrade', (req, socket, head) => {
+    const url = new URL(req.url ?? '/', 'http://localhost');
+    if (url.pathname !== '/admin/fleet/ws') {
+      socket.destroy();
+      return;
+    }
+    const ticket = url.searchParams.get('ticket');
+    const adminUserId = ticket ? wsHub.consumeTicket(ticket) : null;
+    if (!adminUserId) {
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+      socket.destroy();
+      return;
+    }
+    wss.handleUpgrade(req, socket, head, (ws) => wsHub.register(ws));
   });
 
   return httpServer;

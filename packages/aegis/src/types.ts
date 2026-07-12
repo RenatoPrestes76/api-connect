@@ -31,6 +31,13 @@ export interface Secret {
   rotatedAt: string;
   expiresAt: string | null;
   tags: string[];
+  /** Sprint 47 (ATLAS FORTRESS): whether the rotation scheduler auto-rotates this secret. */
+  autoRotate: boolean;
+  /** Days between automatic rotations; required when autoRotate is true. */
+  rotationIntervalDays: number | null;
+  /** Sync status against the external provider named in `provider` (only meaningful when provider !== 'internal'). */
+  vaultStatus: 'not_configured' | 'synced' | 'error' | null;
+  vaultVersion: number | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -157,10 +157,43 @@ enum FeatureFlagKind {
   VARIANT
 }
 
+// ─── TENANTS (Sprint 46.3) ──────────────────────────────────────────────────
+//
+// A Tenant is the top-level commercial account — typically 1:1 with an
+// Organization, but modeled as 1:many so an enterprise customer can hold
+// several Organizations (e.g. separate legal entities/business units) under
+// one contract. Added by the Atlas Control Plane; pre-existing standalone
+// Organizations keep tenantId nullable.
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  CHURNED
+}
+
+model Tenant {
+  id                  String       @id @default(cuid())
+  slug                String       @unique
+  name                String
+  status              TenantStatus @default(ACTIVE)
+  primaryContactEmail String?
+  metadata            Json?
+
+  organizations Organization[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([slug])
+  @@index([status])
+}
+
 // ─── ORGANIZATIONS ────────────────────────────────────────────────────────
 
 model Organization {
   id       String             @id @default(cuid())
+  tenantId String?
   slug     String             @unique
   name     String
   tier     OrganizationTier   @default(FREE)
@@ -169,6 +202,7 @@ model Organization {
   metadata Json?
   settings Json?
 
+  tenant       Tenant?              @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   members      OrganizationMember[]
   workspaces   Workspace[]
   licenses     License[]
@@ -179,6 +213,9 @@ model Organization {
   notifications Notification[]
   featureFlags FeatureFlag[]
   jobs         Job[]
+  deployments  Deployment[]
+  alerts         RuntimeAlert[]
+  deploymentJobs DeploymentJob[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -187,6 +224,7 @@ model Organization {
   @@index([slug])
   @@index([status])
   @@index([tier])
+  @@index([tenantId])
 }
 
 // ─── USERS ────────────────────────────────────────────────────────────────
@@ -272,6 +310,8 @@ model Environment {
   workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   agents       Agent[]
   featureFlags FeatureFlag[]
+  deployments  Deployment[]
+  deploymentJobs DeploymentJob[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -306,6 +346,8 @@ model Agent {
   heartbeats   AgentHeartbeat[]
   telemetry    AgentTelemetryLog[]
   commands     AgentCommand[]
+  healthSnapshots RuntimeHealthSnapshot[]
+  logs         RuntimeLog[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -393,6 +435,8 @@ model Plugin {
   publisher       User                 @relation(fields: [publisherId], references: [id])
   organizations   OrganizationPlugin[]
   versions        PluginVersion[]
+  deployments     Deployment[]
+  deploymentJobs  DeploymentJob[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -411,13 +455,55 @@ model PluginVersion {
   manifest  Json
   published Boolean @default(false)
 
-  plugin    Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  plugin        Plugin          @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  deployments   Deployment[]
+  deploymentJobs DeploymentJob[]
 
   publishedAt DateTime?
   createdAt   DateTime @default(now())
 
   @@unique([pluginId, version])
   @@index([pluginId])
+}
+
+// ─── DEPLOYMENTS (Sprint 46.3) ──────────────────────────────────────────────
+//
+// A rollout of a specific PluginVersion (connector) to an Organization's
+// Environment. Runtime (Agent) version updates are tracked directly on the
+// Agent record rather than through Deployment.
+
+enum DeploymentStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCEEDED
+  FAILED
+  ROLLED_BACK
+}
+
+model Deployment {
+  id              String           @id @default(cuid())
+  organizationId  String
+  environmentId   String
+  pluginId        String
+  pluginVersionId String
+  status          DeploymentStatus @default(PENDING)
+  triggeredBy     String?
+  error           String?
+  metadata        Json?
+
+  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  environment   Environment   @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  plugin        Plugin        @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  pluginVersion PluginVersion @relation(fields: [pluginVersionId], references: [id], onDelete: Cascade)
+
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([organizationId])
+  @@index([environmentId])
+  @@index([pluginId])
+  @@index([status])
 }
 
 model OrganizationPlugin {
@@ -643,4 +729,190 @@ model MetricSnapshot {
   @@index([agentId])
   @@index([kind])
   @@index([recordedAt])
+}
+
+// ─── FLEET OPERATIONS (Sprint 46.4) ─────────────────────────────────────────
+//
+// RuntimeMetric and RuntimeCommand are intentionally NOT new models here —
+// AgentHeartbeat (cpuPct/memPct/diskPct/latencyMs/status/receivedAt) and
+// AgentCommand (commandType/payload/result/error/issuedAt) already cover them
+// exactly. AuditTimeline is also not a new model — it's a presentation over
+// the existing admin audit log (see modules/admin-identity). Only genuinely
+// new concepts get new tables below.
+
+enum HealthCheckStatus {
+  PASS
+  WARN
+  FAIL
+}
+
+model RuntimeHealthSnapshot {
+  id       String @id @default(cuid())
+  agentId  String
+  status   HealthCheckStatus
+  checks   Json // [{ name, status, message }]
+  metadata Json?
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  recordedAt DateTime @default(now())
+
+  @@index([agentId])
+  @@index([recordedAt])
+}
+
+model RuntimeLog {
+  id       String  @id @default(cuid())
+  agentId  String
+  level    String // INFO | WARN | ERROR
+  message  String
+  source   String?
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([agentId])
+  @@index([level])
+  @@index([createdAt])
+}
+
+enum AlertType {
+  RUNTIME_OFFLINE
+  HIGH_CPU
+  HIGH_MEMORY
+  SYNC_FAILURE
+  CONNECTOR_STOPPED
+  DEPLOY_FAILED
+  TOKEN_EXPIRING
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AlertStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+model RuntimeAlert {
+  id             String        @id @default(cuid())
+  organizationId String
+  agentId        String?
+  pluginId       String?
+  deploymentId   String?
+  type           AlertType
+  severity       AlertSeverity
+  status         AlertStatus   @default(ACTIVE)
+  message        String
+  metadata       Json?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime  @default(now())
+  acknowledgedAt DateTime?
+  resolvedAt   DateTime?
+
+  @@index([organizationId])
+  @@index([agentId])
+  @@index([type])
+  @@index([severity])
+  @@index([status])
+}
+
+enum NotificationChannelKind {
+  EMAIL
+  WEBSOCKET
+  SLACK
+  TEAMS
+  WEBHOOK
+}
+
+enum FleetNotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model FleetNotification {
+  id            String                   @id @default(cuid())
+  channel       NotificationChannelKind
+  target        String
+  subject       String?
+  body          String
+  relatedAlertId String?
+  status        FleetNotificationStatus  @default(PENDING)
+  error         String?
+
+  createdAt DateTime  @default(now())
+  sentAt    DateTime?
+
+  @@index([channel])
+  @@index([status])
+  @@index([relatedAlertId])
+}
+
+enum DeploymentMode {
+  MANUAL
+  AUTOMATIC
+  SCHEDULED
+}
+
+enum DeploymentJobStatus {
+  PENDING_APPROVAL
+  SCHEDULED
+  APPROVED
+  IN_PROGRESS
+  SUCCEEDED
+  FAILED
+  REJECTED
+  ROLLED_BACK
+}
+
+model DeploymentJob {
+  id              String               @id @default(cuid())
+  organizationId  String
+  environmentId   String
+  pluginId        String
+  pluginVersionId String
+  mode            DeploymentMode
+  status          DeploymentJobStatus  @default(PENDING_APPROVAL)
+  scheduledAt     DateTime?
+  requestedBy     String?
+  approvedBy      String?
+  error           String?
+
+  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  environment   Environment   @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  plugin        Plugin        @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  pluginVersion PluginVersion @relation(fields: [pluginVersionId], references: [id], onDelete: Cascade)
+  tasks         DeploymentTask[]
+
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  @@index([organizationId])
+  @@index([environmentId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model DeploymentTask {
+  id     String @id @default(cuid())
+  jobId  String
+  name   String
+  status String // PENDING | RUNNING | SUCCEEDED | FAILED
+  order  Int
+
+  job DeploymentJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  @@index([jobId])
 }

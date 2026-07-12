@@ -20,6 +20,11 @@ export interface RouteContext {
   orgId?: string;
   /** Set by agent-auth middleware for Atlas agent routes */
   agentId?: string;
+  /** Set by admin-auth middleware for Atlas Control Plane admin routes */
+  adminUserId?: string;
+  adminEmail?: string;
+  adminRole?: string;
+  adminPermissions?: string[];
 }
 
 export type RouteHandler = (ctx: RouteContext, res: ServerResponse) => Promise<void>;

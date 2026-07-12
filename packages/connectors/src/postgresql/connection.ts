@@ -10,11 +10,7 @@
  *   - Graceful shutdown (drains active queries before closing)
  */
 import { Pool, type PoolConfig, type PoolClient } from 'pg';
-import {
-  ConnectionError,
-  type PostgreSQLConnectorConfig,
-  type SSLConfig,
-} from './types.js';
+import { ConnectionError, type PostgreSQLConnectorConfig, type SSLConfig } from './types.js';
 
 // ─── Pool Event Types ─────────────────────────────────────────────────────────
 
@@ -36,23 +32,34 @@ export class PostgreSQLConnectionManager {
     this._config = config;
     const poolConfig = this._buildPoolConfig(config);
 
-    this._pool = new Pool(poolConfig);
+    const pool = new Pool(poolConfig);
 
     // Forward pool-level errors (idle client errors)
-    this._pool.on('error', (err: Error) => {
+    pool.on('error', (err: Error) => {
       for (const handler of this._errorHandlers) {
-        try { handler(err); } catch { /* non-fatal */ }
+        try {
+          handler(err);
+        } catch {
+          /* non-fatal */
+        }
       }
     });
 
-    // Verify connectivity + enforce READ ONLY at session level
-    const client = await this._pool.connect().catch((err: unknown) => {
+    // Verify connectivity + enforce READ ONLY at session level. Only assign to this._pool
+    // once the connection genuinely succeeds — otherwise isConnected would report true for
+    // a pool that never connected.
+    const client = await pool.connect().catch(async (err: unknown) => {
+      await pool.end().catch(() => {
+        /* pool never connected — nothing to drain */
+      });
       throw new ConnectionError(
         `Cannot connect to ${config.host}:${config.port}/${config.database}: ` +
-        (err instanceof Error ? err.message : String(err)),
-        err,
+          (err instanceof Error ? err.message : String(err)),
+        err
       );
     });
+
+    this._pool = pool;
 
     try {
       // Enforce read-only at the session level — second line of defense
@@ -96,7 +103,7 @@ export class PostgreSQLConnectionManager {
 
   async query<T extends Record<string, unknown>>(
     sql: string,
-    params?: unknown[],
+    params?: unknown[]
   ): Promise<{ rows: T[]; rowCount: number }> {
     const pool = this._requirePool();
     const result = await pool.query<T>(sql, params);
@@ -111,9 +118,7 @@ export class PostgreSQLConnectionManager {
   async ping(): Promise<{ latencyMs: number; serverVersion: string }> {
     const pool = this._requirePool();
     const start = Date.now();
-    const result = await pool.query<{ version: string }>(
-      'SELECT version() AS version',
-    );
+    const result = await pool.query<{ version: string }>('SELECT version() AS version');
     const latencyMs = Date.now() - start;
     const version = result.rows[0]?.version ?? 'unknown';
     return { latencyMs, serverVersion: version };
@@ -124,17 +129,23 @@ export class PostgreSQLConnectionManager {
   poolStats(): { total: number; idle: number; waiting: number } {
     if (!this._pool) return { total: 0, idle: 0, waiting: 0 };
     return {
-      total:   this._pool.totalCount,
-      idle:    this._pool.idleCount,
+      total: this._pool.totalCount,
+      idle: this._pool.idleCount,
       waiting: this._pool.waitingCount,
     };
   }
 
   // ─── Getters ──────────────────────────────────────────────────────────────
 
-  get isConnected(): boolean { return this._pool !== null; }
-  get connectedAt(): Date | null { return this._connectedAt; }
-  get config(): PostgreSQLConnectorConfig | null { return this._config; }
+  get isConnected(): boolean {
+    return this._pool !== null;
+  }
+  get connectedAt(): Date | null {
+    return this._connectedAt;
+  }
+  get config(): PostgreSQLConnectorConfig | null {
+    return this._config;
+  }
 
   // ─── Error Listener ───────────────────────────────────────────────────────
 
@@ -158,34 +169,32 @@ export class PostgreSQLConnectionManager {
     const ssl = this._buildSSLConfig(config.ssl);
 
     return {
-      host:               config.host,
-      port:               config.port,
-      database:           config.database,
-      user:               config.user,
-      password:           config.password,
+      host: config.host,
+      port: config.port,
+      database: config.database,
+      user: config.user,
+      password: config.password,
       ssl,
-      application_name:   config.applicationName ?? 'atlas-connect',
-      statement_timeout:  config.statementTimeoutMs ?? 30_000,
+      application_name: config.applicationName ?? 'atlas-connect',
+      statement_timeout: config.statementTimeoutMs ?? 30_000,
       connectionTimeoutMillis: config.connectionTimeoutMs ?? 10_000,
-      idleTimeoutMillis:  config.idleTimeoutMs ?? 300_000,
-      max:                config.maxPoolSize ?? 10,
-      keepAlive:          config.keepAlive ?? true,
+      idleTimeoutMillis: config.idleTimeoutMs ?? 300_000,
+      max: config.maxPoolSize ?? 10,
+      keepAlive: config.keepAlive ?? true,
       keepAliveInitialDelayMillis: config.keepAliveInitialDelayMs ?? 10_000,
     };
   }
 
-  private _buildSSLConfig(
-    ssl: PostgreSQLConnectorConfig['ssl'],
-  ): PoolConfig['ssl'] {
+  private _buildSSLConfig(ssl: PostgreSQLConnectorConfig['ssl']): PoolConfig['ssl'] {
     if (ssl === false || ssl === undefined) return false;
     if (ssl === true) return { rejectUnauthorized: true };
 
     const sslConf = ssl as SSLConfig;
     return {
       rejectUnauthorized: sslConf.rejectUnauthorized ?? true,
-      ca:   sslConf.ca,
+      ca: sslConf.ca,
       cert: sslConf.cert,
-      key:  sslConf.key,
+      key: sslConf.key,
     };
   }
 }

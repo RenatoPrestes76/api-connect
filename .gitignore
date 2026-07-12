@@ -69,3 +69,6 @@ docker-compose.override.yml
 tmp/
 temp/
 *.tmp
+
+# Local runtime data (e.g. disaster-recovery backup snapshots)
+.data/

@@ -52,6 +52,15 @@ export function registerHaBackupRoutes(router: { get: Function; post: Function }
     } catch (err) {
       const code = (err as { code?: string }).code;
       if (code === 'BACKUP_NOT_FOUND') return apiError(res, 'Backup not found', 404, 'NOT_FOUND');
+      if (code === 'BACKUP_FILE_MISSING')
+        return apiError(res, 'Backup file is missing from disk', 410, 'BACKUP_FILE_MISSING');
+      if (code === 'BACKUP_CHECKSUM_MISMATCH')
+        return apiError(
+          res,
+          'Backup file checksum does not match the recorded checksum',
+          409,
+          'CHECKSUM_MISMATCH'
+        );
       return apiError(res, (err as Error).message, 500, 'RESTORE_ERROR');
     }
   });

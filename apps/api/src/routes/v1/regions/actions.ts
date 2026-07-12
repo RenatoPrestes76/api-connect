@@ -51,9 +51,31 @@ export function registerRegionActionRoutes(router: { post: Function }): void {
       reason,
       failoveredAt: nowIso(),
       complianceChecked: true,
+      automatic: false,
       message: `Tenant ${tenantId} successfully failed over to ${toRegion}`,
     };
 
+    json(res, result, 201);
+  });
+
+  // POST /api/v1/regions/failover/auto — picks the nearest eligible active region automatically.
+  router.post('/api/v1/regions/failover/auto', (ctx: RouteContext, res: ServerResponse) => {
+    const body = (ctx.body as any) ?? {};
+    const { tenantId, reason = 'Automatic geographic failover' } = body;
+
+    if (!tenantId) return apiError(res, '"tenantId" is required', 400, 'MISSING_FIELDS');
+
+    const result = regionsStore.automaticGeoFailover(tenantId, reason);
+    if (result === 'TENANT_NOT_FOUND')
+      return apiError(res, `Tenant "${tenantId}" not found`, 404, 'NOT_FOUND');
+    if (result === 'NO_ELIGIBLE_REGION') {
+      return apiError(
+        res,
+        'No eligible active region available for automatic failover',
+        409,
+        'NO_ELIGIBLE_REGION'
+      );
+    }
     json(res, result, 201);
   });
 
@@ -137,27 +159,22 @@ export function registerRegionActionRoutes(router: { post: Function }): void {
     if (!target)
       return apiError(res, `Region "${targetRegion}" not found`, 404, 'REGION_NOT_FOUND');
 
-    const itemsSynced = scope === 'configs' ? 24 : scope === 'policies' ? 9 : 147;
-    const latencyMs = Math.abs(source.latencyMs - target.latencyMs) + 50;
+    // Genuine config replication: real payload, real byte size, real SHA-256 checksum,
+    // itemsReplicated derived from actual compliance-policy/tenant-placement records.
+    const replicated = regionsStore.replicateConfig(sourceRegion, targetRegion);
 
-    // Update replication record
-    regionsStore.upsertReplication({
-      sourceRegion,
-      targetRegion,
-      status: 'in_sync',
-      latencyMs,
-      lastSynced: nowIso(),
-      itemsReplicated: itemsSynced,
-      pendingItems: 0,
-    });
-
-    // Record event
     regionsStore.addGlobalEvent({
       type: 'sync.completed',
       region: sourceRegion,
       severity: 'info',
-      message: `Sync completed: ${sourceRegion} → ${targetRegion} (${itemsSynced} items, ${latencyMs}ms, scope: ${scope})`,
-      payload: { sourceRegion, targetRegion, scope, itemsSynced, latencyMs },
+      message: `Sync completed: ${sourceRegion} → ${targetRegion} (${replicated.itemsReplicated} items, ${replicated.latencyMs}ms, scope: ${scope})`,
+      payload: {
+        sourceRegion,
+        targetRegion,
+        scope,
+        itemsSynced: replicated.itemsReplicated,
+        checksum: replicated.checksum,
+      },
     });
 
     const result: SyncResult = {
@@ -165,10 +182,10 @@ export function registerRegionActionRoutes(router: { post: Function }): void {
       sourceRegion,
       targetRegion,
       scope,
-      itemsSynced,
-      latencyMs,
-      syncedAt: nowIso(),
-      message: `Sync completed: ${itemsSynced} items replicated from ${sourceRegion} to ${targetRegion}`,
+      itemsSynced: replicated.itemsReplicated,
+      latencyMs: replicated.latencyMs,
+      syncedAt: replicated.syncedAt,
+      message: `Sync completed: ${replicated.itemsReplicated} items replicated from ${sourceRegion} to ${targetRegion}`,
     };
 
     json(res, result, 201);
