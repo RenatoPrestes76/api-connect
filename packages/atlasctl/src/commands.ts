@@ -19,7 +19,11 @@ function result<T>(command: CtlCommand, data: T, start: number): CommandResult<T
   };
 }
 
-function errResult(command: CtlCommand, message: string, start: number): CommandResult<null> {
+function errResult<T = never>(
+  command: CtlCommand,
+  message: string,
+  start: number
+): CommandResult<T> {
   return {
     status: 'error',
     command,

@@ -90,7 +90,7 @@ class TitanStore {
   private slos = new Map<string, SloDefinition>();
   private backups: Backup[] = [];
   private drTests: DrTest[] = [];
-  private drConfig: DrConfig;
+  private drConfig!: DrConfig; // assigned synchronously by seed() -> seedDr(), called from the constructor
 
   readonly circuits: CircuitBreakerRegistry;
 

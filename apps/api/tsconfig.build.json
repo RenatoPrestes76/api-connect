@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "incremental": false,
+    "outDir": "dist",
+    "rootDir": "src",
+    // Production build resolves @seltriva/* via each sibling package's own compiled
+    // dist/ through normal node_modules resolution (matching container runtime),
+    // not via the root tsconfig's dev-time "paths" mapping to raw sibling src/ — that
+    // mapping pulls sibling .ts sources into this program and breaks rootDir/output
+    // layout (emits under dist/apps/api/src/... instead of dist/...).
+    "paths": {}
+  },
+  "exclude": ["node_modules", "dist", "src/**/__tests__/**", "src/**/*.test.ts", "src/**/*.spec.ts"]
+}

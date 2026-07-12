@@ -8,7 +8,7 @@
  *   if (r.isOk()) console.log(r.value);
  */
 export type Result<T, E = string> =
-  | { readonly ok: true;  readonly value: T }
+  | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly error: E };
 
 export const Result = {
@@ -63,11 +63,14 @@ export const Result = {
 // ─── Guard ──────────────────────────────────────────────────────────────────
 
 /** Throws if result is an error. Returns value if ok. */
-export function unwrap<T>(result: Result<T>): T {
+export function unwrap<T, E = string>(result: Result<T, E>): T {
   if (!result.ok) {
-    const msg = typeof result.error === 'string'
-      ? result.error
-      : (result.error instanceof Error ? result.error.message : JSON.stringify(result.error));
+    const msg =
+      typeof result.error === 'string'
+        ? result.error
+        : result.error instanceof Error
+          ? result.error.message
+          : JSON.stringify(result.error);
     throw new Error(`Result.unwrap failed: ${msg}`);
   }
   return result.value;

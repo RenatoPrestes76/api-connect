@@ -1356,7 +1356,9 @@ class SecurityStore {
     return framework ? all.filter((c) => c.framework === framework) : all;
   }
 
-  createDataRequest(data: Omit<DataRequest, 'id' | 'requestedAt' | 'deadlineAt'>): DataRequest {
+  createDataRequest(
+    data: Omit<DataRequest, 'id' | 'requestedAt' | 'deadlineAt' | 'completedAt'>
+  ): DataRequest {
     const id = `dr-${Date.now()}`;
     const now = new Date();
     const deadline = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);

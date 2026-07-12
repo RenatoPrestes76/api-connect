@@ -118,7 +118,7 @@ export type ConditionOperator = 'eq' | 'neq' | 'in' | 'notIn' | 'gt' | 'lt' | 'm
 export interface PolicyCondition {
   attribute: string;
   operator: ConditionOperator;
-  value: string | number | string[];
+  value: string | number | string[] | number[];
 }
 
 export interface Policy {

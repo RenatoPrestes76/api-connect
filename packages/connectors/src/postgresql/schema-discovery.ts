@@ -20,8 +20,13 @@
  */
 import type { QueryRunner } from './query-runner.js';
 import {
-  asSchemaName, asTableName, asColumnName, asIndexName, asConstraintName,
-  asSequenceName, asViewName,
+  asSchemaName,
+  asTableName,
+  asColumnName,
+  asIndexName,
+  asConstraintName,
+  asSequenceName,
+  asViewName,
   type SchemaName,
   type ColumnMetadata,
   type TableMetadata,
@@ -37,18 +42,21 @@ import {
 
 // ─── Raw Row Types (pg returns everything as string) ─────────────────────────
 
-interface RawSchema {
+// Plain `type` aliases (not `interface`) so these structurally satisfy the
+// `Record<string, unknown>` generic constraint on QueryRunner.query<T>() —
+// TypeScript interfaces don't automatically satisfy index-signature constraints.
+type RawSchema = {
   schema_name: string;
   schema_owner: string;
-}
+};
 
-interface RawTable {
+type RawTable = {
   table_name: string;
   comment: string | null;
   is_partitioned: boolean;
-}
+};
 
-interface RawColumn {
+type RawColumn = {
   column_name: string;
   ordinal_position: string;
   column_default: string | null;
@@ -64,14 +72,14 @@ interface RawColumn {
   is_generated: string;
   generation_expression: string | null;
   comment: string | null;
-}
+};
 
-interface RawPK {
+type RawPK = {
   constraint_name: string;
   column_name: string;
-}
+};
 
-interface RawFK {
+type RawFK = {
   constraint_name: string;
   column_name: string;
   foreign_schema: string;
@@ -79,31 +87,31 @@ interface RawFK {
   foreign_column: string;
   update_rule: string;
   delete_rule: string;
-}
+};
 
-interface RawIndex {
+type RawIndex = {
   index_name: string;
   definition: string;
   is_unique: boolean;
   is_primary: boolean;
   index_type: string;
   column_names: string;
-}
+};
 
-interface RawView {
+type RawView = {
   view_name: string;
   definition: string;
   comment: string | null;
-}
+};
 
-interface RawMatView {
+type RawMatView = {
   view_name: string;
   definition: string;
   has_data: boolean;
   comment: string | null;
-}
+};
 
-interface RawSequence {
+type RawSequence = {
   sequence_name: string;
   data_type: string;
   start_value: string;
@@ -111,24 +119,24 @@ interface RawSequence {
   minimum_value: string;
   maximum_value: string;
   cycle_option: string;
-}
+};
 
-interface RawEnum {
+type RawEnum = {
   enum_name: string;
   values: string[];
-}
+};
 
-interface RawExtension {
+type RawExtension = {
   name: string;
   version: string;
-}
+};
 
-interface RawServerInfo {
+type RawServerInfo = {
   server_version: string;
   encoding: string;
   collation: string;
   timezone: string;
-}
+};
 
 // ─── SchemaDiscovery ──────────────────────────────────────────────────────────
 
@@ -158,9 +166,9 @@ export class SchemaDiscovery {
 
     return {
       serverVersion: row.server_version,
-      encoding:      row.encoding,
-      collation:     row.collation,
-      timezone:      row.timezone,
+      encoding: row.encoding,
+      collation: row.collation,
+      timezone: row.timezone,
     };
   }
 
@@ -187,19 +195,22 @@ export class SchemaDiscovery {
       ORDER BY schema_name
     `);
     return rows.map((r) => ({
-      name:  asSchemaName(r.schema_name),
+      name: asSchemaName(r.schema_name),
       owner: r.schema_owner,
     }));
   }
 
   // ─── Tables ─────────────────────────────────────────────────────────────
 
-  async getTables(schema: SchemaName): Promise<Array<{
-    name: typeof asTableName extends (s: string) => infer R ? R : never;
-    comment: string | null;
-    isPartitioned: boolean;
-  }>> {
-    const { rows } = await this._runner.query<RawTable>(`
+  async getTables(schema: SchemaName): Promise<
+    Array<{
+      name: typeof asTableName extends (s: string) => infer R ? R : never;
+      comment: string | null;
+      isPartitioned: boolean;
+    }>
+  > {
+    const { rows } = await this._runner.query<RawTable>(
+      `
       SELECT
         t.table_name,
         obj_description(pgc.oid, 'pg_class')    AS comment,
@@ -215,19 +226,25 @@ export class SchemaDiscovery {
       WHERE t.table_schema = $1
         AND t.table_type   = 'BASE TABLE'
       ORDER BY t.table_name
-    `, [schema]);
+    `,
+      [schema]
+    );
 
     return rows.map((r) => ({
-      name:          asTableName(r.table_name),
-      comment:       r.comment,
+      name: asTableName(r.table_name),
+      comment: r.comment,
       isPartitioned: Boolean(r.is_partitioned),
     }));
   }
 
   // ─── Columns ────────────────────────────────────────────────────────────
 
-  async getColumns(schema: SchemaName, table: ReturnType<typeof asTableName>): Promise<ColumnMetadata[]> {
-    const { rows } = await this._runner.query<RawColumn>(`
+  async getColumns(
+    schema: SchemaName,
+    table: ReturnType<typeof asTableName>
+  ): Promise<ColumnMetadata[]> {
+    const { rows } = await this._runner.query<RawColumn>(
+      `
       SELECT
         c.column_name,
         c.ordinal_position,
@@ -253,31 +270,38 @@ export class SchemaDiscovery {
       WHERE c.table_schema = $1
         AND c.table_name   = $2
       ORDER BY c.ordinal_position
-    `, [schema, table]);
+    `,
+      [schema, table]
+    );
 
     return rows.map((r) => ({
-      name:                 asColumnName(r.column_name),
-      ordinalPosition:      parseInt(r.ordinal_position, 10),
-      dataType:             r.data_type,
-      userDefinedType:      r.udt_name !== r.data_type ? r.udt_name : null,
-      isNullable:           r.is_nullable === 'YES',
-      defaultValue:         r.column_default,
-      characterMaxLength:   r.character_maximum_length !== null ? parseInt(r.character_maximum_length, 10) : null,
-      numericPrecision:     r.numeric_precision !== null ? parseInt(r.numeric_precision, 10) : null,
-      numericScale:         r.numeric_scale !== null ? parseInt(r.numeric_scale, 10) : null,
-      datetimePrecision:    r.datetime_precision !== null ? parseInt(r.datetime_precision, 10) : null,
-      isIdentity:           r.is_identity === 'YES',
-      identityGeneration:   r.identity_generation as ColumnMetadata['identityGeneration'],
-      isGenerated:          r.is_generated === 'ALWAYS',
+      name: asColumnName(r.column_name),
+      ordinalPosition: parseInt(r.ordinal_position, 10),
+      dataType: r.data_type,
+      userDefinedType: r.udt_name !== r.data_type ? r.udt_name : null,
+      isNullable: r.is_nullable === 'YES',
+      defaultValue: r.column_default,
+      characterMaxLength:
+        r.character_maximum_length !== null ? parseInt(r.character_maximum_length, 10) : null,
+      numericPrecision: r.numeric_precision !== null ? parseInt(r.numeric_precision, 10) : null,
+      numericScale: r.numeric_scale !== null ? parseInt(r.numeric_scale, 10) : null,
+      datetimePrecision: r.datetime_precision !== null ? parseInt(r.datetime_precision, 10) : null,
+      isIdentity: r.is_identity === 'YES',
+      identityGeneration: r.identity_generation as ColumnMetadata['identityGeneration'],
+      isGenerated: r.is_generated === 'ALWAYS',
       generationExpression: r.generation_expression,
-      comment:              r.comment,
+      comment: r.comment,
     }));
   }
 
   // ─── Primary Key ────────────────────────────────────────────────────────
 
-  async getPrimaryKey(schema: SchemaName, table: ReturnType<typeof asTableName>): Promise<PrimaryKeyMetadata | null> {
-    const { rows } = await this._runner.query<RawPK>(`
+  async getPrimaryKey(
+    schema: SchemaName,
+    table: ReturnType<typeof asTableName>
+  ): Promise<PrimaryKeyMetadata | null> {
+    const { rows } = await this._runner.query<RawPK>(
+      `
       SELECT
         tc.constraint_name,
         kcu.column_name
@@ -290,20 +314,26 @@ export class SchemaDiscovery {
         AND tc.table_schema    = $1
         AND tc.table_name      = $2
       ORDER BY kcu.ordinal_position
-    `, [schema, table]);
+    `,
+      [schema, table]
+    );
 
     if (rows.length === 0) return null;
 
     return {
       constraintName: asConstraintName(rows[0]!.constraint_name),
-      columns:        rows.map((r) => asColumnName(r.column_name)),
+      columns: rows.map((r) => asColumnName(r.column_name)),
     };
   }
 
   // ─── Foreign Keys ────────────────────────────────────────────────────────
 
-  async getForeignKeys(schema: SchemaName, table: ReturnType<typeof asTableName>): Promise<ForeignKeyMetadata[]> {
-    const { rows } = await this._runner.query<RawFK>(`
+  async getForeignKeys(
+    schema: SchemaName,
+    table: ReturnType<typeof asTableName>
+  ): Promise<ForeignKeyMetadata[]> {
+    const { rows } = await this._runner.query<RawFK>(
+      `
       SELECT
         tc.constraint_name,
         kcu.column_name,
@@ -326,7 +356,9 @@ export class SchemaDiscovery {
         AND tc.table_schema    = $1
         AND tc.table_name      = $2
       ORDER BY tc.constraint_name, kcu.ordinal_position
-    `, [schema, table]);
+    `,
+      [schema, table]
+    );
 
     // Group by constraint name
     const groups = new Map<string, ForeignKeyMetadata>();
@@ -334,18 +366,20 @@ export class SchemaDiscovery {
       const key = r.constraint_name;
       if (!groups.has(key)) {
         groups.set(key, {
-          constraintName:    asConstraintName(r.constraint_name),
-          columns:           [],
-          referencedSchema:  asSchemaName(r.foreign_schema),
-          referencedTable:   asTableName(r.foreign_table),
+          constraintName: asConstraintName(r.constraint_name),
+          columns: [],
+          referencedSchema: asSchemaName(r.foreign_schema),
+          referencedTable: asTableName(r.foreign_table),
           referencedColumns: [],
-          updateRule:        r.update_rule,
-          deleteRule:        r.delete_rule,
+          updateRule: r.update_rule,
+          deleteRule: r.delete_rule,
         });
       }
       const fk = groups.get(key)!;
       (fk.columns as ReturnType<typeof asColumnName>[]).push(asColumnName(r.column_name));
-      (fk.referencedColumns as ReturnType<typeof asColumnName>[]).push(asColumnName(r.foreign_column));
+      (fk.referencedColumns as ReturnType<typeof asColumnName>[]).push(
+        asColumnName(r.foreign_column)
+      );
     }
 
     return [...groups.values()];
@@ -353,8 +387,12 @@ export class SchemaDiscovery {
 
   // ─── Indexes ─────────────────────────────────────────────────────────────
 
-  async getIndexes(schema: SchemaName, table: ReturnType<typeof asTableName>): Promise<IndexMetadata[]> {
-    const { rows } = await this._runner.query<RawIndex>(`
+  async getIndexes(
+    schema: SchemaName,
+    table: ReturnType<typeof asTableName>
+  ): Promise<IndexMetadata[]> {
+    const { rows } = await this._runner.query<RawIndex>(
+      `
       SELECT
         i.indexname                                               AS index_name,
         i.indexdef                                                AS definition,
@@ -386,14 +424,16 @@ export class SchemaDiscovery {
       WHERE i.schemaname = $1
         AND i.tablename  = $2
       ORDER BY i.indexname
-    `, [schema, table]);
+    `,
+      [schema, table]
+    );
 
     return rows.map((r) => ({
-      name:       asIndexName(r.index_name),
-      isUnique:   Boolean(r.is_unique),
-      isPrimary:  Boolean(r.is_primary),
-      indexType:  r.index_type,
-      columns:    r.column_names ? r.column_names.split(', ').filter(Boolean) : [],
+      name: asIndexName(r.index_name),
+      isUnique: Boolean(r.is_unique),
+      isPrimary: Boolean(r.is_primary),
+      indexType: r.index_type,
+      columns: r.column_names ? r.column_names.split(', ').filter(Boolean) : [],
       definition: r.definition,
     }));
   }
@@ -401,7 +441,8 @@ export class SchemaDiscovery {
   // ─── Views ────────────────────────────────────────────────────────────────
 
   async getViews(schema: SchemaName): Promise<ViewMetadata[]> {
-    const { rows } = await this._runner.query<RawView>(`
+    const { rows } = await this._runner.query<RawView>(
+      `
       SELECT
         v.table_name                                    AS view_name,
         v.view_definition                               AS definition,
@@ -414,7 +455,9 @@ export class SchemaDiscovery {
        AND pgn.nspname = v.table_schema
       WHERE v.table_schema = $1
       ORDER BY v.table_name
-    `, [schema]);
+    `,
+      [schema]
+    );
 
     const views: ViewMetadata[] = [];
     for (const r of rows) {
@@ -428,7 +471,8 @@ export class SchemaDiscovery {
   // ─── Materialized Views ───────────────────────────────────────────────────
 
   async getMaterializedViews(schema: SchemaName): Promise<MaterializedViewMetadata[]> {
-    const { rows } = await this._runner.query<RawMatView>(`
+    const { rows } = await this._runner.query<RawMatView>(
+      `
       SELECT
         mv.matviewname                               AS view_name,
         mv.definition,
@@ -442,7 +486,9 @@ export class SchemaDiscovery {
        AND pgn.nspname = mv.schemaname
       WHERE mv.schemaname = $1
       ORDER BY mv.matviewname
-    `, [schema]);
+    `,
+      [schema]
+    );
 
     const matViews: MaterializedViewMetadata[] = [];
     for (const r of rows) {
@@ -452,8 +498,8 @@ export class SchemaDiscovery {
         schema,
         name,
         definition: r.definition ?? '',
-        hasData:    Boolean(r.has_data),
-        comment:    r.comment,
+        hasData: Boolean(r.has_data),
+        comment: r.comment,
         columns,
       });
     }
@@ -463,7 +509,8 @@ export class SchemaDiscovery {
   // ─── Sequences ───────────────────────────────────────────────────────────
 
   async getSequences(schema: SchemaName): Promise<SequenceMetadata[]> {
-    const { rows } = await this._runner.query<RawSequence>(`
+    const { rows } = await this._runner.query<RawSequence>(
+      `
       SELECT
         sequence_name,
         data_type,
@@ -475,24 +522,27 @@ export class SchemaDiscovery {
       FROM information_schema.sequences
       WHERE sequence_schema = $1
       ORDER BY sequence_name
-    `, [schema]);
+    `,
+      [schema]
+    );
 
     return rows.map((r) => ({
       schema,
-      name:      asSequenceName(r.sequence_name),
-      dataType:  r.data_type,
-      start:     r.start_value,
+      name: asSequenceName(r.sequence_name),
+      dataType: r.data_type,
+      start: r.start_value,
       increment: r.increment,
-      minimum:   r.minimum_value,
-      maximum:   r.maximum_value,
-      cycle:     r.cycle_option === 'YES',
+      minimum: r.minimum_value,
+      maximum: r.maximum_value,
+      cycle: r.cycle_option === 'YES',
     }));
   }
 
   // ─── Enums ───────────────────────────────────────────────────────────────
 
   async getEnums(schema: SchemaName): Promise<EnumMetadata[]> {
-    const { rows } = await this._runner.query<RawEnum>(`
+    const { rows } = await this._runner.query<RawEnum>(
+      `
       SELECT
         t.typname                                        AS enum_name,
         array_agg(e.enumlabel ORDER BY e.enumsortorder) AS values
@@ -504,18 +554,24 @@ export class SchemaDiscovery {
       WHERE n.nspname = $1
       GROUP BY t.typname
       ORDER BY t.typname
-    `, [schema]);
+    `,
+      [schema]
+    );
 
     return rows.map((r) => ({
       schema,
-      name:   r.enum_name,
+      name: r.enum_name,
       values: Array.isArray(r.values) ? r.values : [],
     }));
   }
 
   // ─── Full Table Discovery ────────────────────────────────────────────────
 
-  async discoverTable(schema: SchemaName, tableName: ReturnType<typeof asTableName>, isPartitioned: boolean): Promise<TableMetadata> {
+  async discoverTable(
+    schema: SchemaName,
+    tableName: ReturnType<typeof asTableName>,
+    isPartitioned: boolean
+  ): Promise<TableMetadata> {
     const [columns, primaryKey, foreignKeys, indexes] = await Promise.all([
       this.getColumns(schema, tableName),
       this.getPrimaryKey(schema, tableName),

@@ -3,6 +3,7 @@ import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import { evaluatePoliciesWithAudit } from '@seltriva/aegis';
+import type { PolicyContext } from '@seltriva/aegis';
 
 function resolveTenant(ctx: RouteContext): string {
   return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
@@ -34,7 +35,11 @@ export function registerPoliciesRoutes(router: {
     async (ctx: RouteContext, res: ServerResponse) => {
       const tenantId = resolveTenant(ctx);
       const body = ctx.body as Record<string, unknown>;
-      const context = (body?.['context'] as Record<string, string | number | undefined>) || {};
+      const rawContext = (body?.['context'] as Record<string, string | number | undefined>) || {};
+      const context: PolicyContext = {
+        ...rawContext,
+        role: String(rawContext['role'] ?? 'unknown'),
+      };
       const policies = securityStore.getPolicies(tenantId);
       const result = evaluatePoliciesWithAudit(policies, context);
       json(res, result);

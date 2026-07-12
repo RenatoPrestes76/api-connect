@@ -11,10 +11,11 @@ export { Entity, AggregateRoot } from './domain/entity.js';
 export { Result, unwrap, getOrUndefined, getOrDefault } from './domain/result.js';
 
 // ─── Domain-Driven Design + DI ──────────────────────────────────────────────
+// ValueObject/Entity/AggregateRoot are intentionally NOT re-exported here — the
+// concrete classes above (lines 9-10) already export those names as both value
+// and type; re-exporting the interfaces/index.ts contracts under the same bare
+// names would collide (TS2300 duplicate identifier).
 export type {
-  ValueObject,
-  Entity,
-  AggregateRoot,
   DomainEvent,
   Repository,
   RepositoryCriteria,

@@ -43,8 +43,8 @@ export interface FileConnector extends Connector {
   /** Detect the schema / column structure of a file */
   detectSchema(source: FileSource): Promise<ConnectorResult<FileSchema>>;
 
-  /** Validate that records conform to a schema */
-  validate<TRecord = Record<string, unknown>>(
+  /** Validate that records conform to a schema — distinct from Connector.validate(config). */
+  validateRecords<TRecord = Record<string, unknown>>(
     records: TRecord[],
     schema: FileSchema
   ): Promise<ConnectorResult<FileValidationResult>>;
@@ -255,7 +255,10 @@ export interface XMLConnector extends FileConnector {
   ): Promise<ConnectorResult<string>>;
 
   /** Validate against XSD */
-  validateSchema(source: FileSource, xsd: FileSource): Promise<ConnectorResult<FileValidationResult>>;
+  validateSchema(
+    source: FileSource,
+    xsd: FileSource
+  ): Promise<ConnectorResult<FileValidationResult>>;
 }
 
 export interface XMLReadOptions extends FileReadOptions {
@@ -353,10 +356,7 @@ export interface TXTConnector extends FileConnector {
   readonly subtype: 'txt';
 
   /** Read raw lines */
-  readLines(
-    source: FileSource,
-    options?: TXTReadOptions
-  ): Promise<ConnectorResult<TXTReadResult>>;
+  readLines(source: FileSource, options?: TXTReadOptions): Promise<ConnectorResult<TXTReadResult>>;
 
   /** Read fixed-width records */
   readFixedWidth(

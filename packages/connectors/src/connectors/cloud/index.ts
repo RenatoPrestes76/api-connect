@@ -17,14 +17,20 @@ export interface CloudStorageConnector extends Connector {
   // ── Containers (Bucket / Container / Bucket) ──────────────────────────
 
   listContainers(): Promise<ConnectorResult<CloudContainer[]>>;
-  createContainer(name: string, options?: ContainerOptions): Promise<ConnectorResult<CloudContainer>>;
+  createContainer(
+    name: string,
+    options?: ContainerOptions
+  ): Promise<ConnectorResult<CloudContainer>>;
   deleteContainer(name: string, options?: DeleteContainerOptions): Promise<ConnectorResult<void>>;
   getContainer(name: string): Promise<ConnectorResult<CloudContainer>>;
   containerExists(name: string): Promise<ConnectorResult<boolean>>;
 
   // ── Objects ───────────────────────────────────────────────────────────
 
-  listObjects(container: string, options?: ListObjectsOptions): Promise<ConnectorResult<CloudObjectListing>>;
+  listObjects(
+    container: string,
+    options?: ListObjectsOptions
+  ): Promise<ConnectorResult<CloudObjectListing>>;
   getObject(container: string, key: string): Promise<ConnectorResult<CloudObject>>;
   headObject(container: string, key: string): Promise<ConnectorResult<CloudObjectMetadata>>;
   objectExists(container: string, key: string): Promise<ConnectorResult<boolean>>;
@@ -50,7 +56,10 @@ export interface CloudStorageConnector extends Connector {
 
   // ── Streaming ─────────────────────────────────────────────────────────
 
-  downloadStream(container: string, key: string): Promise<ConnectorResult<AsyncIterable<Uint8Array>>>;
+  downloadStream(
+    container: string,
+    key: string
+  ): Promise<ConnectorResult<AsyncIterable<Uint8Array>>>;
   uploadStream(
     container: string,
     key: string,
@@ -216,10 +225,7 @@ export interface S3Connector extends CloudStorageConnector {
   ): Promise<ConnectorResult<CloudObject>>;
 
   /** List all versions of an object */
-  listVersions(
-    container: string,
-    key: string
-  ): Promise<ConnectorResult<S3ObjectVersion[]>>;
+  listVersions(container: string, key: string): Promise<ConnectorResult<S3ObjectVersion[]>>;
 
   /** Set bucket lifecycle rules */
   setLifecycleRules(container: string, rules: S3LifecycleRule[]): Promise<ConnectorResult<void>>;
@@ -269,7 +275,12 @@ export interface S3LifecycleRule {
 
 export interface S3LifecycleTransition {
   readonly days: number;
-  readonly storageClass: 'STANDARD_IA' | 'ONEZONE_IA' | 'INTELLIGENT_TIERING' | 'GLACIER' | 'DEEP_ARCHIVE';
+  readonly storageClass:
+    | 'STANDARD_IA'
+    | 'ONEZONE_IA'
+    | 'INTELLIGENT_TIERING'
+    | 'GLACIER'
+    | 'DEEP_ARCHIVE';
 }
 
 export interface S3LifecycleExpiration {
@@ -284,11 +295,7 @@ export interface AzureBlobConnector extends CloudStorageConnector {
   readonly subtype: 'azure-blob';
 
   /** Append blocks to an append blob */
-  appendBlock(
-    container: string,
-    key: string,
-    block: Buffer
-  ): Promise<ConnectorResult<void>>;
+  appendBlock(container: string, key: string, block: Buffer): Promise<ConnectorResult<void>>;
 
   /** Get a shared access signature URL */
   generateSasUrl(
@@ -298,17 +305,10 @@ export interface AzureBlobConnector extends CloudStorageConnector {
   ): Promise<ConnectorResult<PresignedUrl>>;
 
   /** Set blob tier (Hot/Cool/Archive) */
-  setTier(
-    container: string,
-    key: string,
-    tier: AzureBlobTier
-  ): Promise<ConnectorResult<void>>;
+  setTier(container: string, key: string, tier: AzureBlobTier): Promise<ConnectorResult<void>>;
 
   /** Create a blob snapshot */
-  createSnapshot(
-    container: string,
-    key: string
-  ): Promise<ConnectorResult<AzureBlobSnapshot>>;
+  createSnapshot(container: string, key: string): Promise<ConnectorResult<AzureBlobSnapshot>>;
 
   /** Set container-level CORS rules */
   setCorsRules(container: string, rules: AzureCorsRule[]): Promise<ConnectorResult<void>>;
@@ -385,7 +385,8 @@ export interface GCSConnector extends CloudStorageConnector {
 export interface GCSConnectorConfig extends ConnectorConfig {
   readonly projectId: string;
   readonly keyFilename?: string;
-  readonly credentials?: {
+  /** GCP service-account JSON key — distinct shape from ConnectorConfig.credentials. */
+  readonly serviceAccountCredentials?: {
     readonly client_email: string;
     readonly private_key: string;
   };

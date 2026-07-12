@@ -993,7 +993,9 @@ export class GovernanceStore {
         'createdAt',
       ];
       const rows = records.map((l) =>
-        headers.map((h) => JSON.stringify((l as Record<string, unknown>)[h] ?? '')).join(',')
+        headers
+          .map((h) => JSON.stringify((l as unknown as Record<string, unknown>)[h] ?? ''))
+          .join(',')
       );
       const data = [headers.join(','), ...rows].join('\n');
       return { format: 'csv', total: records.length, exportedAt, data };

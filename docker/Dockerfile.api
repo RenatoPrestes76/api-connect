@@ -1,24 +1,34 @@
-FROM node:20-alpine as base
+FROM node:20-alpine AS base
 RUN apk add --no-cache libc6-compat
 RUN npm install -g pnpm
 WORKDIR /app
 
-FROM base as dependencies
-COPY pnpm-lock.yaml .
-COPY package.json .
-RUN pnpm install --prod --frozen-lockfile
-
-FROM base as build
+# A single stage does the full workspace install + build. A separate
+# "install only apps/api/package.json" stage doesn't work with pnpm
+# workspaces — pnpm needs every workspace member's package.json (copied in
+# via `COPY . .` below) to resolve anything. `pnpm prune --prod` was tried
+# to slim the final node_modules but incorrectly strips real runtime deps
+# (e.g. dotenv) in this workspace's virtual-store layout — correctness over
+# image size, so the full install ships as-is.
+FROM base AS build
 COPY pnpm-lock.yaml .
 COPY package.json .
 COPY . .
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm --filter=@seltriva/database run db:generate
 RUN pnpm build --filter=./apps/api
 
 FROM base
-COPY --from=dependencies /app/node_modules ./node_modules
-COPY --from=build /app/apps/api/dist ./dist
+# pnpm's per-package node_modules (e.g. apps/api/node_modules/dotenv) are symlinks
+# with RELATIVE targets into the root node_modules/.pnpm virtual store (e.g.
+# ../../node_modules/.pnpm/dotenv@.../node_modules/dotenv). Flattening dist to
+# /app/dist while only copying the root node_modules breaks those symlinks —
+# apps/api's own node_modules must be copied too, at its original relative depth.
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=build /app/apps/api/dist ./apps/api/dist
 COPY --from=build /app/packages ./packages
 
+WORKDIR /app/apps/api
 EXPOSE 3001
 CMD ["node", "dist/index.js"]

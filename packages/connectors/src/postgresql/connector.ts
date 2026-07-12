@@ -109,12 +109,12 @@ export class PostgreSQLConnector implements Connector {
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
 
-  async connect(config: ConnectorConfig): Promise<ConnectorResult<void>> {
+  async connect(config: PostgreSQLConnectorConfig): Promise<ConnectorResult<void>> {
     if (this._state === 'ready') return ok(undefined, 0);
 
     this._state = 'connecting';
     const start = Date.now();
-    const pgConfig = config as PostgreSQLConnectorConfig;
+    const pgConfig = config;
 
     const validation = await this.validate(pgConfig);
     if (!validation.success || !validation.data?.isValid) {
@@ -316,7 +316,7 @@ export class PostgreSQLConnector implements Connector {
           entities: fullReport.schemas.flatMap((s) => s.tables),
           introspectionReport: fullReport,
           retrievedAt: new Date(),
-        } as ConnectorMetadata,
+        },
         Date.now() - start
       );
     } catch (err) {
@@ -331,8 +331,8 @@ export class PostgreSQLConnector implements Connector {
 
   // ─── Validate ─────────────────────────────────────────────────────────────
 
-  async validate(config: ConnectorConfig): Promise<ConnectorResult<ValidationReport>> {
-    const pg = config as PostgreSQLConnectorConfig;
+  async validate(config: PostgreSQLConnectorConfig): Promise<ConnectorResult<ValidationReport>> {
+    const pg = config;
     const errors: { field: string; code: string; message: string }[] = [];
     const warnings: { field: string; code: string; message: string }[] = [];
 

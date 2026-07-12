@@ -4,7 +4,7 @@
   "description": "Seltriva Connect Authentication - Supabase integration",
   "private": true,
   "type": "module",
-  "main": "./dist/index.ts",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",

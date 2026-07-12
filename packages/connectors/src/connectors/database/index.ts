@@ -86,7 +86,9 @@ export interface RelationalConnector extends DatabaseConnector {
 
 export interface PreparedStatement {
   readonly sql: string;
-  execute<TRow = Record<string, unknown>>(params?: unknown[]): Promise<ConnectorResult<QueryResult<TRow>>>;
+  execute<TRow = Record<string, unknown>>(
+    params?: unknown[]
+  ): Promise<ConnectorResult<QueryResult<TRow>>>;
   close(): Promise<void>;
 }
 
@@ -190,10 +192,7 @@ export interface SQLServerConnector extends RelationalConnector {
   queryLinkedServer(server: string, sql: string): Promise<ConnectorResult<QueryResult>>;
 
   /** Bulk copy (BCP) */
-  bulkCopy(
-    table: string,
-    data: Record<string, unknown>[]
-  ): Promise<ConnectorResult<ExecuteResult>>;
+  bulkCopy(table: string, data: Record<string, unknown>[]): Promise<ConnectorResult<ExecuteResult>>;
 }
 
 export interface SQLServerConnectorConfig extends RelationalConnectorConfig {
@@ -223,7 +222,10 @@ export interface OracleConnector extends RelationalConnector {
   readonly subtype: 'oracle';
 
   /** Execute PL/SQL block */
-  executePLSQL(plsql: string, binds?: Record<string, unknown>): Promise<ConnectorResult<OraclePLSQLResult>>;
+  executePLSQL(
+    plsql: string,
+    binds?: Record<string, unknown>
+  ): Promise<ConnectorResult<OraclePLSQLResult>>;
 
   /** Oracle-specific LOB handling */
   createClob(content: string): Promise<ConnectorResult<unknown>>;
@@ -302,7 +304,7 @@ export interface MySQLLoadDataOptions {
  * MariaDB shares the MySQL interface but has distinct capabilities
  * (Columnstore, Galera Cluster, JSON functions, etc.)
  */
-export interface MariaDBConnector extends MySQLConnector {
+export interface MariaDBConnector extends Omit<MySQLConnector, 'subtype'> {
   readonly subtype: 'mariadb';
 
   /** Galera Cluster: check if wsrep is ready */
@@ -324,7 +326,9 @@ export interface SQLiteConnector extends RelationalConnector {
   readonly subtype: 'sqlite';
 
   /** SQLite-specific WAL checkpoint */
-  walCheckpoint(mode?: 'passive' | 'full' | 'restart' | 'truncate'): Promise<ConnectorResult<SQLiteCheckpointResult>>;
+  walCheckpoint(
+    mode?: 'passive' | 'full' | 'restart' | 'truncate'
+  ): Promise<ConnectorResult<SQLiteCheckpointResult>>;
 
   /** Vacuum (defragment) the database file */
   vacuum(): Promise<ConnectorResult<void>>;
@@ -365,10 +369,16 @@ export interface MongoDBConnector extends DatabaseConnector {
   ): Promise<ConnectorResult<MongoCursor>>;
 
   /** Insert one document */
-  insertOne(collection: string, document: Record<string, unknown>): Promise<ConnectorResult<MongoInsertResult>>;
+  insertOne(
+    collection: string,
+    document: Record<string, unknown>
+  ): Promise<ConnectorResult<MongoInsertResult>>;
 
   /** Insert many documents */
-  insertMany(collection: string, documents: Record<string, unknown>[]): Promise<ConnectorResult<MongoInsertManyResult>>;
+  insertMany(
+    collection: string,
+    documents: Record<string, unknown>[]
+  ): Promise<ConnectorResult<MongoInsertManyResult>>;
 
   /** Update documents matching filter */
   updateMany(
@@ -378,10 +388,7 @@ export interface MongoDBConnector extends DatabaseConnector {
   ): Promise<ConnectorResult<MongoUpdateResult>>;
 
   /** Delete documents matching filter */
-  deleteMany(
-    collection: string,
-    filter: MongoFilter
-  ): Promise<ConnectorResult<MongoDeleteResult>>;
+  deleteMany(collection: string, filter: MongoFilter): Promise<ConnectorResult<MongoDeleteResult>>;
 
   /** Run an aggregation pipeline */
   aggregate(
@@ -402,7 +409,12 @@ export interface MongoDBConnectorConfig extends ConnectorConfig {
   readonly database: string;
   readonly authSource?: string;
   readonly replicaSet?: string;
-  readonly readPreference?: 'primary' | 'primaryPreferred' | 'secondary' | 'secondaryPreferred' | 'nearest';
+  readonly readPreference?:
+    | 'primary'
+    | 'primaryPreferred'
+    | 'secondary'
+    | 'secondaryPreferred'
+    | 'nearest';
   readonly writeConcern?: MongoWriteConcern;
   readonly tls?: boolean;
   readonly tlsCAFile?: string;

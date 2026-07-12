@@ -9,18 +9,18 @@ import type { PostgreSQLConnectorConfig } from '../types.js';
 // ─── Mock pg Pool ─────────────────────────────────────────────────────────────
 
 const mockClient = {
-  query:   vi.fn().mockResolvedValue({ rows: [{ pid: 1 }], rowCount: 1 }),
+  query: vi.fn().mockResolvedValue({ rows: [{ pid: 1 }], rowCount: 1 }),
   release: vi.fn(),
 };
 
 const mockPool = {
-  connect:       vi.fn().mockResolvedValue(mockClient),
-  query:         vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
-  end:           vi.fn().mockResolvedValue(undefined),
-  on:            vi.fn(),
-  totalCount:    2,
-  idleCount:     1,
-  waitingCount:  0,
+  connect: vi.fn().mockResolvedValue(mockClient),
+  query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+  end: vi.fn().mockResolvedValue(undefined),
+  on: vi.fn(),
+  totalCount: 2,
+  idleCount: 1,
+  waitingCount: 0,
 };
 
 vi.mock('pg', () => ({
@@ -30,13 +30,13 @@ vi.mock('pg', () => ({
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const BASE_CONFIG: PostgreSQLConnectorConfig = {
-  id:       'test',
-  name:     'test',
-  type:     'database',
-  host:     'localhost',
-  port:     5432,
+  id: 'test',
+  name: 'test',
+  type: 'database',
+  host: 'localhost',
+  port: 5432,
   database: 'testdb',
-  user:     'test',
+  user: 'test',
   password: 'secret',
 };
 
@@ -80,8 +80,8 @@ describe('PostgreSQLConnectionManager', () => {
     it('sets READ ONLY on acquired connection', async () => {
       await manager.connect(BASE_CONFIG);
 
-      const readOnlyCalls = mockClient.query.mock.calls.filter(
-        (args) => String(args[0]).includes('READ ONLY'),
+      const readOnlyCalls = mockClient.query.mock.calls.filter((args) =>
+        String(args[0]).includes('READ ONLY')
       );
       expect(readOnlyCalls.length).toBeGreaterThan(0);
     });
@@ -143,9 +143,9 @@ describe('PostgreSQLConnectionManager', () => {
       manager.onError(handler);
 
       // Simulate pool error event
-      const errorEventHandler = mockPool.on.mock.calls.find(
-        (call) => call[0] === 'error',
-      )?.[1] as ((err: Error) => void) | undefined;
+      const errorEventHandler = mockPool.on.mock.calls.find((call) => call[0] === 'error')?.[1] as
+        | ((err: Error) => void)
+        | undefined;
 
       errorEventHandler?.(new Error('idle client error'));
 
@@ -159,9 +159,9 @@ describe('PostgreSQLConnectionManager', () => {
       const unsubscribe = manager.onError(handler);
       unsubscribe();
 
-      const errorEventHandler = mockPool.on.mock.calls.find(
-        (call) => call[0] === 'error',
-      )?.[1] as ((err: Error) => void) | undefined;
+      const errorEventHandler = mockPool.on.mock.calls.find((call) => call[0] === 'error')?.[1] as
+        | ((err: Error) => void)
+        | undefined;
 
       errorEventHandler?.(new Error('idle client error'));
       expect(handler).not.toHaveBeenCalled();
@@ -173,7 +173,7 @@ describe('PostgreSQLConnectionManager', () => {
       const { Pool } = await import('pg');
       await manager.connect({ ...BASE_CONFIG, ssl: false });
 
-      const poolConfig = (Pool as ReturnType<typeof vi.fn>).mock.calls[0]![0];
+      const poolConfig = (Pool as unknown as ReturnType<typeof vi.fn>).mock.calls[0]![0];
       expect(poolConfig.ssl).toBe(false);
     });
 
@@ -181,7 +181,7 @@ describe('PostgreSQLConnectionManager', () => {
       const { Pool } = await import('pg');
       await manager.connect({ ...BASE_CONFIG, ssl: true });
 
-      const poolConfig = (Pool as ReturnType<typeof vi.fn>).mock.calls[0]![0];
+      const poolConfig = (Pool as unknown as ReturnType<typeof vi.fn>).mock.calls[0]![0];
       expect(poolConfig.ssl).toEqual({ rejectUnauthorized: true });
     });
 
@@ -192,8 +192,13 @@ describe('PostgreSQLConnectionManager', () => {
         ssl: { rejectUnauthorized: false, ca: 'cert-pem' },
       });
 
-      const poolConfig = (Pool as ReturnType<typeof vi.fn>).mock.calls[0]![0];
-      expect(poolConfig.ssl).toEqual({ rejectUnauthorized: false, ca: 'cert-pem', cert: undefined, key: undefined });
+      const poolConfig = (Pool as unknown as ReturnType<typeof vi.fn>).mock.calls[0]![0];
+      expect(poolConfig.ssl).toEqual({
+        rejectUnauthorized: false,
+        ca: 'cert-pem',
+        cert: undefined,
+        key: undefined,
+      });
     });
   });
 });

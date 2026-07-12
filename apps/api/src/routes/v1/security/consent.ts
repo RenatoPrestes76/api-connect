@@ -2,6 +2,7 @@ import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { securityStore } from '../../../modules/security/security-store.js';
+import type { ConsentPurpose } from '@seltriva/aegis';
 
 function resolveTenant(ctx: RouteContext): string {
   return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
@@ -22,8 +23,13 @@ export function registerConsentRoutes(router: {
   // POST /api/v1/security/consent
   router.post('/api/v1/security/consent', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = resolveTenant(ctx);
-    const body = ctx.body as Record<string, unknown>;
-    const { userId, purpose, framework, source, ipAddress, version } = body ?? ({} as any);
+    const body = (ctx.body ?? {}) as Record<string, unknown>;
+    const userId = body['userId'] as string | undefined;
+    const purpose = body['purpose'] as ConsentPurpose | undefined;
+    const framework = body['framework'] as 'LGPD' | 'GDPR' | undefined;
+    const source = body['source'] as string | undefined;
+    const ipAddress = body['ipAddress'] as string | undefined;
+    const version = body['version'] as string | undefined;
     if (!userId || !purpose || !framework)
       return apiError(res, 'userId, purpose, framework required', 400);
     const now = new Date().toISOString();

@@ -2,6 +2,7 @@ import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { securityStore } from '../../../modules/security/security-store.js';
+import type { DataRequestType } from '@seltriva/aegis';
 
 function resolveTenant(ctx: RouteContext): string {
   return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
@@ -41,15 +42,18 @@ export function registerComplianceRoutes(router: { get: Function; post: Function
     '/api/v1/security/compliance/data-request',
     async (ctx: RouteContext, res: ServerResponse) => {
       const tenantId = resolveTenant(ctx);
-      const body = ctx.body as Record<string, unknown>;
-      const { type, requestorEmail, framework, notes = '' } = body ?? ({} as any);
+      const body = (ctx.body ?? {}) as Record<string, unknown>;
+      const type = body['type'] as DataRequestType | undefined;
+      const requestorEmail = body['requestorEmail'] as string | undefined;
+      const framework = body['framework'] as 'LGPD' | 'GDPR' | undefined;
+      const notes = (body['notes'] as string | undefined) ?? '';
       if (!type || !requestorEmail || !framework)
         return apiError(res, 'type, requestorEmail, framework required', 400);
       const req = securityStore.createDataRequest({
         type,
         requestorEmail,
         framework,
-        notes: notes as string,
+        notes,
         status: 'pending',
         tenantId,
       });

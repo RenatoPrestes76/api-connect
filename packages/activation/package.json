@@ -4,25 +4,26 @@
   "description": "BOOTSTRAP — Activation Token domain. Manages one-time human-readable tokens for headless agent installation.",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types":   "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "scripts": {
-    "test":          "vitest run",
+    "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:watch":    "vitest",
-    "type-check":    "tsc --noEmit"
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit",
+    "build": "tsc"
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/node":       "^20.14.0",
+    "@types/node": "^20.14.0",
     "@vitest/coverage-v8": "^2.1.8",
-    "typescript":        "^5.4.5",
-    "vitest":            "^2.1.8"
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.8"
   }
 }

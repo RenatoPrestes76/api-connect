@@ -2,6 +2,7 @@ import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { securityStore } from '../../../modules/security/security-store.js';
+import type { RiskType, RiskLevel } from '@seltriva/aegis';
 
 function resolveTenant(ctx: RouteContext): string {
   return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
@@ -30,8 +31,14 @@ export function registerRiskRoutes(router: { get: Function; post: Function }): v
   // POST /api/v1/security/risk/assess
   router.post('/api/v1/security/risk/assess', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = resolveTenant(ctx);
-    const body = ctx.body as Record<string, unknown>;
-    const { type, actor, level, score, description, ip, country = null } = body ?? ({} as any);
+    const body = (ctx.body ?? {}) as Record<string, unknown>;
+    const type = body['type'] as RiskType | undefined;
+    const actor = body['actor'] as string | undefined;
+    const level = body['level'] as RiskLevel | undefined;
+    const score = body['score'] as number | undefined;
+    const description = body['description'] as string | undefined;
+    const ip = body['ip'] as string | undefined;
+    const country = (body['country'] as string | undefined) ?? null;
     if (!type || !actor || !level || score === undefined || !description || !ip) {
       return apiError(res, 'type, actor, level, score, description, ip required', 400);
     }

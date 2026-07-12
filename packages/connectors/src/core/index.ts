@@ -22,13 +22,7 @@ export interface ConnectorDescriptor {
 /**
  * Top-level connector type categories
  */
-export type ConnectorType =
-  | 'database'
-  | 'api'
-  | 'file'
-  | 'cloud'
-  | 'queue'
-  | 'custom';
+export type ConnectorType = 'database' | 'api' | 'file' | 'cloud' | 'queue' | 'custom';
 
 // ─── Connector Configuration ────────────────────────────────────────────────
 
@@ -240,6 +234,8 @@ export interface ConnectorMetadata {
   readonly source: Record<string, unknown>;
   readonly entities: unknown[];
   readonly retrievedAt: Date;
+  /** Connector-specific deep introspection payload (e.g. PostgreSQLIntrospectionReport). */
+  readonly introspectionReport?: unknown;
 }
 
 export interface ValidationReport {

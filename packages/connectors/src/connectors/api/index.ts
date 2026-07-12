@@ -385,7 +385,8 @@ export interface GRPCConnectorConfig extends ConnectorConfig {
   readonly address: string;
   readonly protoPath?: string;
   readonly packageName?: string;
-  readonly credentials?: 'insecure' | 'ssl' | 'token';
+  /** Transport/auth mode — distinct from ConnectorConfig.credentials (the actual credential material). */
+  readonly credentialsMode?: 'insecure' | 'ssl' | 'token';
   readonly sslCa?: string;
   readonly sslCert?: string;
   readonly sslKey?: string;

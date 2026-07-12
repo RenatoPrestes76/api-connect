@@ -37,7 +37,9 @@ export async function planWorkflow(ctx: RouteContext, res: ServerResponse): Prom
       });
       const final = await stream.finalMessage();
       const text = final.content
-        .filter((b): b is import('@anthropic-ai/sdk').TextBlock => b.type === 'text')
+        .filter(
+          (b): b is import('@anthropic-ai/sdk').default.Messages.TextBlock => b.type === 'text'
+        )
         .map((b) => b.text)
         .join('');
       plan = parsePlanFromText(text) ?? demoPlan(prompt);
