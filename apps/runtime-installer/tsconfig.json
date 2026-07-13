@@ -4,6 +4,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "noEmit": false,
+    "incremental": false,
     "moduleResolution": "node16",
     "module": "node16",
     "target": "ES2022",

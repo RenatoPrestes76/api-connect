@@ -12,7 +12,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "moduleResolution": "bundler",
-    "incremental": true,
+    "incremental": false,
     "paths": {
       "@seltriva/*": ["./packages/*/src"],
       "@seltriva/ui/*": ["./packages/ui/src/*"],
