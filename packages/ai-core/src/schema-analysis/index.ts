@@ -13,9 +13,7 @@
  * ATHENA adds a reasoning layer on top.
  */
 
-import type {
-  AIResult, AgentId, AIConfidenceValue,
-} from '../providers/index';
+import type { AIResult, AgentId, AIConfidenceValue } from '../providers/index';
 import type { AIRecommendation } from '../recommendations/index';
 
 // ─── Schema Analysis Engine ───────────────────────────────────────────────
@@ -238,7 +236,14 @@ export interface SchemaChangeAssessmentInput {
 
 export interface SchemaChange {
   readonly changeId: string;
-  readonly type: 'add-entity' | 'remove-entity' | 'add-field' | 'remove-field' | 'rename-field' | 'change-type' | 'change-nullable';
+  readonly type:
+    | 'add-entity'
+    | 'remove-entity'
+    | 'add-field'
+    | 'remove-field'
+    | 'rename-field'
+    | 'change-type'
+    | 'change-nullable';
   readonly entityName: string;
   readonly fieldName?: string;
   readonly previousValue?: string;

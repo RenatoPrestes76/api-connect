@@ -13,9 +13,7 @@
  * adds an AI reasoning layer for complex ambiguous cases.
  */
 
-import type {
-  AIResult, AIConfidenceValue,
-} from '../providers/index';
+import type { AIResult, AIConfidenceValue } from '../providers/index';
 import type { AIRecommendation } from '../recommendations/index';
 
 // ─── Mapping Analysis Engine ──────────────────────────────────────────────
@@ -29,12 +27,16 @@ export interface MappingAnalysisEngine {
   /**
    * Resolve a specific mapping conflict with AI reasoning
    */
-  resolveConflict(input: MappingConflictResolutionInput): Promise<AIResult<MappingConflictResolution>>;
+  resolveConflict(
+    input: MappingConflictResolutionInput
+  ): Promise<AIResult<MappingConflictResolution>>;
 
   /**
    * Suggest a transformation function between two semantically different fields
    */
-  suggestTransformation(input: TransformationSuggestionInput): Promise<AIResult<TransformationSuggestion>>;
+  suggestTransformation(
+    input: TransformationSuggestionInput
+  ): Promise<AIResult<TransformationSuggestion>>;
 
   /**
    * Validate that a mapping configuration is semantically sound
@@ -131,13 +133,13 @@ export interface FieldMappingAnalysis {
 }
 
 export type MappingMatchType =
-  | 'exact-term'        // same CBL term
-  | 'compatible-term'   // different but compatible CBL terms
-  | 'name-similarity'   // high name similarity
-  | 'type-match'        // same type, ambiguous name
-  | 'structural-match'  // structural position match
-  | 'fuzzy'             // low-confidence fuzzy match
-  | 'no-match';         // could not find a mapping
+  | 'exact-term' // same CBL term
+  | 'compatible-term' // different but compatible CBL terms
+  | 'name-similarity' // high name similarity
+  | 'type-match' // same type, ambiguous name
+  | 'structural-match' // structural position match
+  | 'fuzzy' // low-confidence fuzzy match
+  | 'no-match'; // could not find a mapping
 
 export interface SemanticCompatibility {
   readonly level: 'identical' | 'compatible' | 'lossy' | 'incompatible';
@@ -158,12 +160,12 @@ export interface MappingConflict {
 }
 
 export type MappingConflictKind =
-  | 'multiple-candidates'    // source field matches multiple target fields
-  | 'type-mismatch'          // types are semantically incompatible
-  | 'semantic-mismatch'      // CBL terms suggest different meanings
-  | 'precision-loss'         // mapping would lose data precision
-  | 'nullability-conflict'   // source nullable, target required
-  | 'ambiguous-target'       // target field could serve multiple roles
+  | 'multiple-candidates' // source field matches multiple target fields
+  | 'type-mismatch' // types are semantically incompatible
+  | 'semantic-mismatch' // CBL terms suggest different meanings
+  | 'precision-loss' // mapping would lose data precision
+  | 'nullability-conflict' // source nullable, target required
+  | 'ambiguous-target' // target field could serve multiple roles
   | 'missing-required-target'; // a required target field has no source match
 
 // ─── Conflict Resolution ──────────────────────────────────────────────────
@@ -178,7 +180,12 @@ export interface MappingConflictResolutionInput {
 
 export interface MappingConflictResolution {
   readonly conflictId: string;
-  readonly resolution: 'map-to-first' | 'map-to-transformed' | 'split' | 'exclude' | 'manual-review';
+  readonly resolution:
+    | 'map-to-first'
+    | 'map-to-transformed'
+    | 'split'
+    | 'exclude'
+    | 'manual-review';
   readonly recommendedTarget?: string;
   readonly transformation?: TransformationSuggestion;
   readonly confidence: AIConfidenceValue;

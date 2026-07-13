@@ -2,7 +2,12 @@
   "name": "@seltriva/testing",
   "version": "0.1.0",
   "description": "Atlas plugin testing framework — test harness, mocks, and assertion helpers",
-  "keywords": ["seltriva", "atlas", "testing", "plugin"],
+  "keywords": [
+    "seltriva",
+    "atlas",
+    "testing",
+    "plugin"
+  ],
   "license": "MIT",
   "private": false,
   "type": "module",

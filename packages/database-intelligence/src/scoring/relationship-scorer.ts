@@ -5,30 +5,63 @@
  * INVENTORY or SALE. If it IS pointed to by many tables, it's likely a
  * master-data entity (PRODUCT, SUPPLIER, CUSTOMER, CATEGORY).
  */
-import type { EntityType, ForeignKeyInput, ScoreMap, ScoringReason, TableInput } from '../types/index.js';
+import type {
+  EntityType,
+  ForeignKeyInput,
+  ScoreMap,
+  ScoringReason,
+  TableInput,
+} from '../types/index.js';
 import { normalizeTableName } from '../knowledge/entity-patterns.js';
 
 // Signals fired when a FK references a table whose name matches an entity
 const FK_TARGET_SIGNALS: Readonly<Partial<Record<EntityType, Array<[EntityType, number]>>>> = {
-  PRODUCT:    [['INVENTORY', 50], ['SALE', 40], ['MOVEMENT', 40], ['PRICE', 40]],
-  SUPPLIER:   [['PURCHASE', 50], ['PRODUCT', 30]],
-  CUSTOMER:   [['SALE', 60]],
-  CATEGORY:   [['PRODUCT', 30]],
-  BRANCH:     [['INVENTORY', 40], ['SALE', 30], ['MOVEMENT', 30]],
-  PRICE:      [['SALE', 20]],
-  EXPIRY:     [['INVENTORY', 30], ['LOT', 40]],
-  LOT:        [['INVENTORY', 30], ['EXPIRY', 30]],
-  USER:       [['AUDIT', 30], ['LOG', 20], ['PERMISSION', 20]],
+  PRODUCT: [
+    ['INVENTORY', 50],
+    ['SALE', 40],
+    ['MOVEMENT', 40],
+    ['PRICE', 40],
+  ],
+  SUPPLIER: [
+    ['PURCHASE', 50],
+    ['PRODUCT', 30],
+  ],
+  CUSTOMER: [['SALE', 60]],
+  CATEGORY: [['PRODUCT', 30]],
+  BRANCH: [
+    ['INVENTORY', 40],
+    ['SALE', 30],
+    ['MOVEMENT', 30],
+  ],
+  PRICE: [['SALE', 20]],
+  EXPIRY: [
+    ['INVENTORY', 30],
+    ['LOT', 40],
+  ],
+  LOT: [
+    ['INVENTORY', 30],
+    ['EXPIRY', 30],
+  ],
+  USER: [
+    ['AUDIT', 30],
+    ['LOG', 20],
+    ['PERMISSION', 20],
+  ],
   PERMISSION: [['USER', 30]],
 };
 
 // Being referenced by many tables increases master-data confidence
 const MASTER_DATA_ENTITIES: readonly EntityType[] = [
-  'PRODUCT', 'SUPPLIER', 'CUSTOMER', 'CATEGORY', 'BRANCH', 'USER',
+  'PRODUCT',
+  'SUPPLIER',
+  'CUSTOMER',
+  'CATEGORY',
+  'BRANCH',
+  'USER',
 ];
 
 export interface RelationshipScoreResult {
-  readonly scores:  ScoreMap;
+  readonly scores: ScoreMap;
   readonly reasons: readonly ScoringReason[];
 }
 
@@ -39,7 +72,7 @@ export class RelationshipScorer {
   score(
     table: TableInput,
     entityHints: Readonly<Partial<Record<string, EntityType>>>,
-    allTables: readonly TableInput[],
+    allTables: readonly TableInput[]
   ): RelationshipScoreResult {
     const accumulated: Record<EntityType, number> = {} as Record<EntityType, number>;
     const reasons: ScoringReason[] = [];
@@ -47,8 +80,9 @@ export class RelationshipScorer {
     // ─── Outgoing FKs ────────────────────────────────────────────────────
     for (const fk of table.foreignKeys) {
       const targetNorm = normalizeTableName(fk.referencedTable);
-      const targetEntity = entityHints[`${fk.referencedSchema}.${fk.referencedTable}`]
-                        ?? entityHints[fk.referencedTable];
+      const targetEntity =
+        entityHints[`${fk.referencedSchema}.${fk.referencedTable}`] ??
+        entityHints[fk.referencedTable];
 
       if (targetEntity) {
         const signals = FK_TARGET_SIGNALS[targetEntity];
@@ -108,7 +142,7 @@ export class RelationshipScorer {
       // Many outgoing FKs, no incoming → likely a transactional / junction table
       const pts = 20;
       accumulated['MOVEMENT'] = (accumulated['MOVEMENT'] ?? 0) + pts;
-      accumulated['SALE']     = (accumulated['SALE']     ?? 0) + pts;
+      accumulated['SALE'] = (accumulated['SALE'] ?? 0) + pts;
       reasons.push({
         signal: 'no_incoming_fks',
         weight: pts,
@@ -131,16 +165,16 @@ function guessEntityFromName(normalizedName: string): Array<[EntityType, number]
   const hints: Array<[EntityType, number]> = [];
 
   if (/prod|item|sku|article|mercad/.test(normalizedName)) hints.push(['PRODUCT', 60]);
-  if (/forne|supplier|vendor/.test(normalizedName))         hints.push(['SUPPLIER', 60]);
-  if (/categ|grupo|familia|classe/.test(normalizedName))    hints.push(['CATEGORY', 60]);
-  if (/client|customer|pessoa/.test(normalizedName))        hints.push(['CUSTOMER', 60]);
-  if (/filial|loja|store|branch/.test(normalizedName))      hints.push(['BRANCH', 60]);
-  if (/estoque|stock|saldo/.test(normalizedName))           hints.push(['INVENTORY', 60]);
-  if (/pedido|venda|sale|order/.test(normalizedName))       hints.push(['SALE', 60]);
-  if (/compra|purchase/.test(normalizedName))               hints.push(['PURCHASE', 60]);
-  if (/validade|expiry/.test(normalizedName))               hints.push(['EXPIRY', 60]);
-  if (/lote|batch|serie/.test(normalizedName))              hints.push(['LOT', 60]);
-  if (/usuario|user|operador/.test(normalizedName))         hints.push(['USER', 60]);
+  if (/forne|supplier|vendor/.test(normalizedName)) hints.push(['SUPPLIER', 60]);
+  if (/categ|grupo|familia|classe/.test(normalizedName)) hints.push(['CATEGORY', 60]);
+  if (/client|customer|pessoa/.test(normalizedName)) hints.push(['CUSTOMER', 60]);
+  if (/filial|loja|store|branch/.test(normalizedName)) hints.push(['BRANCH', 60]);
+  if (/estoque|stock|saldo/.test(normalizedName)) hints.push(['INVENTORY', 60]);
+  if (/pedido|venda|sale|order/.test(normalizedName)) hints.push(['SALE', 60]);
+  if (/compra|purchase/.test(normalizedName)) hints.push(['PURCHASE', 60]);
+  if (/validade|expiry/.test(normalizedName)) hints.push(['EXPIRY', 60]);
+  if (/lote|batch|serie/.test(normalizedName)) hints.push(['LOT', 60]);
+  if (/usuario|user|operador/.test(normalizedName)) hints.push(['USER', 60]);
 
   return hints;
 }

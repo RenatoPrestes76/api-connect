@@ -9,7 +9,13 @@
 
 import type { EntityId, FieldId, ChangeSeverity, ConfidenceScore } from '../models/index';
 import type { SIEResult } from '../core/index';
-import type { CanonicalSchema, CanonicalEntity, CanonicalField, CanonicalType, CanonicalRelationship } from '../canonical/index';
+import type {
+  CanonicalSchema,
+  CanonicalEntity,
+  CanonicalField,
+  CanonicalType,
+  CanonicalRelationship,
+} from '../canonical/index';
 
 // ─── Schema Comparator ────────────────────────────────────────────────────
 
@@ -25,10 +31,7 @@ export interface SchemaComparator {
   /**
    * Compare only a single entity across two schema versions
    */
-  compareEntity(
-    before: CanonicalEntity,
-    after: CanonicalEntity
-  ): SIEResult<EntityDiff>;
+  compareEntity(before: CanonicalEntity, after: CanonicalEntity): SIEResult<EntityDiff>;
 
   /**
    * Compare two field definitions

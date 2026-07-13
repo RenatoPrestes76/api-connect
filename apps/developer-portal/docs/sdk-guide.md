@@ -129,7 +129,7 @@ const webhook = await client.webhooks.register(orgId, {
 const isValid = client.webhooks.verifySignature(
   rawBody,
   req.headers['x-atlas-signature'] as string,
-  process.env.WEBHOOK_SECRET!,
+  process.env.WEBHOOK_SECRET!
 );
 ```
 
@@ -183,14 +183,17 @@ console.log('Created:', result.data.id);
 ## SdkResult Type
 
 ```typescript
-type SdkResult<T> =
-  | { ok: true;  data: T }
-  | { ok: false; error: SdkError };
+type SdkResult<T> = { ok: true; data: T } | { ok: false; error: SdkError };
 
 type SdkErrorCode =
-  | 'UNAUTHORIZED' | 'FORBIDDEN' | 'NOT_FOUND'
-  | 'VALIDATION_ERROR' | 'RATE_LIMITED'
-  | 'SERVER_ERROR' | 'NETWORK_ERROR' | 'TIMEOUT'
+  | 'UNAUTHORIZED'
+  | 'FORBIDDEN'
+  | 'NOT_FOUND'
+  | 'VALIDATION_ERROR'
+  | 'RATE_LIMITED'
+  | 'SERVER_ERROR'
+  | 'NETWORK_ERROR'
+  | 'TIMEOUT'
   | 'UNKNOWN';
 ```
 
@@ -198,15 +201,15 @@ type SdkErrorCode =
 
 When creating API keys via the Atlas Cloud dashboard, grant the minimum required scopes:
 
-| Scope                 | Description                          |
-|-----------------------|--------------------------------------|
-| `agents:read`         | Read agent status and history        |
-| `agents:write`        | Send commands to agents              |
-| `organizations:read`  | Read org metadata and members        |
-| `organizations:write` | Manage organizations and invites     |
-| `plugins:read`        | Browse and read plugin details       |
-| `plugins:write`       | Install/uninstall plugins            |
-| `configuration:read`  | Read workspace configuration         |
-| `configuration:write` | Write workspace configuration        |
-| `metrics:read`        | Read telemetry and metrics           |
-| `webhooks:write`      | Manage webhook registrations         |
+| Scope                 | Description                      |
+| --------------------- | -------------------------------- |
+| `agents:read`         | Read agent status and history    |
+| `agents:write`        | Send commands to agents          |
+| `organizations:read`  | Read org metadata and members    |
+| `organizations:write` | Manage organizations and invites |
+| `plugins:read`        | Browse and read plugin details   |
+| `plugins:write`       | Install/uninstall plugins        |
+| `configuration:read`  | Read workspace configuration     |
+| `configuration:write` | Write workspace configuration    |
+| `metrics:read`        | Read telemetry and metrics       |
+| `webhooks:write`      | Manage webhook registrations     |

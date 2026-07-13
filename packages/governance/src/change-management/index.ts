@@ -16,21 +16,39 @@ import type { GovernanceResult } from '../policies/index';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
-export type ChangeRequestId    = Branded<string, 'ChangeRequestId'>;
-export type DeploymentPlanId   = Branded<string, 'DeploymentPlanId'>;
-export type ChangeRecordId     = Branded<string, 'ChangeRecordId'>;
+export type ChangeRequestId = Branded<string, 'ChangeRequestId'>;
+export type DeploymentPlanId = Branded<string, 'DeploymentPlanId'>;
+export type ChangeRecordId = Branded<string, 'ChangeRecordId'>;
 
 // ─── Change Request ──────────────────────────────────────────────────────────
 
-export type ChangeType     = 'standard' | 'normal' | 'emergency' | 'automated';
+export type ChangeType = 'standard' | 'normal' | 'emergency' | 'automated';
 export type ChangePriority = 'low' | 'medium' | 'high' | 'critical';
-export type ChangeRisk     = 'low' | 'medium' | 'high' | 'very-high';
-export type ChangeStatus   = 'draft' | 'submitted' | 'reviewing' | 'approved' | 'rejected' | 'implementing' | 'completed' | 'failed' | 'rolled-back' | 'cancelled';
-export type ChangeCategory = 'deployment' | 'configuration' | 'infrastructure' | 'security' | 'plugin' | 'schema' | 'rollback' | 'maintenance';
+export type ChangeRisk = 'low' | 'medium' | 'high' | 'very-high';
+export type ChangeStatus =
+  | 'draft'
+  | 'submitted'
+  | 'reviewing'
+  | 'approved'
+  | 'rejected'
+  | 'implementing'
+  | 'completed'
+  | 'failed'
+  | 'rolled-back'
+  | 'cancelled';
+export type ChangeCategory =
+  | 'deployment'
+  | 'configuration'
+  | 'infrastructure'
+  | 'security'
+  | 'plugin'
+  | 'schema'
+  | 'rollback'
+  | 'maintenance';
 
 export interface ChangeRequest {
   readonly id: ChangeRequestId;
-  readonly number: string;                  // human-readable: "CR-2024-0001"
+  readonly number: string; // human-readable: "CR-2024-0001"
   readonly organizationId: string;
   readonly workspaceId?: string;
   readonly environmentId?: string;
@@ -72,11 +90,16 @@ export interface ChangeImpact {
 
 export interface RollbackPlan {
   readonly available: boolean;
-  readonly strategy: 'revert-commit' | 'snapshot-restore' | 'manual-steps' | 'blue-green-swap' | 'not-applicable';
+  readonly strategy:
+    | 'revert-commit'
+    | 'snapshot-restore'
+    | 'manual-steps'
+    | 'blue-green-swap'
+    | 'not-applicable';
   readonly estimatedRollbackMinutes: number;
   readonly steps: string[];
   readonly dataRecoverable: boolean;
-  readonly rollbackWindowHours: number;     // window after deployment where rollback is possible
+  readonly rollbackWindowHours: number; // window after deployment where rollback is possible
 }
 
 export interface ImplementationStep {
@@ -117,12 +140,12 @@ export interface DeploymentPlan {
 }
 
 export type DeploymentStrategy =
-  | 'rolling'           // gradual node-by-node
-  | 'blue-green'        // instant swap between environments
-  | 'canary'            // percentage-based traffic shift
-  | 'all-at-once'       // simultaneous (fast but high risk)
-  | 'shadow'            // deploy alongside, validate, then switch
-  | 'feature-flag'      // deploy behind a flag, enable gradually;
+  | 'rolling' // gradual node-by-node
+  | 'blue-green' // instant swap between environments
+  | 'canary' // percentage-based traffic shift
+  | 'all-at-once' // simultaneous (fast but high risk)
+  | 'shadow' // deploy alongside, validate, then switch
+  | 'feature-flag'; // deploy behind a flag, enable gradually;
 
 export interface DeploymentPhase {
   readonly order: number;
@@ -174,7 +197,7 @@ export interface ChangeRecord {
   readonly actorId: string;
   readonly actorEmail: string;
   readonly comment?: string;
-  readonly snapshot?: unknown;              // state snapshot at this point
+  readonly snapshot?: unknown; // state snapshot at this point
   readonly occurredAt: Date;
 }
 
@@ -197,17 +220,36 @@ export type ChangeHistoryEvent =
 export interface IChangeManagementService {
   create(input: CreateChangeRequestInput): Promise<GovernanceResult<ChangeRequest>>;
   submit(id: ChangeRequestId, by: string): Promise<GovernanceResult<ChangeRequest>>;
-  approve(id: ChangeRequestId, by: string, comment?: string): Promise<GovernanceResult<ChangeRequest>>;
+  approve(
+    id: ChangeRequestId,
+    by: string,
+    comment?: string
+  ): Promise<GovernanceResult<ChangeRequest>>;
   reject(id: ChangeRequestId, by: string, reason: string): Promise<GovernanceResult<ChangeRequest>>;
-  schedule(id: ChangeRequestId, scheduledFor: Date, by: string): Promise<GovernanceResult<ChangeRequest>>;
+  schedule(
+    id: ChangeRequestId,
+    scheduledFor: Date,
+    by: string
+  ): Promise<GovernanceResult<ChangeRequest>>;
   startImplementation(id: ChangeRequestId, by: string): Promise<GovernanceResult<ChangeRequest>>;
-  complete(id: ChangeRequestId, by: string, pir?: PostImplementationReview): Promise<GovernanceResult<ChangeRequest>>;
-  initiateRollback(id: ChangeRequestId, reason: string, by: string): Promise<GovernanceResult<ChangeRequest>>;
+  complete(
+    id: ChangeRequestId,
+    by: string,
+    pir?: PostImplementationReview
+  ): Promise<GovernanceResult<ChangeRequest>>;
+  initiateRollback(
+    id: ChangeRequestId,
+    reason: string,
+    by: string
+  ): Promise<GovernanceResult<ChangeRequest>>;
   cancel(id: ChangeRequestId, reason: string, by: string): Promise<GovernanceResult<ChangeRequest>>;
   getById(id: ChangeRequestId): Promise<ChangeRequest | null>;
   getHistory(id: ChangeRequestId): Promise<ChangeRecord[]>;
   list(filter: ChangeRequestFilter): Promise<ChangeRequest[]>;
-  createDeploymentPlan(crId: ChangeRequestId, plan: CreateDeploymentPlanInput): Promise<GovernanceResult<DeploymentPlan>>;
+  createDeploymentPlan(
+    crId: ChangeRequestId,
+    plan: CreateDeploymentPlanInput
+  ): Promise<GovernanceResult<DeploymentPlan>>;
 }
 
 export interface CreateChangeRequestInput {

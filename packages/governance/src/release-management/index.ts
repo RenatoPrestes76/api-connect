@@ -13,20 +13,28 @@ import type { ChangeRequestId } from '../change-management/index';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
-export type ReleaseId       = Branded<string, 'ReleaseId'>;
-export type ReleaseGateId   = Branded<string, 'ReleaseGateId'>;
-export type ReleasePlanId   = Branded<string, 'ReleasePlanId'>;
+export type ReleaseId = Branded<string, 'ReleaseId'>;
+export type ReleaseGateId = Branded<string, 'ReleaseGateId'>;
+export type ReleasePlanId = Branded<string, 'ReleasePlanId'>;
 
 // ─── Release ─────────────────────────────────────────────────────────────────
 
-export type ReleaseType    = 'major' | 'minor' | 'patch' | 'hotfix' | 'rollback';
-export type ReleaseStatus  = 'planned' | 'preparing' | 'gating' | 'approved' | 'promoting' | 'live' | 'rolled-back' | 'cancelled';
+export type ReleaseType = 'major' | 'minor' | 'patch' | 'hotfix' | 'rollback';
+export type ReleaseStatus =
+  | 'planned'
+  | 'preparing'
+  | 'gating'
+  | 'approved'
+  | 'promoting'
+  | 'live'
+  | 'rolled-back'
+  | 'cancelled';
 export type ReleaseChannel = 'internal' | 'beta' | 'stable' | 'lts';
 
 export interface Release {
   readonly id: ReleaseId;
-  readonly number: string;                  // "RELEASE-2024.001"
-  readonly version: string;                 // semver: "1.2.0"
+  readonly number: string; // "RELEASE-2024.001"
+  readonly version: string; // semver: "1.2.0"
   readonly type: ReleaseType;
   readonly channel: ReleaseChannel;
   readonly status: ReleaseStatus;
@@ -42,14 +50,14 @@ export interface Release {
   readonly scheduledAt?: Date;
   readonly promotedToStableAt?: Date;
   readonly rolledBackAt?: Date;
-  readonly rollbackTarget?: string;         // version to roll back to
+  readonly rollbackTarget?: string; // version to roll back to
   readonly releaseManager: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
 
 export interface ReleaseComponent {
-  readonly name: string;                    // "atlas-cloud", "atlas-agent", "plugin-sdk"
+  readonly name: string; // "atlas-cloud", "atlas-agent", "plugin-sdk"
   readonly fromVersion: string;
   readonly toVersion: string;
   readonly breaking: boolean;
@@ -128,11 +136,32 @@ export interface ReleasePlanStage {
 
 export interface IReleaseManagementService {
   create(input: CreateReleaseInput): Promise<GovernanceResult<Release>>;
-  createPlan(releaseId: ReleaseId, plan: CreateReleasePlanInput): Promise<GovernanceResult<ReleasePlan>>;
-  evaluateGate(releaseId: ReleaseId, gateId: ReleaseGateId, result: GateEvaluationInput): Promise<GovernanceResult<ReleaseGateState>>;
-  waiverGate(releaseId: ReleaseId, gateId: ReleaseGateId, reason: string, by: string): Promise<GovernanceResult<void>>;
-  promote(releaseId: ReleaseId, toEnvironment: string, by: string): Promise<GovernanceResult<Release>>;
-  rollback(releaseId: ReleaseId, targetVersion: string, reason: string, by: string): Promise<GovernanceResult<Release>>;
+  createPlan(
+    releaseId: ReleaseId,
+    plan: CreateReleasePlanInput
+  ): Promise<GovernanceResult<ReleasePlan>>;
+  evaluateGate(
+    releaseId: ReleaseId,
+    gateId: ReleaseGateId,
+    result: GateEvaluationInput
+  ): Promise<GovernanceResult<ReleaseGateState>>;
+  waiverGate(
+    releaseId: ReleaseId,
+    gateId: ReleaseGateId,
+    reason: string,
+    by: string
+  ): Promise<GovernanceResult<void>>;
+  promote(
+    releaseId: ReleaseId,
+    toEnvironment: string,
+    by: string
+  ): Promise<GovernanceResult<Release>>;
+  rollback(
+    releaseId: ReleaseId,
+    targetVersion: string,
+    reason: string,
+    by: string
+  ): Promise<GovernanceResult<Release>>;
   cancel(releaseId: ReleaseId, reason: string, by: string): Promise<GovernanceResult<Release>>;
   getById(id: ReleaseId): Promise<Release | null>;
   list(filter: ReleaseListFilter): Promise<Release[]>;

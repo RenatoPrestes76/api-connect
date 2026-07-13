@@ -15,9 +15,13 @@ export function writeSecretFile(filePath: string, content: string): void {
     try {
       const username = process.env['USERNAME'] ?? process.env['USER'];
       if (username) {
-        execSync(`icacls "${filePath}" /inheritance:r /grant "${username}:(R,W)"`, { stdio: 'ignore' });
+        execSync(`icacls "${filePath}" /inheritance:r /grant "${username}:(R,W)"`, {
+          stdio: 'ignore',
+        });
       }
-    } catch { /* best-effort — file is still owner-only on NTFS by default */ }
+    } catch {
+      /* best-effort — file is still owner-only on NTFS by default */
+    }
   }
 }
 

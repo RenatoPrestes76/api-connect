@@ -10,16 +10,16 @@ npm install -g @seltriva/cli
 
 ## Commands
 
-| Command           | Description                                    |
-|-------------------|------------------------------------------------|
-| `atlas login`     | Authenticate with Atlas Cloud                  |
-| `atlas logout`    | Remove stored credentials                      |
-| `atlas create`    | Scaffold a new plugin project                  |
-| `atlas build`     | Compile TypeScript plugin                      |
-| `atlas test`      | Run plugin tests                               |
-| `atlas package`   | Create signed .atlasp distributable            |
-| `atlas publish`   | Publish plugin to marketplace                  |
-| `atlas doctor`    | Diagnose environment and project issues        |
+| Command         | Description                             |
+| --------------- | --------------------------------------- |
+| `atlas login`   | Authenticate with Atlas Cloud           |
+| `atlas logout`  | Remove stored credentials               |
+| `atlas create`  | Scaffold a new plugin project           |
+| `atlas build`   | Compile TypeScript plugin               |
+| `atlas test`    | Run plugin tests                        |
+| `atlas package` | Create signed .atlasp distributable     |
+| `atlas publish` | Publish plugin to marketplace           |
+| `atlas doctor`  | Diagnose environment and project issues |
 
 ## Quick Start
 

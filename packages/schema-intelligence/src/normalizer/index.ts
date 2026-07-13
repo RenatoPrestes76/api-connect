@@ -8,8 +8,19 @@
  */
 
 import type { NamingConvention, FieldRole, CanonicalDataKind } from '../models/index';
-import type { RawSchema, RawEntity, RawField, NormalizationContext, SIEResult } from '../core/index';
-import type { CanonicalSchema, CanonicalEntity, CanonicalField, CanonicalType } from '../canonical/index';
+import type {
+  RawSchema,
+  RawEntity,
+  RawField,
+  NormalizationContext,
+  SIEResult,
+} from '../core/index';
+import type {
+  CanonicalSchema,
+  CanonicalEntity,
+  CanonicalField,
+  CanonicalType,
+} from '../canonical/index';
 
 // ─── Schema Normalizer ────────────────────────────────────────────────────
 
@@ -105,7 +116,11 @@ export interface EntityNormalizer {
  * Delegates type mapping to TypeNormalizer.
  */
 export interface FieldNormalizer {
-  normalize(raw: RawField, entityName: string, context: NormalizationContext): SIEResult<CanonicalField>;
+  normalize(
+    raw: RawField,
+    entityName: string,
+    context: NormalizationContext
+  ): SIEResult<CanonicalField>;
   inferRole(field: RawField): FieldRole;
   normalizeName(name: string, convention: NamingConvention): string;
 }

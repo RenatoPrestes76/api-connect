@@ -4,27 +4,27 @@ import { computeDelay } from './retry-policy.js';
 import type { RetryPolicy } from './retry-policy.js';
 
 export interface ConnectionManagerOptions {
-  readonly retryPolicy?:  RetryPolicy;
-  readonly timeoutMs?:    number;
+  readonly retryPolicy?: RetryPolicy;
+  readonly timeoutMs?: number;
   // Legacy options (supported for backward compat, prefer retryPolicy)
-  readonly maxRetries?:   number;
+  readonly maxRetries?: number;
   readonly retryDelayMs?: number;
 }
 
 export class ConnectionManager {
   private _isConnected = false;
-  private _retryCount  = 0;
-  private readonly _policy:    RetryPolicy;
+  private _retryCount = 0;
+  private readonly _policy: RetryPolicy;
   private readonly _timeoutMs: number;
 
   constructor(
     private readonly _adapter: DatabaseAdapter,
-    options: ConnectionManagerOptions = {},
+    options: ConnectionManagerOptions = {}
   ) {
     this._timeoutMs = options.timeoutMs ?? 10_000;
     this._policy = options.retryPolicy ?? {
-      attempts:     (options.maxRetries ?? 3) + 1,
-      backoff:      'fixed',
+      attempts: (options.maxRetries ?? 3) + 1,
+      backoff: 'fixed',
       initialDelay: options.retryDelayMs ?? 1_000,
     };
   }
@@ -36,7 +36,7 @@ export class ConnectionManager {
       try {
         await this._withTimeout(this._adapter.connect(), this._timeoutMs);
         this._isConnected = true;
-        this._retryCount  = attempt;
+        this._retryCount = attempt;
         return;
       } catch (err) {
         if (err instanceof TimeoutError) throw err;
@@ -50,7 +50,7 @@ export class ConnectionManager {
     this._retryCount = this._policy.attempts - 1;
     throw new ConnectionFailedError(
       `Connection failed after ${this._policy.attempts} attempt(s): ${lastError?.message ?? 'unknown error'}`,
-      lastError,
+      lastError
     );
   }
 
@@ -65,18 +65,28 @@ export class ConnectionManager {
     await this.connect();
   }
 
-  get isConnected(): boolean { return this._isConnected; }
-  get retryCount():  number  { return this._retryCount; }
+  get isConnected(): boolean {
+    return this._isConnected;
+  }
+  get retryCount(): number {
+    return this._retryCount;
+  }
 
   private _withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const timer = setTimeout(
         () => reject(new TimeoutError(`Operation timed out after ${ms}ms`)),
-        ms,
+        ms
       );
       promise.then(
-        (val) => { clearTimeout(timer); resolve(val); },
-        (err) => { clearTimeout(timer); reject(err); },
+        (val) => {
+          clearTimeout(timer);
+          resolve(val);
+        },
+        (err) => {
+          clearTimeout(timer);
+          reject(err);
+        }
       );
     });
   }

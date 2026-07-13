@@ -110,17 +110,17 @@ export interface MemoryEntryInput {
 // ─── Memory Kinds ─────────────────────────────────────────────────────────
 
 export type MemoryEntryKind =
-  | 'schema-structure'         // entity/field structure knowledge
-  | 'semantic-mapping'         // confirmed CBL term → source name
-  | 'erp-pattern'              // ERP naming/structural conventions
-  | 'performance-baseline'     // timing/throughput statistics
-  | 'sync-pattern'             // sync topology and strategy
-  | 'conflict-resolution'      // how a conflict type was resolved
-  | 'validation-rule'          // a rule learned from corrections
-  | 'security-classification'  // data sensitivity classification
-  | 'reasoning-outcome'        // a reasoning chain and its result
-  | 'agent-feedback'           // feedback from a specialist agent
-  | 'change-pattern';          // schema change patterns
+  | 'schema-structure' // entity/field structure knowledge
+  | 'semantic-mapping' // confirmed CBL term → source name
+  | 'erp-pattern' // ERP naming/structural conventions
+  | 'performance-baseline' // timing/throughput statistics
+  | 'sync-pattern' // sync topology and strategy
+  | 'conflict-resolution' // how a conflict type was resolved
+  | 'validation-rule' // a rule learned from corrections
+  | 'security-classification' // data sensitivity classification
+  | 'reasoning-outcome' // a reasoning chain and its result
+  | 'agent-feedback' // feedback from a specialist agent
+  | 'change-pattern'; // schema change patterns
 
 export type MemoryDomain =
   | 'schema'
@@ -349,5 +349,9 @@ export interface MemoryStore {
 
 export interface EmbeddingMemoryStore {
   storeWithEmbedding(entry: MemoryEntry, embedding: readonly number[]): Promise<void>;
-  findSimilar(embedding: readonly number[], limit?: number, threshold?: number): Promise<MemoryEntry[]>;
+  findSimilar(
+    embedding: readonly number[],
+    limit?: number,
+    threshold?: number
+  ): Promise<MemoryEntry[]>;
 }

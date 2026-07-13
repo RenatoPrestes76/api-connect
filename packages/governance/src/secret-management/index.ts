@@ -12,8 +12,8 @@ import type { GovernanceResult } from '../policies/index';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
-export type SecretId         = Branded<string, 'SecretId'>;
-export type SecretVersionId  = Branded<string, 'SecretVersionId'>;
+export type SecretId = Branded<string, 'SecretId'>;
+export type SecretVersionId = Branded<string, 'SecretVersionId'>;
 export type RotationPolicyId = Branded<string, 'RotationPolicyId'>;
 
 // ─── Secret Types ────────────────────────────────────────────────────────────
@@ -31,7 +31,13 @@ export type SecretKind =
   | 'cloud-credential'
   | 'custom';
 
-export type SecretStatus = 'active' | 'inactive' | 'expired' | 'compromised' | 'pending-rotation' | 'archived';
+export type SecretStatus =
+  | 'active'
+  | 'inactive'
+  | 'expired'
+  | 'compromised'
+  | 'pending-rotation'
+  | 'archived';
 
 // ─── Secret ──────────────────────────────────────────────────────────────────
 
@@ -47,7 +53,7 @@ export interface Secret {
   readonly currentVersionId: SecretVersionId;
   readonly rotationPolicyId?: RotationPolicyId;
   readonly tags: string[];
-  readonly allowedConsumers: SecretConsumer[];  // who can read this secret
+  readonly allowedConsumers: SecretConsumer[]; // who can read this secret
   readonly expiresAt?: Date;
   readonly lastRotatedAt?: Date;
   readonly nextRotationAt?: Date;
@@ -61,8 +67,8 @@ export interface SecretVersion {
   readonly secretId: SecretId;
   readonly version: number;
   readonly status: 'active' | 'inactive' | 'deprecated';
-  readonly encryptionKeyId: string;      // references KMS key
-  readonly checksum: string;             // SHA-256 of plaintext (stored encrypted)
+  readonly encryptionKeyId: string; // references KMS key
+  readonly checksum: string; // SHA-256 of plaintext (stored encrypted)
   readonly createdBy: string;
   readonly createdAt: Date;
   readonly deprecatedAt?: Date;
@@ -83,24 +89,24 @@ export interface RotationPolicy {
   readonly rotationIntervalDays: number;
   readonly notifyBeforeDays: number;
   readonly autoRotate: boolean;
-  readonly rotationHandler?: string;     // handler function ID for automated rotation
-  readonly keepVersionCount: number;     // number of old versions to retain
+  readonly rotationHandler?: string; // handler function ID for automated rotation
+  readonly keepVersionCount: number; // number of old versions to retain
   readonly requireApproval: boolean;
   readonly enabled: boolean;
 }
 
 export const DEFAULT_ROTATION_POLICIES: Record<SecretKind, Partial<RotationPolicy>> = {
-  'api-key':              { rotationIntervalDays: 90,  autoRotate: false, keepVersionCount: 2 },
-  'password':             { rotationIntervalDays: 90,  autoRotate: false, keepVersionCount: 1 },
-  'oauth-client-secret':  { rotationIntervalDays: 180, autoRotate: false, keepVersionCount: 2 },
-  'private-key':          { rotationIntervalDays: 365, autoRotate: false, keepVersionCount: 2 },
-  'certificate':          { rotationIntervalDays: 365, autoRotate: true,  keepVersionCount: 2 },
-  'connection-string':    { rotationIntervalDays: 180, autoRotate: false, keepVersionCount: 1 },
-  'token':                { rotationIntervalDays: 30,  autoRotate: false, keepVersionCount: 1 },
-  'symmetric-key':        { rotationIntervalDays: 365, autoRotate: true,  keepVersionCount: 3 },
-  'webhook-secret':       { rotationIntervalDays: 180, autoRotate: false, keepVersionCount: 1 },
-  'cloud-credential':     { rotationIntervalDays: 90,  autoRotate: false, keepVersionCount: 2 },
-  'custom':               { rotationIntervalDays: 90,  autoRotate: false, keepVersionCount: 1 },
+  'api-key': { rotationIntervalDays: 90, autoRotate: false, keepVersionCount: 2 },
+  password: { rotationIntervalDays: 90, autoRotate: false, keepVersionCount: 1 },
+  'oauth-client-secret': { rotationIntervalDays: 180, autoRotate: false, keepVersionCount: 2 },
+  'private-key': { rotationIntervalDays: 365, autoRotate: false, keepVersionCount: 2 },
+  certificate: { rotationIntervalDays: 365, autoRotate: true, keepVersionCount: 2 },
+  'connection-string': { rotationIntervalDays: 180, autoRotate: false, keepVersionCount: 1 },
+  token: { rotationIntervalDays: 30, autoRotate: false, keepVersionCount: 1 },
+  'symmetric-key': { rotationIntervalDays: 365, autoRotate: true, keepVersionCount: 3 },
+  'webhook-secret': { rotationIntervalDays: 180, autoRotate: false, keepVersionCount: 1 },
+  'cloud-credential': { rotationIntervalDays: 90, autoRotate: false, keepVersionCount: 2 },
+  custom: { rotationIntervalDays: 90, autoRotate: false, keepVersionCount: 1 },
 };
 
 // ─── Secret Access ───────────────────────────────────────────────────────────
@@ -109,7 +115,7 @@ export interface SecretAccessResult {
   readonly secretId: SecretId;
   readonly versionId: SecretVersionId;
   readonly version: number;
-  readonly value: string;               // plaintext (only on direct access, never in list)
+  readonly value: string; // plaintext (only on direct access, never in list)
   readonly expiresAt?: Date;
   readonly accessedAt: Date;
 }
@@ -119,7 +125,7 @@ export interface SecretAccessRequest {
   readonly requesterId: string;
   readonly requesterType: 'user' | 'agent' | 'service' | 'plugin';
   readonly justification?: string;
-  readonly versionId?: SecretVersionId;  // specific version; defaults to current
+  readonly versionId?: SecretVersionId; // specific version; defaults to current
 }
 
 // ─── Secret Service Interface ────────────────────────────────────────────────

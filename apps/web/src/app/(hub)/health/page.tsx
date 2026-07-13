@@ -13,8 +13,9 @@ export default function HealthPage() {
   const { data, isLoading, error, refetch } = useHealth();
 
   if (isLoading) return <PageLoading />;
-  if (error)     return <ErrorState message="Health data unavailable." onRetry={() => void refetch()} />;
-  if (!data)     return null;
+  if (error)
+    return <ErrorState message="Health data unavailable." onRetry={() => void refetch()} />;
+  if (!data) return null;
 
   return (
     <div className="space-y-4 max-w-screen-lg">
@@ -35,7 +36,9 @@ export default function HealthPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         {/* System metrics */}
         <Card>
-          <CardHeader><CardTitle>System Metrics</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>System Metrics</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-4">
             {data.metrics.length === 0 ? (
               <p className="text-sm text-slate-400">No metrics available.</p>
@@ -56,7 +59,9 @@ export default function HealthPage() {
 
         {/* Component health */}
         <Card>
-          <CardHeader><CardTitle>Components</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Components</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-3">
             {data.components.length === 0 ? (
               <p className="text-sm text-slate-400">No component data available.</p>
@@ -65,9 +70,7 @@ export default function HealthPage() {
                 <div key={c.name} className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
                     <p className="font-medium text-sm text-slate-900">{c.name}</p>
-                    {c.message && (
-                      <p className="text-xs text-slate-500 truncate">{c.message}</p>
-                    )}
+                    {c.message && <p className="text-xs text-slate-500 truncate">{c.message}</p>}
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     {c.latencyMs != null && (

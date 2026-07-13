@@ -8,16 +8,16 @@ Defines the metadata structures that TypeScript decorators attach to classes, me
 
 ## Interfaces
 
-| Interface | Attached By | Stored On |
-|-----------|-------------|-----------|
-| `InjectableOptions` / `InjectableMetadata` | `@Injectable` | class |
-| `InjectOptions` | `@Inject` | constructor parameter |
-| `SubscribeToOptions` / `EventHandlerMetadata` | `@SubscribeTo` | method |
-| `HandleCommandOptions` / `CommandHandlerMetadata` | `@HandleCommand` | method |
-| `ValidateOptions` / `PropertyValidationMetadata` | `@Validate` | property |
-| `RepositoryOptions` / `RepositoryMetadata` | `@Repository` | class |
-| `DriverDecoratorOptions` / `DriverDecoratorMetadata` | `@Driver` | class |
-| `PluginDecoratorOptions` | `@PluginDescriptor` | class |
+| Interface                                            | Attached By         | Stored On             |
+| ---------------------------------------------------- | ------------------- | --------------------- |
+| `InjectableOptions` / `InjectableMetadata`           | `@Injectable`       | class                 |
+| `InjectOptions`                                      | `@Inject`           | constructor parameter |
+| `SubscribeToOptions` / `EventHandlerMetadata`        | `@SubscribeTo`      | method                |
+| `HandleCommandOptions` / `CommandHandlerMetadata`    | `@HandleCommand`    | method                |
+| `ValidateOptions` / `PropertyValidationMetadata`     | `@Validate`         | property              |
+| `RepositoryOptions` / `RepositoryMetadata`           | `@Repository`       | class                 |
+| `DriverDecoratorOptions` / `DriverDecoratorMetadata` | `@Driver`           | class                 |
+| `PluginDecoratorOptions`                             | `@PluginDescriptor` | class                 |
 
 ## Metadata Keys
 

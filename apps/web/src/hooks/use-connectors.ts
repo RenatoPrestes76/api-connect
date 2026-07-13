@@ -6,7 +6,7 @@ import { POLL_INTERVAL_MS } from '@/lib/constants';
 export function useConnectors() {
   return useQuery({
     queryKey: ['connectors'],
-    queryFn:  ({ signal }) => listConnectors(signal),
+    queryFn: ({ signal }) => listConnectors(signal),
     refetchInterval: POLL_INTERVAL_MS,
   });
 }
@@ -14,9 +14,9 @@ export function useConnectors() {
 export function useConnector(id: string) {
   return useQuery({
     queryKey: ['connectors', id],
-    queryFn:  ({ signal }) => getConnector(id, signal),
+    queryFn: ({ signal }) => getConnector(id, signal),
     refetchInterval: POLL_INTERVAL_MS,
-    enabled:  !!id,
+    enabled: !!id,
   });
 }
 

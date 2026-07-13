@@ -15,9 +15,7 @@
  *   - Dynamic registration (programmatic)
  */
 
-import type {
-  RuntimeResult, PluginId, ModuleId, Disposable,
-} from '../kernel/index';
+import type { RuntimeResult, PluginId, ModuleId, Disposable } from '../kernel/index';
 import type { LifecycleState } from '../lifecycle/index';
 import type { SandboxLevel, SandboxCapability, ResourceQuota } from '../sandbox/index';
 
@@ -205,7 +203,10 @@ export interface PluginContext {
   /**
    * Subscribe to events (requires 'subscribe-events' capability)
    */
-  subscribeEvent(pattern: string, handler: (event: Record<string, unknown>) => Promise<void>): Disposable;
+  subscribeEvent(
+    pattern: string,
+    handler: (event: Record<string, unknown>) => Promise<void>
+  ): Disposable;
 
   /**
    * Get a configuration value (requires 'read-config' capability)
@@ -215,12 +216,22 @@ export interface PluginContext {
   /**
    * Get a plugin-specific logger
    */
-  getLogger(): { info: (msg: string, ctx?: object) => void; error: (msg: string, ctx?: object) => void };
+  getLogger(): {
+    info: (msg: string, ctx?: object) => void;
+    error: (msg: string, ctx?: object) => void;
+  };
 }
 
 // ─── Plugin Events ────────────────────────────────────────────────────────
 
-export type PluginEventKind = 'loaded' | 'started' | 'stopped' | 'disabled' | 'error' | 'unloaded' | 'reloaded';
+export type PluginEventKind =
+  | 'loaded'
+  | 'started'
+  | 'stopped'
+  | 'disabled'
+  | 'error'
+  | 'unloaded'
+  | 'reloaded';
 
 export interface PluginEvent {
   readonly kind: PluginEventKind;

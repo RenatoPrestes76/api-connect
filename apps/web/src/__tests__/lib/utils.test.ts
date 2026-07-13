@@ -1,10 +1,20 @@
 import { describe, it, expect } from 'vitest';
 import {
-  cn, formatRelative, formatDateTime, formatDuration,
-  formatNumber, formatPercent, clamp,
-  truncate, capitalize, slugify,
-  groupBy, sortBy,
-  healthToStatus, confidenceColor, confidenceBg,
+  cn,
+  formatRelative,
+  formatDateTime,
+  formatDuration,
+  formatNumber,
+  formatPercent,
+  clamp,
+  truncate,
+  capitalize,
+  slugify,
+  groupBy,
+  sortBy,
+  healthToStatus,
+  confidenceColor,
+  confidenceBg,
   buildQuery,
 } from '@/lib/utils';
 
@@ -143,7 +153,11 @@ describe('slugify', () => {
 
 describe('groupBy', () => {
   it('groups by key', () => {
-    const input = [{ g: 'a', v: 1 }, { g: 'b', v: 2 }, { g: 'a', v: 3 }];
+    const input = [
+      { g: 'a', v: 1 },
+      { g: 'b', v: 2 },
+      { g: 'a', v: 3 },
+    ];
     const result = groupBy(input, (x) => x.g);
     expect(result['a']).toHaveLength(2);
     expect(result['b']).toHaveLength(1);

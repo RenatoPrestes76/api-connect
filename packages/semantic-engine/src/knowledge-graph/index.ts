@@ -18,7 +18,14 @@
  *    relationship from PRODUCT."
  */
 
-import type { CBLEntityTerm, CBLFieldTerm, CBLEntityKind, CBLFieldKind, CBLRelationshipKind, CBLDomainKind } from '../business-language/index';
+import type {
+  CBLEntityTerm,
+  CBLFieldTerm,
+  CBLEntityKind,
+  CBLFieldKind,
+  CBLRelationshipKind,
+  CBLDomainKind,
+} from '../business-language/index';
 import type { SemanticResult } from '../business-language/index';
 import type { ConfidenceValue } from '../confidence-engine/index';
 
@@ -39,10 +46,7 @@ export interface BusinessKnowledgeGraph {
    * Given a mapped entity, score the coherence of its current field mappings
    * against what the graph expects
    */
-  scoreCoherence(
-    entityKind: CBLEntityKind,
-    mappedFields: CBLFieldKind[]
-  ): GraphCoherenceScore;
+  scoreCoherence(entityKind: CBLEntityKind, mappedFields: CBLFieldKind[]): GraphCoherenceScore;
 
   /**
    * Query the graph for entities that are related to a given entity kind

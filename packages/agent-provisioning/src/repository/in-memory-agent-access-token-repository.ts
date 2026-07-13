@@ -1,5 +1,5 @@
 import { AgentAccessToken, AgentAccessTokenSnapshot } from '../entity/agent-access-token.js';
-import type { AgentAccessTokenRepository }             from './agent-access-token-repository.js';
+import type { AgentAccessTokenRepository } from './agent-access-token-repository.js';
 
 export class InMemoryAgentAccessTokenRepository implements AgentAccessTokenRepository {
   private readonly _store = new Map<string, AgentAccessTokenSnapshot>();
@@ -47,8 +47,12 @@ export class InMemoryAgentAccessTokenRepository implements AgentAccessTokenRepos
   }
 
   /** Test helper */
-  get size(): number { return this._store.size; }
+  get size(): number {
+    return this._store.size;
+  }
 
   /** Test helper */
-  clear(): void { this._store.clear(); }
+  clear(): void {
+    this._store.clear();
+  }
 }

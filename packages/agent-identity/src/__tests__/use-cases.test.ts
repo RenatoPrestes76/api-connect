@@ -1,21 +1,21 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { AtlasAgent }                         from '../entity/atlas-agent.js';
-import { AgentStatusKind }                    from '../value-objects/agent-status.js';
-import { InMemoryAtlasAgentRepository }       from '../repository/in-memory-atlas-agent-repository.js';
-import { RegisterAgent }                      from '../use-cases/register-agent.js';
-import { UpdateHeartbeat }                    from '../use-cases/update-heartbeat.js';
-import { UpdateSynchronization }              from '../use-cases/update-synchronization.js';
-import { DisableAgent }                       from '../use-cases/disable-agent.js';
-import { FindAgent }                          from '../use-cases/find-agent.js';
-import type { RegisterAgentParams }           from '../entity/atlas-agent.js';
+import { AtlasAgent } from '../entity/atlas-agent.js';
+import { AgentStatusKind } from '../value-objects/agent-status.js';
+import { InMemoryAtlasAgentRepository } from '../repository/in-memory-atlas-agent-repository.js';
+import { RegisterAgent } from '../use-cases/register-agent.js';
+import { UpdateHeartbeat } from '../use-cases/update-heartbeat.js';
+import { UpdateSynchronization } from '../use-cases/update-synchronization.js';
+import { DisableAgent } from '../use-cases/disable-agent.js';
+import { FindAgent } from '../use-cases/find-agent.js';
+import type { RegisterAgentParams } from '../entity/atlas-agent.js';
 
 const mkParams = (overrides: Partial<RegisterAgentParams> = {}): RegisterAgentParams => ({
-  companyId:     'company-1',
-  name:          'Test Agent',
-  hostname:      'host01',
-  machineId:     'MACHINE-00001',
+  companyId: 'company-1',
+  name: 'Test Agent',
+  hostname: 'host01',
+  machineId: 'MACHINE-00001',
   connectorType: 'POSTGRES',
-  version:       '1.0.0',
+  version: '1.0.0',
   ...overrides,
 });
 
@@ -26,7 +26,7 @@ describe('RegisterAgent', () => {
   let useCase: RegisterAgent;
 
   beforeEach(() => {
-    repo    = new InMemoryAtlasAgentRepository();
+    repo = new InMemoryAtlasAgentRepository();
     useCase = new RegisterAgent(repo);
   });
 
@@ -83,14 +83,14 @@ describe('RegisterAgent', () => {
 // ─── UpdateHeartbeat ──────────────────────────────────────────────────────────
 
 describe('UpdateHeartbeat', () => {
-  let repo:    InMemoryAtlasAgentRepository;
+  let repo: InMemoryAtlasAgentRepository;
   let register: RegisterAgent;
   let useCase: UpdateHeartbeat;
 
   beforeEach(() => {
-    repo     = new InMemoryAtlasAgentRepository();
+    repo = new InMemoryAtlasAgentRepository();
     register = new RegisterAgent(repo);
-    useCase  = new UpdateHeartbeat(repo);
+    useCase = new UpdateHeartbeat(repo);
   });
 
   it('updates heartbeat and returns ok=true', async () => {
@@ -138,14 +138,14 @@ describe('UpdateHeartbeat', () => {
 // ─── UpdateSynchronization ────────────────────────────────────────────────────
 
 describe('UpdateSynchronization', () => {
-  let repo:    InMemoryAtlasAgentRepository;
+  let repo: InMemoryAtlasAgentRepository;
   let register: RegisterAgent;
   let useCase: UpdateSynchronization;
 
   beforeEach(() => {
-    repo     = new InMemoryAtlasAgentRepository();
+    repo = new InMemoryAtlasAgentRepository();
     register = new RegisterAgent(repo);
-    useCase  = new UpdateSynchronization(repo);
+    useCase = new UpdateSynchronization(repo);
   });
 
   async function getSyncingAgent(): Promise<string> {
@@ -154,7 +154,7 @@ describe('UpdateSynchronization', () => {
     const id = reg.value.agentId;
     const agent = await repo.findById(id);
     agent!.markHeartbeat(); // → ONLINE
-    agent!.markSyncing();   // → SYNCING
+    agent!.markSyncing(); // → SYNCING
     await repo.update(agent!);
     return id;
   }
@@ -213,14 +213,14 @@ describe('UpdateSynchronization', () => {
 // ─── DisableAgent ─────────────────────────────────────────────────────────────
 
 describe('DisableAgent', () => {
-  let repo:    InMemoryAtlasAgentRepository;
+  let repo: InMemoryAtlasAgentRepository;
   let register: RegisterAgent;
   let useCase: DisableAgent;
 
   beforeEach(() => {
-    repo     = new InMemoryAtlasAgentRepository();
+    repo = new InMemoryAtlasAgentRepository();
     register = new RegisterAgent(repo);
-    useCase  = new DisableAgent(repo);
+    useCase = new DisableAgent(repo);
   });
 
   it('disables an ONLINE agent and returns ok=true', async () => {
@@ -280,14 +280,14 @@ describe('DisableAgent', () => {
 // ─── FindAgent ───────────────────────────────────────────────────────────────
 
 describe('FindAgent', () => {
-  let repo:    InMemoryAtlasAgentRepository;
+  let repo: InMemoryAtlasAgentRepository;
   let register: RegisterAgent;
   let useCase: FindAgent;
 
   beforeEach(() => {
-    repo     = new InMemoryAtlasAgentRepository();
+    repo = new InMemoryAtlasAgentRepository();
     register = new RegisterAgent(repo);
-    useCase  = new FindAgent(repo);
+    useCase = new FindAgent(repo);
   });
 
   describe('byId()', () => {

@@ -2,7 +2,12 @@
   "name": "@seltriva/marketplace-api",
   "version": "0.1.0",
   "description": "Atlas Marketplace API — plugin marketplace contracts for publishers and consumers",
-  "keywords": ["seltriva", "atlas", "marketplace", "plugin"],
+  "keywords": [
+    "seltriva",
+    "atlas",
+    "marketplace",
+    "plugin"
+  ],
   "license": "MIT",
   "private": false,
   "type": "module",

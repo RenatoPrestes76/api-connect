@@ -13,7 +13,7 @@ export { EntityClassifier } from './classifier/entity-classifier.js';
 
 // ─── Knowledge Graph ──────────────────────────────────────────────────────────
 export { KnowledgeGraph } from './knowledge-graph/graph.js';
-export { GraphBuilder }   from './knowledge-graph/graph-builder.js';
+export { GraphBuilder } from './knowledge-graph/graph-builder.js';
 
 // ─── Types (value objects + domain vocabulary) ────────────────────────────────
 export type {

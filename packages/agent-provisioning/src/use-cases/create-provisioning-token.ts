@@ -6,24 +6,21 @@ import {
 import type { ProvisioningTokenRepository } from '../repository/provisioning-token-repository.js';
 
 export interface CreateProvisioningTokenResult {
-  readonly tokenId:  string;
+  readonly tokenId: string;
   readonly rawToken: string;
   readonly expiresAt: Date;
 }
 
-export type CreateProvisioningTokenError =
-  | { code: 'VALIDATION_ERROR'; message: string };
+export type CreateProvisioningTokenError = { code: 'VALIDATION_ERROR'; message: string };
 
 export type CreateProvisioningTokenOutput =
-  | { ok: true;  value: CreateProvisioningTokenResult }
+  | { ok: true; value: CreateProvisioningTokenResult }
   | { ok: false; error: CreateProvisioningTokenError };
 
 export class CreateProvisioningToken {
   constructor(private readonly _repo: ProvisioningTokenRepository) {}
 
-  async execute(
-    params: CreateProvisioningTokenParams,
-  ): Promise<CreateProvisioningTokenOutput> {
+  async execute(params: CreateProvisioningTokenParams): Promise<CreateProvisioningTokenOutput> {
     let token: ProvisioningToken;
     let rawToken: string;
 
@@ -41,7 +38,7 @@ export class CreateProvisioningToken {
     return {
       ok: true,
       value: {
-        tokenId:   token.id,
+        tokenId: token.id,
         rawToken,
         expiresAt: token.expiresAt,
       },

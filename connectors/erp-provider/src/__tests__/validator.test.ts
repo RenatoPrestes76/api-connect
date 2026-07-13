@@ -4,7 +4,7 @@ import { makeContext, makeContextWithCredentials, DEFAULT_CONFIG } from './helpe
 
 describe('ErpValidator', () => {
   it('returns valid=true with complete config and credentials', async () => {
-    const ctx    = await makeContextWithCredentials();
+    const ctx = await makeContextWithCredentials();
     const result = await new ErpValidator(ctx).validate();
     expect(result.ok).toBe(true);
     expect(result.data!.valid).toBe(true);
@@ -13,7 +13,7 @@ describe('ErpValidator', () => {
 
   it('reports CONFIG_INVALID for missing host', async () => {
     const { host: _h, ...cfg } = DEFAULT_CONFIG;
-    const ctx    = await makeContextWithCredentials('test', cfg as Record<string, unknown>);
+    const ctx = await makeContextWithCredentials('test', cfg as Record<string, unknown>);
     const result = await new ErpValidator(ctx).validate();
     expect(result.data!.valid).toBe(false);
     const err = result.data!.errors.find((e) => e.field === 'host');
@@ -23,7 +23,7 @@ describe('ErpValidator', () => {
 
   it('reports CONFIG_INVALID for missing database', async () => {
     const { database: _d, ...cfg } = DEFAULT_CONFIG;
-    const ctx    = await makeContextWithCredentials('test', cfg as Record<string, unknown>);
+    const ctx = await makeContextWithCredentials('test', cfg as Record<string, unknown>);
     const result = await new ErpValidator(ctx).validate();
     expect(result.data!.errors.some((e) => e.field === 'database')).toBe(true);
   });
@@ -32,7 +32,7 @@ describe('ErpValidator', () => {
     const ctx = makeContext(); // no credentials set
     const result = await new ErpValidator(ctx).validate();
     const err = result.data!.errors.find(
-      (e) => e.code === 'CREDENTIAL_MISSING' && e.field === 'username',
+      (e) => e.code === 'CREDENTIAL_MISSING' && e.field === 'username'
     );
     expect(err).toBeDefined();
   });
@@ -42,19 +42,19 @@ describe('ErpValidator', () => {
     await ctx.credentials.set('username', 'svc');
     const result = await new ErpValidator(ctx).validate();
     const err = result.data!.errors.find(
-      (e) => e.code === 'CREDENTIAL_MISSING' && e.field === 'password',
+      (e) => e.code === 'CREDENTIAL_MISSING' && e.field === 'password'
     );
     expect(err).toBeDefined();
   });
 
   it('emits TIMEOUT_LOW warning when timeout < 100', async () => {
-    const ctx    = await makeContextWithCredentials('test', { ...DEFAULT_CONFIG, timeout: 50 });
+    const ctx = await makeContextWithCredentials('test', { ...DEFAULT_CONFIG, timeout: 50 });
     const result = await new ErpValidator(ctx).validate();
     expect(result.data!.warnings.some((w) => w.code === 'TIMEOUT_LOW')).toBe(true);
   });
 
   it('emits TIMEOUT_HIGH warning when timeout > 30000', async () => {
-    const ctx    = await makeContextWithCredentials('test', { ...DEFAULT_CONFIG, timeout: 35_000 });
+    const ctx = await makeContextWithCredentials('test', { ...DEFAULT_CONFIG, timeout: 35_000 });
     const result = await new ErpValidator(ctx).validate();
     expect(result.data!.warnings.some((w) => w.code === 'TIMEOUT_HIGH')).toBe(true);
   });
@@ -66,7 +66,7 @@ describe('ErpValidator', () => {
   });
 
   it('valid=false when any error is present', async () => {
-    const ctx    = makeContext(); // no credentials
+    const ctx = makeContext(); // no credentials
     const result = await new ErpValidator(ctx).validate();
     expect(result.data!.valid).toBe(false);
   });

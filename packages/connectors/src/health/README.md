@@ -55,27 +55,27 @@ HealthReport
 
 ## Health Status Levels
 
-| Status | Meaning |
-|--------|---------|
-| `healthy` | All checks pass, latency is good |
-| `degraded` | Operational but with warnings (high latency, pool pressure) |
-| `unhealthy` | Critical failures; connector should not be used |
-| `unknown` | Health check could not complete |
+| Status      | Meaning                                                     |
+| ----------- | ----------------------------------------------------------- |
+| `healthy`   | All checks pass, latency is good                            |
+| `degraded`  | Operational but with warnings (high latency, pool pressure) |
+| `unhealthy` | Critical failures; connector should not be used             |
+| `unknown`   | Health check could not complete                             |
 
 ## Warning Codes
 
-| Code | Meaning |
-|------|---------|
-| `HIGH_LATENCY` | Latency above acceptable threshold |
-| `CONNECTION_POOL_EXHAUSTED` | No free connections available |
-| `AUTH_EXPIRING_SOON` | Token expires within 15 minutes |
-| `AUTH_EXPIRED` | Authentication has expired |
-| `PERMISSION_MISSING` | Required permission not granted |
-| `VERSION_UNSUPPORTED` | Server version below minimum |
-| `VERSION_DEPRECATED` | Server version approaching end-of-life |
-| `SSL_EXPIRING_SOON` | Certificate expires within 7 days |
-| `RATE_LIMIT_APPROACHING` | Close to rate limit threshold |
-| `CONNECTION_UNSTABLE` | Multiple reconnection attempts |
+| Code                        | Meaning                                |
+| --------------------------- | -------------------------------------- |
+| `HIGH_LATENCY`              | Latency above acceptable threshold     |
+| `CONNECTION_POOL_EXHAUSTED` | No free connections available          |
+| `AUTH_EXPIRING_SOON`        | Token expires within 15 minutes        |
+| `AUTH_EXPIRED`              | Authentication has expired             |
+| `PERMISSION_MISSING`        | Required permission not granted        |
+| `VERSION_UNSUPPORTED`       | Server version below minimum           |
+| `VERSION_DEPRECATED`        | Server version approaching end-of-life |
+| `SSL_EXPIRING_SOON`         | Certificate expires within 7 days      |
+| `RATE_LIMIT_APPROACHING`    | Close to rate limit threshold          |
+| `CONNECTION_UNSTABLE`       | Multiple reconnection attempts         |
 
 ## Continuous Monitoring
 

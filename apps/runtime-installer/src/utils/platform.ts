@@ -4,10 +4,14 @@ export type Platform = 'windows' | 'linux' | 'macos' | 'unsupported';
 
 export function detectPlatform(): Platform {
   switch (process.platform) {
-    case 'win32':  return 'windows';
-    case 'linux':  return 'linux';
-    case 'darwin': return 'macos';
-    default:       return 'unsupported';
+    case 'win32':
+      return 'windows';
+    case 'linux':
+      return 'linux';
+    case 'darwin':
+      return 'macos';
+    default:
+      return 'unsupported';
   }
 }
 

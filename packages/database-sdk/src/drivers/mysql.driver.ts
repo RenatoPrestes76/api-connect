@@ -22,19 +22,22 @@ export class MySqlDriver extends SqlAdapter implements SchemaReader {
   constructor(
     config: DriverConfig,
     private readonly _poolFactory: MySqlPoolFactory = defaultMySqlFactory,
-    private readonly _schemaReaderFactory?: (client: DbQueryClient, database: string) => SchemaReader,
+    private readonly _schemaReaderFactory?: (
+      client: DbQueryClient,
+      database: string
+    ) => SchemaReader
   ) {
     super(config, 'mysql');
   }
 
   async connect(): Promise<void> {
     this._pool = this._poolFactory({
-      host:           this._config.host,
-      port:           this._config.port,
-      database:       this._config.database,
-      user:           this._config.username,
-      password:       this._config.password,
-      ssl:            this._config.ssl ? {} : undefined,
+      host: this._config.host,
+      port: this._config.port,
+      database: this._config.database,
+      user: this._config.username,
+      password: this._config.password,
+      ssl: this._config.ssl ? {} : undefined,
       connectTimeout: this._config.timeout,
     });
     await this._pool.query('SELECT 1');
@@ -43,7 +46,7 @@ export class MySqlDriver extends SqlAdapter implements SchemaReader {
 
   async disconnect(): Promise<void> {
     await this._pool?.end();
-    this._pool        = null;
+    this._pool = null;
     this._isConnected = false;
   }
 
@@ -57,33 +60,50 @@ export class MySqlDriver extends SqlAdapter implements SchemaReader {
       if (err instanceof ConnectionFailedError) throw err;
       throw new QueryError(
         err instanceof Error ? err.message : String(err),
-        err instanceof Error ? err : undefined,
+        err instanceof Error ? err : undefined
       );
     }
   }
 
   async health(): Promise<DatabaseHealth> {
     if (!this._pool) {
-      return { connected: false, latency: 0, databaseVersion: '', activeConnections: 0, poolUsage: 0, status: 'unhealthy' };
+      return {
+        connected: false,
+        latency: 0,
+        databaseVersion: '',
+        activeConnections: 0,
+        poolUsage: 0,
+        status: 'unhealthy',
+      };
     }
     try {
-      const start  = Date.now();
-      const [rows] = await this._pool.query('SELECT version() AS version') as [Array<{ version: string }>, unknown];
+      const start = Date.now();
+      const [rows] = (await this._pool.query('SELECT version() AS version')) as [
+        Array<{ version: string }>,
+        unknown,
+      ];
       const latency = Date.now() - start;
       const version = rows[0]?.version ?? '';
-      const pool    = (this._pool as mysql.Pool).pool;
-      const total   = (pool as { _allConnections?: unknown[] })._allConnections?.length ?? 0;
-      const free    = (pool as { _freeConnections?: unknown[] })._freeConnections?.length ?? 0;
+      const pool = (this._pool as mysql.Pool).pool;
+      const total = (pool as { _allConnections?: unknown[] })._allConnections?.length ?? 0;
+      const free = (pool as { _freeConnections?: unknown[] })._freeConnections?.length ?? 0;
       return {
-        connected:         true,
+        connected: true,
         latency,
-        databaseVersion:   version,
+        databaseVersion: version,
         activeConnections: total - free,
-        poolUsage:         total > 0 ? (total - free) / total : 0,
-        status:            'healthy',
+        poolUsage: total > 0 ? (total - free) / total : 0,
+        status: 'healthy',
       };
     } catch {
-      return { connected: false, latency: 0, databaseVersion: '', activeConnections: 0, poolUsage: 0, status: 'unhealthy' };
+      return {
+        connected: false,
+        latency: 0,
+        databaseVersion: '',
+        activeConnections: 0,
+        poolUsage: 0,
+        status: 'unhealthy',
+      };
     }
   }
 
@@ -95,8 +115,12 @@ export class MySqlDriver extends SqlAdapter implements SchemaReader {
     return reader.readSchema();
   }
 
-  async readSchema():            Promise<DatabaseSchema> { return this.schema(); }
-  async listTables():            Promise<string[]>        { return (await this.schema()).tables.map((t) => t.name); }
+  async readSchema(): Promise<DatabaseSchema> {
+    return this.schema();
+  }
+  async listTables(): Promise<string[]> {
+    return (await this.schema()).tables.map((t) => t.name);
+  }
   async readTable(name: string): Promise<Table | null> {
     return (await this.schema()).tables.find((t) => t.name === name) ?? null;
   }

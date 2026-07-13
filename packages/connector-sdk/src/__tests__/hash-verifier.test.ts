@@ -11,7 +11,7 @@ describe('sha256', () => {
   it('produces a known hash for "hello"', () => {
     // echo -n hello | sha256sum → 2cf24dba...
     expect(sha256(Buffer.from('hello'))).toBe(
-      '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824',
+      '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
     );
   });
 
@@ -27,7 +27,7 @@ describe('sha256', () => {
 
 describe('verifyHash', () => {
   it('does not throw when hash matches', () => {
-    const buf  = Buffer.from('test bundle content');
+    const buf = Buffer.from('test bundle content');
     const hash = sha256(buf);
     expect(() => verifyHash(buf, hash)).not.toThrow();
   });
@@ -38,13 +38,13 @@ describe('verifyHash', () => {
   });
 
   it('is case-insensitive for the expected hash', () => {
-    const buf  = Buffer.from('case test');
+    const buf = Buffer.from('case test');
     const hash = sha256(buf).toUpperCase();
     expect(() => verifyHash(buf, hash)).not.toThrow();
   });
 
   it('HashMismatchError contains both expected and actual hashes', () => {
-    const buf  = Buffer.from('tampered');
+    const buf = Buffer.from('tampered');
     const fake = 'b'.repeat(64);
     try {
       verifyHash(buf, fake);

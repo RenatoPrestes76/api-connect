@@ -66,7 +66,10 @@ export interface SchemaVersionStore {
   /**
    * List all versions for a schema (newest first)
    */
-  list(schemaId: SchemaId, options?: VersionListOptions): Promise<SIEResult<SchemaVersionSummary[]>>;
+  list(
+    schemaId: SchemaId,
+    options?: VersionListOptions
+  ): Promise<SIEResult<SchemaVersionSummary[]>>;
 
   /**
    * Check if a version exists
@@ -122,10 +125,7 @@ export interface SchemaVersionHistory {
   /**
    * Get the diff between any two versions in this history
    */
-  diffVersions(
-    fromVersionId: VersionId,
-    toVersionId: VersionId
-  ): Promise<SIEResult<SchemaDiff>>;
+  diffVersions(fromVersionId: VersionId, toVersionId: VersionId): Promise<SIEResult<SchemaDiff>>;
 
   /**
    * Navigate to a specific version index

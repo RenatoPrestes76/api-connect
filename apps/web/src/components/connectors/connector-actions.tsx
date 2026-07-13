@@ -6,14 +6,17 @@ import { startConnector, stopConnector, restartConnector } from '@/services/conn
 import type { ConnectorInstance } from '@/types/index';
 
 interface ConnectorActionsProps {
-  connector:   ConnectorInstance;
-  onRefresh?:  () => void;
+  connector: ConnectorInstance;
+  onRefresh?: () => void;
   onViewLogs?: (id: string) => void;
-  compact?:    boolean;
+  compact?: boolean;
 }
 
 export function ConnectorActions({
-  connector, onRefresh, onViewLogs, compact = false,
+  connector,
+  onRefresh,
+  onViewLogs,
+  compact = false,
 }: ConnectorActionsProps) {
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -27,8 +30,8 @@ export function ConnectorActions({
     }
   };
 
-  const isRunning  = connector.status === 'RUNNING';
-  const isStopped  = connector.status === 'STOPPED' || connector.status === 'ERROR';
+  const isRunning = connector.status === 'RUNNING';
+  const isStopped = connector.status === 'STOPPED' || connector.status === 'ERROR';
   const isTransient = connector.status === 'STARTING' || connector.status === 'STOPPING';
 
   return (

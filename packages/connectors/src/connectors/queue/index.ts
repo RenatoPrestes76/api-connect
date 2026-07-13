@@ -153,10 +153,17 @@ export interface RabbitMQConnector extends QueueConnector {
   readonly subtype: 'rabbitmq';
 
   /** Declare a queue (idempotent) */
-  assertQueue(name: string, options?: RabbitQueueOptions): Promise<ConnectorResult<RabbitQueueInfo>>;
+  assertQueue(
+    name: string,
+    options?: RabbitQueueOptions
+  ): Promise<ConnectorResult<RabbitQueueInfo>>;
 
   /** Declare an exchange */
-  assertExchange(name: string, type: RabbitExchangeType, options?: RabbitExchangeOptions): Promise<ConnectorResult<void>>;
+  assertExchange(
+    name: string,
+    type: RabbitExchangeType,
+    options?: RabbitExchangeOptions
+  ): Promise<ConnectorResult<void>>;
 
   /** Bind a queue to an exchange with a routing key */
   bindQueue(queue: string, exchange: string, routingKey: string): Promise<ConnectorResult<void>>;
@@ -244,17 +251,10 @@ export interface KafkaConnector extends QueueConnector {
   describeTopics(names: string[]): Promise<ConnectorResult<KafkaTopicMetadata[]>>;
 
   /** Seek consumer group to a specific offset */
-  seek(
-    topic: string,
-    partition: number,
-    offset: string | number
-  ): Promise<ConnectorResult<void>>;
+  seek(topic: string, partition: number, offset: string | number): Promise<ConnectorResult<void>>;
 
   /** Seek consumer group to beginning or end */
-  seekToTimestamp(
-    topic: string,
-    timestamp: Date
-  ): Promise<ConnectorResult<Record<number, number>>>;
+  seekToTimestamp(topic: string, timestamp: Date): Promise<ConnectorResult<Record<number, number>>>;
 
   /** Commit offsets manually */
   commitOffsets(offsets: KafkaTopicOffset[]): Promise<ConnectorResult<void>>;
@@ -336,10 +336,7 @@ export interface RedisStreamsConnector extends QueueConnector {
   ): Promise<ConnectorResult<string>>;
 
   /** Read entries from a stream (XREAD) */
-  xread(
-    streams: string[],
-    options?: XReadOptions
-  ): Promise<ConnectorResult<XReadResult[]>>;
+  xread(streams: string[], options?: XReadOptions): Promise<ConnectorResult<XReadResult[]>>;
 
   /** Read from consumer group (XREADGROUP) */
   xreadGroup(
@@ -350,11 +347,7 @@ export interface RedisStreamsConnector extends QueueConnector {
   ): Promise<ConnectorResult<XReadResult[]>>;
 
   /** Acknowledge a message (XACK) */
-  xack(
-    stream: string,
-    group: string,
-    ...ids: string[]
-  ): Promise<ConnectorResult<number>>;
+  xack(stream: string, group: string, ...ids: string[]): Promise<ConnectorResult<number>>;
 
   /** Create a consumer group (XGROUP CREATE) */
   xgroupCreate(

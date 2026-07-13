@@ -26,6 +26,7 @@ atlas doctor
 ```
 
 Every required check must pass:
+
 - `dc-manifest-valid` — manifest fully compliant with spec
 - `dc-build-output` — production build exists
 - `dc-atlas-auth` — authenticated as a publisher
@@ -39,6 +40,7 @@ atlas package --sign --key-file ~/.atlas/signing.key
 ```
 
 The package includes:
+
 - `atlas-plugin.json` — manifest with checksums and signature
 - `dist/` — compiled, minified plugin code
 - `CHECKSUMS.sha256` — SHA-256 hashes of all files
@@ -56,17 +58,18 @@ atlas publish --channel beta
 ### Step 4: Review
 
 After publishing:
+
 - **Stable channel** — undergoes automated security scanning + manual review
 - **Beta/Edge channels** — automated scan only, available immediately
 - Review typically takes 1-2 business days for stable
 
 ## Release Channels
 
-| Channel  | Review         | Stability     | Who installs                    |
-|----------|----------------|---------------|---------------------------------|
-| `stable` | Manual review  | Production    | General install by default      |
-| `beta`   | Automated only | Pre-release   | Users who opt-in to beta        |
-| `edge`   | None           | Experimental  | Internal testing / CI only      |
+| Channel  | Review         | Stability    | Who installs               |
+| -------- | -------------- | ------------ | -------------------------- |
+| `stable` | Manual review  | Production   | General install by default |
+| `beta`   | Automated only | Pre-release  | Users who opt-in to beta   |
+| `edge`   | None           | Experimental | Internal testing / CI only |
 
 ## Versioning Policy
 
@@ -87,6 +90,7 @@ All stable channel packages **must** be signed with Ed25519.
 The platform verifies the signature against the publisher's registered public key.
 
 Key generation (first time):
+
 ```bash
 atlas login
 # Atlas generates and stores a key pair:
@@ -95,6 +99,7 @@ atlas login
 ```
 
 To rotate keys:
+
 1. Generate a new key pair
 2. Register new public key in publisher dashboard
 3. Grace period: old key accepted for 30 days
@@ -103,6 +108,7 @@ To rotate keys:
 ## Security Scanning
 
 Every published package undergoes automated scanning for:
+
 - Forbidden dependencies (`eval`, `child_process` with write access, etc.)
 - Over-declared permissions vs. capabilities
 - Manifest integrity (SHA-256 of each file)
@@ -136,6 +142,7 @@ const version = await registry.getVersion(plugin.id, '1.2.0');
 ## Metrics and Analytics
 
 After publishing, the publisher dashboard shows:
+
 - Install counts (total + delta per period)
 - Active installs (organizations using the plugin today)
 - Ratings and reviews
@@ -151,10 +158,10 @@ After publishing, the publisher dashboard shows:
 
 ## Plugin Badges
 
-| Badge         | Criteria                                           |
-|---------------|----------------------------------------------------|
-| ✓ Verified    | Publisher identity verified by Seltriva            |
-| ⭐ Featured    | Hand-picked by Seltriva editorial team             |
-| 🔒 Signed      | Package has valid Ed25519 signature                |
-| 🏆 Top Rated   | Average rating ≥ 4.5 with ≥ 10 reviews            |
-| 🔥 Trending    | Significant install growth in last 7 days          |
+| Badge        | Criteria                                  |
+| ------------ | ----------------------------------------- |
+| ✓ Verified   | Publisher identity verified by Seltriva   |
+| ⭐ Featured  | Hand-picked by Seltriva editorial team    |
+| 🔒 Signed    | Package has valid Ed25519 signature       |
+| 🏆 Top Rated | Average rating ≥ 4.5 with ≥ 10 reviews    |
+| 🔥 Trending  | Significant install growth in last 7 days |

@@ -9,7 +9,14 @@
  * here's what FIELD_COST_PRICE means."
  */
 
-import type { CBLEntityTerm, CBLFieldTerm, CBLTerm, CBLEntityKind, CBLFieldKind, CBLDomainKind } from '../business-language/index';
+import type {
+  CBLEntityTerm,
+  CBLFieldTerm,
+  CBLTerm,
+  CBLEntityKind,
+  CBLFieldKind,
+  CBLDomainKind,
+} from '../business-language/index';
 
 // ─── Business Dictionary ──────────────────────────────────────────────────
 

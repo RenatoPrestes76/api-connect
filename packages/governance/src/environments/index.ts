@@ -37,9 +37,17 @@ export interface ChangeWindow {
 
 export interface ChangeWindowSchedule {
   readonly timezone: string;
-  readonly allowedDays: ('monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday')[];
-  readonly allowedHoursStart: string;   // "HH:MM"
-  readonly allowedHoursEnd: string;     // "HH:MM"
+  readonly allowedDays: (
+    | 'monday'
+    | 'tuesday'
+    | 'wednesday'
+    | 'thursday'
+    | 'friday'
+    | 'saturday'
+    | 'sunday'
+  )[];
+  readonly allowedHoursStart: string; // "HH:MM"
+  readonly allowedHoursEnd: string; // "HH:MM"
 }
 
 export interface EnvironmentLockdown {
@@ -47,7 +55,7 @@ export interface EnvironmentLockdown {
   readonly lockedAt?: Date;
   readonly lockedBy?: string;
   readonly lockedReason?: string;
-  readonly allowedActions: string[];    // actions allowed even when locked
+  readonly allowedActions: string[]; // actions allowed even when locked
   readonly autoUnlockAt?: Date;
 }
 
@@ -79,11 +87,23 @@ export type EnvironmentEvent =
 
 export interface IEnvironmentGovernanceService {
   getPolicy(environmentId: string): Promise<EnvironmentGovernancePolicy | null>;
-  setPolicy(input: SetEnvironmentGovernancePolicyInput): Promise<GovernanceResult<EnvironmentGovernancePolicy>>;
-  lockEnvironment(environmentId: string, reason: string, by: string, until?: Date): Promise<GovernanceResult<void>>;
+  setPolicy(
+    input: SetEnvironmentGovernancePolicyInput
+  ): Promise<GovernanceResult<EnvironmentGovernancePolicy>>;
+  lockEnvironment(
+    environmentId: string,
+    reason: string,
+    by: string,
+    until?: Date
+  ): Promise<GovernanceResult<void>>;
   unlockEnvironment(environmentId: string, by: string): Promise<GovernanceResult<void>>;
   isChangeAllowed(environmentId: string, action: string): Promise<ChangeAllowedResult>;
-  freezeChangeWindow(environmentId: string, until: Date, reason: string, by: string): Promise<GovernanceResult<void>>;
+  freezeChangeWindow(
+    environmentId: string,
+    until: Date,
+    reason: string,
+    by: string
+  ): Promise<GovernanceResult<void>>;
 }
 
 export interface SetEnvironmentGovernancePolicyInput {

@@ -1,17 +1,17 @@
-import type { ServerResponse }          from 'node:http';
-import type { RouteContext }             from '../../../http/router.js';
-import { json, apiError }                from '../../../http/router.js';
-import type { ActivationTokenService }   from '@seltriva/activation';
+import type { ServerResponse } from 'node:http';
+import type { RouteContext } from '../../../http/router.js';
+import { json, apiError } from '../../../http/router.js';
+import type { ActivationTokenService } from '@seltriva/activation';
 
 // ─── POST /admin/activation-tokens ───────────────────────────────────────────
 
 export function createActivationTokenHandler(service: ActivationTokenService) {
   return async (ctx: RouteContext, res: ServerResponse): Promise<void> => {
-    const body        = ctx.body as Record<string, unknown> | undefined;
-    const companyId   = body?.['companyId']         as string | undefined;
-    const environment = body?.['environment']        as string | undefined;
-    const expiresIn   = body?.['expiresInMinutes']   as number | undefined;
-    const createdBy   = body?.['createdBy']          as string | undefined;
+    const body = ctx.body as Record<string, unknown> | undefined;
+    const companyId = body?.['companyId'] as string | undefined;
+    const environment = body?.['environment'] as string | undefined;
+    const expiresIn = body?.['expiresInMinutes'] as number | undefined;
+    const createdBy = body?.['createdBy'] as string | undefined;
 
     if (!companyId || !environment) {
       apiError(res, 'companyId and environment are required', 422, 'VALIDATION_ERROR');
@@ -19,7 +19,12 @@ export function createActivationTokenHandler(service: ActivationTokenService) {
     }
 
     if (!['production', 'staging', 'development'].includes(environment)) {
-      apiError(res, 'environment must be production, staging, or development', 422, 'VALIDATION_ERROR');
+      apiError(
+        res,
+        'environment must be production, staging, or development',
+        422,
+        'VALIDATION_ERROR'
+      );
       return;
     }
 
@@ -72,15 +77,24 @@ export function deleteActivationTokenHandler(service: ActivationTokenService) {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function tokenToView(token: { id: string; token: string; companyId: string; environment: string; expiresAt: Date; usedAt: Date | null; createdAt: Date; createdBy: string | null }) {
+function tokenToView(token: {
+  id: string;
+  token: string;
+  companyId: string;
+  environment: string;
+  expiresAt: Date;
+  usedAt: Date | null;
+  createdAt: Date;
+  createdBy: string | null;
+}) {
   return {
-    id:          token.id,
-    token:       token.token,
-    companyId:   token.companyId,
+    id: token.id,
+    token: token.token,
+    companyId: token.companyId,
     environment: token.environment,
-    expiresAt:   token.expiresAt.toISOString(),
-    usedAt:      token.usedAt?.toISOString() ?? null,
-    createdAt:   token.createdAt.toISOString(),
-    createdBy:   token.createdBy,
+    expiresAt: token.expiresAt.toISOString(),
+    usedAt: token.usedAt?.toISOString() ?? null,
+    createdAt: token.createdAt.toISOString(),
+    createdBy: token.createdBy,
   };
 }

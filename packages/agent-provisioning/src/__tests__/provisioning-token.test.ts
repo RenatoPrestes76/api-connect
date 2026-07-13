@@ -7,12 +7,12 @@ import {
 } from '../entity/provisioning-token.js';
 
 const FUTURE = new Date(Date.now() + 86_400_000); // +1 day
-const PAST   = new Date(Date.now() - 1_000);       // 1 second ago
+const PAST = new Date(Date.now() - 1_000); // 1 second ago
 
 const BASE = {
-  companyId:   'company-abc',
+  companyId: 'company-abc',
   description: 'CI pipeline token',
-  expiresAt:   FUTURE,
+  expiresAt: FUTURE,
 };
 
 describe('hashProvisioningToken()', () => {
@@ -80,18 +80,21 @@ describe('ProvisioningToken.create()', () => {
   });
 
   it('throws when companyId is empty', () => {
-    expect(() => ProvisioningToken.create({ ...BASE, companyId: '' }))
-      .toThrowError(ProvisioningTokenDomainError);
+    expect(() => ProvisioningToken.create({ ...BASE, companyId: '' })).toThrowError(
+      ProvisioningTokenDomainError
+    );
   });
 
   it('throws when description is blank', () => {
-    expect(() => ProvisioningToken.create({ ...BASE, description: '   ' }))
-      .toThrowError(ProvisioningTokenDomainError);
+    expect(() => ProvisioningToken.create({ ...BASE, description: '   ' })).toThrowError(
+      ProvisioningTokenDomainError
+    );
   });
 
   it('throws when expiresAt is in the past', () => {
-    expect(() => ProvisioningToken.create({ ...BASE, expiresAt: PAST }))
-      .toThrowError(ProvisioningTokenDomainError);
+    expect(() => ProvisioningToken.create({ ...BASE, expiresAt: PAST })).toThrowError(
+      ProvisioningTokenDomainError
+    );
   });
 
   it('each call generates a different raw token', () => {
@@ -117,7 +120,7 @@ describe('ProvisioningToken — isValid / isExpired / isRevoked', () => {
   });
 
   it('isRevoked() is true when revokedAt is set', () => {
-    const snap    = ProvisioningToken.create(BASE).token.toSnapshot();
+    const snap = ProvisioningToken.create(BASE).token.toSnapshot();
     const revoked = ProvisioningToken.fromSnapshot({ ...snap, revokedAt: new Date() });
     expect(revoked.isRevoked()).toBe(true);
     expect(revoked.isValid()).toBe(false);
@@ -162,7 +165,7 @@ describe('ProvisioningToken.markUsed()', () => {
   });
 
   it('throws when token is expired', () => {
-    const snap    = ProvisioningToken.create(BASE).token.toSnapshot();
+    const snap = ProvisioningToken.create(BASE).token.toSnapshot();
     const expired = ProvisioningToken.fromSnapshot({ ...snap, expiresAt: PAST });
     expect(() => expired.markUsed()).toThrowError(ProvisioningTokenDomainError);
   });
@@ -172,8 +175,8 @@ describe('ProvisioningToken.fromSnapshot() / toSnapshot()', () => {
   it('round-trips correctly', () => {
     const { token } = ProvisioningToken.create(BASE);
     token.revoke();
-    const snap      = token.toSnapshot();
-    const restored  = ProvisioningToken.fromSnapshot(snap);
+    const snap = token.toSnapshot();
+    const restored = ProvisioningToken.fromSnapshot(snap);
     expect(restored.id).toBe(token.id);
     expect(restored.companyId).toBe(token.companyId);
     expect(restored.tokenHash).toBe(token.tokenHash);

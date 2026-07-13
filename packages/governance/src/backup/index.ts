@@ -13,16 +13,22 @@ import type { GovernanceResult } from '../policies/index';
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
 export type BackupPolicyId = Branded<string, 'BackupPolicyId'>;
-export type BackupJobId    = Branded<string, 'BackupJobId'>;
-export type BackupSetId    = Branded<string, 'BackupSetId'>;
+export type BackupJobId = Branded<string, 'BackupJobId'>;
+export type BackupSetId = Branded<string, 'BackupSetId'>;
 
 // ─── Backup Policy ───────────────────────────────────────────────────────────
 
-export type BackupFrequency  = 'hourly' | 'daily' | 'weekly' | 'monthly' | 'continuous';
-export type BackupType       = 'full' | 'incremental' | 'differential' | 'snapshot';
+export type BackupFrequency = 'hourly' | 'daily' | 'weekly' | 'monthly' | 'continuous';
+export type BackupType = 'full' | 'incremental' | 'differential' | 'snapshot';
 export type BackupEncryption = 'none' | 'aes-256' | 'customer-managed';
-export type BackupStatus     = 'pending' | 'running' | 'completed' | 'failed' | 'partial' | 'expired';
-export type BackupTargetType = 'database' | 'storage' | 'config' | 'secrets' | 'audit-logs' | 'custom';
+export type BackupStatus = 'pending' | 'running' | 'completed' | 'failed' | 'partial' | 'expired';
+export type BackupTargetType =
+  | 'database'
+  | 'storage'
+  | 'config'
+  | 'secrets'
+  | 'audit-logs'
+  | 'custom';
 
 export interface BackupPolicy {
   readonly id: BackupPolicyId;
@@ -35,7 +41,7 @@ export interface BackupPolicy {
   readonly encryption: BackupEncryption;
   readonly compressionEnabled: boolean;
   readonly verifyAfterBackup: boolean;
-  readonly destinationId: string;           // storage destination reference
+  readonly destinationId: string; // storage destination reference
   readonly notificationChannels: string[];
   readonly enabled: boolean;
   readonly createdAt: Date;
@@ -46,16 +52,16 @@ export interface BackupTarget {
   readonly id: string;
   readonly type: BackupTargetType;
   readonly name: string;
-  readonly identifier: string;              // connection string, bucket, etc.
+  readonly identifier: string; // connection string, bucket, etc.
   readonly backupType: BackupType;
   readonly priority: number;
 }
 
 export interface BackupSchedule {
   readonly frequency: BackupFrequency;
-  readonly cron?: string;                   // custom cron expression
+  readonly cron?: string; // custom cron expression
   readonly timezone: string;
-  readonly startTime?: string;              // "HH:MM"
+  readonly startTime?: string; // "HH:MM"
   readonly maxDurationMinutes?: number;
 }
 
@@ -73,19 +79,19 @@ export interface BackupRetention {
 export interface BackupJob {
   readonly id: BackupJobId;
   readonly policyId: BackupPolicyId;
-  readonly setId?: BackupSetId;             // groups related jobs
+  readonly setId?: BackupSetId; // groups related jobs
   readonly organizationId?: string;
   readonly status: BackupStatus;
   readonly type: BackupType;
-  readonly targets: string[];               // target IDs covered
+  readonly targets: string[]; // target IDs covered
   readonly startedAt?: Date;
   readonly completedAt?: Date;
   readonly sizeBytes?: number;
   readonly compressedSizeBytes?: number;
-  readonly checksums: Record<string, string>;  // targetId → SHA-256
+  readonly checksums: Record<string, string>; // targetId → SHA-256
   readonly verified: boolean;
   readonly error?: string;
-  readonly location?: string;               // storage location URI
+  readonly location?: string; // storage location URI
   readonly expiresAt?: Date;
 }
 
@@ -94,7 +100,7 @@ export interface BackupSet {
   readonly policyId: BackupPolicyId;
   readonly jobs: BackupJobId[];
   readonly status: BackupStatus;
-  readonly fullBackupJobId?: BackupJobId;   // reference to base full backup
+  readonly fullBackupJobId?: BackupJobId; // reference to base full backup
   readonly createdAt: Date;
 }
 
@@ -102,7 +108,11 @@ export interface BackupSet {
 
 export interface IBackupGovernanceService {
   createPolicy(input: CreateBackupPolicyInput): Promise<GovernanceResult<BackupPolicy>>;
-  updatePolicy(id: BackupPolicyId, input: Partial<CreateBackupPolicyInput>, by: string): Promise<GovernanceResult<BackupPolicy>>;
+  updatePolicy(
+    id: BackupPolicyId,
+    input: Partial<CreateBackupPolicyInput>,
+    by: string
+  ): Promise<GovernanceResult<BackupPolicy>>;
   deletePolicy(id: BackupPolicyId, by: string): Promise<GovernanceResult<void>>;
   getPolicy(id: BackupPolicyId): Promise<BackupPolicy | null>;
   listPolicies(organizationId?: string): Promise<BackupPolicy[]>;
@@ -141,8 +151,8 @@ export interface BackupComplianceStatus {
   readonly organizationId: string;
   readonly policiesActive: number;
   readonly lastSuccessfulBackup?: Date;
-  readonly oldestBackupAge: number;         // hours
-  readonly coveragePercent: number;         // % of targets covered
+  readonly oldestBackupAge: number; // hours
+  readonly coveragePercent: number; // % of targets covered
   readonly issues: string[];
   readonly compliant: boolean;
   readonly generatedAt: Date;

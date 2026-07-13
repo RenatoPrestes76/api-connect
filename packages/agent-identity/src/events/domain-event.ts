@@ -7,24 +7,24 @@ import { randomUUID } from 'crypto';
 
 export interface DomainEvent {
   /** Unique event id (UUID v4) */
-  readonly eventId:      string;
+  readonly eventId: string;
   /** Discriminant type string (e.g. 'AtlasAgent.Registered') */
-  readonly type:         string;
+  readonly type: string;
   /** The aggregate (entity) this event belongs to */
-  readonly aggregateId:  string;
+  readonly aggregateId: string;
   /** When the event occurred */
-  readonly occurredAt:   Date;
+  readonly occurredAt: Date;
   /** Monotonically increasing within the aggregate's lifetime */
-  readonly version:      number;
+  readonly version: number;
 }
 
 /** Convenience factory — fills boilerplate fields. */
 export function createDomainEvent<T extends DomainEvent>(
-  partial: Omit<T, 'eventId' | 'occurredAt'>,
+  partial: Omit<T, 'eventId' | 'occurredAt'>
 ): T {
   return {
     ...partial,
-    eventId:    randomUUID(),
+    eventId: randomUUID(),
     occurredAt: new Date(),
   } as T;
 }

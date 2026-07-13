@@ -96,26 +96,26 @@ export interface ERPNamingPattern {
  * IDs for built-in ERP profiles.
  */
 export const KNOWN_ERP_PROFILES = {
-  SAP_ECC:                  'erp-sap-ecc',
-  SAP_S4HANA:               'erp-sap-s4hana',
-  SAP_B1:                   'erp-sap-b1',
-  TOTVS_PROTHEUS:           'erp-totvs-protheus',
-  TOTVS_RM:                 'erp-totvs-rm',
-  ORACLE_EBS:               'erp-oracle-ebs',
-  ORACLE_FUSION:            'erp-oracle-fusion',
-  MICROSOFT_DYNAMICS_365:   'erp-ms-dynamics-365',
-  MICROSOFT_DYNAMICS_NAV:   'erp-ms-dynamics-nav',
-  MICROSOFT_DYNAMICS_AX:    'erp-ms-dynamics-ax',
-  NETSUITE:                 'erp-netsuite',
-  SAGE_X3:                  'erp-sage-x3',
-  INFOR_M3:                 'erp-infor-m3',
-  EPICOR:                   'erp-epicor',
-  LINX:                     'erp-linx',
-  SENIOR:                   'erp-senior',
-  OMIE:                     'erp-omie',
-  BLING:                    'erp-bling',
-  TINY_ERP:                 'erp-tiny',
-  GENERIC:                  'erp-generic',
+  SAP_ECC: 'erp-sap-ecc',
+  SAP_S4HANA: 'erp-sap-s4hana',
+  SAP_B1: 'erp-sap-b1',
+  TOTVS_PROTHEUS: 'erp-totvs-protheus',
+  TOTVS_RM: 'erp-totvs-rm',
+  ORACLE_EBS: 'erp-oracle-ebs',
+  ORACLE_FUSION: 'erp-oracle-fusion',
+  MICROSOFT_DYNAMICS_365: 'erp-ms-dynamics-365',
+  MICROSOFT_DYNAMICS_NAV: 'erp-ms-dynamics-nav',
+  MICROSOFT_DYNAMICS_AX: 'erp-ms-dynamics-ax',
+  NETSUITE: 'erp-netsuite',
+  SAGE_X3: 'erp-sage-x3',
+  INFOR_M3: 'erp-infor-m3',
+  EPICOR: 'erp-epicor',
+  LINX: 'erp-linx',
+  SENIOR: 'erp-senior',
+  OMIE: 'erp-omie',
+  BLING: 'erp-bling',
+  TINY_ERP: 'erp-tiny',
+  GENERIC: 'erp-generic',
 } as const;
 
 export type KnownERPProfileId = (typeof KNOWN_ERP_PROFILES)[keyof typeof KNOWN_ERP_PROFILES];
@@ -163,18 +163,12 @@ export interface ProfileMatcher {
   /**
    * Score a schema against all registered profiles
    */
-  match(
-    entityNames: string[],
-    fieldNames: string[]
-  ): SemanticResult<ProfileMatchResult[]>;
+  match(entityNames: string[], fieldNames: string[]): SemanticResult<ProfileMatchResult[]>;
 
   /**
    * Find the best-matching profile
    */
-  findBest(
-    entityNames: string[],
-    fieldNames: string[]
-  ): SemanticResult<ProfileMatchResult | null>;
+  findBest(entityNames: string[], fieldNames: string[]): SemanticResult<ProfileMatchResult | null>;
 }
 
 export interface ProfileMatchResult {

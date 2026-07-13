@@ -4,13 +4,13 @@ API Connector interfaces — REST, SOAP, GraphQL, gRPC, Webhook.
 
 ## Supported Protocols
 
-| Connector | Subtype | Protocol | Auth |
-|-----------|---------|----------|------|
-| `RESTConnector` | `rest` | HTTP/1.1, HTTP/2 | None, Basic, Bearer, API Key, OAuth2 |
-| `SOAPConnector` | `soap` | HTTP + XML, WSDL | WS-Security, NTLM, Basic |
-| `GraphQLConnector` | `graphql` | HTTP + WebSocket | Bearer, API Key |
-| `GRPCConnector` | `grpc` | HTTP/2 + Protobuf | Insecure, SSL, Token |
-| `WebhookConnector` | `webhook` | Inbound HTTP | HMAC Signature |
+| Connector          | Subtype   | Protocol          | Auth                                 |
+| ------------------ | --------- | ----------------- | ------------------------------------ |
+| `RESTConnector`    | `rest`    | HTTP/1.1, HTTP/2  | None, Basic, Bearer, API Key, OAuth2 |
+| `SOAPConnector`    | `soap`    | HTTP + XML, WSDL  | WS-Security, NTLM, Basic             |
+| `GraphQLConnector` | `graphql` | HTTP + WebSocket  | Bearer, API Key                      |
+| `GRPCConnector`    | `grpc`    | HTTP/2 + Protobuf | Insecure, SSL, Token                 |
+| `WebhookConnector` | `webhook` | Inbound HTTP      | HMAC Signature                       |
 
 ## Interface Hierarchy
 

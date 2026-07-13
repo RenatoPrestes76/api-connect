@@ -14,16 +14,16 @@ services:
     image: postgres:15-alpine
     container_name: atlas-connect-pg-test
     environment:
-      POSTGRES_USER:     atlas_test
+      POSTGRES_USER: atlas_test
       POSTGRES_PASSWORD: atlas_test_secret
-      POSTGRES_DB:       atlas_test
+      POSTGRES_DB: atlas_test
     ports:
-      - "5433:5432"           # port 5433 avoids conflict with local Postgres
+      - '5433:5432' # port 5433 avoids conflict with local Postgres
     volumes:
       - ./seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
       - pg_test_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U atlas_test -d atlas_test"]
+      test: ['CMD-SHELL', 'pg_isready -U atlas_test -d atlas_test']
       interval: 5s
       timeout: 5s
       retries: 10

@@ -84,7 +84,7 @@ export interface ConfigurationProvider {
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
-export type ConfigKey   = string;
+export type ConfigKey = string;
 export type ConfigValue = string | number | boolean | string[] | Record<string, unknown> | null;
 
 export type ConfigChangeHandler = (change: ConfigChange) => void;
@@ -115,7 +115,15 @@ export interface ConfigSchemaEntry {
   readonly validator?: (value: ConfigValue) => boolean;
 }
 
-export type ConfigValueType = 'string' | 'number' | 'boolean' | 'array' | 'object' | 'url' | 'port' | 'duration-ms';
+export type ConfigValueType =
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'array'
+  | 'object'
+  | 'url'
+  | 'port'
+  | 'duration-ms';
 
 export interface ConfigValidationResult {
   readonly isValid: boolean;
@@ -132,11 +140,11 @@ export interface ConfigValidationError {
 // ─── Configuration Sources ────────────────────────────────────────────────
 
 export type ConfigSourceKind =
-  | 'environment'     // process.env
-  | 'supabase'        // Supabase remote config table
-  | 'file'            // JSON/YAML file
-  | 'default'         // schema defaults
-  | 'runtime-set';    // set programmatically at runtime
+  | 'environment' // process.env
+  | 'supabase' // Supabase remote config table
+  | 'file' // JSON/YAML file
+  | 'default' // schema defaults
+  | 'runtime-set'; // set programmatically at runtime
 
 export interface ConfigSource {
   readonly kind: ConfigSourceKind;
@@ -159,18 +167,18 @@ export interface ConfigKeyMeta {
 // ─── Platform Configuration Namespaces ───────────────────────────────────
 
 export const CONFIG_NAMESPACES = {
-  PLATFORM:      'platform',
-  DATABASE:      'database',
-  SUPABASE:      'supabase',
-  AI:            'ai',
-  SCHEDULER:     'scheduler',
-  WORKER:        'worker',
-  TELEMETRY:     'telemetry',
-  HEALTH:        'health',
-  RESILIENCE:    'resilience',
-  SECURITY:      'security',
-  CACHE:         'cache',
-  QUEUE:         'queue',
+  PLATFORM: 'platform',
+  DATABASE: 'database',
+  SUPABASE: 'supabase',
+  AI: 'ai',
+  SCHEDULER: 'scheduler',
+  WORKER: 'worker',
+  TELEMETRY: 'telemetry',
+  HEALTH: 'health',
+  RESILIENCE: 'resilience',
+  SECURITY: 'security',
+  CACHE: 'cache',
+  QUEUE: 'queue',
 } as const;
 
 export type ConfigNamespace = (typeof CONFIG_NAMESPACES)[keyof typeof CONFIG_NAMESPACES];
@@ -179,34 +187,34 @@ export type ConfigNamespace = (typeof CONFIG_NAMESPACES)[keyof typeof CONFIG_NAM
 
 export const CONFIG_KEYS = {
   // Platform
-  PLATFORM_ENV:              'platform.environment',
-  PLATFORM_VERSION:          'platform.version',
-  PLATFORM_NAME:             'platform.name',
-  PLATFORM_REGION:           'platform.region',
-  PLATFORM_LOG_LEVEL:        'platform.log_level',
+  PLATFORM_ENV: 'platform.environment',
+  PLATFORM_VERSION: 'platform.version',
+  PLATFORM_NAME: 'platform.name',
+  PLATFORM_REGION: 'platform.region',
+  PLATFORM_LOG_LEVEL: 'platform.log_level',
   PLATFORM_SHUTDOWN_TIMEOUT: 'platform.shutdown_timeout_ms',
 
   // Database
-  DATABASE_URL:              'database.url',
-  DATABASE_POOL_MIN:         'database.pool.min',
-  DATABASE_POOL_MAX:         'database.pool.max',
+  DATABASE_URL: 'database.url',
+  DATABASE_POOL_MIN: 'database.pool.min',
+  DATABASE_POOL_MAX: 'database.pool.max',
 
   // Supabase
-  SUPABASE_URL:              'supabase.url',
-  SUPABASE_ANON_KEY:         'supabase.anon_key',
-  SUPABASE_SERVICE_KEY:      'supabase.service_role_key',
+  SUPABASE_URL: 'supabase.url',
+  SUPABASE_ANON_KEY: 'supabase.anon_key',
+  SUPABASE_SERVICE_KEY: 'supabase.service_role_key',
 
   // Scheduler
-  SCHEDULER_MAX_CONCURRENT:  'scheduler.max_concurrent',
-  SCHEDULER_TIMEZONE:        'scheduler.timezone',
+  SCHEDULER_MAX_CONCURRENT: 'scheduler.max_concurrent',
+  SCHEDULER_TIMEZONE: 'scheduler.timezone',
 
   // Worker
-  WORKER_POOL_SIZE:          'worker.pool_size',
-  WORKER_TASK_TIMEOUT_MS:    'worker.task_timeout_ms',
+  WORKER_POOL_SIZE: 'worker.pool_size',
+  WORKER_TASK_TIMEOUT_MS: 'worker.task_timeout_ms',
 
   // Resilience
   CIRCUIT_BREAKER_THRESHOLD: 'resilience.circuit_breaker.failure_threshold',
-  RETRY_MAX_ATTEMPTS:        'resilience.retry.max_attempts',
+  RETRY_MAX_ATTEMPTS: 'resilience.retry.max_attempts',
 } as const;
 
 // ─── Secret Provider ──────────────────────────────────────────────────────

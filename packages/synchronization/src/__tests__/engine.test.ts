@@ -1,39 +1,48 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SynchronizationEngine } from '../engine/synchronization-engine.js';
-import { CloudDispatcher }        from '../dispatcher/cloud-dispatcher.js';
-import { Telemetry }              from '../telemetry/telemetry.js';
+import { CloudDispatcher } from '../dispatcher/cloud-dispatcher.js';
+import { Telemetry } from '../telemetry/telemetry.js';
 import {
-  asSyncJobId, asTenantId, asCorrelationId,
-  DEFAULT_PIPELINE_CONFIG, DEFAULT_RETRY_CONFIG,
-  type SyncConfig, type SyncEvent,
+  asSyncJobId,
+  asTenantId,
+  asCorrelationId,
+  DEFAULT_PIPELINE_CONFIG,
+  DEFAULT_RETRY_CONFIG,
+  type SyncConfig,
+  type SyncEvent,
 } from '../types/index.js';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
-const JOB    = asSyncJobId('job-engine-001');
+const JOB = asSyncJobId('job-engine-001');
 const TENANT = asTenantId('tenant-acme');
-const CORR   = asCorrelationId('corr-engine');
+const CORR = asCorrelationId('corr-engine');
 
 const TABLE_CFG = {
-  schema:    'public',
-  table:     'produto',
-  mode:      'FULL'        as const,
+  schema: 'public',
+  table: 'produto',
+  mode: 'FULL' as const,
   detection: 'UPDATED_AT' as const,
-  conflict:  'OVERWRITE'  as const,
-  priority:  1,
+  conflict: 'OVERWRITE' as const,
+  priority: 1,
 };
 
 function makeConfig(overrides: Partial<SyncConfig> = {}): SyncConfig {
   return {
-    jobId:         JOB,
-    tenantId:      TENANT,
+    jobId: JOB,
+    tenantId: TENANT,
     correlationId: CORR,
-    mode:          'FULL',
-    tables:        [TABLE_CFG],
-    pipeline:      { ...DEFAULT_PIPELINE_CONFIG, compression: { enabled: false, algorithm: 'none', level: 0 }, encryption: { enabled: false, algorithm: 'aes-256-gcm', keyId: '' }, validate: false },
-    retry:         { ...DEFAULT_RETRY_CONFIG, maxAttempts: 1, initialDelayMs: 0, jitterMs: 0 },
-    workers:       1,
-    tags:          {},
+    mode: 'FULL',
+    tables: [TABLE_CFG],
+    pipeline: {
+      ...DEFAULT_PIPELINE_CONFIG,
+      compression: { enabled: false, algorithm: 'none', level: 0 },
+      encryption: { enabled: false, algorithm: 'aes-256-gcm', keyId: '' },
+      validate: false,
+    },
+    retry: { ...DEFAULT_RETRY_CONFIG, maxAttempts: 1, initialDelayMs: 0, jitterMs: 0 },
+    workers: 1,
+    tags: {},
     ...overrides,
   };
 }
@@ -65,12 +74,12 @@ function makeQueryFn(rows = [{ id: 1, nome: 'Produto' }]) {
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe('SynchronizationEngine', () => {
-  let engine:     SynchronizationEngine;
+  let engine: SynchronizationEngine;
   let dispatcher: CloudDispatcher;
 
   beforeEach(() => {
     dispatcher = makeDispatcher();
-    engine     = new SynchronizationEngine(dispatcher, new Telemetry({}, 'ERROR'));
+    engine = new SynchronizationEngine(dispatcher, new Telemetry({}, 'ERROR'));
   });
 
   it('starts with IDLE status', () => {
@@ -79,7 +88,7 @@ describe('SynchronizationEngine', () => {
 
   it('completes a full sync and reaches COMPLETED status', async () => {
     const queryFn = makeQueryFn([{ id: 1, nome: 'Produto', updated_at: null }]);
-    const result  = await engine.start(makeConfig(), queryFn);
+    const result = await engine.start(makeConfig(), queryFn);
     expect(result.ok).toBe(true);
     expect(engine.status).toBe('COMPLETED');
   });
@@ -180,7 +189,7 @@ describe('SynchronizationEngine', () => {
 
     const config = makeConfig({
       tables: [
-        { ...TABLE_CFG, table: 'pedido',  priority: 2 },
+        { ...TABLE_CFG, table: 'pedido', priority: 2 },
         { ...TABLE_CFG, table: 'produto', priority: 1 },
       ],
     });

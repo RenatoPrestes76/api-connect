@@ -4,15 +4,19 @@ import { startAdminServer, stopServer, seedAgent, type TestAdminServer } from '.
 describe('PATCH /admin/agents/:id/disable', () => {
   let ctx: TestAdminServer;
 
-  beforeAll(async () => { ctx = await startAdminServer(); });
-  afterAll(async  () => stopServer(ctx.server));
-  beforeEach(() => { ctx.agentRepo.clear(); });
+  beforeAll(async () => {
+    ctx = await startAdminServer();
+  });
+  afterAll(async () => stopServer(ctx.server));
+  beforeEach(() => {
+    ctx.agentRepo.clear();
+  });
 
   it('returns 200 with status DISABLED', async () => {
     const agent = await seedAgent(ctx.agentRepo);
-    const res   = await fetch(`${ctx.baseUrl}/admin/agents/${agent.id}/disable`, { method: 'PATCH' });
+    const res = await fetch(`${ctx.baseUrl}/admin/agents/${agent.id}/disable`, { method: 'PATCH' });
     expect(res.status).toBe(200);
-    const body  = await res.json() as { data: { agentId: string; status: string } };
+    const body = (await res.json()) as { data: { agentId: string; status: string } };
     expect(body.data.status).toBe('DISABLED');
     expect(body.data.agentId).toBe(agent.id.toString());
   });
@@ -40,9 +44,13 @@ describe('PATCH /admin/agents/:id/disable', () => {
 describe('PATCH /admin/agents/:id/enable', () => {
   let ctx: TestAdminServer;
 
-  beforeAll(async () => { ctx = await startAdminServer(); });
-  afterAll(async  () => stopServer(ctx.server));
-  beforeEach(() => { ctx.agentRepo.clear(); });
+  beforeAll(async () => {
+    ctx = await startAdminServer();
+  });
+  afterAll(async () => stopServer(ctx.server));
+  beforeEach(() => {
+    ctx.agentRepo.clear();
+  });
 
   async function disableAgent(id: string): Promise<void> {
     await fetch(`${ctx.baseUrl}/admin/agents/${id}/disable`, { method: 'PATCH' });
@@ -51,9 +59,9 @@ describe('PATCH /admin/agents/:id/enable', () => {
   it('re-enables a disabled agent with status REGISTERING', async () => {
     const agent = await seedAgent(ctx.agentRepo);
     await disableAgent(agent.id.toString());
-    const res  = await fetch(`${ctx.baseUrl}/admin/agents/${agent.id}/enable`, { method: 'PATCH' });
+    const res = await fetch(`${ctx.baseUrl}/admin/agents/${agent.id}/enable`, { method: 'PATCH' });
     expect(res.status).toBe(200);
-    const body = await res.json() as { data: { status: string } };
+    const body = (await res.json()) as { data: { status: string } };
     expect(body.data.status).toBe('REGISTERING');
   });
 
@@ -67,7 +75,7 @@ describe('PATCH /admin/agents/:id/enable', () => {
 
   it('returns 409 when agent is not disabled', async () => {
     const agent = await seedAgent(ctx.agentRepo); // ONLINE
-    const res   = await fetch(`${ctx.baseUrl}/admin/agents/${agent.id}/enable`, { method: 'PATCH' });
+    const res = await fetch(`${ctx.baseUrl}/admin/agents/${agent.id}/enable`, { method: 'PATCH' });
     expect(res.status).toBe(409);
   });
 
@@ -80,13 +88,17 @@ describe('PATCH /admin/agents/:id/enable', () => {
 describe('DELETE /admin/agents/:id', () => {
   let ctx: TestAdminServer;
 
-  beforeAll(async () => { ctx = await startAdminServer(); });
-  afterAll(async  () => stopServer(ctx.server));
-  beforeEach(() => { ctx.agentRepo.clear(); });
+  beforeAll(async () => {
+    ctx = await startAdminServer();
+  });
+  afterAll(async () => stopServer(ctx.server));
+  beforeEach(() => {
+    ctx.agentRepo.clear();
+  });
 
   it('returns 204 and removes agent from repository', async () => {
     const agent = await seedAgent(ctx.agentRepo);
-    const res   = await fetch(`${ctx.baseUrl}/admin/agents/${agent.id}`, { method: 'DELETE' });
+    const res = await fetch(`${ctx.baseUrl}/admin/agents/${agent.id}`, { method: 'DELETE' });
     expect(res.status).toBe(204);
     expect(await ctx.agentRepo.findById(agent.id.toString())).toBeNull();
   });

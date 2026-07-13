@@ -66,29 +66,29 @@ export interface TokenUsage {
 
 // ─── Branded IDs ──────────────────────────────────────────────────────────
 
-export type AIProviderId  = string & { readonly __brand: 'AIProviderId' };
-export type AIModelId     = string & { readonly __brand: 'AIModelId' };
-export type AgentId       = string & { readonly __brand: 'AgentId' };
-export type PromptId      = string & { readonly __brand: 'PromptId' };
-export type SessionId     = string & { readonly __brand: 'SessionId' };
+export type AIProviderId = string & { readonly __brand: 'AIProviderId' };
+export type AIModelId = string & { readonly __brand: 'AIModelId' };
+export type AgentId = string & { readonly __brand: 'AgentId' };
+export type PromptId = string & { readonly __brand: 'PromptId' };
+export type SessionId = string & { readonly __brand: 'SessionId' };
 export type RecommendationId = string & { readonly __brand: 'RecommendationId' };
-export type DecisionId    = string & { readonly __brand: 'DecisionId' };
+export type DecisionId = string & { readonly __brand: 'DecisionId' };
 export type MemoryEntryId = string & { readonly __brand: 'MemoryEntryId' };
-export type FeedbackId    = string & { readonly __brand: 'FeedbackId' };
+export type FeedbackId = string & { readonly __brand: 'FeedbackId' };
 
 // ─── Confidence ───────────────────────────────────────────────────────────
 
 export type AIConfidenceValue = number;
 
 export type AIConfidenceTier =
-  | 'very-high'   // 0.90–1.00
-  | 'high'        // 0.75–0.89
-  | 'medium'      // 0.55–0.74
-  | 'low'         // 0.35–0.54
-  | 'very-low';   // 0.00–0.34
+  | 'very-high' // 0.90–1.00
+  | 'high' // 0.75–0.89
+  | 'medium' // 0.55–0.74
+  | 'low' // 0.35–0.54
+  | 'very-low'; // 0.00–0.34
 
 export function confidenceTier(value: AIConfidenceValue): AIConfidenceTier {
-  if (value >= 0.90) return 'very-high';
+  if (value >= 0.9) return 'very-high';
   if (value >= 0.75) return 'high';
   if (value >= 0.55) return 'medium';
   if (value >= 0.35) return 'low';
@@ -246,14 +246,14 @@ export interface AIProviderConfig {
 // ─── Known Provider IDs ───────────────────────────────────────────────────
 
 export const PROVIDER_IDS = {
-  OPENAI:        'provider-openai'          as AIProviderId,
-  ANTHROPIC:     'provider-anthropic'       as AIProviderId,
-  GOOGLE_GEMINI: 'provider-google-gemini'   as AIProviderId,
-  AZURE_OPENAI:  'provider-azure-openai'    as AIProviderId,
-  DEEPSEEK:      'provider-deepseek'        as AIProviderId,
-  MISTRAL:       'provider-mistral'         as AIProviderId,
-  LLAMA:         'provider-llama'           as AIProviderId,
-  LOCAL:         'provider-local'           as AIProviderId,
+  OPENAI: 'provider-openai' as AIProviderId,
+  ANTHROPIC: 'provider-anthropic' as AIProviderId,
+  GOOGLE_GEMINI: 'provider-google-gemini' as AIProviderId,
+  AZURE_OPENAI: 'provider-azure-openai' as AIProviderId,
+  DEEPSEEK: 'provider-deepseek' as AIProviderId,
+  MISTRAL: 'provider-mistral' as AIProviderId,
+  LLAMA: 'provider-llama' as AIProviderId,
+  LOCAL: 'provider-local' as AIProviderId,
 } as const;
 
 export type KnownProviderId = (typeof PROVIDER_IDS)[keyof typeof PROVIDER_IDS];
@@ -262,27 +262,27 @@ export type KnownProviderId = (typeof PROVIDER_IDS)[keyof typeof PROVIDER_IDS];
 
 export const MODEL_IDS = {
   // OpenAI
-  GPT_4O:                  'gpt-4o'                    as AIModelId,
-  GPT_4O_MINI:             'gpt-4o-mini'               as AIModelId,
-  GPT_4_TURBO:             'gpt-4-turbo'               as AIModelId,
-  GPT_35_TURBO:            'gpt-3.5-turbo'             as AIModelId,
+  GPT_4O: 'gpt-4o' as AIModelId,
+  GPT_4O_MINI: 'gpt-4o-mini' as AIModelId,
+  GPT_4_TURBO: 'gpt-4-turbo' as AIModelId,
+  GPT_35_TURBO: 'gpt-3.5-turbo' as AIModelId,
   // Anthropic
-  CLAUDE_SONNET_46:        'claude-sonnet-4-6'         as AIModelId,
-  CLAUDE_OPUS_48:          'claude-opus-4-8'           as AIModelId,
-  CLAUDE_HAIKU_45:         'claude-haiku-4-5-20251001' as AIModelId,
+  CLAUDE_SONNET_46: 'claude-sonnet-4-6' as AIModelId,
+  CLAUDE_OPUS_48: 'claude-opus-4-8' as AIModelId,
+  CLAUDE_HAIKU_45: 'claude-haiku-4-5-20251001' as AIModelId,
   // Google
-  GEMINI_15_PRO:           'gemini-1.5-pro'            as AIModelId,
-  GEMINI_15_FLASH:         'gemini-1.5-flash'          as AIModelId,
-  GEMINI_20_FLASH:         'gemini-2.0-flash'          as AIModelId,
+  GEMINI_15_PRO: 'gemini-1.5-pro' as AIModelId,
+  GEMINI_15_FLASH: 'gemini-1.5-flash' as AIModelId,
+  GEMINI_20_FLASH: 'gemini-2.0-flash' as AIModelId,
   // DeepSeek
-  DEEPSEEK_R1:             'deepseek-r1'               as AIModelId,
-  DEEPSEEK_CHAT:           'deepseek-chat'             as AIModelId,
+  DEEPSEEK_R1: 'deepseek-r1' as AIModelId,
+  DEEPSEEK_CHAT: 'deepseek-chat' as AIModelId,
   // Mistral
-  MISTRAL_LARGE:           'mistral-large-latest'      as AIModelId,
-  MISTRAL_SMALL:           'mistral-small-latest'      as AIModelId,
+  MISTRAL_LARGE: 'mistral-large-latest' as AIModelId,
+  MISTRAL_SMALL: 'mistral-small-latest' as AIModelId,
   // Meta Llama
-  LLAMA_31_70B:            'llama-3.1-70b-instruct'    as AIModelId,
-  LLAMA_31_8B:             'llama-3.1-8b-instruct'     as AIModelId,
+  LLAMA_31_70B: 'llama-3.1-70b-instruct' as AIModelId,
+  LLAMA_31_8B: 'llama-3.1-8b-instruct' as AIModelId,
 } as const;
 
 // ─── Provider Registry ────────────────────────────────────────────────────

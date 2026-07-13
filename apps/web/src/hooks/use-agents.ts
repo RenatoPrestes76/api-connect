@@ -6,7 +6,7 @@ import { POLL_INTERVAL_MS } from '@/lib/constants';
 export function useAgents() {
   return useQuery({
     queryKey: ['agents'],
-    queryFn:  ({ signal }) => listAgents(signal),
+    queryFn: ({ signal }) => listAgents(signal),
     refetchInterval: POLL_INTERVAL_MS,
   });
 }
@@ -14,8 +14,8 @@ export function useAgents() {
 export function useAgent(id: string) {
   return useQuery({
     queryKey: ['agents', id],
-    queryFn:  ({ signal }) => getAgent(id, signal),
+    queryFn: ({ signal }) => getAgent(id, signal),
     refetchInterval: POLL_INTERVAL_MS,
-    enabled:  !!id,
+    enabled: !!id,
   });
 }

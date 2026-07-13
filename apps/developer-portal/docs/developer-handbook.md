@@ -157,6 +157,7 @@ Exports data to a specific format or destination.
 See [Plugin Guide: Plugin Manifest](./plugin-guide.md#2-plugin-manifest-atlas-pluginjson) for the complete spec.
 
 Key rules:
+
 - `id` must be globally unique in reverse-domain format
 - `version` is immutable after publish
 - `capabilities` and `permissions` must be the minimum required
@@ -169,20 +170,20 @@ Key rules:
 The `PluginContext` is the complete API surface available to plugins.
 Nothing outside this interface is accessible.
 
-| API                         | Purpose                                   | Permission Required      |
-|-----------------------------|-------------------------------------------|--------------------------|
-| `context.logger`            | Structured logging (pino-compatible)      | None                     |
-| `context.config.get(key)`   | Read plugin configuration                 | `read:config`            |
-| `context.config.getRequired`| Read required config (throws if missing)  | `read:config`            |
-| `context.credentials.get`   | Read stored credentials                   | `read:credentials`       |
-| `context.credentials.set`   | Store credentials                         | `write:credentials`      |
-| `context.http.get/post/...` | Sandboxed HTTP client                     | `network-outbound` cap   |
-| `context.storage.get/set`   | Plugin-isolated key-value storage         | `storage-read/write` cap |
-| `context.events.emit`       | Publish events to the platform            | None                     |
-| `context.events.on`         | Subscribe to platform events              | None                     |
-| `context.metrics.increment` | Record counter metrics                    | `write:metrics`          |
-| `context.metrics.gauge`     | Record gauge metrics                      | `write:metrics`          |
-| `context.metrics.timing`    | Record timing metrics                     | `write:metrics`          |
+| API                          | Purpose                                  | Permission Required      |
+| ---------------------------- | ---------------------------------------- | ------------------------ |
+| `context.logger`             | Structured logging (pino-compatible)     | None                     |
+| `context.config.get(key)`    | Read plugin configuration                | `read:config`            |
+| `context.config.getRequired` | Read required config (throws if missing) | `read:config`            |
+| `context.credentials.get`    | Read stored credentials                  | `read:credentials`       |
+| `context.credentials.set`    | Store credentials                        | `write:credentials`      |
+| `context.http.get/post/...`  | Sandboxed HTTP client                    | `network-outbound` cap   |
+| `context.storage.get/set`    | Plugin-isolated key-value storage        | `storage-read/write` cap |
+| `context.events.emit`        | Publish events to the platform           | None                     |
+| `context.events.on`          | Subscribe to platform events             | None                     |
+| `context.metrics.increment`  | Record counter metrics                   | `write:metrics`          |
+| `context.metrics.gauge`      | Record gauge metrics                     | `write:metrics`          |
+| `context.metrics.timing`     | Record timing metrics                    | `write:metrics`          |
 
 ---
 
@@ -196,6 +197,7 @@ The validator rejects any package where permissions exceed declared capabilities
 ### No Direct I/O
 
 Plugins cannot:
+
 - Access the filesystem directly (only via `context.storage`)
 - Open raw sockets (only via `context.http`)
 - Spawn child processes (requires `process-spawn` capability — rarely approved)
@@ -204,6 +206,7 @@ Plugins cannot:
 ### Credential Storage
 
 Always use `context.credentials` for sensitive values:
+
 ```typescript
 // BAD — hardcoded secret in code
 const apiKey = 'sk-1234567890abcdef';
@@ -255,6 +258,7 @@ describe('MyConnector', () => {
 ### Integration Tests (recommended)
 
 Run against a real (dev) instance of the connected system:
+
 ```typescript
 // Only runs in CI with integration test secrets
 it.skipIf(!process.env.DB_HOST)('connects to real database', async () => {
@@ -281,12 +285,12 @@ it.skipIf(!process.env.DB_HOST)('connects to real database', async () => {
 
 ### Bundle Size Limits
 
-| Threshold       | Action                                   |
-|-----------------|------------------------------------------|
-| > 5 MB          | Blocked — cannot publish                 |
-| > 1 MB          | Warning — review necessity               |
-| 100 KB–1 MB     | Acceptable for complex connectors        |
-| < 100 KB        | Ideal for most plugin types              |
+| Threshold   | Action                            |
+| ----------- | --------------------------------- |
+| > 5 MB      | Blocked — cannot publish          |
+| > 1 MB      | Warning — review necessity        |
+| 100 KB–1 MB | Acceptable for complex connectors |
+| < 100 KB    | Ideal for most plugin types       |
 
 ### Signing Keys
 
@@ -357,6 +361,7 @@ async stop() {
 ### Communicating Changes
 
 Always include a `changelog` when publishing:
+
 ```bash
 atlas publish --channel stable
 # Prompts for changelog text if not set in atlas.yaml
@@ -381,6 +386,7 @@ Most plugins do not need this — use `context.http` instead.
 ### "Bundle size exceeds 5 MB"
 
 Check for accidentally bundled large modules:
+
 ```bash
 npx vite-bundle-visualizer  # or
 npx source-map-explorer dist/index.js

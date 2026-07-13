@@ -49,13 +49,13 @@ export type AgentErrorCode =
 
 // ─── Branded IDs ──────────────────────────────────────────────────────────
 
-export type AgentId       = string & { readonly __brand: 'AgentId' };
-export type ConnectorId   = string & { readonly __brand: 'ConnectorId' };
-export type SyncJobId     = string & { readonly __brand: 'SyncJobId' };
-export type CredentialId  = string & { readonly __brand: 'CredentialId' };
-export type PluginId      = string & { readonly __brand: 'PluginId' };
-export type CacheKey      = string & { readonly __brand: 'CacheKey' };
-export type TraceId       = string & { readonly __brand: 'TraceId' };
+export type AgentId = string & { readonly __brand: 'AgentId' };
+export type ConnectorId = string & { readonly __brand: 'ConnectorId' };
+export type SyncJobId = string & { readonly __brand: 'SyncJobId' };
+export type CredentialId = string & { readonly __brand: 'CredentialId' };
+export type PluginId = string & { readonly __brand: 'PluginId' };
+export type CacheKey = string & { readonly __brand: 'CacheKey' };
+export type TraceId = string & { readonly __brand: 'TraceId' };
 
 // ─── Configuration Schema ─────────────────────────────────────────────────
 
@@ -78,6 +78,8 @@ export interface AgentSection {
   readonly id: string;
   /** Human-readable name */
   readonly name: string;
+  /** Agent software version — reported during cloud registration */
+  readonly version: string;
   /** Seltriva Connect Platform URL */
   readonly platform_url: string;
   /** Environment: development | staging | production */
@@ -86,6 +88,8 @@ export interface AgentSection {
   readonly data_dir: string;
   /** Working directory for temporary files */
   readonly work_dir: string;
+  /** Free-form key/value metadata reported during cloud registration */
+  readonly labels?: Record<string, string>;
 }
 
 export type AgentEnvironment = 'development' | 'staging' | 'production';
@@ -139,13 +143,7 @@ export interface DatabaseConnectorConfig {
   readonly enabled: boolean;
 }
 
-export type DatabaseType =
-  | 'postgres'
-  | 'mysql'
-  | 'mssql'
-  | 'oracle'
-  | 'sqlite'
-  | 'mariadb';
+export type DatabaseType = 'postgres' | 'mysql' | 'mssql' | 'oracle' | 'sqlite' | 'mariadb';
 
 export interface SyncSection {
   readonly mode: SyncMode;

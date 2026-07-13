@@ -79,6 +79,7 @@ packages/database/
 Rich aggregate root. Enforces state machine transitions via `AgentStatus`.
 
 Status lifecycle:
+
 ```
 REGISTERING ──► ONLINE ──► OFFLINE ──► ONLINE (recovery)
                    │                   ▲
@@ -100,12 +101,14 @@ REGISTERING ──► ONLINE ──► OFFLINE ──► ONLINE (recovery)
 Models live in `packages/database/prisma/schema.prisma`.
 
 After any schema change:
+
 ```sh
 pnpm --filter @seltriva/database db:generate
 pnpm --filter @seltriva/database db:push
 ```
 
 Key decisions:
+
 - `machineId` is unique — prevents duplicate registrations from the same host.
 - Soft-delete via `deletedAt` on `AtlasAgent` — preserves audit history.
 - `tokenHash` is unique — prevents hash collision attacks.

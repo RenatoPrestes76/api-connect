@@ -29,7 +29,8 @@ export class ReadOnlyViolationError extends Error {
   }
 }
 
-const WRITE_VERB_RE = /^\s*(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE|GRANT|REVOKE|VACUUM|REINDEX|CLUSTER|COPY|LOCK|COMMENT)\b/i;
+const WRITE_VERB_RE =
+  /^\s*(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE|GRANT|REVOKE|VACUUM|REINDEX|CLUSTER|COPY|LOCK|COMMENT)\b/i;
 
 export function assertReadOnly(sql: string): void {
   if (WRITE_VERB_RE.test(sql)) throw new ReadOnlyViolationError(sql);
@@ -38,10 +39,10 @@ export function assertReadOnly(sql: string): void {
 // ─── Strategy implementations ─────────────────────────────────────────────────
 
 export interface StrategyResult {
-  readonly strategy:  ChangeDetectionStrategyKind;
-  readonly sql:       string;
-  readonly params:    readonly RecordValue[];
-  readonly sinceCol:  string | null;
+  readonly strategy: ChangeDetectionStrategyKind;
+  readonly sql: string;
+  readonly params: readonly RecordValue[];
+  readonly sinceCol: string | null;
 }
 
 /**
@@ -49,7 +50,7 @@ export interface StrategyResult {
  */
 export function selectStrategy(
   columns: readonly string[],
-  preferred?: ChangeDetectionStrategyKind,
+  preferred?: ChangeDetectionStrategyKind
 ): ChangeDetectionStrategyKind {
   if (preferred && preferred !== 'NONE') {
     // Validate the preferred strategy is feasible
@@ -61,7 +62,7 @@ export function selectStrategy(
   }
 
   // Auto-detect
-  if (hasXmin(columns))      return 'XMIN';
+  if (hasXmin(columns)) return 'XMIN';
   if (hasUpdatedAt(columns)) return 'UPDATED_AT';
   if (hasCreatedAt(columns)) return 'CREATED_AT';
   return 'ROW_HASH';
@@ -72,7 +73,14 @@ function hasXmin(columns: readonly string[]): boolean {
 }
 
 function hasUpdatedAt(columns: readonly string[]): boolean {
-  const patterns = ['updated_at', 'atualizado_em', 'dt_atualizacao', 'modified_at', 'changed_at', 'dt_alteracao'];
+  const patterns = [
+    'updated_at',
+    'atualizado_em',
+    'dt_atualizacao',
+    'modified_at',
+    'changed_at',
+    'dt_alteracao',
+  ];
   return columns.some((c) => patterns.includes(c.toLowerCase()));
 }
 
@@ -96,49 +104,62 @@ function qualName(schema: string, table: string): string {
 }
 
 export function buildExtractSql(
-  schema:    string,
-  table:     string,
-  config:    TableSyncConfig,
-  columns:   readonly string[],
-  since:     RecordValue,
-  offset:    number,
-  batchSize: number,
+  schema: string,
+  table: string,
+  config: TableSyncConfig,
+  columns: readonly string[],
+  since: RecordValue,
+  offset: number,
+  batchSize: number
 ): StrategyResult {
-  const fqn      = qualName(schema, table);
+  const fqn = qualName(schema, table);
   const strategy = selectStrategy(columns, config.detection);
 
-  let sql:       string;
-  let params:    RecordValue[];
-  let sinceCol:  string | null = null;
+  let sql: string;
+  let params: RecordValue[];
+  let sinceCol: string | null = null;
 
   switch (strategy) {
     case 'XMIN': {
-      sql    = `SELECT *, xmin::text AS _xmin FROM ${fqn} WHERE xmin::text::bigint > $1::bigint LIMIT $2 OFFSET $3`;
+      sql = `SELECT *, xmin::text AS _xmin FROM ${fqn} WHERE xmin::text::bigint > $1::bigint LIMIT $2 OFFSET $3`;
       params = [since ?? '0', batchSize, offset];
       sinceCol = '_xmin';
       break;
     }
 
     case 'UPDATED_AT': {
-      const col = findColumn(columns, ['updated_at', 'atualizado_em', 'dt_atualizacao', 'modified_at', 'changed_at', 'dt_alteracao'])!;
-      sinceCol  = col;
+      const col = findColumn(columns, [
+        'updated_at',
+        'atualizado_em',
+        'dt_atualizacao',
+        'modified_at',
+        'changed_at',
+        'dt_alteracao',
+      ])!;
+      sinceCol = col;
       const cond = since != null ? `WHERE ${quoteIdent(col)} > $1` : '';
       const pList = since != null ? [since, batchSize, offset] : [batchSize, offset];
       const offset$ = since != null ? '$3' : '$2';
-      const batch$  = since != null ? '$2' : '$1';
-      sql    = `SELECT * FROM ${fqn} ${cond} ORDER BY ${quoteIdent(col)} ASC LIMIT ${batch$} OFFSET ${offset$}`;
+      const batch$ = since != null ? '$2' : '$1';
+      sql = `SELECT * FROM ${fqn} ${cond} ORDER BY ${quoteIdent(col)} ASC LIMIT ${batch$} OFFSET ${offset$}`;
       params = pList;
       break;
     }
 
     case 'CREATED_AT': {
-      const col = findColumn(columns, ['created_at', 'criado_em', 'dt_criacao', 'inserted_at', 'dt_inclusao'])!;
-      sinceCol  = col;
+      const col = findColumn(columns, [
+        'created_at',
+        'criado_em',
+        'dt_criacao',
+        'inserted_at',
+        'dt_inclusao',
+      ])!;
+      sinceCol = col;
       const cond = since != null ? `WHERE ${quoteIdent(col)} > $1` : '';
       const pList = since != null ? [since, batchSize, offset] : [batchSize, offset];
       const offset$ = since != null ? '$3' : '$2';
-      const batch$  = since != null ? '$2' : '$1';
-      sql    = `SELECT * FROM ${fqn} ${cond} ORDER BY ${quoteIdent(col)} ASC LIMIT ${batch$} OFFSET ${offset$}`;
+      const batch$ = since != null ? '$2' : '$1';
+      sql = `SELECT * FROM ${fqn} ${cond} ORDER BY ${quoteIdent(col)} ASC LIMIT ${batch$} OFFSET ${offset$}`;
       params = pList;
       break;
     }
@@ -146,7 +167,7 @@ export function buildExtractSql(
     default: {
       // ROW_HASH / CHECKSUM / COMPARISON / NONE — full table scan in batches
       const orderBy = config.orderBy ? ` ORDER BY ${quoteIdent(config.orderBy)}` : '';
-      sql    = `SELECT * FROM ${fqn}${orderBy} LIMIT $1 OFFSET $2`;
+      sql = `SELECT * FROM ${fqn}${orderBy} LIMIT $1 OFFSET $2`;
       params = [batchSize, offset];
       break;
     }
@@ -162,7 +183,7 @@ export function hashRecord(record: SyncRecord): string {
   const normalized = JSON.stringify(
     Object.entries(record)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([k, v]) => [k, v instanceof Date ? v.toISOString() : v]),
+      .map(([k, v]) => [k, v instanceof Date ? v.toISOString() : v])
   );
   return createHash('md5').update(normalized).digest('hex');
 }
@@ -184,7 +205,8 @@ export class ChangeDetector {
    */
   extractSinceValue(record: SyncRecord, strategy: ChangeDetectionStrategyKind): RecordValue {
     switch (strategy) {
-      case 'XMIN':       return record['_xmin'] ?? record['xmin'] ?? null;
+      case 'XMIN':
+        return record['_xmin'] ?? record['xmin'] ?? null;
       case 'UPDATED_AT': {
         const keys = ['updated_at', 'atualizado_em', 'dt_atualizacao', 'modified_at'];
         for (const k of keys) {
@@ -199,34 +221,35 @@ export class ChangeDetector {
         }
         return null;
       }
-      default: return null;
+      default:
+        return null;
     }
   }
 
   /** Estimate detected change count (for progress reporting). */
   async estimateChanges(
-    schema:   string,
-    table:    string,
+    schema: string,
+    table: string,
     strategy: ChangeDetectionStrategyKind,
-    since:    RecordValue,
-    queryFn:  (sql: string, params: readonly RecordValue[]) => Promise<readonly SyncRecord[]>,
+    since: RecordValue,
+    queryFn: (sql: string, params: readonly RecordValue[]) => Promise<readonly SyncRecord[]>
   ): Promise<DetectedChange> {
-    let sql:    string;
+    let sql: string;
     let params: RecordValue[];
 
     const fqn = qualName(schema, table);
 
     switch (strategy) {
       case 'UPDATED_AT':
-        sql    = `SELECT COUNT(*)::int AS n FROM ${fqn} WHERE updated_at > $1`;
+        sql = `SELECT COUNT(*)::int AS n FROM ${fqn} WHERE updated_at > $1`;
         params = [since];
         break;
       case 'XMIN':
-        sql    = `SELECT COUNT(*)::int AS n FROM ${fqn} WHERE xmin::text::bigint > $1::bigint`;
+        sql = `SELECT COUNT(*)::int AS n FROM ${fqn} WHERE xmin::text::bigint > $1::bigint`;
         params = [since ?? '0'];
         break;
       default:
-        sql    = `SELECT COUNT(*)::int AS n FROM ${fqn}`;
+        sql = `SELECT COUNT(*)::int AS n FROM ${fqn}`;
         params = [];
     }
 
@@ -239,7 +262,7 @@ export class ChangeDetector {
       table,
       strategy,
       since,
-      until:     null,
+      until: null,
       estimated,
     };
   }

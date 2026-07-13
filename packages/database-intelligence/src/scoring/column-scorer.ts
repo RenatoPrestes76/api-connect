@@ -7,38 +7,104 @@
  *  3. Aggregate and normalize across all columns
  */
 import { FIELD_PATTERNS } from '../knowledge/field-patterns.js';
-import type { ColumnInput, EntityType, FieldRole, FieldRoleAssignment, ScoreMap, ScoringReason } from '../types/index.js';
+import type {
+  ColumnInput,
+  EntityType,
+  FieldRole,
+  FieldRoleAssignment,
+  ScoreMap,
+  ScoringReason,
+} from '../types/index.js';
 
 // ─── Role → Entity signal mapping ────────────────────────────────────────────
 
 const ROLE_ENTITY_SIGNALS: Readonly<Partial<Record<FieldRole, Array<[EntityType, number]>>>> = {
-  EAN:             [['PRODUCT', 80]],
-  SKU:             [['PRODUCT', 70]],
-  COST_PRICE:      [['PRODUCT', 60], ['PRICE', 50]],
-  SALE_PRICE:      [['PRODUCT', 60], ['PRICE', 60], ['SALE', 30]],
-  PRICE:           [['PRICE', 50], ['PRODUCT', 30], ['SALE', 20]],
-  MARGIN:          [['PRODUCT', 40], ['PRICE', 50]],
-  BALANCE:         [['INVENTORY', 70], ['PRODUCT', 20]],
-  QUANTITY:        [['INVENTORY', 50], ['MOVEMENT', 40], ['SALE', 30]],
-  EXPIRY_DATE:     [['EXPIRY', 90], ['LOT', 40]],
-  MANUFACTURE_DATE:[['LOT', 60]],
-  WEIGHT:          [['PRODUCT', 50]],
-  BRAND:           [['PRODUCT', 40]],
-  SUPPLIER_FK:     [['PRODUCT', 40], ['PURCHASE', 50], ['SUPPLIER', 20]],
-  CATEGORY_FK:     [['PRODUCT', 40], ['CATEGORY', 30]],
-  BRANCH_FK:       [['INVENTORY', 40], ['SALE', 30], ['BRANCH', 20]],
-  CUSTOMER_FK:     [['SALE', 60], ['CUSTOMER', 30]],
-  PRODUCT_FK:      [['INVENTORY', 50], ['SALE', 50], ['MOVEMENT', 40], ['PRICE', 40]],
-  FLAG:            [['PRODUCT', 10], ['USER', 10], ['CONFIGURATION', 20]],
-  STATUS:          [['SALE', 20], ['PURCHASE', 20], ['MOVEMENT', 10]],
-  SOFT_DELETE:     [['CUSTOMER', 15], ['PRODUCT', 15], ['USER', 15]],
-  TIMESTAMP_CREATED: [['SALE', 10], ['PURCHASE', 10], ['MOVEMENT', 10]],
+  EAN: [['PRODUCT', 80]],
+  SKU: [['PRODUCT', 70]],
+  COST_PRICE: [
+    ['PRODUCT', 60],
+    ['PRICE', 50],
+  ],
+  SALE_PRICE: [
+    ['PRODUCT', 60],
+    ['PRICE', 60],
+    ['SALE', 30],
+  ],
+  PRICE: [
+    ['PRICE', 50],
+    ['PRODUCT', 30],
+    ['SALE', 20],
+  ],
+  MARGIN: [
+    ['PRODUCT', 40],
+    ['PRICE', 50],
+  ],
+  BALANCE: [
+    ['INVENTORY', 70],
+    ['PRODUCT', 20],
+  ],
+  QUANTITY: [
+    ['INVENTORY', 50],
+    ['MOVEMENT', 40],
+    ['SALE', 30],
+  ],
+  EXPIRY_DATE: [
+    ['EXPIRY', 90],
+    ['LOT', 40],
+  ],
+  MANUFACTURE_DATE: [['LOT', 60]],
+  WEIGHT: [['PRODUCT', 50]],
+  BRAND: [['PRODUCT', 40]],
+  SUPPLIER_FK: [
+    ['PRODUCT', 40],
+    ['PURCHASE', 50],
+    ['SUPPLIER', 20],
+  ],
+  CATEGORY_FK: [
+    ['PRODUCT', 40],
+    ['CATEGORY', 30],
+  ],
+  BRANCH_FK: [
+    ['INVENTORY', 40],
+    ['SALE', 30],
+    ['BRANCH', 20],
+  ],
+  CUSTOMER_FK: [
+    ['SALE', 60],
+    ['CUSTOMER', 30],
+  ],
+  PRODUCT_FK: [
+    ['INVENTORY', 50],
+    ['SALE', 50],
+    ['MOVEMENT', 40],
+    ['PRICE', 40],
+  ],
+  FLAG: [
+    ['PRODUCT', 10],
+    ['USER', 10],
+    ['CONFIGURATION', 20],
+  ],
+  STATUS: [
+    ['SALE', 20],
+    ['PURCHASE', 20],
+    ['MOVEMENT', 10],
+  ],
+  SOFT_DELETE: [
+    ['CUSTOMER', 15],
+    ['PRODUCT', 15],
+    ['USER', 15],
+  ],
+  TIMESTAMP_CREATED: [
+    ['SALE', 10],
+    ['PURCHASE', 10],
+    ['MOVEMENT', 10],
+  ],
 };
 
 export interface ColumnScoreResult {
-  readonly scores:       ScoreMap;
-  readonly reasons:      readonly ScoringReason[];
-  readonly fieldRoles:   readonly FieldRoleAssignment[];
+  readonly scores: ScoreMap;
+  readonly reasons: readonly ScoringReason[];
+  readonly fieldRoles: readonly FieldRoleAssignment[];
 }
 
 export class ColumnScorer {
@@ -72,9 +138,20 @@ export class ColumnScorer {
       if (bestWeight < 60) {
         const dtLower = col.dataType.toLowerCase();
         if (dtLower.includes('numeric') || dtLower.includes('decimal')) {
-          if (colLower.includes('preco') || colLower.includes('price') || colLower.includes('vl_')) {
-            colReasons.push({ signal: 'column_type', weight: 30, detail: `numeric column "${col.name}" hints at PRICE role` });
-            if (30 > bestWeight) { bestWeight = 30; bestRole = 'PRICE'; }
+          if (
+            colLower.includes('preco') ||
+            colLower.includes('price') ||
+            colLower.includes('vl_')
+          ) {
+            colReasons.push({
+              signal: 'column_type',
+              weight: 30,
+              detail: `numeric column "${col.name}" hints at PRICE role`,
+            });
+            if (30 > bestWeight) {
+              bestWeight = 30;
+              bestRole = 'PRICE';
+            }
           }
         }
       }

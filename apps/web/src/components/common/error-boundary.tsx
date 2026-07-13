@@ -4,11 +4,14 @@ import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ErrorBoundaryProps {
-  children:  React.ReactNode;
+  children: React.ReactNode;
   fallback?: React.ReactNode;
 }
 
-interface State { hasError: boolean; message: string }
+interface State {
+  hasError: boolean;
+  message: string;
+}
 
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
   constructor(props: ErrorBoundaryProps) {
@@ -45,20 +48,24 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
 }
 
 interface ErrorStateProps {
-  message?:  string;
-  onRetry?:  () => void;
+  message?: string;
+  onRetry?: () => void;
   className?: string;
 }
 
 export function ErrorState({
-  message = 'Failed to load data', onRetry, className,
+  message = 'Failed to load data',
+  onRetry,
+  className,
 }: ErrorStateProps) {
   return (
     <div className={`flex flex-col items-center gap-2 py-10 text-center ${className ?? ''}`}>
       <AlertTriangle className="h-6 w-6 text-rose-400" />
       <p className="text-sm text-rose-600">{message}</p>
       {onRetry && (
-        <Button size="sm" variant="outline" onClick={onRetry}>Retry</Button>
+        <Button size="sm" variant="outline" onClick={onRetry}>
+          Retry
+        </Button>
       )}
     </div>
   );

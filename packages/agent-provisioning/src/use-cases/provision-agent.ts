@@ -6,14 +6,11 @@
  * registration to a specific company.
  */
 import type { RegisterAgentParams } from '@seltriva/agent-identity';
-import {
-  ProvisioningService,
-  ProvisioningResult,
-} from '../service/provisioning-service.js';
+import { ProvisioningService, ProvisioningResult } from '../service/provisioning-service.js';
 
 export interface ProvisionAgentInput {
-  readonly rawToken:     string;
-  readonly agentParams:  RegisterAgentParams;
+  readonly rawToken: string;
+  readonly agentParams: RegisterAgentParams;
 }
 
 export type ProvisionAgentOutput = ProvisioningResult;

@@ -12,16 +12,16 @@ import type { GovernanceResult } from '../policies/index';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
-export type TenantBoundaryId  = Branded<string, 'TenantBoundaryId'>;
+export type TenantBoundaryId = Branded<string, 'TenantBoundaryId'>;
 export type IsolationPolicyId = Branded<string, 'IsolationPolicyId'>;
 
 // ─── Isolation Levels ────────────────────────────────────────────────────────
 
 export type IsolationLevel =
-  | 'shared'        // same infra, logical isolation only (row-level security)
-  | 'pooled'        // shared pool, resource quotas per tenant
-  | 'siloed'        // dedicated compute, shared control plane
-  | 'dedicated';    // fully dedicated infra and control plane
+  | 'shared' // same infra, logical isolation only (row-level security)
+  | 'pooled' // shared pool, resource quotas per tenant
+  | 'siloed' // dedicated compute, shared control plane
+  | 'dedicated'; // fully dedicated infra and control plane
 
 // ─── Tenant Boundary ─────────────────────────────────────────────────────────
 
@@ -33,7 +33,7 @@ export interface TenantBoundary {
   readonly networkPolicy: TenantNetworkPolicy;
   readonly resourceQuotas: TenantResourceQuotas;
   readonly crossTenantRules: CrossTenantRule[];
-  readonly complianceRequirements: string[];    // required compliance framework IDs
+  readonly complianceRequirements: string[]; // required compliance framework IDs
   readonly encryptionPolicy: TenantEncryptionPolicy;
   readonly enabled: boolean;
   readonly createdAt: Date;
@@ -41,7 +41,7 @@ export interface TenantBoundary {
 }
 
 export interface DataResidency {
-  readonly primaryRegion: string;            // e.g. "br-south-1"
+  readonly primaryRegion: string; // e.g. "br-south-1"
   readonly allowedRegions: string[];
   readonly replicationAllowed: boolean;
   readonly crossBorderTransferAllowed: boolean;
@@ -49,7 +49,7 @@ export interface DataResidency {
 }
 
 export interface TenantNetworkPolicy {
-  readonly ingressWhitelist?: string[];      // CIDR blocks allowed in
+  readonly ingressWhitelist?: string[]; // CIDR blocks allowed in
   readonly egressRestricted: boolean;
   readonly allowedEgressCIDRs?: string[];
   readonly privateLinkEnabled: boolean;
@@ -83,13 +83,13 @@ export interface CrossTenantRule {
 export interface TenantEncryptionPolicy {
   readonly atRest: EncryptionSpec;
   readonly inTransit: EncryptionSpec;
-  readonly kmsKeyId?: string;               // customer-managed KMS key
+  readonly kmsKeyId?: string; // customer-managed KMS key
   readonly customerManagedKeys: boolean;
   readonly keyRotationDays: number;
 }
 
 export interface EncryptionSpec {
-  readonly algorithm: string;              // e.g. "AES-256-GCM"
+  readonly algorithm: string; // e.g. "AES-256-GCM"
   readonly keyLength: 128 | 192 | 256;
 }
 
@@ -147,7 +147,11 @@ export interface ITenantIsolationService {
    * Add a cross-tenant access grant.
    */
   grantCrossTenantAccess(input: CrossTenantGrantInput): Promise<GovernanceResult<CrossTenantRule>>;
-  revokeCrossTenantAccess(orgId: string, ruleId: string, by: string): Promise<GovernanceResult<void>>;
+  revokeCrossTenantAccess(
+    orgId: string,
+    ruleId: string,
+    by: string
+  ): Promise<GovernanceResult<void>>;
 
   /**
    * Check if two organizations may communicate.

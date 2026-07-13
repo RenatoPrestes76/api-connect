@@ -9,9 +9,12 @@ function makeSchema(name: string): DatabaseSchema {
 function makeReader(name = 'db'): { reader: SchemaReader; callCount: () => number } {
   let calls = 0;
   const reader: SchemaReader = {
-    readSchema:  async () => { calls++; return makeSchema(name); },
-    readTable:   async () => null,
-    listTables:  async () => [],
+    readSchema: async () => {
+      calls++;
+      return makeSchema(name);
+    },
+    readTable: async () => null,
+    listTables: async () => [],
   };
   return { reader, callCount: () => calls };
 }

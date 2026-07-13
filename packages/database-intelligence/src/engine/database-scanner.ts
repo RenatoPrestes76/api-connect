@@ -32,17 +32,14 @@ import {
 import { NameScorer } from '../scoring/name-scorer.js';
 
 export class DatabaseScanner {
-  private readonly _classifier  = new EntityClassifier();
+  private readonly _classifier = new EntityClassifier();
   private readonly _relAnalyzer = new RelationshipAnalyzer();
   private readonly _graphBuilder = new GraphBuilder();
-  private readonly _cache       = new AnalysisCache();
+  private readonly _cache = new AnalysisCache();
   private readonly _reportBuilder = new ReportBuilder();
-  private readonly _nameScorer  = new NameScorer();
+  private readonly _nameScorer = new NameScorer();
 
-  async scan(
-    input:   DatabaseInput,
-    options: ScanOptions = {},
-  ): Promise<DatabaseIntelligenceReport> {
+  async scan(input: DatabaseInput, options: ScanOptions = {}): Promise<DatabaseIntelligenceReport> {
     const opts = { ...DEFAULT_SCAN_OPTIONS, ...options };
     const start = Date.now();
 
@@ -59,9 +56,8 @@ export class DatabaseScanner {
 
     // ─── Second pass: full classification ────────────────────────────────
     const pool = new WorkerPool(opts.parallelism);
-    const classifications = await pool.runCollect(
-      allTables,
-      async (table) => this._classifier.classify(table, entityHints, allTables),
+    const classifications = await pool.runCollect(allTables, async (table) =>
+      this._classifier.classify(table, entityHints, allTables)
     );
 
     // ─── Relationship analysis ────────────────────────────────────────────
@@ -104,15 +100,19 @@ export class DatabaseScanner {
     const lower = name.toLowerCase();
     const system = ['information_schema', 'pg_catalog', 'pg_toast'];
     if (system.includes(lower)) return false;
-    if (opts.includeSchemas.length > 0 && !opts.includeSchemas.some((p) => matches(lower, p))) return false;
-    if (opts.excludeSchemas.length > 0 &&  opts.excludeSchemas.some((p) => matches(lower, p))) return false;
+    if (opts.includeSchemas.length > 0 && !opts.includeSchemas.some((p) => matches(lower, p)))
+      return false;
+    if (opts.excludeSchemas.length > 0 && opts.excludeSchemas.some((p) => matches(lower, p)))
+      return false;
     return true;
   }
 
   private _shouldIncludeTable(name: string, opts: Required<ScanOptions>): boolean {
     const lower = name.toLowerCase();
-    if (opts.includeTables.length > 0 && !opts.includeTables.some((p) => matches(lower, p))) return false;
-    if (opts.excludeTables.length > 0 &&  opts.excludeTables.some((p) => matches(lower, p))) return false;
+    if (opts.includeTables.length > 0 && !opts.includeTables.some((p) => matches(lower, p)))
+      return false;
+    if (opts.excludeTables.length > 0 && opts.excludeTables.some((p) => matches(lower, p)))
+      return false;
     return true;
   }
 
@@ -134,7 +134,9 @@ export class DatabaseScanner {
   }
 
   /** Expose cache for testing / invalidation. */
-  get cache(): AnalysisCache { return this._cache; }
+  get cache(): AnalysisCache {
+    return this._cache;
+  }
 }
 
 // ─── Glob-style pattern matching ──────────────────────────────────────────────

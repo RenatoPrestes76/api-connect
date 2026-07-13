@@ -7,7 +7,7 @@ import type { DbQueryClient } from './db-client.js';
 export class MySQLSchemaReader implements SchemaReader {
   constructor(
     private readonly _client: DbQueryClient,
-    private readonly _database: string,
+    private readonly _database: string
   ) {}
 
   async listTables(): Promise<string[]> {
@@ -15,7 +15,7 @@ export class MySQLSchemaReader implements SchemaReader {
       `SELECT TABLE_NAME FROM information_schema.TABLES
        WHERE TABLE_SCHEMA = ? AND TABLE_TYPE = 'BASE TABLE'
        ORDER BY TABLE_NAME`,
-      [this._database],
+      [this._database]
     );
     return rows.map((r) => String(r['TABLE_NAME']));
   }
@@ -34,7 +34,7 @@ export class MySQLSchemaReader implements SchemaReader {
   }
 
   private async _readTableDetails(name: string): Promise<Table> {
-    const columns    = await this._readColumns(name);
+    const columns = await this._readColumns(name);
     const { primaryKey, foreignKeys, indexes } = await this._readConstraints(name);
     return { name, schema: this._database, columns, primaryKey, foreignKeys, indexes };
   }
@@ -45,22 +45,22 @@ export class MySQLSchemaReader implements SchemaReader {
        FROM information_schema.COLUMNS
        WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
        ORDER BY ORDINAL_POSITION`,
-      [this._database, table],
+      [this._database, table]
     );
     return rows.map((r) => ({
-      name:         String(r['COLUMN_NAME']),
-      type:         String(r['DATA_TYPE']),
-      nullable:     r['IS_NULLABLE'] === 'YES',
+      name: String(r['COLUMN_NAME']),
+      type: String(r['DATA_TYPE']),
+      nullable: r['IS_NULLABLE'] === 'YES',
       isPrimaryKey: r['COLUMN_KEY'] === 'PRI',
       isForeignKey: r['COLUMN_KEY'] === 'MUL',
-      isUnique:     r['COLUMN_KEY'] === 'UNI' || r['COLUMN_KEY'] === 'PRI',
+      isUnique: r['COLUMN_KEY'] === 'UNI' || r['COLUMN_KEY'] === 'PRI',
     }));
   }
 
   private async _readConstraints(table: string): Promise<{
     primaryKey?: PrimaryKey;
     foreignKeys: ForeignKey[];
-    indexes:     Index[];
+    indexes: Index[];
   }> {
     const { rows } = await this._client.query(
       `SELECT kcu.CONSTRAINT_NAME, tc.CONSTRAINT_TYPE,
@@ -71,7 +71,7 @@ export class MySQLSchemaReader implements SchemaReader {
         AND tc.TABLE_SCHEMA    = kcu.TABLE_SCHEMA
         AND tc.TABLE_NAME      = kcu.TABLE_NAME
        WHERE tc.TABLE_SCHEMA = ? AND tc.TABLE_NAME = ?`,
-      [this._database, table],
+      [this._database, table]
     );
 
     const pkCols: string[] = [];
@@ -79,7 +79,7 @@ export class MySQLSchemaReader implements SchemaReader {
     const indexMap = new Map<string, Index>();
 
     for (const r of rows) {
-      const col   = String(r['COLUMN_NAME']);
+      const col = String(r['COLUMN_NAME']);
       const ctype = String(r['CONSTRAINT_TYPE']);
       const cname = String(r['CONSTRAINT_NAME']);
 
@@ -93,8 +93,8 @@ export class MySQLSchemaReader implements SchemaReader {
 
       if (ctype === 'FOREIGN KEY' && r['REFERENCED_TABLE_NAME']) {
         foreignKeys.push({
-          column:           col,
-          referencedTable:  String(r['REFERENCED_TABLE_NAME']),
+          column: col,
+          referencedTable: String(r['REFERENCED_TABLE_NAME']),
           referencedColumn: String(r['REFERENCED_COLUMN_NAME']),
         });
       }
@@ -108,9 +108,9 @@ export class MySQLSchemaReader implements SchemaReader {
     }
 
     return {
-      primaryKey:  pkCols.length ? { columns: pkCols } : undefined,
+      primaryKey: pkCols.length ? { columns: pkCols } : undefined,
       foreignKeys,
-      indexes:     [...indexMap.values()],
+      indexes: [...indexMap.values()],
     };
   }
 
@@ -119,11 +119,11 @@ export class MySQLSchemaReader implements SchemaReader {
     for (const table of tables) {
       for (const fk of table.foreignKeys) {
         relations.push({
-          fromTable:  table.name,
+          fromTable: table.name,
           fromColumn: fk.column,
-          toTable:    fk.referencedTable,
-          toColumn:   fk.referencedColumn,
-          type:       'many-to-one',
+          toTable: fk.referencedTable,
+          toColumn: fk.referencedColumn,
+          type: 'many-to-one',
         });
       }
     }

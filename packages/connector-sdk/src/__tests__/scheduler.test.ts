@@ -16,7 +16,7 @@ describe('ConnectorScheduler', () => {
 
   it('registers a job and returns a jobId', () => {
     const task = vi.fn().mockResolvedValue(undefined);
-    const id   = scheduler.schedule('conn-1', { intervalMs: 1000, task });
+    const id = scheduler.schedule('conn-1', { intervalMs: 1000, task });
     expect(id).toMatch(/^job-\d+-conn-1$/);
     expect(scheduler.size).toBe(1);
   });
@@ -48,7 +48,7 @@ describe('ConnectorScheduler', () => {
   });
 
   it('cancel() removes the job', async () => {
-    const task  = vi.fn().mockResolvedValue(undefined);
+    const task = vi.fn().mockResolvedValue(undefined);
     const jobId = scheduler.schedule('conn-1', { intervalMs: 100, task });
     scheduler.start();
     scheduler.cancel(jobId);
@@ -72,7 +72,9 @@ describe('ConnectorScheduler', () => {
     scheduler.onError(errHandler);
     scheduler.schedule('conn-1', {
       intervalMs: 100,
-      task: async () => { throw new Error('task error'); },
+      task: async () => {
+        throw new Error('task error');
+      },
     });
     scheduler.start();
 

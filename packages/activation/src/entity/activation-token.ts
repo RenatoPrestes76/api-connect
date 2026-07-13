@@ -13,7 +13,9 @@ import { randomBytes } from 'node:crypto';
 export type ActivationEnvironment = 'production' | 'staging' | 'development';
 
 export const ACTIVATION_ENVIRONMENTS: ActivationEnvironment[] = [
-  'production', 'staging', 'development',
+  'production',
+  'staging',
+  'development',
 ];
 
 export const DEFAULT_EXPIRY_MINUTES = 30;
@@ -21,14 +23,14 @@ export const DEFAULT_EXPIRY_MINUTES = 30;
 // ─── Snapshot ─────────────────────────────────────────────────────────────────
 
 export interface ActivationTokenSnapshot {
-  readonly id:          string;
-  readonly token:       string;
-  readonly companyId:   string;
+  readonly id: string;
+  readonly token: string;
+  readonly companyId: string;
   readonly environment: ActivationEnvironment;
-  readonly expiresAt:   Date;
-  readonly usedAt:      Date | null;
-  readonly createdAt:   Date;
-  readonly createdBy:   string | null;
+  readonly expiresAt: Date;
+  readonly usedAt: Date | null;
+  readonly createdAt: Date;
+  readonly createdBy: string | null;
 }
 
 // ─── Entity ───────────────────────────────────────────────────────────────────
@@ -39,26 +41,26 @@ export class ActivationToken {
   // ─── Factory: generate ──────────────────────────────────────────────────────
 
   static generate(
-    companyId:        string,
-    environment:      ActivationEnvironment,
+    companyId: string,
+    environment: ActivationEnvironment,
     expiresInMinutes: number = DEFAULT_EXPIRY_MINUTES,
-    createdBy?:       string,
+    createdBy?: string
   ): ActivationToken {
-    if (!companyId?.trim())    throw new ActivationTokenError('companyId is required');
+    if (!companyId?.trim()) throw new ActivationTokenError('companyId is required');
     if (expiresInMinutes <= 0) throw new ActivationTokenError('expiresInMinutes must be positive');
     if (!ACTIVATION_ENVIRONMENTS.includes(environment)) {
       throw new ActivationTokenError(`Invalid environment: ${environment}`);
     }
 
     return new ActivationToken({
-      id:          randomBytes(12).toString('hex'),
-      token:       ActivationToken._generateCode(),
-      companyId:   companyId.trim(),
+      id: randomBytes(12).toString('hex'),
+      token: ActivationToken._generateCode(),
+      companyId: companyId.trim(),
       environment,
-      expiresAt:   new Date(Date.now() + expiresInMinutes * 60_000),
-      usedAt:      null,
-      createdAt:   new Date(),
-      createdBy:   createdBy ?? null,
+      expiresAt: new Date(Date.now() + expiresInMinutes * 60_000),
+      usedAt: null,
+      createdAt: new Date(),
+      createdBy: createdBy ?? null,
     });
   }
 
@@ -68,28 +70,52 @@ export class ActivationToken {
 
   // ─── Domain methods ─────────────────────────────────────────────────────────
 
-  isExpired(): boolean { return this._s.expiresAt < new Date(); }
-  isUsed():    boolean { return this._s.usedAt !== null; }
-  isValid():   boolean { return !this.isExpired() && !this.isUsed(); }
+  isExpired(): boolean {
+    return this._s.expiresAt < new Date();
+  }
+  isUsed(): boolean {
+    return this._s.usedAt !== null;
+  }
+  isValid(): boolean {
+    return !this.isExpired() && !this.isUsed();
+  }
 
   markUsed(): ActivationToken {
-    if (this.isUsed())    throw new ActivationTokenError('Token has already been used');
+    if (this.isUsed()) throw new ActivationTokenError('Token has already been used');
     if (this.isExpired()) throw new ActivationTokenError('Token has expired');
     return new ActivationToken({ ...this._s, usedAt: new Date() });
   }
 
-  toSnapshot(): ActivationTokenSnapshot { return { ...this._s }; }
+  toSnapshot(): ActivationTokenSnapshot {
+    return { ...this._s };
+  }
 
   // ─── Accessors ──────────────────────────────────────────────────────────────
 
-  get id():          string                 { return this._s.id;          }
-  get token():       string                 { return this._s.token;       }
-  get companyId():   string                 { return this._s.companyId;   }
-  get environment(): ActivationEnvironment  { return this._s.environment; }
-  get expiresAt():   Date                   { return this._s.expiresAt;   }
-  get usedAt():      Date | null            { return this._s.usedAt;      }
-  get createdAt():   Date                   { return this._s.createdAt;   }
-  get createdBy():   string | null          { return this._s.createdBy;   }
+  get id(): string {
+    return this._s.id;
+  }
+  get token(): string {
+    return this._s.token;
+  }
+  get companyId(): string {
+    return this._s.companyId;
+  }
+  get environment(): ActivationEnvironment {
+    return this._s.environment;
+  }
+  get expiresAt(): Date {
+    return this._s.expiresAt;
+  }
+  get usedAt(): Date | null {
+    return this._s.usedAt;
+  }
+  get createdAt(): Date {
+    return this._s.createdAt;
+  }
+  get createdBy(): string | null {
+    return this._s.createdBy;
+  }
 
   // ─── Private helpers ─────────────────────────────────────────────────────────
 

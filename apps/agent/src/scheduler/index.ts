@@ -106,11 +106,7 @@ export interface JobOptions {
 
 // ─── Triggers ─────────────────────────────────────────────────────────────
 
-export type JobTrigger =
-  | ManualTrigger
-  | CronTrigger
-  | IntervalTrigger
-  | EventDrivenTrigger;
+export type JobTrigger = ManualTrigger | CronTrigger | IntervalTrigger | EventDrivenTrigger;
 
 export interface ManualTrigger {
   readonly kind: 'manual';
@@ -118,7 +114,7 @@ export interface ManualTrigger {
 
 export interface CronTrigger {
   readonly kind: 'cron';
-  /** Standard cron expression: "0 */6 * * *" */
+  /** Standard cron expression, e.g. every 6 hours: "0 0/6 * * *" */
   readonly expression: string;
   /** IANA timezone — defaults to UTC */
   readonly timezone?: string;
@@ -200,15 +196,15 @@ export type JobRunStatus =
 // ─── Built-in Job IDs ─────────────────────────────────────────────────────
 
 export const AGENT_JOB_IDS = {
-  SCHEMA_SYNC:          'job-schema-sync'         as SyncJobId,
-  INCREMENTAL_SYNC:     'job-incremental-sync'    as SyncJobId,
-  HEALTH_CHECK:         'job-health-check'        as SyncJobId,
-  HEARTBEAT:            'job-heartbeat'           as SyncJobId,
-  QUEUE_FLUSH:          'job-queue-flush'         as SyncJobId,
-  TOKEN_ROTATION:       'job-token-rotation'      as SyncJobId,
-  UPDATE_CHECK:         'job-update-check'        as SyncJobId,
-  LOG_ROTATION:         'job-log-rotation'        as SyncJobId,
-  CREDENTIAL_ROTATION:  'job-credential-rotation' as SyncJobId,
+  SCHEMA_SYNC: 'job-schema-sync' as SyncJobId,
+  INCREMENTAL_SYNC: 'job-incremental-sync' as SyncJobId,
+  HEALTH_CHECK: 'job-health-check' as SyncJobId,
+  HEARTBEAT: 'job-heartbeat' as SyncJobId,
+  QUEUE_FLUSH: 'job-queue-flush' as SyncJobId,
+  TOKEN_ROTATION: 'job-token-rotation' as SyncJobId,
+  UPDATE_CHECK: 'job-update-check' as SyncJobId,
+  LOG_ROTATION: 'job-log-rotation' as SyncJobId,
+  CREDENTIAL_ROTATION: 'job-credential-rotation' as SyncJobId,
   DIAGNOSTICS_SNAPSHOT: 'job-diagnostics-snapshot' as SyncJobId,
 } as const;
 

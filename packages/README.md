@@ -7,37 +7,47 @@ This directory contains all shared packages that power Seltriva Connect applicat
 ### Core Packages
 
 #### [`types`](./types/)
+
 Shared TypeScript type definitions and interfaces used across the platform.
 
 #### [`config`](./config/)
+
 Environment configuration and settings management with validation.
 
 #### [`logger`](./logger/)
+
 Structured JSON logging utility for consistent logging across services.
 
 #### [`shared`](./shared/)
+
 Common utility functions and helpers (string, array, async utilities).
 
 ### Data & Integration Packages
 
 #### [`database`](./database/)
+
 Prisma ORM layer for PostgreSQL database access and schema management.
 
 #### [`auth`](./auth/)
+
 Supabase authentication and authorization implementation.
 
 #### [`drivers`](./drivers/)
+
 External service integrations and third-party connectors.
 
 #### [`ai`](./ai/)
+
 AI/ML integrations and LLM utilities.
 
 ### Client & UI Packages
 
 #### [`sdk`](./sdk/)
+
 Client library for Seltriva Connect API integration.
 
 #### [`ui`](./ui/)
+
 React component library built on Radix UI and Tailwind CSS.
 
 ## Package Dependencies
@@ -118,6 +128,7 @@ pnpm build --filter @seltriva/package-name...
 ## Documentation
 
 Each package should include:
+
 - Clear purpose statement
 - Main exports
 - Usage examples

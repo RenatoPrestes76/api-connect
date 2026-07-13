@@ -11,11 +11,11 @@ declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
 
 export type SdkOrganizationId = Branded<string, 'OrganizationId'>;
-export type SdkWorkspaceId    = Branded<string, 'WorkspaceId'>;
-export type SdkEnvironmentId  = Branded<string, 'EnvironmentId'>;
-export type SdkAgentId        = Branded<string, 'AgentId'>;
-export type SdkPluginId       = Branded<string, 'PluginId'>;
-export type SdkUserId         = Branded<string, 'UserId'>;
+export type SdkWorkspaceId = Branded<string, 'WorkspaceId'>;
+export type SdkEnvironmentId = Branded<string, 'EnvironmentId'>;
+export type SdkAgentId = Branded<string, 'AgentId'>;
+export type SdkPluginId = Branded<string, 'PluginId'>;
+export type SdkUserId = Branded<string, 'UserId'>;
 
 // ─── SDK Configuration ──────────────────────────────────────────────────────
 
@@ -32,7 +32,7 @@ export interface AtlasClientConfig {
 // ─── SDK Result ─────────────────────────────────────────────────────────────
 
 export type SdkResult<T> =
-  | { readonly ok: true;  readonly data: T }
+  | { readonly ok: true; readonly data: T }
   | { readonly ok: false; readonly error: SdkError };
 
 export interface SdkError {
@@ -121,7 +121,10 @@ export interface IOrganizationsClient {
   list(options?: SdkPaginationOptions): Promise<SdkResult<SdkPaginatedResult<SdkOrganization>>>;
   get(id: SdkOrganizationId): Promise<SdkResult<SdkOrganization>>;
   create(input: CreateOrganizationInput): Promise<SdkResult<SdkOrganization>>;
-  update(id: SdkOrganizationId, input: UpdateOrganizationInput): Promise<SdkResult<SdkOrganization>>;
+  update(
+    id: SdkOrganizationId,
+    input: UpdateOrganizationInput
+  ): Promise<SdkResult<SdkOrganization>>;
   delete(id: SdkOrganizationId): Promise<SdkResult<void>>;
   getMembers(id: SdkOrganizationId): Promise<SdkResult<SdkMember[]>>;
   inviteMember(id: SdkOrganizationId, input: InviteMemberInput): Promise<SdkResult<void>>;
@@ -164,7 +167,10 @@ export interface SdkMember {
 // ─── Agents ──────────────────────────────────────────────────────────────────
 
 export interface IAgentsClient {
-  list(orgId: SdkOrganizationId, options?: SdkPaginationOptions): Promise<SdkResult<SdkPaginatedResult<SdkAgent>>>;
+  list(
+    orgId: SdkOrganizationId,
+    options?: SdkPaginationOptions
+  ): Promise<SdkResult<SdkPaginatedResult<SdkAgent>>>;
   get(agentId: SdkAgentId): Promise<SdkResult<SdkAgent>>;
   sendCommand(agentId: SdkAgentId, command: SdkAgentCommand): Promise<SdkResult<void>>;
   getHeartbeatHistory(agentId: SdkAgentId, limit?: number): Promise<SdkResult<SdkHeartbeat[]>>;
@@ -199,7 +205,11 @@ export interface SdkHeartbeat {
 export interface IPluginsClient {
   list(options?: PluginListOptions): Promise<SdkResult<SdkPaginatedResult<SdkPluginListing>>>;
   get(pluginId: SdkPluginId): Promise<SdkResult<SdkPluginListing>>;
-  install(orgId: SdkOrganizationId, pluginId: SdkPluginId, version: string): Promise<SdkResult<void>>;
+  install(
+    orgId: SdkOrganizationId,
+    pluginId: SdkPluginId,
+    version: string
+  ): Promise<SdkResult<void>>;
   uninstall(orgId: SdkOrganizationId, pluginId: SdkPluginId): Promise<SdkResult<void>>;
   publish(manifest: unknown, packageBuffer: ArrayBuffer): Promise<SdkResult<SdkPluginListing>>;
 }
@@ -290,18 +300,18 @@ export interface SdkWebhook {
 // ─── Atlas Client (entry point) ───────────────────────────────────────────────
 
 export interface IAtlasClient {
-  readonly auth:           IAtlasAuth;
-  readonly organizations:  IOrganizationsClient;
-  readonly agents:         IAgentsClient;
-  readonly plugins:        IPluginsClient;
-  readonly configuration:  IConfigurationClient;
-  readonly metrics:        IMetricsClient;
-  readonly webhooks:       IWebhooksClient;
+  readonly auth: IAtlasAuth;
+  readonly organizations: IOrganizationsClient;
+  readonly agents: IAgentsClient;
+  readonly plugins: IPluginsClient;
+  readonly configuration: IConfigurationClient;
+  readonly metrics: IMetricsClient;
+  readonly webhooks: IWebhooksClient;
 }
 
 export function createAtlasClient(config: AtlasClientConfig): IAtlasClient {
   throw new Error(
-    'createAtlasClient is an interface contract. Import the concrete implementation from @seltriva/sdk/client.',
+    'createAtlasClient is an interface contract. Import the concrete implementation from @seltriva/sdk/client.'
   );
 }
 
@@ -324,11 +334,11 @@ export interface RealtimeEvent {
 // ─── SDK Events ───────────────────────────────────────────────────────────────
 
 export const SDK_EVENTS = {
-  AGENT_STATUS_CHANGED:   'agent.status.changed',
-  AGENT_HEARTBEAT:        'agent.heartbeat',
-  PLUGIN_INSTALLED:       'plugin.installed',
-  CONFIGURATION_UPDATED:  'configuration.updated',
-  MEMBER_INVITED:         'member.invited',
+  AGENT_STATUS_CHANGED: 'agent.status.changed',
+  AGENT_HEARTBEAT: 'agent.heartbeat',
+  PLUGIN_INSTALLED: 'plugin.installed',
+  CONFIGURATION_UPDATED: 'configuration.updated',
+  MEMBER_INVITED: 'member.invited',
 } as const;
 
 export const SDK_VERSION = '0.1.0';

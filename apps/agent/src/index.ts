@@ -195,12 +195,7 @@ export type {
   PluginValidator,
 } from './plugins/index';
 
-export type {
-  AgentCache,
-  SchemaCache,
-  KVCache,
-  CacheStats,
-} from './cache/index';
+export type { AgentCache, SchemaCache, KVCache, CacheStats } from './cache/index';
 
 export { CACHE_PREFIXES } from './cache/index';
 

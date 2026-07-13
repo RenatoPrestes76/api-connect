@@ -8,18 +8,18 @@ const TARGET = { url: 'https://atlas.seltriva.dev', apiKey: 'sk-test-123', timeo
 
 const OPTS: DispatchOptions = {
   correlationId: asCorrelationId('corr-001'),
-  tenantId:      asTenantId('tenant-acme'),
+  tenantId: asTenantId('tenant-acme'),
 };
 
 const BATCH: CompressedBatch = {
-  batchId:        asBatchId('batch-001'),
-  schema:         'public',
-  table:          'produto',
-  records:        10,
-  payload:        Buffer.from('{"data":"test"}'),
-  compressed:     false,
-  algorithm:      'none',
-  originalSize:   100,
+  batchId: asBatchId('batch-001'),
+  schema: 'public',
+  table: 'produto',
+  records: 10,
+  payload: Buffer.from('{"data":"test"}'),
+  compressed: false,
+  algorithm: 'none',
+  originalSize: 100,
   compressedSize: 100,
 };
 
@@ -37,7 +37,7 @@ describe('CloudDispatcher', () => {
 
   it('dispatches batch and returns DispatchResult on success', async () => {
     fetchMock.mockResolvedValue({
-      ok:   true,
+      ok: true,
       json: async () => ({ serverRef: 'srv-abc', accepted: 10, rejected: 0 }),
     });
     const dispatcher = new CloudDispatcher(TARGET);
@@ -53,7 +53,7 @@ describe('CloudDispatcher', () => {
 
   it('defaults missing serverRef to a generated UUID', async () => {
     fetchMock.mockResolvedValue({
-      ok:   true,
+      ok: true,
       json: async () => ({ accepted: 5 }),
     });
     const dispatcher = new CloudDispatcher(TARGET);
@@ -66,7 +66,7 @@ describe('CloudDispatcher', () => {
 
   it('defaults accepted/rejected from batch.records when missing in response', async () => {
     fetchMock.mockResolvedValue({
-      ok:   true,
+      ok: true,
       json: async () => ({}),
     });
     const dispatcher = new CloudDispatcher(TARGET);
@@ -79,9 +79,9 @@ describe('CloudDispatcher', () => {
 
   it('returns retryable error on HTTP 500', async () => {
     fetchMock.mockResolvedValue({
-      ok:     false,
+      ok: false,
       status: 500,
-      text:   async () => 'Internal Server Error',
+      text: async () => 'Internal Server Error',
     });
     const dispatcher = new CloudDispatcher(TARGET);
     const result = await dispatcher.dispatch(BATCH, OPTS);
@@ -93,9 +93,9 @@ describe('CloudDispatcher', () => {
 
   it('returns retryable error on HTTP 429', async () => {
     fetchMock.mockResolvedValue({
-      ok:     false,
+      ok: false,
       status: 429,
-      text:   async () => 'Too Many Requests',
+      text: async () => 'Too Many Requests',
     });
     const dispatcher = new CloudDispatcher(TARGET);
     const result = await dispatcher.dispatch(BATCH, OPTS);
@@ -106,9 +106,9 @@ describe('CloudDispatcher', () => {
 
   it('returns non-retryable error on HTTP 400', async () => {
     fetchMock.mockResolvedValue({
-      ok:     false,
+      ok: false,
       status: 400,
-      text:   async () => 'Bad Request: invalid schema',
+      text: async () => 'Bad Request: invalid schema',
     });
     const dispatcher = new CloudDispatcher(TARGET);
     const result = await dispatcher.dispatch(BATCH, OPTS);
@@ -140,7 +140,7 @@ describe('CloudDispatcher', () => {
 
   it('sets Content-Encoding header for gzip-compressed batch', async () => {
     fetchMock.mockResolvedValue({
-      ok:   true,
+      ok: true,
       json: async () => ({ accepted: 5, rejected: 0 }),
     });
     const compressed: CompressedBatch = { ...BATCH, compressed: true, algorithm: 'gzip' };
@@ -154,7 +154,7 @@ describe('CloudDispatcher', () => {
 
   it('does not set Content-Encoding for uncompressed batch', async () => {
     fetchMock.mockResolvedValue({
-      ok:   true,
+      ok: true,
       json: async () => ({ accepted: 10 }),
     });
     const dispatcher = new CloudDispatcher(TARGET);
@@ -167,7 +167,7 @@ describe('CloudDispatcher', () => {
 
   it('sets Authorization and X-Tenant-Id headers', async () => {
     fetchMock.mockResolvedValue({
-      ok:   true,
+      ok: true,
       json: async () => ({ accepted: 10 }),
     });
     const dispatcher = new CloudDispatcher(TARGET);

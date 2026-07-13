@@ -4,16 +4,16 @@
  * Run: pnpm test:integration
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { MySqlDriver }  from '../../drivers/mysql.driver.js';
+import { MySqlDriver } from '../../drivers/mysql.driver.js';
 import { QueryBuilder } from '../../query/query-builder.js';
-import { equals }       from '../../query/filters.js';
+import { equals } from '../../query/filters.js';
 import type { DriverConfig } from '../../connection/connection-options.js';
 
 const cfg: DriverConfig = {
-  host:     process.env['MYSQL_HOST']     ?? 'localhost',
-  port:     Number(process.env['MYSQL_PORT'] ?? 3307),
+  host: process.env['MYSQL_HOST'] ?? 'localhost',
+  port: Number(process.env['MYSQL_PORT'] ?? 3307),
   database: process.env['MYSQL_DATABASE'] ?? 'testdb',
-  username: process.env['MYSQL_USER']     ?? 'testuser',
+  username: process.env['MYSQL_USER'] ?? 'testuser',
   password: process.env['MYSQL_PASSWORD'] ?? 'testpass',
 };
 
@@ -42,13 +42,13 @@ describe('MySQL integration', () => {
   // ─── Query execution ─────────────────────────────────────────────────────────
 
   it('executes raw SELECT 1', async () => {
-    const q    = QueryBuilder.raw('SELECT 1 AS value', []);
+    const q = QueryBuilder.raw('SELECT 1 AS value', []);
     const rows = await driver.execute<{ value: number }>(q);
     expect(rows[0]?.value).toBe(1);
   });
 
   it('executes SELECT from users table', async () => {
-    const q    = new QueryBuilder().from('users').limit(10).build();
+    const q = new QueryBuilder().from('users').limit(10).build();
     const rows = await driver.execute<{ id: number; email: string }>(q);
     expect(Array.isArray(rows)).toBe(true);
     expect(rows.length).toBeGreaterThan(0);
@@ -56,16 +56,13 @@ describe('MySQL integration', () => {
   });
 
   it('executes SELECT with WHERE filter', async () => {
-    const q = new QueryBuilder()
-      .from('users')
-      .where(equals('email', 'alice@example.com'))
-      .build();
+    const q = new QueryBuilder().from('users').where(equals('email', 'alice@example.com')).build();
     const rows = await driver.execute<{ name: string }>(q);
     expect(rows[0]?.name).toBe('Alice');
   });
 
   it('executes SELECT with LIMIT', async () => {
-    const q    = new QueryBuilder().from('users').limit(1).build();
+    const q = new QueryBuilder().from('users').limit(1).build();
     const rows = await driver.execute(q);
     expect(rows).toHaveLength(1);
   });
@@ -74,14 +71,14 @@ describe('MySQL integration', () => {
 
   it('discovers schema with users and orders tables', async () => {
     const schema = await driver.schema();
-    const names  = schema.tables.map((t) => t.name);
+    const names = schema.tables.map((t) => t.name);
     expect(names).toContain('users');
     expect(names).toContain('orders');
   });
 
   it('discovers users table columns', async () => {
     const schema = await driver.schema();
-    const users  = schema.tables.find((t) => t.name === 'users');
+    const users = schema.tables.find((t) => t.name === 'users');
     expect(users).toBeDefined();
     const colNames = users!.columns.map((c) => c.name);
     expect(colNames).toContain('id');
@@ -91,9 +88,7 @@ describe('MySQL integration', () => {
   it('discovers foreign key relation', async () => {
     const schema = await driver.schema();
     expect(schema.relations.length).toBeGreaterThan(0);
-    const rel = schema.relations.find(
-      (r) => r.fromTable === 'orders' && r.toTable === 'users',
-    );
+    const rel = schema.relations.find((r) => r.fromTable === 'orders' && r.toTable === 'users');
     expect(rel).toBeDefined();
   });
 
@@ -128,7 +123,7 @@ describe('MySQL integration', () => {
     await expect(
       driver.transaction(async () => {
         throw new Error('intentional rollback');
-      }),
+      })
     ).rejects.toThrow('Transaction rolled back');
   });
 

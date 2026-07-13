@@ -45,7 +45,13 @@ export const AgentService = {
     });
   },
 
-  async list({ organizationId, environmentId, status, page = 1, pageSize = 20 }: ListAgentsFilter = {}) {
+  async list({
+    organizationId,
+    environmentId,
+    status,
+    page = 1,
+    pageSize = 20,
+  }: ListAgentsFilter = {}) {
     const where = {
       retiredAt: null,
       ...(organizationId && { organizationId }),

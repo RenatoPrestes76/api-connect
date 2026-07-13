@@ -1,7 +1,10 @@
 export type SimpleFilterOperator =
-  | 'eq' | 'neq'
-  | 'gt' | 'gte'
-  | 'lt' | 'lte'
+  | 'eq'
+  | 'neq'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte'
   | 'between'
   | 'like'
   | 'in'

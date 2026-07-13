@@ -11,9 +11,15 @@ Complete, runnable plugin examples for each of the 12 plugin types.
 // "type": "connector", "capabilities": ["database-read", "network-outbound"]
 
 import type {
-  IConnectorPlugin, PluginContext, PluginManifest,
-  PluginResult, ConnectorConfig, ConnectorHandle,
-  ConnectorTestResult, ConnectorCapabilities, PluginHealthStatus,
+  IConnectorPlugin,
+  PluginContext,
+  PluginManifest,
+  PluginResult,
+  ConnectorConfig,
+  ConnectorHandle,
+  ConnectorTestResult,
+  ConnectorCapabilities,
+  PluginHealthStatus,
 } from '@seltriva/plugin-sdk';
 import manifest from '../atlas-plugin.json' assert { type: 'json' };
 
@@ -44,10 +50,11 @@ export class PostgreSQLConnector implements IConnectorPlugin {
   }
 
   async connect(config: ConnectorConfig): Promise<PluginResult<ConnectorHandle>> {
-    const result = await this.ctx.http.post<{ id: string }>(
-      `http://proxy:5433/connect`,
-      { host: config.host, port: config.port, database: config.database },
-    );
+    const result = await this.ctx.http.post<{ id: string }>(`http://proxy:5433/connect`, {
+      host: config.host,
+      port: config.port,
+      database: config.database,
+    });
     if (!result.ok) return result;
     return {
       ok: true,
@@ -63,7 +70,7 @@ export class PostgreSQLConnector implements IConnectorPlugin {
   async test(config: ConnectorConfig): Promise<PluginResult<ConnectorTestResult>> {
     const start = Date.now();
     const result = await this.ctx.http.get<{ version: string }>(
-      `http://proxy:5433/ping?host=${config.host}&port=${config.port}`,
+      `http://proxy:5433/ping?host=${config.host}&port=${config.port}`
     );
     if (!result.ok) {
       return { ok: false, error: { code: 'CONNECTION_FAILED', message: 'Cannot reach host' } };
@@ -98,8 +105,10 @@ export default new PostgreSQLConnector();
 
 ```typescript
 import type {
-  INotificationPlugin, NotificationChannelDescriptor,
-  NotificationPayload, PluginResult,
+  INotificationPlugin,
+  NotificationChannelDescriptor,
+  NotificationPayload,
+  PluginResult,
 } from '@seltriva/plugin-sdk';
 
 export class SlackNotificationPlugin implements INotificationPlugin {
@@ -107,18 +116,23 @@ export class SlackNotificationPlugin implements INotificationPlugin {
   // ... manifest, lifecycle ...
 
   getChannels(): NotificationChannelDescriptor[] {
-    return [{
-      id: 'slack',
-      name: 'Slack',
-      supportsRichContent: true,
-      supportsBatchSend: false,
-    }];
+    return [
+      {
+        id: 'slack',
+        name: 'Slack',
+        supportsRichContent: true,
+        supportsBatchSend: false,
+      },
+    ];
   }
 
   async send(notification: NotificationPayload): Promise<PluginResult<void>> {
     const webhookUrl = await this.ctx.credentials.get('slack-webhook-url');
     if (!webhookUrl) {
-      return { ok: false, error: { code: 'CONFIGURATION_INVALID', message: 'Slack webhook URL not configured' } };
+      return {
+        ok: false,
+        error: { code: 'CONFIGURATION_INVALID', message: 'Slack webhook URL not configured' },
+      };
     }
 
     const result = await this.ctx.http.post(webhookUrl, {
@@ -126,7 +140,10 @@ export class SlackNotificationPlugin implements INotificationPlugin {
     });
 
     if (!result.ok) {
-      return { ok: false, error: { code: 'OPERATION_FAILED', message: 'Failed to send Slack message' } };
+      return {
+        ok: false,
+        error: { code: 'OPERATION_FAILED', message: 'Failed to send Slack message' },
+      };
     }
 
     this.ctx.metrics.increment('notifications.sent');
@@ -149,8 +166,11 @@ export class SlackNotificationPlugin implements INotificationPlugin {
 
 ```typescript
 import type {
-  IAIProviderPlugin, AIModelDescriptor, AICompletionRequest,
-  AICompletionResponse, PluginResult,
+  IAIProviderPlugin,
+  AIModelDescriptor,
+  AICompletionRequest,
+  AICompletionResponse,
+  PluginResult,
 } from '@seltriva/plugin-sdk';
 
 export class OpenAIProvider implements IAIProviderPlugin {
@@ -167,8 +187,22 @@ export class OpenAIProvider implements IAIProviderPlugin {
 
   getModels(): AIModelDescriptor[] {
     return [
-      { id: 'gpt-4o', name: 'GPT-4o', contextWindow: 128000, maxOutputTokens: 16384, supportsImages: true, supportsStreaming: true },
-      { id: 'gpt-4o-mini', name: 'GPT-4o mini', contextWindow: 128000, maxOutputTokens: 16384, supportsImages: true, supportsStreaming: true },
+      {
+        id: 'gpt-4o',
+        name: 'GPT-4o',
+        contextWindow: 128000,
+        maxOutputTokens: 16384,
+        supportsImages: true,
+        supportsStreaming: true,
+      },
+      {
+        id: 'gpt-4o-mini',
+        name: 'GPT-4o mini',
+        contextWindow: 128000,
+        maxOutputTokens: 16384,
+        supportsImages: true,
+        supportsStreaming: true,
+      },
     ];
   }
 
@@ -183,7 +217,7 @@ export class OpenAIProvider implements IAIProviderPlugin {
         max_tokens: request.maxTokens,
         temperature: request.temperature,
       },
-      { headers: { Authorization: `Bearer ${apiKey}` } },
+      { headers: { Authorization: `Bearer ${apiKey}` } }
     );
 
     if (!result.ok) return result as any;
@@ -214,7 +248,11 @@ interface OpenAIApiResponse {
 
 ```typescript
 import type {
-  IExportProviderPlugin, ExportFormat, ExportRequest, ExportResult, PluginResult,
+  IExportProviderPlugin,
+  ExportFormat,
+  ExportRequest,
+  ExportResult,
+  PluginResult,
 } from '@seltriva/plugin-sdk';
 
 export class CSVExportProvider implements IExportProviderPlugin {
@@ -224,7 +262,13 @@ export class CSVExportProvider implements IExportProviderPlugin {
   getFormats(): ExportFormat[] {
     return [
       { id: 'csv', name: 'CSV', mimeType: 'text/csv', extension: '.csv', supportsStreaming: true },
-      { id: 'tsv', name: 'TSV', mimeType: 'text/tab-separated-values', extension: '.tsv', supportsStreaming: true },
+      {
+        id: 'tsv',
+        name: 'TSV',
+        mimeType: 'text/tab-separated-values',
+        extension: '.tsv',
+        supportsStreaming: true,
+      },
     ];
   }
 
@@ -233,14 +277,23 @@ export class CSVExportProvider implements IExportProviderPlugin {
     const records = request.data as Record<string, unknown>[];
 
     if (!records.length) {
-      return { ok: true, value: { formatId: request.formatId, content: Buffer.from(''), mimeType: 'text/csv', sizeBytes: 0, durationMs: 0 } };
+      return {
+        ok: true,
+        value: {
+          formatId: request.formatId,
+          content: Buffer.from(''),
+          mimeType: 'text/csv',
+          sizeBytes: 0,
+          durationMs: 0,
+        },
+      };
     }
 
     const start = Date.now();
     const headers = Object.keys(records[0]);
     const rows = [
       headers.join(delimiter),
-      ...records.map(r => headers.map(h => JSON.stringify(r[h] ?? '')).join(delimiter)),
+      ...records.map((r) => headers.map((h) => JSON.stringify(r[h] ?? '')).join(delimiter)),
     ];
 
     const content = Buffer.from(rows.join('\n'), 'utf-8');
@@ -308,7 +361,10 @@ describe('MyConnector', () => {
   it('fails gracefully on network error', async () => {
     const failHarness = createTestHarness(new MyConnector(), {
       config: { host: 'unreachable', port: 5432 },
-      mockHttp: () => ({ ok: false, error: { code: 'NETWORK_ERROR', message: 'Connection refused' } }),
+      mockHttp: () => ({
+        ok: false,
+        error: { code: 'NETWORK_ERROR', message: 'Connection refused' },
+      }),
     });
     await failHarness.init();
     const result = await failHarness.plugin.test({ host: 'unreachable', port: 5432 });

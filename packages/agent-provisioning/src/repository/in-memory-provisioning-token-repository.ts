@@ -2,7 +2,7 @@
  * InMemoryProvisioningTokenRepository — Map-backed implementation for tests.
  */
 import { ProvisioningToken, ProvisioningTokenSnapshot } from '../entity/provisioning-token.js';
-import type { ProvisioningTokenRepository }              from './provisioning-token-repository.js';
+import type { ProvisioningTokenRepository } from './provisioning-token-repository.js';
 
 export class InMemoryProvisioningTokenRepository implements ProvisioningTokenRepository {
   private readonly _store = new Map<string, ProvisioningTokenSnapshot>();
@@ -44,14 +44,10 @@ export class InMemoryProvisioningTokenRepository implements ProvisioningTokenRep
   }
 
   async findActive(companyId: string): Promise<ProvisioningToken[]> {
-    const now     = new Date();
+    const now = new Date();
     const results: ProvisioningToken[] = [];
     for (const snap of this._store.values()) {
-      if (
-        snap.companyId === companyId &&
-        snap.revokedAt === null &&
-        snap.expiresAt > now
-      ) {
+      if (snap.companyId === companyId && snap.revokedAt === null && snap.expiresAt > now) {
         results.push(ProvisioningToken.fromSnapshot(snap));
       }
     }
@@ -65,8 +61,12 @@ export class InMemoryProvisioningTokenRepository implements ProvisioningTokenRep
   }
 
   /** Test helper */
-  get size(): number { return this._store.size; }
+  get size(): number {
+    return this._store.size;
+  }
 
   /** Test helper */
-  clear(): void { this._store.clear(); }
+  clear(): void {
+    this._store.clear();
+  }
 }

@@ -13,24 +13,24 @@ import type { BackupJobId } from '../backup/index';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
-export type RecoveryPlanId    = Branded<string, 'RecoveryPlanId'>;
-export type RecoveryPointId   = Branded<string, 'RecoveryPointId'>;
-export type DRTestId          = Branded<string, 'DRTestId'>;
+export type RecoveryPlanId = Branded<string, 'RecoveryPlanId'>;
+export type RecoveryPointId = Branded<string, 'RecoveryPointId'>;
+export type DRTestId = Branded<string, 'DRTestId'>;
 
 // ─── Recovery Objectives ─────────────────────────────────────────────────────
 
 export interface RecoveryObjectives {
-  readonly rpoHours: number;               // Recovery Point Objective: max data loss
-  readonly rtoHours: number;               // Recovery Time Objective: max downtime
-  readonly mtpdHours?: number;             // Maximum Tolerable Period of Disruption
+  readonly rpoHours: number; // Recovery Point Objective: max data loss
+  readonly rtoHours: number; // Recovery Time Objective: max downtime
+  readonly mtpdHours?: number; // Maximum Tolerable Period of Disruption
   readonly tier: DRTier;
 }
 
 export type DRTier =
-  | 'tier-1'   // 0–1h RTO, continuous protection (mission-critical)
-  | 'tier-2'   // 1–4h RTO, near-realtime replication
-  | 'tier-3'   // 4–8h RTO, daily backup
-  | 'tier-4';  // 8–24h RTO, weekly backup
+  | 'tier-1' // 0–1h RTO, continuous protection (mission-critical)
+  | 'tier-2' // 1–4h RTO, near-realtime replication
+  | 'tier-3' // 4–8h RTO, daily backup
+  | 'tier-4'; // 8–24h RTO, weekly backup
 
 // ─── Recovery Plan ───────────────────────────────────────────────────────────
 
@@ -68,8 +68,8 @@ export interface RecoveryPlan {
 }
 
 export interface RecoveryScope {
-  readonly components: string[];            // system components covered
-  readonly environments: string[];          // environments covered
+  readonly components: string[]; // system components covered
+  readonly environments: string[]; // environments covered
   readonly dataTypes: string[];
   readonly excludes?: string[];
 }
@@ -85,13 +85,20 @@ export interface RecoveryPhase {
   readonly verificationSteps: string[];
 }
 
-export type PhaseType = 'initiation' | 'assessment' | 'restore' | 'validation' | 'notification' | 'escalation' | 'closeout';
+export type PhaseType =
+  | 'initiation'
+  | 'assessment'
+  | 'restore'
+  | 'validation'
+  | 'notification'
+  | 'escalation'
+  | 'closeout';
 
 export interface RecoveryStep {
   readonly id: string;
   readonly name: string;
   readonly description: string;
-  readonly responsible: string;            // role or person
+  readonly responsible: string; // role or person
   readonly automated: boolean;
   readonly command?: string;
   readonly expectedDurationMinutes?: number;
@@ -123,7 +130,7 @@ export interface RecoveryPoint {
   readonly description?: string;
   readonly type: RecoveryPointType;
   readonly components: string[];
-  readonly dataTimestamp: Date;            // when data was captured
+  readonly dataTimestamp: Date; // when data was captured
   readonly rpoSatisfied: boolean;
   readonly sizeBytes: number;
   readonly location: string;
@@ -175,8 +182,14 @@ export interface IDRGovernanceService {
   listPlans(orgId?: string): Promise<RecoveryPlan[]>;
   createRecoveryPoint(input: CreateRecoveryPointInput): Promise<GovernanceResult<RecoveryPoint>>;
   listRecoveryPoints(orgId?: string, since?: Date): Promise<RecoveryPoint[]>;
-  scheduleDRTest(planId: RecoveryPlanId, input: ScheduleDRTestInput): Promise<GovernanceResult<DRTest>>;
-  recordDRTestResult(testId: DRTestId, result: DRTestResultInput): Promise<GovernanceResult<DRTest>>;
+  scheduleDRTest(
+    planId: RecoveryPlanId,
+    input: ScheduleDRTestInput
+  ): Promise<GovernanceResult<DRTest>>;
+  recordDRTestResult(
+    testId: DRTestId,
+    result: DRTestResultInput
+  ): Promise<GovernanceResult<DRTest>>;
   getDRStatus(orgId: string): Promise<DRStatusReport>;
 }
 
@@ -232,7 +245,7 @@ export interface DRStatusReport {
   readonly rtoMet?: boolean;
   readonly rpoMet?: boolean;
   readonly recoveryPoints: number;
-  readonly oldestRecoveryPointAge?: number;  // hours
+  readonly oldestRecoveryPointAge?: number; // hours
   readonly compliant: boolean;
   readonly generatedAt: Date;
 }

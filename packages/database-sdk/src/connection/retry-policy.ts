@@ -1,23 +1,23 @@
 export type BackoffStrategy = 'fixed' | 'linear' | 'exponential';
 
 export interface RetryPolicy {
-  readonly attempts:     number;
-  readonly backoff:      BackoffStrategy;
+  readonly attempts: number;
+  readonly backoff: BackoffStrategy;
   readonly initialDelay: number;
-  readonly maxDelay?:    number;
-  readonly factor?:      number;
+  readonly maxDelay?: number;
+  readonly factor?: number;
 }
 
 export const DEFAULT_RETRY_POLICY: RetryPolicy = {
-  attempts:     4,
-  backoff:      'exponential',
+  attempts: 4,
+  backoff: 'exponential',
   initialDelay: 1_000,
-  maxDelay:     30_000,
-  factor:       2,
+  maxDelay: 30_000,
+  factor: 2,
 };
 
 export function computeDelay(policy: RetryPolicy, attempt: number): number {
-  const factor   = policy.factor   ?? 2;
+  const factor = policy.factor ?? 2;
   const maxDelay = policy.maxDelay ?? Infinity;
 
   switch (policy.backoff) {

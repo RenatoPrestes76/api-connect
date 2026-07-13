@@ -3,9 +3,13 @@ import type { SqlDialect } from './dialect.js';
 export class OracleDialect implements SqlDialect {
   readonly name = 'oracle';
 
-  quoteIdentifier(name: string): string { return `"${name}"`; }
+  quoteIdentifier(name: string): string {
+    return `"${name}"`;
+  }
 
-  placeholder(index: number): string { return `:${index}`; }
+  placeholder(index: number): string {
+    return `:${index}`;
+  }
 
   renderLimit(limit?: number, offset?: number): string {
     if (limit !== undefined && offset !== undefined) {
@@ -24,7 +28,9 @@ export class OracleDialect implements SqlDialect {
     return sql + this.renderLimit(limit, offset);
   }
 
-  booleanLiteral(value: boolean): string { return value ? '1' : '0'; }
+  booleanLiteral(value: boolean): string {
+    return value ? '1' : '0';
+  }
 }
 
 export const oracleDialect = new OracleDialect();

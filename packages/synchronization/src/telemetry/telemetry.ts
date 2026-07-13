@@ -16,25 +16,27 @@ import {
 export type LogObserver = (log: StructuredLog) => void;
 
 export interface TelemetryContext {
-  jobId?:         SyncJobId;
-  tenantId?:      TenantId;
+  jobId?: SyncJobId;
+  tenantId?: TenantId;
   correlationId?: CorrelationId;
-  traceId?:       TraceId;
-  schema?:        string;
-  table?:         string;
+  traceId?: TraceId;
+  schema?: string;
+  table?: string;
 }
 
 export class Telemetry {
   private readonly _observers: LogObserver[] = [];
-  private readonly _context:   TelemetryContext;
-  private          _minLevel:  LogLevel;
+  private readonly _context: TelemetryContext;
+  private _minLevel: LogLevel;
 
   constructor(context: TelemetryContext = {}, minLevel: LogLevel = 'INFO') {
-    this._context  = context;
+    this._context = context;
     this._minLevel = minLevel;
   }
 
-  setLevel(level: LogLevel): void { this._minLevel = level; }
+  setLevel(level: LogLevel): void {
+    this._minLevel = level;
+  }
 
   /** Register a log observer; returns an unsubscribe function. */
   observe(observer: LogObserver): () => void {
@@ -77,8 +79,14 @@ export class Telemetry {
   timed<T>(label: string, fn: () => Promise<T>): Promise<T> {
     const start = Date.now();
     return fn().then(
-      (v) => { this.debug(`${label} completed`, { durationMs: Date.now() - start }); return v; },
-      (err) => { this.error(`${label} failed`, err, { durationMs: Date.now() - start }); throw err; },
+      (v) => {
+        this.debug(`${label} completed`, { durationMs: Date.now() - start });
+        return v;
+      },
+      (err) => {
+        this.error(`${label} failed`, err, { durationMs: Date.now() - start });
+        throw err;
+      }
     );
   }
 
@@ -88,23 +96,29 @@ export class Telemetry {
     const log: StructuredLog = {
       level,
       message,
-      timestamp:    new Date().toISOString(),
-      jobId:        this._context.jobId,
-      tenantId:     this._context.tenantId,
+      timestamp: new Date().toISOString(),
+      jobId: this._context.jobId,
+      tenantId: this._context.tenantId,
       correlationId: this._context.correlationId,
-      traceId:      this._context.traceId,
-      schema:       this._context.schema ?? (fields['schema'] as string | undefined),
-      table:        this._context.table  ?? (fields['table']  as string | undefined),
-      durationMs:   fields['durationMs'] as number | undefined,
-      error:        fields['error'] as string | undefined,
-      stack:        fields['stack'] as string | undefined,
-      fields:       Object.fromEntries(
-        Object.entries(fields).filter(([k]) => !['schema','table','durationMs','error','stack'].includes(k)),
+      traceId: this._context.traceId,
+      schema: this._context.schema ?? (fields['schema'] as string | undefined),
+      table: this._context.table ?? (fields['table'] as string | undefined),
+      durationMs: fields['durationMs'] as number | undefined,
+      error: fields['error'] as string | undefined,
+      stack: fields['stack'] as string | undefined,
+      fields: Object.fromEntries(
+        Object.entries(fields).filter(
+          ([k]) => !['schema', 'table', 'durationMs', 'error', 'stack'].includes(k)
+        )
       ),
     };
 
     for (const obs of this._observers) {
-      try { obs(log); } catch { /* observer errors must not stop execution */ }
+      try {
+        obs(log);
+      } catch {
+        /* observer errors must not stop execution */
+      }
     }
   }
 

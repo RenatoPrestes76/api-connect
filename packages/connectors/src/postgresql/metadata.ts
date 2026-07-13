@@ -48,7 +48,10 @@ function shouldIncludeSchema(name: SchemaName, filter: DiscoveryFilter): boolean
   return true;
 }
 
-function shouldIncludeTable(name: ReturnType<typeof asTableName>, filter: DiscoveryFilter): boolean {
+function shouldIncludeTable(
+  name: ReturnType<typeof asTableName>,
+  filter: DiscoveryFilter
+): boolean {
   const t = String(name);
   if (filter.excludeTables?.length && matchesAnyPattern(t, filter.excludeTables)) return false;
   if (filter.includeTables?.length && !matchesAnyPattern(t, filter.includeTables)) return false;
@@ -60,7 +63,7 @@ function shouldIncludeTable(name: ReturnType<typeof asTableName>, filter: Discov
 export class MetadataAggregator {
   constructor(
     private readonly _discovery: SchemaDiscovery,
-    private readonly _statistics: TableStatisticsEngine,
+    private readonly _statistics: TableStatisticsEngine
   ) {}
 
   async buildReport(filter: DiscoveryFilter = {}): Promise<PostgreSQLIntrospectionReport> {
@@ -80,7 +83,9 @@ export class MetadataAggregator {
     const filteredSchemas = allSchemas.filter((s) => shouldIncludeSchema(s.name, filter));
 
     if (filteredSchemas.length === 0) {
-      warnings.push('No schemas matched the discovery filter — check includeSchemas/excludeSchemas');
+      warnings.push(
+        'No schemas matched the discovery filter — check includeSchemas/excludeSchemas'
+      );
     }
 
     // ── 3. Discover each schema ───────────────────────────────────────────
@@ -121,16 +126,24 @@ export class MetadataAggregator {
         tables.map(async (table) => {
           const key = `${schemaName}.${table.name}`;
 
-          const stats = await this._statistics
-            .getTableStatistics(schemaName, table.name)
-            .catch((): TableStatistics => ({
+          const stats = await this._statistics.getTableStatistics(schemaName, table.name).catch(
+            (): TableStatistics => ({
               schema: schemaName,
               table: table.name,
-              estimatedRows: 0, liveTuples: 0, deadTuples: 0,
-              tableSizeBytes: 0, indexesSizeBytes: 0, totalSizeBytes: 0,
-              tableSizeHuman: '0 bytes', totalSizeHuman: '0 bytes',
-              lastVacuum: null, lastAutoVacuum: null, lastAnalyze: null, lastAutoAnalyze: null,
-            }));
+              estimatedRows: 0,
+              liveTuples: 0,
+              deadTuples: 0,
+              tableSizeBytes: 0,
+              indexesSizeBytes: 0,
+              totalSizeBytes: 0,
+              tableSizeHuman: '0 bytes',
+              totalSizeHuman: '0 bytes',
+              lastVacuum: null,
+              lastAutoVacuum: null,
+              lastAnalyze: null,
+              lastAutoAnalyze: null,
+            })
+          );
 
           statsMap[key] = stats;
           totalEstimatedRows += stats.estimatedRows;
@@ -138,20 +151,22 @@ export class MetadataAggregator {
           if (enableProfiling) {
             const profile = await this._statistics
               .profileTable(schemaName, table.name, table.columns, sampleSize)
-              .catch((): TableProfile => ({
-                schema: schemaName,
-                table: table.name,
-                sampleSize,
-                actualRowsSampled: 0,
-                columns: [],
-              }));
+              .catch(
+                (): TableProfile => ({
+                  schema: schemaName,
+                  table: table.name,
+                  sampleSize,
+                  actualRowsSampled: 0,
+                  columns: [],
+                })
+              );
             profileMap[key] = profile;
           }
-        }),
+        })
       );
 
       totalTables += tables.length;
-      totalViews  += views.length + matViews.length;
+      totalViews += views.length + matViews.length;
 
       // Rebuild tables with correct comments from rawTables
       const tablesWithComments: TableMetadata[] = tables.map((t) => {
@@ -160,9 +175,9 @@ export class MetadataAggregator {
       });
 
       schemaMetadatas.push({
-        name:              schemaName,
-        owner:             schema.owner,
-        tables:            tablesWithComments,
+        name: schemaName,
+        owner: schema.owner,
+        tables: tablesWithComments,
         views,
         materializedViews: matViews,
         sequences,
@@ -175,22 +190,22 @@ export class MetadataAggregator {
     return {
       connectedAt,
       completedAt,
-      durationMs:          completedAt.getTime() - connectedAt.getTime(),
-      host:                '',
-      port:                0,
-      database:            '',
-      serverVersion:       serverInfo.serverVersion,
-      encoding:            serverInfo.encoding,
-      collation:           serverInfo.collation,
-      timezone:            serverInfo.timezone,
+      durationMs: completedAt.getTime() - connectedAt.getTime(),
+      host: '',
+      port: 0,
+      database: '',
+      serverVersion: serverInfo.serverVersion,
+      encoding: serverInfo.encoding,
+      collation: serverInfo.collation,
+      timezone: serverInfo.timezone,
       extensions,
-      schemasDiscovered:   schemaMetadatas.length,
-      tablesDiscovered:    totalTables,
-      viewsDiscovered:     totalViews,
+      schemasDiscovered: schemaMetadatas.length,
+      tablesDiscovered: totalTables,
+      viewsDiscovered: totalViews,
       totalEstimatedRows,
-      schemas:             schemaMetadatas,
-      statistics:          statsMap,
-      profiles:            profileMap,
+      schemas: schemaMetadatas,
+      statistics: statsMap,
+      profiles: profileMap,
       warnings,
     };
   }
@@ -199,9 +214,13 @@ export class MetadataAggregator {
 
   private async _discoverTablesBatched(
     schema: SchemaName,
-    rawTables: Array<{ name: ReturnType<typeof asTableName>; comment: string | null; isPartitioned: boolean }>,
+    rawTables: Array<{
+      name: ReturnType<typeof asTableName>;
+      comment: string | null;
+      isPartitioned: boolean;
+    }>,
     warnings: string[],
-    batchSize = 5,
+    batchSize = 5
   ): Promise<TableMetadata[]> {
     const results: TableMetadata[] = [];
 
@@ -215,7 +234,7 @@ export class MetadataAggregator {
             warnings.push(`Failed to discover table "${schema}.${t.name}": ${String(err)}`);
             return null;
           }
-        }),
+        })
       );
       results.push(...resolved.filter((t): t is TableMetadata => t !== null));
     }

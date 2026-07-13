@@ -2,12 +2,12 @@ import { Hostname } from '@seltriva/agent-identity';
 import type { AtlasAgentRepository } from '@seltriva/agent-identity';
 
 export type UpdateAgentHostnameError =
-  | { code: 'AGENT_NOT_FOUND';     agentId: string }
-  | { code: 'AGENT_DISABLED';      agentId: string }
-  | { code: 'INVALID_HOSTNAME';    hostname: string; reason: string };
+  | { code: 'AGENT_NOT_FOUND'; agentId: string }
+  | { code: 'AGENT_DISABLED'; agentId: string }
+  | { code: 'INVALID_HOSTNAME'; hostname: string; reason: string };
 
 export type UpdateAgentHostnameOutput =
-  | { ok: true;  value: { agentId: string; hostname: string } }
+  | { ok: true; value: { agentId: string; hostname: string } }
   | { ok: false; error: UpdateAgentHostnameError };
 
 export class UpdateAgentHostname {
@@ -30,9 +30,9 @@ export class UpdateAgentHostname {
       return {
         ok: false,
         error: {
-          code:     'INVALID_HOSTNAME',
+          code: 'INVALID_HOSTNAME',
           hostname: newHostname,
-          reason:   (err as Error).message,
+          reason: (err as Error).message,
         },
       };
     }

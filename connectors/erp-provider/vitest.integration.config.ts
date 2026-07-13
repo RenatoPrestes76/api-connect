@@ -2,13 +2,13 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    include:    ['src/__tests__/integration/**/*.test.ts'],
-    exclude:    [],
-    globals:    false,
+    include: ['src/__tests__/integration/**/*.test.ts'],
+    exclude: [],
+    globals: false,
     environment: 'node',
     testTimeout: 30_000,
     hookTimeout: 30_000,
-    pool:       'forks',
+    pool: 'forks',
     poolOptions: { forks: { singleFork: true } },
   },
 });

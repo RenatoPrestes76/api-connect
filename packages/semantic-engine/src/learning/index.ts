@@ -46,7 +46,10 @@ export interface SemanticLearner {
   /**
    * Query patterns that match a given source name
    */
-  queryPatterns(sourceName: string, options?: PatternQueryOptions): Promise<SemanticResult<LearningPattern[]>>;
+  queryPatterns(
+    sourceName: string,
+    options?: PatternQueryOptions
+  ): Promise<SemanticResult<LearningPattern[]>>;
 
   /**
    * Retrieve all patterns in the memory

@@ -19,14 +19,17 @@ describe('computeDelay — fixed backoff', () => {
 
 describe('computeDelay — exponential backoff', () => {
   const policy: RetryPolicy = {
-    attempts: 5, backoff: 'exponential', initialDelay: 100, factor: 2,
+    attempts: 5,
+    backoff: 'exponential',
+    initialDelay: 100,
+    factor: 2,
   };
 
   it('doubles delay each attempt', () => {
-    expect(computeDelay(policy, 0)).toBe(100);  // 100 * 2^0
-    expect(computeDelay(policy, 1)).toBe(200);  // 100 * 2^1
-    expect(computeDelay(policy, 2)).toBe(400);  // 100 * 2^2
-    expect(computeDelay(policy, 3)).toBe(800);  // 100 * 2^3
+    expect(computeDelay(policy, 0)).toBe(100); // 100 * 2^0
+    expect(computeDelay(policy, 1)).toBe(200); // 100 * 2^1
+    expect(computeDelay(policy, 2)).toBe(400); // 100 * 2^2
+    expect(computeDelay(policy, 3)).toBe(800); // 100 * 2^3
   });
 
   it('respects maxDelay cap', () => {
@@ -47,9 +50,9 @@ describe('computeDelay — linear backoff', () => {
   const policy: RetryPolicy = { attempts: 5, backoff: 'linear', initialDelay: 200 };
 
   it('increases linearly each attempt', () => {
-    expect(computeDelay(policy, 0)).toBe(200);  // 200 * 1
-    expect(computeDelay(policy, 1)).toBe(400);  // 200 * 2
-    expect(computeDelay(policy, 2)).toBe(600);  // 200 * 3
+    expect(computeDelay(policy, 0)).toBe(200); // 200 * 1
+    expect(computeDelay(policy, 1)).toBe(400); // 200 * 2
+    expect(computeDelay(policy, 2)).toBe(600); // 200 * 3
   });
 
   it('respects maxDelay cap', () => {

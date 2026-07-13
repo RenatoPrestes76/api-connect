@@ -17,9 +17,18 @@
  */
 
 import type {
-  AIResult, DecisionId, RecommendationId, AgentId, AIConfidenceValue, SessionId,
+  AIResult,
+  DecisionId,
+  RecommendationId,
+  AgentId,
+  AIConfidenceValue,
+  SessionId,
 } from '../providers/index';
-import type { AIRecommendation, RecommendationKind, RecommendationPriority } from '../recommendations/index';
+import type {
+  AIRecommendation,
+  RecommendationKind,
+  RecommendationPriority,
+} from '../recommendations/index';
 import type { Explanation } from '../explainability/index';
 
 // ─── Decision Engine ──────────────────────────────────────────────────────
@@ -49,12 +58,19 @@ export interface DecisionEngine {
   /**
    * Modify a pending decision before approving (human action)
    */
-  modify(decisionId: DecisionId, modification: DecisionModification): Promise<AIResult<DecisionRecord>>;
+  modify(
+    decisionId: DecisionId,
+    modification: DecisionModification
+  ): Promise<AIResult<DecisionRecord>>;
 
   /**
    * Auto-approve all decisions above a confidence threshold in a session
    */
-  bulkApprove(sessionId: SessionId, minConfidence: number, approvedBy: string): Promise<BulkDecisionResult>;
+  bulkApprove(
+    sessionId: SessionId,
+    minConfidence: number,
+    approvedBy: string
+  ): Promise<BulkDecisionResult>;
 
   /**
    * Get a decision record by ID
@@ -126,19 +142,19 @@ export interface DecisionRecord {
 // ─── Decision Outcome ─────────────────────────────────────────────────────
 
 export type DecisionOutcome =
-  | 'auto-approved'       // confidence above threshold, no blocking rules
-  | 'pending-review'      // queued for human review
-  | 'approved'            // human reviewed and approved
-  | 'rejected'            // human reviewed and rejected
-  | 'modified-approved'   // human modified and approved
-  | 'revoked'             // previously approved, now revoked
-  | 'blocked';            // blocked by a decision rule (cannot proceed)
+  | 'auto-approved' // confidence above threshold, no blocking rules
+  | 'pending-review' // queued for human review
+  | 'approved' // human reviewed and approved
+  | 'rejected' // human reviewed and rejected
+  | 'modified-approved' // human modified and approved
+  | 'revoked' // previously approved, now revoked
+  | 'blocked'; // blocked by a decision rule (cannot proceed)
 
 export type DecisionMethod =
-  | 'auto'          // fully automatic (high confidence, low risk)
-  | 'human-review'  // required human review
+  | 'auto' // fully automatic (high confidence, low risk)
+  | 'human-review' // required human review
   | 'forced-manual' // rule forced human review regardless of confidence
-  | 'bulk-approval' // approved as part of bulk action;
+  | 'bulk-approval'; // approved as part of bulk action;
 
 // ─── Decision Rules ───────────────────────────────────────────────────────
 
@@ -174,17 +190,17 @@ export interface DecisionRuleViolation {
 
 export const DECISION_RULE_IDS = {
   // Always require human for destructive changes
-  REQUIRE_REVIEW_FOR_DESTRUCTIVE:   'rule-require-review-destructive',
+  REQUIRE_REVIEW_FOR_DESTRUCTIVE: 'rule-require-review-destructive',
   // Block decisions with insufficient confidence
-  MIN_CONFIDENCE_THRESHOLD:         'rule-min-confidence',
+  MIN_CONFIDENCE_THRESHOLD: 'rule-min-confidence',
   // Require review for entity removals
   REQUIRE_REVIEW_FOR_ENTITY_REMOVAL: 'rule-require-entity-removal',
   // Block changes to confirmed mappings without reasoning chain
-  REQUIRE_REASONING_FOR_CONFIRMED:  'rule-require-reasoning-confirmed',
+  REQUIRE_REASONING_FOR_CONFIRMED: 'rule-require-reasoning-confirmed',
   // Require review for security classification changes
-  REQUIRE_REVIEW_FOR_SECURITY:      'rule-require-review-security',
+  REQUIRE_REVIEW_FOR_SECURITY: 'rule-require-review-security',
   // Block expired recommendations
-  REJECT_EXPIRED:                   'rule-reject-expired',
+  REJECT_EXPIRED: 'rule-reject-expired',
 } as const;
 
 // ─── Decision Thresholds ──────────────────────────────────────────────────
@@ -198,7 +214,7 @@ export interface DecisionThresholds {
 export const DEFAULT_DECISION_THRESHOLDS: DecisionThresholds = {
   autoApprove: 0.92,
   requiresReview: 0.55,
-  block: 0.20,
+  block: 0.2,
 };
 
 // ─── Human Review ─────────────────────────────────────────────────────────

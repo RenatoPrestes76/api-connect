@@ -3,7 +3,7 @@
  * Runs the 7-phase startup sequence and returns a live AgentInstance.
  */
 import { readFileSync, existsSync } from 'node:fs';
-import { homedir, hostname, platform, arch } from 'node:os';
+import { homedir, hostname, platform, arch, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type {
@@ -24,7 +24,11 @@ import {
   AGENT_TOKEN_ENV_VAR,
   AGENT_DATA_DIR_ENV_VAR,
 } from './index.js';
-import { DEFAULT_CONFIG_PATHS, CONFIG_ENV_VAR } from '../configuration/index.js';
+import {
+  DEFAULT_CONFIG_PATHS,
+  CONFIG_ENV_VAR,
+  DEFAULT_PLATFORM_URL,
+} from '../configuration/index.js';
 
 // ─── Default Config ──────────────────────────────────────────────────────────
 
@@ -33,79 +37,92 @@ const DEFAULT_CONFIG: AgentConfig = {
     id: process.env[AGENT_ID_ENV_VAR] ?? randomUUID(),
     name: `sentinel-${hostname()}`,
     version: '0.1.0',
+    platform_url: DEFAULT_PLATFORM_URL,
     environment: 'production',
-    dataDir: process.env[AGENT_DATA_DIR_ENV_VAR] ?? join(homedir(), '.seltriva', 'agent'),
-    tags: [],
+    data_dir: process.env[AGENT_DATA_DIR_ENV_VAR] ?? join(homedir(), '.seltriva', 'agent'),
+    work_dir: join(tmpdir(), 'seltriva-agent'),
     labels: {},
   },
   security: {
-    encryptionAlgorithm: 'aes-256-gcm',
-    tls: { enabled: true, rejectUnauthorized: true },
-    credentialStore: { backend: 'file', path: 'credentials.enc' },
+    tls: {
+      min_version: '1.3',
+      verify_hostname: true,
+      reject_unauthorized: true,
+    },
+    credentials: {
+      encryption_key_path: join(homedir(), '.seltriva', 'agent', 'credentials.key'),
+      rotation_interval_hours: 720,
+      use_keychain: true,
+    },
+    tokens: {
+      rotation_enabled: true,
+      rotation_interval_hours: 24,
+    },
   },
   connectors: {
-    databases: [],
-    maxPoolSize: 10,
-    connectionTimeoutMs: 30_000,
-    idleTimeoutMs: 300_000,
+    database: [],
   },
   sync: {
     mode: 'incremental',
-    batchSize: 500,
-    interval: 60,
-    retryPolicy: {
-      maxAttempts: 3,
-      backoffMs: 1_000,
-      maxBackoffMs: 30_000,
+    interval_ms: 60_000,
+    batch_size: 500,
+    max_retries: 3,
+    retry_delay_ms: 1_000,
+    offline_queue: {
+      enabled: true,
+      max_size: 10_000,
+      persist_path: join(homedir(), '.seltriva', 'agent', 'queue'),
+      flush_interval_ms: 5_000,
+      max_age_hours: 24,
     },
-    excludedTables: [],
-    includedSchemas: ['public'],
+    checkpoint_dir: join(homedir(), '.seltriva', 'agent', 'checkpoints'),
   },
   scheduler: {
-    heartbeatIntervalMs: 30_000,
-    healthCheckIntervalMs: 60_000,
-    syncIntervalMs: 300_000,
-    credentialRotationIntervalMs: 86_400_000,
+    enabled: true,
+    timezone: 'UTC',
+    jobs: [],
   },
   health: {
-    enabled: true,
-    httpPort: 8080,
+    check_interval_ms: 60_000,
+    heartbeat_interval_ms: 30_000,
     thresholds: {
-      cpuPct: 90,
-      memPct: 85,
-      diskPct: 90,
-      latencyMs: 5_000,
+      cpu_percent: 90,
+      memory_percent: 85,
+      disk_percent: 90,
+      latency_ms: 5_000,
     },
   },
   telemetry: {
-    enabled: false,
-    endpoint: '',
-    serviceName: 'seltriva-agent',
-    samplingRate: 0.1,
+    log_level: 'info',
+    metrics_enabled: false,
+    trace_enabled: false,
+    exporters: [],
   },
   updates: {
-    enabled: true,
     channel: 'stable',
-    checkIntervalMs: 3_600_000,
-    autoInstall: false,
+    auto_update: false,
+    check_interval_hours: 24,
+    verify_signature: true,
+    update_server_url: DEFAULT_PLATFORM_URL,
+    backup_before_update: true,
   },
   cache: {
-    driver: 'sqlite',
-    path: 'cache.db',
-    ttlSeconds: 3_600,
-    maxSizeBytes: 104_857_600,
+    enabled: true,
+    max_size_mb: 100,
+    ttl_seconds: 3_600,
+    persist_path: join(homedir(), '.seltriva', 'agent', 'cache.db'),
   },
   plugins: {
     enabled: true,
     directories: [],
-    allowUnverified: false,
+    auto_load: false,
   },
   logs: {
-    level: 'info',
-    format: 'json',
-    maxFileSizeMb: 50,
-    maxFiles: 7,
-    directory: 'logs',
+    directory: join(homedir(), '.seltriva', 'agent', 'logs'),
+    max_file_size_mb: 50,
+    max_files: 7,
+    compress_old_files: true,
+    retention_days: 30,
   },
 };
 
@@ -128,8 +145,10 @@ function loadYamlConfig(filePath: string): Partial<AgentConfig> {
       const value = rest.join(':').trim();
 
       if (indent === 0) {
-        if (!value) { currentSection = key; result[key] = {}; }
-        else {
+        if (!value) {
+          currentSection = key;
+          result[key] = {};
+        } else {
           result[key] = coerceValue(value);
           currentSection = null;
         }
@@ -172,10 +191,18 @@ class AgentInstanceImpl implements AgentInstance {
     this._isReady = true;
   }
 
-  get isReady(): boolean { return this._isReady; }
-  get isShuttingDown(): boolean { return this._isShuttingDown; }
-  get uptimeMs(): number { return Date.now() - this._startTime; }
-  get bootstrapDurationMs(): number { return this._bootstrapDuration; }
+  get isReady(): boolean {
+    return this._isReady;
+  }
+  get isShuttingDown(): boolean {
+    return this._isShuttingDown;
+  }
+  get uptimeMs(): number {
+    return Date.now() - this._startTime;
+  }
+  get bootstrapDurationMs(): number {
+    return this._bootstrapDuration;
+  }
 
   async shutdown(reason?: string): Promise<void> {
     if (this._isShuttingDown) return;
@@ -185,7 +212,11 @@ class AgentInstanceImpl implements AgentInstance {
     console.log(`[Agent] Shutting down: ${reason ?? 'requested'}`);
 
     for (const handler of [...this._shutdownHandlers].reverse()) {
-      try { await handler(); } catch { /* continue */ }
+      try {
+        await handler();
+      } catch {
+        /* continue */
+      }
     }
   }
 
@@ -259,7 +290,11 @@ export class AgentBootstrapperImpl implements AgentBuilder {
 
       const beforeHooks = this._beforeHooks.get(phase) ?? [];
       for (const hook of beforeHooks) {
-        try { await hook(phase, ctx); } catch { /* non-fatal */ }
+        try {
+          await hook(phase, ctx);
+        } catch {
+          /* non-fatal */
+        }
       }
 
       const phaseStart = Date.now();
@@ -270,7 +305,7 @@ export class AgentBootstrapperImpl implements AgentBuilder {
           case 'configuration':
             config = await this._runConfiguration(warnings);
             if (this._dataDir) {
-              (config.agent as { dataDir: string }).dataDir = this._dataDir;
+              (config.agent as { data_dir: string }).data_dir = this._dataDir;
             }
             break;
 
@@ -311,7 +346,11 @@ export class AgentBootstrapperImpl implements AgentBuilder {
 
         const afterHooks = this._afterHooks.get(phase) ?? [];
         for (const hook of afterHooks) {
-          try { await hook(phase, ctx); } catch { /* non-fatal */ }
+          try {
+            await hook(phase, ctx);
+          } catch {
+            /* non-fatal */
+          }
         }
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
@@ -382,17 +421,17 @@ export class AgentBootstrapperImpl implements AgentBuilder {
 
     // Deep merge: file overrides defaults
     const merged: AgentConfig = {
-      agent:      { ...DEFAULT_CONFIG.agent,     ...(fileConfig.agent     ?? {}) },
-      security:   { ...DEFAULT_CONFIG.security,  ...(fileConfig.security  ?? {}) },
+      agent: { ...DEFAULT_CONFIG.agent, ...(fileConfig.agent ?? {}) },
+      security: { ...DEFAULT_CONFIG.security, ...(fileConfig.security ?? {}) },
       connectors: { ...DEFAULT_CONFIG.connectors, ...(fileConfig.connectors ?? {}) },
-      sync:       { ...DEFAULT_CONFIG.sync,      ...(fileConfig.sync      ?? {}) },
-      scheduler:  { ...DEFAULT_CONFIG.scheduler,  ...(fileConfig.scheduler  ?? {}) },
-      health:     { ...DEFAULT_CONFIG.health,    ...(fileConfig.health    ?? {}) },
-      telemetry:  { ...DEFAULT_CONFIG.telemetry, ...(fileConfig.telemetry ?? {}) },
-      updates:    { ...DEFAULT_CONFIG.updates,   ...(fileConfig.updates   ?? {}) },
-      cache:      { ...DEFAULT_CONFIG.cache,     ...(fileConfig.cache     ?? {}) },
-      plugins:    { ...DEFAULT_CONFIG.plugins,   ...(fileConfig.plugins   ?? {}) },
-      logs:       { ...DEFAULT_CONFIG.logs,      ...(fileConfig.logs      ?? {}) },
+      sync: { ...DEFAULT_CONFIG.sync, ...(fileConfig.sync ?? {}) },
+      scheduler: { ...DEFAULT_CONFIG.scheduler, ...(fileConfig.scheduler ?? {}) },
+      health: { ...DEFAULT_CONFIG.health, ...(fileConfig.health ?? {}) },
+      telemetry: { ...DEFAULT_CONFIG.telemetry, ...(fileConfig.telemetry ?? {}) },
+      updates: { ...DEFAULT_CONFIG.updates, ...(fileConfig.updates ?? {}) },
+      cache: { ...DEFAULT_CONFIG.cache, ...(fileConfig.cache ?? {}) },
+      plugins: { ...DEFAULT_CONFIG.plugins, ...(fileConfig.plugins ?? {}) },
+      logs: { ...DEFAULT_CONFIG.logs, ...(fileConfig.logs ?? {}) },
     };
 
     // Apply environment variable overrides
@@ -400,7 +439,7 @@ export class AgentBootstrapperImpl implements AgentBuilder {
       (merged.agent as { id: string }).id = process.env[AGENT_ID_ENV_VAR]!;
     }
     if (process.env[AGENT_DATA_DIR_ENV_VAR]) {
-      (merged.agent as { dataDir: string }).dataDir = process.env[AGENT_DATA_DIR_ENV_VAR]!;
+      (merged.agent as { data_dir: string }).data_dir = process.env[AGENT_DATA_DIR_ENV_VAR]!;
     }
 
     console.log(`[Phase 1] Config loaded from ${configPath}`);
@@ -432,8 +471,8 @@ export class AgentBootstrapperImpl implements AgentBuilder {
       warnings.push('SELTRIVA_AGENT_TOKEN not set — cloud features will be unavailable');
     }
 
-    if (!config.security.tls.enabled) {
-      warnings.push('TLS is disabled — not recommended for production');
+    if (!config.security.tls.reject_unauthorized) {
+      warnings.push('TLS certificate validation is disabled — not recommended for production');
     }
 
     console.log('[Phase 2] Security initialized');
@@ -444,10 +483,10 @@ export class AgentBootstrapperImpl implements AgentBuilder {
   private async _runServices(
     config: AgentConfig,
     ctx: Partial<AgentContext>,
-    warnings: string[],
+    warnings: string[]
   ): Promise<void> {
     // Telemetry
-    if (!config.telemetry.enabled) {
+    if (!config.telemetry.metrics_enabled && !config.telemetry.trace_enabled) {
       warnings.push('Telemetry disabled');
     }
 
@@ -456,7 +495,7 @@ export class AgentBootstrapperImpl implements AgentBuilder {
     (ctx as Record<string, unknown>)['startTime'] = new Date();
     (ctx as Record<string, unknown>)['environment'] = config.agent.environment;
     (ctx as Record<string, unknown>)['version'] = config.agent.version;
-    (ctx as Record<string, unknown>)['dataDir'] = config.agent.dataDir;
+    (ctx as Record<string, unknown>)['dataDir'] = config.agent.data_dir;
     (ctx as Record<string, unknown>)['hostname'] = hostname();
     (ctx as Record<string, unknown>)['platform'] = platform();
     (ctx as Record<string, unknown>)['arch'] = arch();
@@ -468,7 +507,7 @@ export class AgentBootstrapperImpl implements AgentBuilder {
   // ─── Phase 4: Connectors ─────────────────────────────────────────────────
 
   private async _runConnectors(config: AgentConfig, warnings: string[]): Promise<void> {
-    const dbs = config.connectors.databases;
+    const dbs = config.connectors.database;
 
     if (dbs.length === 0) {
       warnings.push('No database connectors configured');
@@ -494,11 +533,11 @@ export class AgentBootstrapperImpl implements AgentBuilder {
   // ─── Phase 5: Scheduler ──────────────────────────────────────────────────
 
   private async _runScheduler(config: AgentConfig, _warnings: string[]): Promise<void> {
-    const { heartbeatIntervalMs, healthCheckIntervalMs } = config.scheduler;
+    const { heartbeat_interval_ms, check_interval_ms } = config.health;
 
     console.log('[Phase 5] Scheduler configured');
-    console.log(`[Phase 5]   heartbeat every ${heartbeatIntervalMs / 1000}s`);
-    console.log(`[Phase 5]   health check every ${healthCheckIntervalMs / 1000}s`);
+    console.log(`[Phase 5]   heartbeat every ${heartbeat_interval_ms / 1000}s`);
+    console.log(`[Phase 5]   health check every ${check_interval_ms / 1000}s`);
     // Actual job registration deferred to AgentRuntime startup
   }
 
@@ -569,7 +608,7 @@ export class AgentBootstrapperImpl implements AgentBuilder {
         platform: platform(),
         arch: arch(),
         nodeVersion: process.version,
-        capabilities: config.connectors.databases.map((d) => d.type),
+        capabilities: config.connectors.database.map((d) => d.type),
         metadata: config.agent.labels,
       }),
       signal: AbortSignal.timeout(10_000),

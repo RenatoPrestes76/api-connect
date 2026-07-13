@@ -28,7 +28,11 @@ export interface SchemaParser<TOptions = Record<string, unknown>> {
    * Parse raw input into an intermediate RawSchema.
    * Must not throw — all errors returned in SIEResult.
    */
-  parse(source: SchemaSource, context: ParseContext, options?: TOptions): Promise<SIEResult<RawSchema>>;
+  parse(
+    source: SchemaSource,
+    context: ParseContext,
+    options?: TOptions
+  ): Promise<SIEResult<RawSchema>>;
 
   /**
    * Perform a quick syntax check without full parsing.
@@ -147,7 +151,9 @@ export interface OpenApiParser extends SchemaParser<OpenApiParserOptions> {
   /**
    * Resolve all $ref references in the document
    */
-  dereferenceDocument(document: Record<string, unknown>): Promise<SIEResult<Record<string, unknown>>>;
+  dereferenceDocument(
+    document: Record<string, unknown>
+  ): Promise<SIEResult<Record<string, unknown>>>;
 }
 
 export interface OpenApiParserOptions {
@@ -383,10 +389,7 @@ export interface XmlSchemaParser extends SchemaParser<XmlParserOptions> {
   /**
    * Resolve xs:import and xs:include references
    */
-  resolveImports(
-    xsd: string,
-    resolver: XsdImportResolver
-  ): Promise<SIEResult<string>>;
+  resolveImports(xsd: string, resolver: XsdImportResolver): Promise<SIEResult<string>>;
 }
 
 export interface XmlParserOptions {

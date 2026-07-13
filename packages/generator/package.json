@@ -2,7 +2,12 @@
   "name": "@seltriva/generator",
   "version": "0.1.0",
   "description": "Atlas code generator — scaffold complete plugin projects from templates",
-  "keywords": ["seltriva", "atlas", "generator", "scaffolding"],
+  "keywords": [
+    "seltriva",
+    "atlas",
+    "generator",
+    "scaffolding"
+  ],
   "license": "MIT",
   "private": false,
   "type": "module",

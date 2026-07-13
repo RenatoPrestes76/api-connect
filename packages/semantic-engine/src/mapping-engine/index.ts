@@ -20,7 +20,12 @@ import type {
   SemanticResult,
 } from '../business-language/index';
 import type { ConfidenceValue } from '../confidence-engine/index';
-import type { CanonicalBusinessModel, CBMEntity, CBMField, MappingStatus } from '../canonical-model/index';
+import type {
+  CanonicalBusinessModel,
+  CBMEntity,
+  CBMField,
+  MappingStatus,
+} from '../canonical-model/index';
 import type { SuggestionBundle, EntitySuggestion, FieldSuggestion } from '../suggestions/index';
 
 // ─── Mapping Engine ───────────────────────────────────────────────────────
@@ -71,7 +76,10 @@ export interface SemanticMappingEngine {
   /**
    * Finalize and commit the model
    */
-  finalizeModel(sessionId: string, options?: FinalizeOptions): Promise<SemanticResult<CanonicalBusinessModel>>;
+  finalizeModel(
+    sessionId: string,
+    options?: FinalizeOptions
+  ): Promise<SemanticResult<CanonicalBusinessModel>>;
 }
 
 // ─── Mapping Session Input ────────────────────────────────────────────────
@@ -200,9 +208,7 @@ export interface SemanticMappingStore {
     entityName?: string
   ): Promise<SemanticResult<SemanticMapping[]>>;
 
-  findByCBLTerm(
-    term: CBLEntityTerm | CBLFieldTerm
-  ): Promise<SemanticResult<SemanticMapping[]>>;
+  findByCBLTerm(term: CBLEntityTerm | CBLFieldTerm): Promise<SemanticResult<SemanticMapping[]>>;
 
   findBySchema(schemaId: string): Promise<SemanticResult<SemanticMapping[]>>;
   findByProfile(erpProfileId: string): Promise<SemanticResult<SemanticMapping[]>>;

@@ -13,8 +13,12 @@
  */
 
 import type {
-  RuntimeResult, WorkerId, WorkerPoolId, ModuleId,
-  Priority, Disposable,
+  RuntimeResult,
+  WorkerId,
+  WorkerPoolId,
+  ModuleId,
+  Priority,
+  Disposable,
 } from '../kernel/index';
 
 // ─── Worker Pool Manager ──────────────────────────────────────────────────

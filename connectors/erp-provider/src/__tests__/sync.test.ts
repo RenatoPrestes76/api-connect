@@ -19,7 +19,9 @@ describe('ProductsSync', () => {
 
   // Incremental sync count depends on DB-level filtering — validated in integration tests.
   it('incremental sync returns 0 or more records', async () => {
-    const { result } = await new ProductsSync(makeContext(), makeMockDb()).sync(job({ since: new Date() }));
+    const { result } = await new ProductsSync(makeContext(), makeMockDb()).sync(
+      job({ since: new Date() })
+    );
     expect(result.synced).toBeGreaterThanOrEqual(0);
   });
 
@@ -42,7 +44,10 @@ describe('ProductsSync', () => {
   it('skips gracefully when products table is absent', async () => {
     const emptySchemaDb = makeMockDb({
       schema: async () => ({
-        name: 'empty', tables: [], relations: [], discoveredAt: new Date(),
+        name: 'empty',
+        tables: [],
+        relations: [],
+        discoveredAt: new Date(),
       }),
     });
     const { result } = await new ProductsSync(makeContext(), emptySchemaDb).sync(job());
@@ -59,7 +64,9 @@ describe('CustomersSync', () => {
   });
 
   it('incremental sync returns 0 or more records', async () => {
-    const { result } = await new CustomersSync(makeContext(), makeMockDb()).sync(job({ since: new Date() }));
+    const { result } = await new CustomersSync(makeContext(), makeMockDb()).sync(
+      job({ since: new Date() })
+    );
     expect(result.synced).toBeGreaterThanOrEqual(0);
   });
 
@@ -76,7 +83,10 @@ describe('CustomersSync', () => {
   it('skips gracefully when customers table is absent', async () => {
     const emptySchemaDb = makeMockDb({
       schema: async () => ({
-        name: 'empty', tables: [], relations: [], discoveredAt: new Date(),
+        name: 'empty',
+        tables: [],
+        relations: [],
+        discoveredAt: new Date(),
       }),
     });
     const { result } = await new CustomersSync(makeContext(), emptySchemaDb).sync(job());
@@ -92,7 +102,9 @@ describe('InventorySync', () => {
   });
 
   it('incremental sync returns 0 or more records', async () => {
-    const { result } = await new InventorySync(makeContext(), makeMockDb()).sync(job({ since: new Date() }));
+    const { result } = await new InventorySync(makeContext(), makeMockDb()).sync(
+      job({ since: new Date() })
+    );
     expect(result.synced).toBeGreaterThanOrEqual(0);
   });
 
@@ -122,7 +134,10 @@ describe('InventorySync', () => {
   it('skips gracefully when inventory table is absent', async () => {
     const emptySchemaDb = makeMockDb({
       schema: async () => ({
-        name: 'empty', tables: [], relations: [], discoveredAt: new Date(),
+        name: 'empty',
+        tables: [],
+        relations: [],
+        discoveredAt: new Date(),
       }),
     });
     const { result } = await new InventorySync(makeContext(), emptySchemaDb).sync(job());

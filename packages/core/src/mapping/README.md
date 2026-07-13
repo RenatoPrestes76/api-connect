@@ -8,21 +8,21 @@ Provides the contracts for translating data between external system shapes (ERP 
 
 ## Interfaces
 
-| Interface | Role |
-|-----------|------|
-| `Mapper` | Maps typed objects using registered `MappingDefinition`s |
-| `MappingDefinition<S, T>` | Full spec for transforming S into T |
-| `PropertyMapping<S, T>` | Single field mapping with optional transformer |
-| `SchemaMapper` | Maps arbitrary data against a `SchemaDefinition` |
-| `SchemaDefinition` | Named, versioned field schema |
-| `FieldDefinition` | Per-field type, nullability, nesting |
-| `FieldTransform` | Conditional field-level transformer |
-| `FieldValidation` | Field-level validator with message |
-| `MappingValidationResult` | Outcome of schema validation |
-| `TransformationPipeline` | Composable sequential data pipeline |
-| `TransformationStep` | Single reversible pipeline step |
-| `FieldMappingRegistry` | Stores canonical ERP↔platform field maps |
-| `FieldMapping` | One field mapping entry with transformer |
+| Interface                 | Role                                                     |
+| ------------------------- | -------------------------------------------------------- |
+| `Mapper`                  | Maps typed objects using registered `MappingDefinition`s |
+| `MappingDefinition<S, T>` | Full spec for transforming S into T                      |
+| `PropertyMapping<S, T>`   | Single field mapping with optional transformer           |
+| `SchemaMapper`            | Maps arbitrary data against a `SchemaDefinition`         |
+| `SchemaDefinition`        | Named, versioned field schema                            |
+| `FieldDefinition`         | Per-field type, nullability, nesting                     |
+| `FieldTransform`          | Conditional field-level transformer                      |
+| `FieldValidation`         | Field-level validator with message                       |
+| `MappingValidationResult` | Outcome of schema validation                             |
+| `TransformationPipeline`  | Composable sequential data pipeline                      |
+| `TransformationStep`      | Single reversible pipeline step                          |
+| `FieldMappingRegistry`    | Stores canonical ERP↔platform field maps                 |
+| `FieldMapping`            | One field mapping entry with transformer                 |
 
 ## Architecture
 

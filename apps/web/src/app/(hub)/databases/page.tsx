@@ -13,44 +13,50 @@ import type { DatabaseConnection } from '@/types/index';
 
 const columns: Column<DatabaseConnection>[] = [
   {
-    key:    'name',
+    key: 'name',
     header: 'Database',
-    cell:   (d) => (
+    cell: (d) => (
       <div>
         <p className="font-medium text-slate-900">{d.name}</p>
-        <p className="text-xs text-slate-400 font-mono">{d.driver} · {d.schema}</p>
+        <p className="text-xs text-slate-400 font-mono">
+          {d.driver} · {d.schema}
+        </p>
       </div>
     ),
   },
   {
-    key:    'host',
+    key: 'host',
     header: 'Host',
-    cell:   (d) => (
-      <span className="font-mono text-xs text-slate-600">{d.host}:{d.port}/{d.database}</span>
+    cell: (d) => (
+      <span className="font-mono text-xs text-slate-600">
+        {d.host}:{d.port}/{d.database}
+      </span>
     ),
   },
   {
-    key:    'status',
+    key: 'status',
     header: 'Health',
-    cell:   (d) => <StatusBadge status={d.status} />,
+    cell: (d) => <StatusBadge status={d.status} />,
   },
   {
-    key:    'version',
+    key: 'version',
     header: 'Version',
-    cell:   (d) => <span className="text-xs">{d.version}</span>,
+    cell: (d) => <span className="text-xs">{d.version}</span>,
   },
   {
-    key:    'latency',
+    key: 'latency',
     header: 'Latency',
-    align:  'right',
-    cell:   (d) => <span className="tabular-nums text-xs">{d.latencyMs}ms</span>,
+    align: 'right',
+    cell: (d) => <span className="tabular-nums text-xs">{d.latencyMs}ms</span>,
   },
   {
-    key:    'pool',
+    key: 'pool',
     header: 'Pool',
-    align:  'right',
-    cell:   (d) => (
-      <span className="tabular-nums text-xs">{d.poolUsed}/{d.poolSize}</span>
+    align: 'right',
+    cell: (d) => (
+      <span className="tabular-nums text-xs">
+        {d.poolUsed}/{d.poolSize}
+      </span>
     ),
   },
 ];
@@ -59,10 +65,11 @@ export default function DatabasesPage() {
   const { data, isLoading, error, refetch } = useDatabases();
 
   if (isLoading) return <PageLoading />;
-  if (error)     return <ErrorState message="Could not load databases." onRetry={() => void refetch()} />;
+  if (error)
+    return <ErrorState message="Could not load databases." onRetry={() => void refetch()} />;
 
   const databases = data ?? [];
-  const healthy   = databases.filter((d) => d.status === 'healthy').length;
+  const healthy = databases.filter((d) => d.status === 'healthy').length;
 
   return (
     <div className="space-y-4 max-w-screen-xl">
@@ -78,14 +85,14 @@ export default function DatabasesPage() {
       />
 
       {databases.length === 0 ? (
-        <EmptyState icon={Database} title="No databases" description="No database connections are tracked yet." />
+        <EmptyState
+          icon={Database}
+          title="No databases"
+          description="No database connections are tracked yet."
+        />
       ) : (
         <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
-          <DataTable
-            data={databases}
-            columns={columns}
-            keyFn={(d) => d.id}
-          />
+          <DataTable data={databases} columns={columns} keyFn={(d) => d.id} />
         </div>
       )}
     </div>

@@ -1,19 +1,22 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { ActivationTokenService }              from '../service/activation-token-service.js';
-import { InMemoryActivationTokenRepository }   from '../repository/in-memory-activation-token-repository.js';
-import { ActivationTokenError }                from '../entity/activation-token.js';
+import { ActivationTokenService } from '../service/activation-token-service.js';
+import { InMemoryActivationTokenRepository } from '../repository/in-memory-activation-token-repository.js';
+import { ActivationTokenError } from '../entity/activation-token.js';
 
 const NOW = new Date('2026-06-30T12:00:00.000Z');
 
 function makeService() {
-  const repo    = new InMemoryActivationTokenRepository();
+  const repo = new InMemoryActivationTokenRepository();
   const service = new ActivationTokenService(repo);
   return { repo, service };
 }
 
 describe('ActivationTokenService.create', () => {
-  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(NOW); });
-  afterEach(()  => vi.useRealTimers());
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => vi.useRealTimers());
 
   it('creates and persists a valid token', async () => {
     const { repo, service } = makeService();
@@ -29,19 +32,24 @@ describe('ActivationTokenService.create', () => {
   it('stores createdBy when provided', async () => {
     const { service } = makeService();
     const token = await service.create({
-      companyId: 'acme', environment: 'staging', createdBy: 'admin',
+      companyId: 'acme',
+      environment: 'staging',
+      createdBy: 'admin',
     });
     expect(token.createdBy).toBe('admin');
   });
 });
 
 describe('ActivationTokenService.validate', () => {
-  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(NOW); });
-  afterEach(()  => vi.useRealTimers());
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => vi.useRealTimers());
 
   it('resolves with the token when valid', async () => {
     const { service } = makeService();
-    const created  = await service.create({ companyId: 'acme', environment: 'production' });
+    const created = await service.create({ companyId: 'acme', environment: 'production' });
     const resolved = await service.validate(created.token);
     expect(resolved.id).toBe(created.id);
   });
@@ -53,7 +61,11 @@ describe('ActivationTokenService.validate', () => {
 
   it('throws EXPIRED when token is past its expiresAt', async () => {
     const { service } = makeService();
-    const created = await service.create({ companyId: 'acme', environment: 'production', expiresInMinutes: 5 });
+    const created = await service.create({
+      companyId: 'acme',
+      environment: 'production',
+      expiresInMinutes: 5,
+    });
     vi.setSystemTime(new Date(NOW.getTime() + 6 * 60_000));
     await expect(service.validate(created.token)).rejects.toThrow(ActivationTokenError);
   });
@@ -67,12 +79,15 @@ describe('ActivationTokenService.validate', () => {
 });
 
 describe('ActivationTokenService.consume', () => {
-  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(NOW); });
-  afterEach(()  => vi.useRealTimers());
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => vi.useRealTimers());
 
   it('marks token as used and persists', async () => {
     const { repo, service } = makeService();
-    const created  = await service.create({ companyId: 'acme', environment: 'production' });
+    const created = await service.create({ companyId: 'acme', environment: 'production' });
     const consumed = await service.consume(created.token);
 
     expect(consumed.isUsed()).toBe(true);
@@ -85,7 +100,7 @@ describe('ActivationTokenService.consume', () => {
 
   it('returns the used token (immutable original stays clean)', async () => {
     const { service } = makeService();
-    const created  = await service.create({ companyId: 'acme', environment: 'production' });
+    const created = await service.create({ companyId: 'acme', environment: 'production' });
     const consumed = await service.consume(created.token);
     expect(consumed.usedAt).not.toBeNull();
   });
@@ -99,8 +114,11 @@ describe('ActivationTokenService.consume', () => {
 });
 
 describe('ActivationTokenService.listByCompany', () => {
-  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(NOW); });
-  afterEach(()  => vi.useRealTimers());
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => vi.useRealTimers());
 
   it('returns only tokens for the given companyId', async () => {
     const { service } = makeService();
@@ -110,7 +128,7 @@ describe('ActivationTokenService.listByCompany', () => {
 
     const list = await service.listByCompany('acme');
     expect(list).toHaveLength(2);
-    expect(list.every(t => t.companyId === 'acme')).toBe(true);
+    expect(list.every((t) => t.companyId === 'acme')).toBe(true);
   });
 
   it('includes isValid flag in each view', async () => {
@@ -130,8 +148,11 @@ describe('ActivationTokenService.listByCompany', () => {
 });
 
 describe('ActivationTokenService.revoke', () => {
-  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(NOW); });
-  afterEach(()  => vi.useRealTimers());
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => vi.useRealTimers());
 
   it('hard-deletes the token', async () => {
     const { repo, service } = makeService();

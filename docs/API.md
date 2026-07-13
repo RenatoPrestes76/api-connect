@@ -194,6 +194,7 @@ X-RateLimit-Reset: 1234567890
 ## Documentation
 
 Each endpoint should document:
+
 - Purpose
 - HTTP method and path
 - Authentication requirements

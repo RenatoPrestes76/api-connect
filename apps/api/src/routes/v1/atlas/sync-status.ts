@@ -1,23 +1,20 @@
-import type { ServerResponse }           from 'node:http';
-import type { RouteContext }             from '../../../http/router.js';
-import { json, apiError }                from '../../../http/router.js';
-import type { AtlasAgentRepository }     from '@seltriva/agent-identity';
-import type { SyncRecordRepository }     from '@seltriva/agent-observability';
-import {
-  SyncRecord,
-  DEFAULT_MAX_SYNCS_PER_AGENT,
-} from '@seltriva/agent-observability';
-import type { SyncResult }               from '@seltriva/agent-observability';
+import type { ServerResponse } from 'node:http';
+import type { RouteContext } from '../../../http/router.js';
+import { json, apiError } from '../../../http/router.js';
+import type { AtlasAgentRepository } from '@seltriva/agent-identity';
+import type { SyncRecordRepository } from '@seltriva/agent-observability';
+import { SyncRecord, DEFAULT_MAX_SYNCS_PER_AGENT } from '@seltriva/agent-observability';
+import type { SyncResult } from '@seltriva/agent-observability';
 
 const VALID_RESULTS = new Set<string>(['SUCCESS', 'PARTIAL', 'FAILED']);
 
 export function createSyncStatusHandler(
   agentRepo: AtlasAgentRepository,
-  syncRepo:  SyncRecordRepository,
+  syncRepo: SyncRecordRepository
 ) {
   return async (ctx: RouteContext, res: ServerResponse): Promise<void> => {
-    const agentId  = ctx.agentId!;
-    const body     = (ctx.body ?? {}) as Record<string, unknown>;
+    const agentId = ctx.agentId!;
+    const body = (ctx.body ?? {}) as Record<string, unknown>;
     const finishedAt = new Date();
 
     const agent = await agentRepo.findById(agentId);
@@ -33,7 +30,7 @@ export function createSyncStatusHandler(
 
     try {
       if (agent.status.value === 'REGISTERING') agent.markHeartbeat();
-      if (agent.status.value !== 'SYNCING')     agent.markSyncing();
+      if (agent.status.value !== 'SYNCING') agent.markSyncing();
       agent.markSynchronizationFinished();
     } catch {
       apiError(res, 'Agent is not in a syncable state', 409, 'INVALID_STATE');
@@ -44,7 +41,9 @@ export function createSyncStatusHandler(
 
     // Persist sync history
     const resultRaw = body['result'] as string | undefined;
-    const result: SyncResult = VALID_RESULTS.has(resultRaw ?? '') ? resultRaw as SyncResult : 'SUCCESS';
+    const result: SyncResult = VALID_RESULTS.has(resultRaw ?? '')
+      ? (resultRaw as SyncResult)
+      : 'SUCCESS';
     const startedAtRaw = body['startedAt'] as string | undefined;
     const startedAt = startedAtRaw ? new Date(startedAtRaw) : new Date(finishedAt.getTime() - 1);
 
@@ -52,8 +51,8 @@ export function createSyncStatusHandler(
       agentId,
       startedAt,
       finishedAt,
-      recordsSent:      Math.max(0, Number(body['recordsSent']     ?? 0)),
-      recordsFailed:    Math.max(0, Number(body['recordsFailed']   ?? 0)),
+      recordsSent: Math.max(0, Number(body['recordsSent'] ?? 0)),
+      recordsFailed: Math.max(0, Number(body['recordsFailed'] ?? 0)),
       bytesTransferred: Math.max(0, Number(body['bytesTransferred'] ?? 0)),
       compressionRatio: body['compressionRatio'] != null ? Number(body['compressionRatio']) : null,
       result,
@@ -66,7 +65,7 @@ export function createSyncStatusHandler(
 
     json(res, {
       data: {
-        agentId:             agent.id.toString(),
+        agentId: agent.id.toString(),
         lastSynchronization: agent.lastSynchronization?.toISOString() ?? null,
       },
     });

@@ -6,7 +6,7 @@ import { POLL_INTERVAL_MS } from '@/lib/constants';
 export function useDashboard() {
   return useQuery({
     queryKey: ['dashboard'],
-    queryFn:  ({ signal }) => getDashboardMetrics(signal),
+    queryFn: ({ signal }) => getDashboardMetrics(signal),
     refetchInterval: POLL_INTERVAL_MS,
   });
 }

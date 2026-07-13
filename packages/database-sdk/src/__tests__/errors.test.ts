@@ -20,7 +20,7 @@ describe('DatabaseError hierarchy', () => {
 
   it('DatabaseError stores cause', () => {
     const cause = new Error('root cause');
-    const err   = new DatabaseError('wrapper', cause);
+    const err = new DatabaseError('wrapper', cause);
     expect(err.cause).toBe(cause);
   });
 

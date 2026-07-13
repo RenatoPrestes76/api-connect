@@ -8,8 +8,11 @@ import {
 const NOW = new Date('2026-06-30T12:00:00.000Z');
 
 describe('ActivationToken — generation', () => {
-  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(NOW); });
-  afterEach(()  => vi.useRealTimers());
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => vi.useRealTimers());
 
   it('generates a token in ATLAS-XXXX-XXXX-XXXX format', () => {
     const t = ActivationToken.generate('comp-1', 'production');
@@ -17,8 +20,9 @@ describe('ActivationToken — generation', () => {
   });
 
   it('each generated token is unique', () => {
-    const tokens = Array.from({ length: 100 }, () =>
-      ActivationToken.generate('comp-1', 'production').token,
+    const tokens = Array.from(
+      { length: 100 },
+      () => ActivationToken.generate('comp-1', 'production').token
     );
     const unique = new Set(tokens);
     expect(unique.size).toBe(100);
@@ -67,8 +71,11 @@ describe('ActivationToken — generation', () => {
 });
 
 describe('ActivationToken — validity checks', () => {
-  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(NOW); });
-  afterEach(()  => vi.useRealTimers());
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => vi.useRealTimers());
 
   it('isValid() true for a fresh token', () => {
     const t = ActivationToken.generate('acme', 'production');
@@ -85,7 +92,7 @@ describe('ActivationToken — validity checks', () => {
   });
 
   it('isUsed() false on fresh token, true after markUsed()', () => {
-    const t    = ActivationToken.generate('acme', 'production');
+    const t = ActivationToken.generate('acme', 'production');
     const used = t.markUsed();
     expect(t.isUsed()).toBe(false);
     expect(used.isUsed()).toBe(true);
@@ -93,7 +100,7 @@ describe('ActivationToken — validity checks', () => {
   });
 
   it('markUsed() throws on already-used token', () => {
-    const t    = ActivationToken.generate('acme', 'production');
+    const t = ActivationToken.generate('acme', 'production');
     const used = t.markUsed();
     expect(() => used.markUsed()).toThrow(ActivationTokenError);
   });

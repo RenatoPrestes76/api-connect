@@ -2,7 +2,15 @@
   "name": "@seltriva/plugin-sdk",
   "version": "0.1.0",
   "description": "Seltriva Connect Plugin SDK — build enterprise plugins, connectors, and integrations",
-  "keywords": ["seltriva", "connect", "plugin", "sdk", "connector", "erp", "enterprise"],
+  "keywords": [
+    "seltriva",
+    "connect",
+    "plugin",
+    "sdk",
+    "connector",
+    "erp",
+    "enterprise"
+  ],
   "license": "MIT",
   "private": false,
   "type": "module",

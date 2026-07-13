@@ -13,8 +13,14 @@ export default function DashboardPage() {
   const { data, isLoading, error, refetch } = useDashboard();
 
   if (isLoading) return <PageLoading />;
-  if (error)     return <ErrorState message="Dashboard unavailable. Could not fetch metrics." onRetry={() => void refetch()} />;
-  if (!data)     return null;
+  if (error)
+    return (
+      <ErrorState
+        message="Dashboard unavailable. Could not fetch metrics."
+        onRetry={() => void refetch()}
+      />
+    );
+  if (!data) return null;
 
   return (
     <div className="space-y-6 max-w-screen-xl">
@@ -36,16 +42,8 @@ export default function DashboardPage() {
           icon={Server}
           variant={data.agentsOnline < data.agents ? 'warning' : 'default'}
         />
-        <MetricCard
-          title="Databases"
-          value={data.databases}
-          icon={Database}
-        />
-        <MetricCard
-          title="Discovery Runs"
-          value={data.discoveryRuns}
-          icon={RefreshCw}
-        />
+        <MetricCard title="Databases" value={data.databases} icon={Database} />
+        <MetricCard title="Discovery Runs" value={data.discoveryRuns} icon={RefreshCw} />
         <MetricCard
           title="Failures (24h)"
           value={data.failures24h}
@@ -57,8 +55,11 @@ export default function DashboardPage() {
           value={data.overallHealth}
           icon={Activity}
           variant={
-            data.overallHealth === 'healthy'   ? 'success' :
-            data.overallHealth === 'degraded'  ? 'warning' : 'danger'
+            data.overallHealth === 'healthy'
+              ? 'success'
+              : data.overallHealth === 'degraded'
+                ? 'warning'
+                : 'danger'
           }
         />
       </div>

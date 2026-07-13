@@ -34,10 +34,10 @@ import { inferSchema, type InferredSchema } from './schema-inference.js';
 export interface RESTConnectorConfig extends ConnectorConfig {
   readonly baseUrl: string;
   readonly authType: 'none' | 'api-key' | 'bearer' | 'basic';
-  readonly apiKeyHeader?: string;       // default: "X-Api-Key"
-  readonly apiKeyQuery?: string;        // alternatively pass in query string
-  readonly contentType?: string;        // default: "application/json"
-  readonly openApiUrl?: string;         // /openapi.json or /swagger.json
+  readonly apiKeyHeader?: string; // default: "X-Api-Key"
+  readonly apiKeyQuery?: string; // alternatively pass in query string
+  readonly contentType?: string; // default: "application/json"
+  readonly openApiUrl?: string; // /openapi.json or /swagger.json
   readonly defaultHeaders?: Record<string, string>;
   readonly followRedirects?: boolean;
 }
@@ -61,9 +61,16 @@ export interface RESTResponse<T = unknown> {
 // ─── Capability Set ──────────────────────────────────────────────────────────
 
 const REST_CAPABILITIES = [
-  'read', 'write', 'delete', 'discover',
-  'schema-inference', 'health-check', 'pagination',
-  'api-key-auth', 'bearer-auth', 'basic-auth',
+  'read',
+  'write',
+  'delete',
+  'discover',
+  'schema-inference',
+  'health-check',
+  'pagination',
+  'api-key-auth',
+  'bearer-auth',
+  'basic-auth',
 ] as const;
 
 function buildCapabilitySet(caps: readonly string[]): CapabilitySet {
@@ -81,7 +88,12 @@ function ok<T>(data: T, duration: number): ConnectorResult<T> {
   return { success: true, data, duration, timestamp: new Date() };
 }
 
-function fail<T>(code: string, message: string, retryable = false, err?: Error): ConnectorResult<T> {
+function fail<T>(
+  code: string,
+  message: string,
+  retryable = false,
+  err?: Error
+): ConnectorResult<T> {
   return {
     success: false,
     error: { code: code as never, message, retryable, originalError: err },
@@ -109,7 +121,9 @@ export class RESTConnectorImpl implements Connector {
   private _authHeaders: Record<string, string> = {};
   private _discoveredSchema: InferredSchema | null = null;
 
-  get state(): ConnectorState { return this._state; }
+  get state(): ConnectorState {
+    return this._state;
+  }
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -176,23 +190,29 @@ export class RESTConnectorImpl implements Connector {
       const latencyMs = Date.now() - start;
       const healthy = res.status < 500;
 
-      return ok<HealthReport>({
-        status: healthy ? 'healthy' : 'degraded',
-        latencyMs,
-        connectionStatus: 'connected',
-        authStatus: this._credentials ? 'authenticated' : 'unauthenticated',
-        warnings: healthy ? [] : [`Server returned ${res.status}`],
-        checkedAt: new Date(),
-      }, latencyMs);
+      return ok<HealthReport>(
+        {
+          status: healthy ? 'healthy' : 'degraded',
+          latencyMs,
+          connectionStatus: 'connected',
+          authStatus: this._credentials ? 'authenticated' : 'unauthenticated',
+          warnings: healthy ? [] : [`Server returned ${res.status}`],
+          checkedAt: new Date(),
+        },
+        latencyMs
+      );
     } catch (err) {
-      return ok<HealthReport>({
-        status: 'unhealthy',
-        latencyMs: Date.now() - start,
-        connectionStatus: 'disconnected',
-        authStatus: 'unauthenticated',
-        warnings: [err instanceof Error ? err.message : 'Network error'],
-        checkedAt: new Date(),
-      }, Date.now() - start);
+      return ok<HealthReport>(
+        {
+          status: 'unhealthy',
+          latencyMs: Date.now() - start,
+          connectionStatus: 'disconnected',
+          authStatus: 'unauthenticated',
+          warnings: [err instanceof Error ? err.message : 'Network error'],
+          checkedAt: new Date(),
+        },
+        Date.now() - start
+      );
     }
   }
 
@@ -211,7 +231,9 @@ export class RESTConnectorImpl implements Connector {
       const limit = options?.limit ?? 100;
 
       for (const path of paths.slice(0, limit)) {
-        const methods = Object.keys((openApiSchema['paths'] as Record<string, unknown>)[path] as object ?? {});
+        const methods = Object.keys(
+          ((openApiSchema['paths'] as Record<string, unknown>)[path] as object) ?? {}
+        );
         items.push({
           id: path,
           name: path,
@@ -219,17 +241,23 @@ export class RESTConnectorImpl implements Connector {
           path,
           metadata: {
             methods,
-            summary: ((openApiSchema['paths'] as Record<string, Record<string, { summary?: string }>>)[path]?.['get']?.summary ?? ''),
+            summary:
+              (openApiSchema['paths'] as Record<string, Record<string, { summary?: string }>>)[
+                path
+              ]?.['get']?.summary ?? '',
           },
         });
       }
 
-      return ok<DiscoveryResult>({
-        items,
-        total: items.length,
-        truncated: items.length === options?.limit,
-        discoveredAt: new Date(),
-      }, Date.now() - start);
+      return ok<DiscoveryResult>(
+        {
+          items,
+          total: items.length,
+          truncated: items.length === options?.limit,
+          discoveredAt: new Date(),
+        },
+        Date.now() - start
+      );
     }
 
     // Fallback: discover by sampling common patterns
@@ -246,15 +274,20 @@ export class RESTConnectorImpl implements Connector {
             metadata: { status: res.status, contentType: res.headers['content-type'] },
           });
         }
-      } catch { /* skip */ }
+      } catch {
+        /* skip */
+      }
     }
 
-    return ok<DiscoveryResult>({
-      items,
-      total: items.length,
-      truncated: false,
-      discoveredAt: new Date(),
-    }, Date.now() - start);
+    return ok<DiscoveryResult>(
+      {
+        items,
+        total: items.length,
+        truncated: false,
+        discoveredAt: new Date(),
+      },
+      Date.now() - start
+    );
   }
 
   // ─── Metadata ────────────────────────────────────────────────────────────
@@ -268,10 +301,12 @@ export class RESTConnectorImpl implements Connector {
     // Try OpenAPI for metadata
     const openApiSchema = await this._fetchOpenApiSpec();
     if (openApiSchema) {
-      const schemas = (openApiSchema['components'] as Record<string, unknown> | undefined)?.['schemas'];
+      const schemas = (openApiSchema['components'] as Record<string, unknown> | undefined)?.[
+        'schemas'
+      ];
       if (schemas && typeof schemas === 'object') {
         for (const [name, schema] of Object.entries(schemas)) {
-          entities.push({ name, ...schema as object });
+          entities.push({ name, ...(schema as object) });
         }
       }
     }
@@ -284,20 +319,27 @@ export class RESTConnectorImpl implements Connector {
           this._discoveredSchema = inferSchema(res.data);
           entities.push({ name: 'Root', schema: this._discoveredSchema });
         }
-      } catch { /* skip */ }
+      } catch {
+        /* skip */
+      }
     }
 
-    return ok<ConnectorMetadata>({
-      connectorId: this.descriptor.id,
-      source: {
-        baseUrl: this._config.baseUrl,
-        authType: this._config.authType,
-        hasOpenApi: !!openApiSchema,
-        openApiVersion: (openApiSchema as Record<string, unknown>)?.['openapi'] ?? (openApiSchema as Record<string, unknown>)?.['swagger'],
+    return ok<ConnectorMetadata>(
+      {
+        connectorId: this.descriptor.id,
+        source: {
+          baseUrl: this._config.baseUrl,
+          authType: this._config.authType,
+          hasOpenApi: !!openApiSchema,
+          openApiVersion:
+            (openApiSchema as Record<string, unknown>)?.['openapi'] ??
+            (openApiSchema as Record<string, unknown>)?.['swagger'],
+        },
+        entities,
+        retrievedAt: new Date(),
       },
-      entities,
-      retrievedAt: new Date(),
-    }, Date.now() - start);
+      Date.now() - start
+    );
   }
 
   // ─── Validation ───────────────────────────────────────────────────────────
@@ -310,24 +352,50 @@ export class RESTConnectorImpl implements Connector {
     if (!restConfig.baseUrl) {
       errors.push({ field: 'baseUrl', code: 'REQUIRED', message: 'baseUrl is required' });
     } else {
-      try { new URL(restConfig.baseUrl); }
-      catch { errors.push({ field: 'baseUrl', code: 'INVALID_URL', message: 'baseUrl must be a valid URL' }); }
+      try {
+        new URL(restConfig.baseUrl);
+      } catch {
+        errors.push({
+          field: 'baseUrl',
+          code: 'INVALID_URL',
+          message: 'baseUrl must be a valid URL',
+        });
+      }
     }
 
     if (restConfig.authType === 'api-key' && !restConfig.credentials?.apiKey) {
-      errors.push({ field: 'credentials.apiKey', code: 'REQUIRED', message: 'API key is required for api-key auth' });
+      errors.push({
+        field: 'credentials.apiKey',
+        code: 'REQUIRED',
+        message: 'API key is required for api-key auth',
+      });
     }
 
     if (restConfig.authType === 'bearer' && !restConfig.credentials?.token) {
-      errors.push({ field: 'credentials.token', code: 'REQUIRED', message: 'Token is required for bearer auth' });
+      errors.push({
+        field: 'credentials.token',
+        code: 'REQUIRED',
+        message: 'Token is required for bearer auth',
+      });
     }
 
-    if (restConfig.authType === 'basic' && (!restConfig.credentials?.username || !restConfig.credentials?.password)) {
-      errors.push({ field: 'credentials', code: 'REQUIRED', message: 'Username and password required for basic auth' });
+    if (
+      restConfig.authType === 'basic' &&
+      (!restConfig.credentials?.username || !restConfig.credentials?.password)
+    ) {
+      errors.push({
+        field: 'credentials',
+        code: 'REQUIRED',
+        message: 'Username and password required for basic auth',
+      });
     }
 
     if (!restConfig.openApiUrl) {
-      warnings.push({ field: 'openApiUrl', code: 'OPTIONAL', message: 'Provide openApiUrl for better schema discovery' });
+      warnings.push({
+        field: 'openApiUrl',
+        code: 'OPTIONAL',
+        message: 'Provide openApiUrl for better schema discovery',
+      });
     }
 
     return ok<ValidationReport>({ isValid: errors.length === 0, errors, warnings }, 0);
@@ -358,7 +426,9 @@ export class RESTConnectorImpl implements Connector {
 
       case 'basic':
         if (credentials.username && credentials.password) {
-          const b64 = Buffer.from(`${credentials.username}:${credentials.password}`).toString('base64');
+          const b64 = Buffer.from(`${credentials.username}:${credentials.password}`).toString(
+            'base64'
+          );
           this._authHeaders['Authorization'] = `Basic ${b64}`;
         }
         break;
@@ -367,10 +437,13 @@ export class RESTConnectorImpl implements Connector {
         break;
     }
 
-    return ok<AuthResult>({
-      authenticated: true,
-      identity: credentials.username ?? 'api-client',
-    }, 0);
+    return ok<AuthResult>(
+      {
+        authenticated: true,
+        identity: credentials.username ?? 'api-client',
+      },
+      0
+    );
   }
 
   // ─── Capabilities ─────────────────────────────────────────────────────────
@@ -446,13 +519,18 @@ export class RESTConnectorImpl implements Connector {
     const durationMs = Date.now() - start;
 
     const responseHeaders: Record<string, string> = {};
-    res.headers.forEach((value, key) => { responseHeaders[key] = value; });
+    res.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
 
     const contentType = res.headers.get('content-type') ?? '';
     let data: unknown;
     if (contentType.includes('application/json') || contentType.includes('+json')) {
-      try { data = await res.json(); }
-      catch { data = await res.text(); }
+      try {
+        data = await res.json();
+      } catch {
+        data = await res.text();
+      }
     } else {
       data = await res.text();
     }
@@ -463,9 +541,12 @@ export class RESTConnectorImpl implements Connector {
   private async _fetchOpenApiSpec(): Promise<Record<string, unknown> | null> {
     const openApiPaths = [
       this._config?.openApiUrl,
-      '/openapi.json', '/openapi.yaml',
-      '/swagger.json', '/api-docs',
-      '/v1/openapi.json', '/api/openapi.json',
+      '/openapi.json',
+      '/openapi.yaml',
+      '/swagger.json',
+      '/api-docs',
+      '/v1/openapi.json',
+      '/api/openapi.json',
     ].filter(Boolean) as string[];
 
     for (const path of openApiPaths) {
@@ -477,7 +558,9 @@ export class RESTConnectorImpl implements Connector {
             return schema;
           }
         }
-      } catch { /* try next */ }
+      } catch {
+        /* try next */
+      }
     }
 
     return null;

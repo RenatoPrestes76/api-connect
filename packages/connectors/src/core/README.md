@@ -23,6 +23,7 @@ Connector
 ## Key Design Decisions
 
 ### ConnectorResult<T> — Never Throws
+
 Every method returns `ConnectorResult<T>`. Errors are data, not exceptions.
 This makes the entire framework composable and safe for pipeline use.
 
@@ -36,15 +37,19 @@ const { latencyMs } = result.data!;
 ```
 
 ### ConnectorType Discriminant
+
 Connectors are tagged with `type: ConnectorType` so the registry can group and
 look them up without switch/if chains.
 
 ### Idempotent Lifecycle
+
 `connect()` and `disconnect()` are idempotent by contract. Calling them on an
 already-connected / already-disconnected connector must be a safe no-op.
 
 ### CapabilitySet — Runtime Feature Detection
+
 Instead of `instanceof` checks, callers use:
+
 ```typescript
 if (connector.capabilities().has(CAPABILITIES.TRANSACTIONS)) {
   await connector.beginTransaction();
@@ -63,23 +68,23 @@ disconnected → connecting → authenticating → ready
 
 ## Interfaces
 
-| Interface | Role |
-|-----------|------|
-| `Connector` | Universal base — every connector implements this |
-| `ConnectorDescriptor` | Immutable identity (id, name, type, vendor) |
-| `ConnectorConfig` | Base configuration (timeout, pool, credentials) |
-| `ConnectorCredentials` | Authentication material |
-| `ConnectorLifecycle` | Optional lifecycle hooks |
-| `ConnectorState` | Typed connection state |
-| `ConnectorResult<T>` | Typed result — never throws |
-| `ConnectorError` | Structured error with retryable flag |
-| `ConnectorErrorCode` | Enumerated error codes |
-| `HealthReport` | Full health status from health() |
-| `DiscoveryResult` | Tree of discovered items |
-| `ValidationReport` | Config validation with field-level issues |
-| `AuthResult` | Authentication outcome |
-| `CapabilitySet` | Runtime feature-detection API |
-| `ConnectorContext` | Runtime services injected by the framework |
+| Interface              | Role                                             |
+| ---------------------- | ------------------------------------------------ |
+| `Connector`            | Universal base — every connector implements this |
+| `ConnectorDescriptor`  | Immutable identity (id, name, type, vendor)      |
+| `ConnectorConfig`      | Base configuration (timeout, pool, credentials)  |
+| `ConnectorCredentials` | Authentication material                          |
+| `ConnectorLifecycle`   | Optional lifecycle hooks                         |
+| `ConnectorState`       | Typed connection state                           |
+| `ConnectorResult<T>`   | Typed result — never throws                      |
+| `ConnectorError`       | Structured error with retryable flag             |
+| `ConnectorErrorCode`   | Enumerated error codes                           |
+| `HealthReport`         | Full health status from health()                 |
+| `DiscoveryResult`      | Tree of discovered items                         |
+| `ValidationReport`     | Config validation with field-level issues        |
+| `AuthResult`           | Authentication outcome                           |
+| `CapabilitySet`        | Runtime feature-detection API                    |
+| `ConnectorContext`     | Runtime services injected by the framework       |
 
 ## Constraints
 

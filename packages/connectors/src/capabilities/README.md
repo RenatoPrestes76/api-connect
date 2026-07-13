@@ -11,24 +11,24 @@ Replaces conditional logic (`if connector is PostgreSQL then...`) with data-driv
 ```typescript
 import { CAPABILITIES } from '@seltriva/connectors/capabilities';
 
-connector.capabilities().has(CAPABILITIES.TRANSACTIONS);    // true/false
-connector.capabilities().has(CAPABILITIES.STREAMING);       // true/false
+connector.capabilities().has(CAPABILITIES.TRANSACTIONS); // true/false
+connector.capabilities().has(CAPABILITIES.STREAMING); // true/false
 connector.capabilities().hasAll([CAPABILITIES.READ, CAPABILITIES.WRITE]);
 ```
 
 ## Capability Categories
 
-| Category | Examples |
-|----------|---------|
-| `data-access` | `read`, `write` |
-| `schema` | `schema-discovery`, `indexes`, `views` |
-| `transactional` | `transactions`, `atomic-writes`, `batch-operations` |
-| `streaming` | `streaming`, `realtime`, `change-data-capture` |
-| `data-movement` | `import`, `export`, `bulk-import`, `bulk-export` |
-| `query` | `pagination`, `filtering`, `sorting`, `aggregation` |
-| `security` | `authentication`, `field-encryption`, `row-level-security` |
-| `connectivity` | `connection-pooling`, `reconnection`, `ssl-tls` |
-| `protocol` | `stored-procedures`, `webhooks`, `rate-limiting` |
+| Category        | Examples                                                   |
+| --------------- | ---------------------------------------------------------- |
+| `data-access`   | `read`, `write`                                            |
+| `schema`        | `schema-discovery`, `indexes`, `views`                     |
+| `transactional` | `transactions`, `atomic-writes`, `batch-operations`        |
+| `streaming`     | `streaming`, `realtime`, `change-data-capture`             |
+| `data-movement` | `import`, `export`, `bulk-import`, `bulk-export`           |
+| `query`         | `pagination`, `filtering`, `sorting`, `aggregation`        |
+| `security`      | `authentication`, `field-encryption`, `row-level-security` |
+| `connectivity`  | `connection-pooling`, `reconnection`, `ssl-tls`            |
+| `protocol`      | `stored-procedures`, `webhooks`, `rate-limiting`           |
 
 ## Capability Negotiation
 
@@ -58,16 +58,16 @@ capabilityRegistry.register({
 
 ## Interfaces
 
-| Interface | Role |
-|-----------|------|
-| `CAPABILITIES` | Canonical constant map for all built-in capabilities |
-| `Capability` | Union type of all built-in capability strings |
-| `CapabilityDescriptor` | Rich metadata for a single capability |
-| `CapabilitySet` | Immutable set returned by `connector.capabilities()` |
-| `CapabilityRegistry` | Stores canonical capability descriptors |
-| `CapabilitySetBuilder` | Fluent builder for constructing a CapabilitySet |
-| `CapabilityNegotiator` | Compares required vs supported capabilities |
-| `CapabilityNegotiationReport` | Outcome: present, missing, optional |
+| Interface                     | Role                                                 |
+| ----------------------------- | ---------------------------------------------------- |
+| `CAPABILITIES`                | Canonical constant map for all built-in capabilities |
+| `Capability`                  | Union type of all built-in capability strings        |
+| `CapabilityDescriptor`        | Rich metadata for a single capability                |
+| `CapabilitySet`               | Immutable set returned by `connector.capabilities()` |
+| `CapabilityRegistry`          | Stores canonical capability descriptors              |
+| `CapabilitySetBuilder`        | Fluent builder for constructing a CapabilitySet      |
+| `CapabilityNegotiator`        | Compares required vs supported capabilities          |
+| `CapabilityNegotiationReport` | Outcome: present, missing, optional                  |
 
 ## Constraints
 

@@ -103,27 +103,27 @@ export interface PermissionCheckResult {
 // ─── Principal ────────────��───────────────────────────────────────────────
 
 export type PermissionPrincipal =
-  | { readonly kind: 'module';  readonly id: ModuleId }
-  | { readonly kind: 'plugin';  readonly id: PluginId }
+  | { readonly kind: 'module'; readonly id: ModuleId }
+  | { readonly kind: 'plugin'; readonly id: PluginId }
   | { readonly kind: 'service'; readonly name: string }
   | { readonly kind: 'system' };
 
 // ─── Resource Kinds ───────────────────────────────────────────────────────
 
 export type ResourceKind =
-  | 'service'        // access to a registered service
-  | 'event'          // publish/subscribe events
-  | 'command'        // dispatch/handle commands
-  | 'configuration'  // read/write configuration
-  | 'secret'         // access secrets
-  | 'file-system'    // read/write files (sandboxed)
-  | 'network'        // outbound HTTP/TCP calls
-  | 'database'       // database access
-  | 'worker-pool'    // create/use worker pool
-  | 'scheduler'      // schedule jobs
-  | 'telemetry'      // emit metrics/traces/logs
-  | 'module'         // load/unload modules
-  | 'platform';      // platform kernel operations
+  | 'service' // access to a registered service
+  | 'event' // publish/subscribe events
+  | 'command' // dispatch/handle commands
+  | 'configuration' // read/write configuration
+  | 'secret' // access secrets
+  | 'file-system' // read/write files (sandboxed)
+  | 'network' // outbound HTTP/TCP calls
+  | 'database' // database access
+  | 'worker-pool' // create/use worker pool
+  | 'scheduler' // schedule jobs
+  | 'telemetry' // emit metrics/traces/logs
+  | 'module' // load/unload modules
+  | 'platform'; // platform kernel operations
 
 export type ResourceAction = 'read' | 'write' | 'execute' | 'subscribe' | 'publish' | 'manage';
 
@@ -137,46 +137,46 @@ export interface PermissionCondition {
 }
 
 export type PermissionConditionKind =
-  | 'environment-equals'    // only in specific environment
-  | 'resource-matches'      // resource ID must match pattern
-  | 'time-window'           // only during specified time range
-  | 'rate-limit'            // max N checks per window
-  | 'namespace-prefix';     // resource must be under a namespace
+  | 'environment-equals' // only in specific environment
+  | 'resource-matches' // resource ID must match pattern
+  | 'time-window' // only during specified time range
+  | 'rate-limit' // max N checks per window
+  | 'namespace-prefix'; // resource must be under a namespace
 
 // ─── Built-in Permission IDs ──────────���───────────────────────────────────
 
 export const PERMISSION_IDS = {
   // Services
-  SERVICE_READ:          'perm-service-read'          as PermissionId,
-  SERVICE_WRITE:         'perm-service-write'         as PermissionId,
+  SERVICE_READ: 'perm-service-read' as PermissionId,
+  SERVICE_WRITE: 'perm-service-write' as PermissionId,
 
   // Events
-  EVENT_PUBLISH:         'perm-event-publish'         as PermissionId,
-  EVENT_SUBSCRIBE:       'perm-event-subscribe'       as PermissionId,
+  EVENT_PUBLISH: 'perm-event-publish' as PermissionId,
+  EVENT_SUBSCRIBE: 'perm-event-subscribe' as PermissionId,
 
   // Commands
-  COMMAND_DISPATCH:      'perm-command-dispatch'      as PermissionId,
-  COMMAND_HANDLE:        'perm-command-handle'        as PermissionId,
+  COMMAND_DISPATCH: 'perm-command-dispatch' as PermissionId,
+  COMMAND_HANDLE: 'perm-command-handle' as PermissionId,
 
   // Configuration
-  CONFIG_READ:           'perm-config-read'           as PermissionId,
-  CONFIG_WRITE:          'perm-config-write'          as PermissionId,
-  SECRET_READ:           'perm-secret-read'           as PermissionId,
+  CONFIG_READ: 'perm-config-read' as PermissionId,
+  CONFIG_WRITE: 'perm-config-write' as PermissionId,
+  SECRET_READ: 'perm-secret-read' as PermissionId,
 
   // Storage
-  DATABASE_READ:         'perm-database-read'         as PermissionId,
-  DATABASE_WRITE:        'perm-database-write'        as PermissionId,
+  DATABASE_READ: 'perm-database-read' as PermissionId,
+  DATABASE_WRITE: 'perm-database-write' as PermissionId,
 
   // Network
-  NETWORK_OUTBOUND:      'perm-network-outbound'      as PermissionId,
+  NETWORK_OUTBOUND: 'perm-network-outbound' as PermissionId,
 
   // Workers & Scheduler
-  WORKER_CREATE:         'perm-worker-create'         as PermissionId,
-  JOB_SCHEDULE:          'perm-job-schedule'          as PermissionId,
+  WORKER_CREATE: 'perm-worker-create' as PermissionId,
+  JOB_SCHEDULE: 'perm-job-schedule' as PermissionId,
 
   // Platform
-  MODULE_LOAD:           'perm-module-load'           as PermissionId,
-  PLATFORM_MANAGE:       'perm-platform-manage'       as PermissionId,
+  MODULE_LOAD: 'perm-module-load' as PermissionId,
+  PLATFORM_MANAGE: 'perm-platform-manage' as PermissionId,
 } as const;
 
 export type BuiltInPermissionId = (typeof PERMISSION_IDS)[keyof typeof PERMISSION_IDS];
@@ -191,11 +191,11 @@ export interface PermissionRole {
 }
 
 export const BUILT_IN_ROLES = {
-  CORE_MODULE:     'role-core-module',
+  CORE_MODULE: 'role-core-module',
   PLUGIN_STANDARD: 'role-plugin-standard',
-  PLUGIN_TRUSTED:  'role-plugin-trusted',
-  READONLY:        'role-readonly',
-  OBSERVER:        'role-observer',
+  PLUGIN_TRUSTED: 'role-plugin-trusted',
+  READONLY: 'role-readonly',
+  OBSERVER: 'role-observer',
 } as const;
 
 // ─── Audit ───────────────────────────────────────────��────────────────────

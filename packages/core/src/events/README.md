@@ -8,17 +8,17 @@ Decouples producers from consumers of domain events. All cross-module communicat
 
 ## Interfaces
 
-| Interface | Role |
-|-----------|------|
-| `Event` | Base contract for all domain and integration events |
-| `EventHandler<T>` | Async handler for a specific typed event |
-| `EventListener<T>` | Fire-and-forget listener (synchronous) |
-| `EventPublisher` | Publishes one or many events |
-| `EventSubscriber` | Subscribes handlers to event types |
-| `EventBus` | Central hub — combines Publisher + Subscriber |
-| `EventInterceptor` | Cross-cutting: logging, tracing, auth per event |
-| `EventReplayer` | Replays historical events (Event Sourcing) |
-| `EventStore` | Append-only log of events per aggregate stream |
+| Interface          | Role                                                |
+| ------------------ | --------------------------------------------------- |
+| `Event`            | Base contract for all domain and integration events |
+| `EventHandler<T>`  | Async handler for a specific typed event            |
+| `EventListener<T>` | Fire-and-forget listener (synchronous)              |
+| `EventPublisher`   | Publishes one or many events                        |
+| `EventSubscriber`  | Subscribes handlers to event types                  |
+| `EventBus`         | Central hub — combines Publisher + Subscriber       |
+| `EventInterceptor` | Cross-cutting: logging, tracing, auth per event     |
+| `EventReplayer`    | Replays historical events (Event Sourcing)          |
+| `EventStore`       | Append-only log of events per aggregate stream      |
 
 ## Architecture
 

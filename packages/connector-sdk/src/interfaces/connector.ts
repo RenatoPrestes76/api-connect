@@ -3,79 +3,84 @@ import type { ConnectorMetadata } from './metadata.js';
 // ─── Result wrapper ────────────────────────────────────────────────────────────
 
 export interface ConnectorResult<T = void> {
-  readonly ok:        boolean;
-  readonly data?:     T;
-  readonly error?:    ConnectorError;
+  readonly ok: boolean;
+  readonly data?: T;
+  readonly error?: ConnectorError;
   readonly durationMs: number;
 }
 
 export interface ConnectorError {
-  readonly code:    string;
+  readonly code: string;
   readonly message: string;
   readonly retryable: boolean;
-  readonly cause?:  Error;
+  readonly cause?: Error;
 }
 
 export function ok<T>(data: T, durationMs = 0): ConnectorResult<T> {
   return { ok: true, data, durationMs };
 }
 
-export function fail(code: string, message: string, retryable = false, cause?: Error): ConnectorResult<never> {
+export function fail(
+  code: string,
+  message: string,
+  retryable = false,
+  cause?: Error
+): ConnectorResult<never> {
   return { ok: false, error: { code, message, retryable, cause }, durationMs: 0 };
 }
 
 // ─── Discovery ─────────────────────────────────────────────────────────────────
 
 export interface DiscoveredEntity {
-  readonly id:       string;
-  readonly name:     string;
-  readonly type:     string;
-  readonly path?:    string;
+  readonly id: string;
+  readonly name: string;
+  readonly type: string;
+  readonly path?: string;
   readonly children?: DiscoveredEntity[];
-  readonly extra?:   Record<string, unknown>;
+  readonly extra?: Record<string, unknown>;
 }
 
 export interface DiscoveryResult {
-  readonly entities:     DiscoveredEntity[];
-  readonly total:        number;
+  readonly entities: DiscoveredEntity[];
+  readonly total: number;
   readonly discoveredAt: Date;
 }
 
 // ─── Validation ────────────────────────────────────────────────────────────────
 
 export interface ValidationResult {
-  readonly valid:    boolean;
-  readonly errors:   ValidationIssue[];
+  readonly valid: boolean;
+  readonly errors: ValidationIssue[];
   readonly warnings: ValidationIssue[];
 }
 
 export interface ValidationIssue {
-  readonly field:   string;
-  readonly code:    string;
+  readonly field: string;
+  readonly code: string;
   readonly message: string;
 }
 
 // ─── Sync ──────────────────────────────────────────────────────────────────────
 
 export interface SyncContext {
-  readonly jobId:        string;
-  readonly since?:       Date;
-  readonly entities?:    string[];
-  readonly batchSize?:   number;
+  readonly jobId: string;
+  readonly since?: Date;
+  readonly entities?: string[];
+  readonly batchSize?: number;
 }
 
 export interface SyncResult {
-  readonly synced:     number;
-  readonly skipped:    number;
-  readonly failed:     number;
-  readonly errors:     SyncError[];
+  readonly synced: number;
+  readonly skipped: number;
+  readonly failed: number;
+  readonly errors: SyncError[];
   readonly finishedAt: Date;
 }
 
 export interface SyncError {
   readonly entityId: string;
-  readonly code:     string;
-  readonly message:  string;
+  readonly code: string;
+  readonly message: string;
 }
 
 // ─── Health ────────────────────────────────────────────────────────────────────
@@ -83,12 +88,12 @@ export interface SyncError {
 export type HealthStatusKind = 'healthy' | 'degraded' | 'unhealthy';
 
 export interface ConnectorHealthStatus {
-  readonly status:         HealthStatusKind;
+  readonly status: HealthStatusKind;
   readonly responseTimeMs: number;
-  readonly lastSync?:      Date;
-  readonly lastFailure?:   Date;
-  readonly uptimeSince?:   Date;
-  readonly message?:       string;
+  readonly lastSync?: Date;
+  readonly lastFailure?: Date;
+  readonly uptimeSince?: Date;
+  readonly message?: string;
 }
 
 // ─── The Connector interface ───────────────────────────────────────────────────
@@ -121,4 +126,6 @@ export interface Connector {
 }
 
 /** Factory function signature — every plugin entry point must export this as default. */
-export type ConnectorFactory = (context: import('../core/connector-context.js').ConnectorContext) => Connector;
+export type ConnectorFactory = (
+  context: import('../core/connector-context.js').ConnectorContext
+) => Connector;

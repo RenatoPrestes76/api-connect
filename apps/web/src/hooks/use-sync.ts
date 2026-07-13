@@ -6,7 +6,7 @@ import { POLL_INTERVAL_MS } from '@/lib/constants';
 export function useSyncHistory(query: SyncHistoryQuery = {}) {
   return useQuery({
     queryKey: ['sync-history', query],
-    queryFn:  ({ signal }) => getSyncHistory(query, signal),
+    queryFn: ({ signal }) => getSyncHistory(query, signal),
     refetchInterval: POLL_INTERVAL_MS,
   });
 }

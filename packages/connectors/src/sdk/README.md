@@ -29,18 +29,20 @@ export const snowflakePlugin: ConnectorPlugin = {
 
   configSchema: {
     properties: {
-      account:    { type: 'string', required: true, label: 'Account' },
-      username:   { type: 'string', required: true, label: 'Username' },
-      password:   { type: 'string', required: true, label: 'Password', secret: true },
-      database:   { type: 'string', required: true, label: 'Database' },
-      schema:     { type: 'string', required: false, label: 'Schema', default: 'PUBLIC' },
-      warehouse:  { type: 'string', required: true, label: 'Warehouse' },
+      account: { type: 'string', required: true, label: 'Account' },
+      username: { type: 'string', required: true, label: 'Username' },
+      password: { type: 'string', required: true, label: 'Password', secret: true },
+      database: { type: 'string', required: true, label: 'Database' },
+      schema: { type: 'string', required: false, label: 'Schema', default: 'PUBLIC' },
+      warehouse: { type: 'string', required: true, label: 'Warehouse' },
     },
   },
 
   author: { name: 'Seltriva', email: 'dev@seltriva.com' },
   lifecycle: {
-    onInstall: async (registry: PluginRegistry) => { /* optional setup */ },
+    onInstall: async (registry: PluginRegistry) => {
+      /* optional setup */
+    },
   },
 
   async createConnector(config: ConnectorConfig): Promise<Connector> {
@@ -48,9 +50,12 @@ export const snowflakePlugin: ConnectorPlugin = {
     return new SnowflakeConnectorImpl(config);
   },
 
-  async validateConfig(config: ConnectorConfig): Promise<ConnectorResult<PluginConfigValidationResult>> {
+  async validateConfig(
+    config: ConnectorConfig
+  ): Promise<ConnectorResult<PluginConfigValidationResult>> {
     const errors = [];
-    if (!config.account) errors.push({ field: 'account', message: 'Account is required', code: 'REQUIRED' });
+    if (!config.account)
+      errors.push({ field: 'account', message: 'Account is required', code: 'REQUIRED' });
     return {
       success: errors.length === 0,
       data: { isValid: errors.length === 0, errors, warnings: [] },
@@ -141,19 +146,19 @@ report.results.forEach(r => {
 
 ## Interfaces
 
-| Interface | Role |
-|-----------|------|
-| `ConnectorPlugin` | Root contract — every distributable connector implements this |
-| `PluginAuthor` | Author metadata |
-| `PluginLifecycle` | Install / uninstall / upgrade hooks |
-| `PluginRegistry` | Manages loaded plugins at runtime |
-| `PluginRegistryEvent` | Change notifications from the plugin registry |
-| `ConnectorManifest` | Static discovery declaration |
-| `PluginLoader` | Loads plugins from paths, packages, or directories |
-| `PluginTestHarness` | UDCF compliance suite for plugin authors |
-| `ComplianceReport` | Full test run results with grade |
-| `AbstractConnectorContract` | Expected shape for concrete connector classes |
-| `SdkVersionInfo` | Runtime SDK version negotiation |
+| Interface                   | Role                                                          |
+| --------------------------- | ------------------------------------------------------------- |
+| `ConnectorPlugin`           | Root contract — every distributable connector implements this |
+| `PluginAuthor`              | Author metadata                                               |
+| `PluginLifecycle`           | Install / uninstall / upgrade hooks                           |
+| `PluginRegistry`            | Manages loaded plugins at runtime                             |
+| `PluginRegistryEvent`       | Change notifications from the plugin registry                 |
+| `ConnectorManifest`         | Static discovery declaration                                  |
+| `PluginLoader`              | Loads plugins from paths, packages, or directories            |
+| `PluginTestHarness`         | UDCF compliance suite for plugin authors                      |
+| `ComplianceReport`          | Full test run results with grade                              |
+| `AbstractConnectorContract` | Expected shape for concrete connector classes                 |
+| `SdkVersionInfo`            | Runtime SDK version negotiation                               |
 
 ## Constraints
 

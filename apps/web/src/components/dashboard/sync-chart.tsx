@@ -15,11 +15,14 @@ export function SyncChart({ trend }: SyncChartProps) {
       </CardHeader>
       <CardContent>
         <AreaChart
-          data={trend.map((t) => ({ ...t, label: new Date(t.ts).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' }) }))}
+          data={trend.map((t) => ({
+            ...t,
+            label: new Date(t.ts).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' }),
+          }))}
           xKey="label"
           series={[
-            { key: 'count',  color: '#4f46e5', label: 'Syncs'    },
-            { key: 'failed', color: '#f43f5e', label: 'Failed'   },
+            { key: 'count', color: '#4f46e5', label: 'Syncs' },
+            { key: 'failed', color: '#f43f5e', label: 'Failed' },
           ]}
           height={160}
         />

@@ -19,12 +19,17 @@ export class MachineId {
       throw new InvalidMachineIdError(value, `Must be at most ${MAX_LENGTH} characters`);
     }
     if (!ALLOWED_RE.test(v)) {
-      throw new InvalidMachineIdError(value, 'Only alphanumeric, dash, underscore, colon and dot allowed');
+      throw new InvalidMachineIdError(
+        value,
+        'Only alphanumeric, dash, underscore, colon and dot allowed'
+      );
     }
     return new MachineId(v);
   }
 
-  toString(): string { return this._value; }
+  toString(): string {
+    return this._value;
+  }
 
   equals(other: MachineId): boolean {
     return this._value === other._value;

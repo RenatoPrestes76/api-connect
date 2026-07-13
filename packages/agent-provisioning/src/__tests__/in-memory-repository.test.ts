@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ProvisioningToken }               from '../entity/provisioning-token.js';
+import { ProvisioningToken } from '../entity/provisioning-token.js';
 import { InMemoryProvisioningTokenRepository } from '../repository/in-memory-provisioning-token-repository.js';
 
 const FUTURE = new Date(Date.now() + 86_400_000);
-const BASE   = { companyId: 'co-1', description: 'test token', expiresAt: FUTURE };
+const BASE = { companyId: 'co-1', description: 'test token', expiresAt: FUTURE };
 
 function mkToken(overrides = {}) {
   return ProvisioningToken.create({ ...BASE, ...overrides }, () => `id-${Math.random()}`);
@@ -12,7 +12,9 @@ function mkToken(overrides = {}) {
 describe('InMemoryProvisioningTokenRepository', () => {
   let repo: InMemoryProvisioningTokenRepository;
 
-  beforeEach(() => { repo = new InMemoryProvisioningTokenRepository(); });
+  beforeEach(() => {
+    repo = new InMemoryProvisioningTokenRepository();
+  });
 
   describe('create()', () => {
     it('persists a token', async () => {
@@ -47,7 +49,7 @@ describe('InMemoryProvisioningTokenRepository', () => {
       const { token } = mkToken();
       await repo.create(token);
       const results = await repo.findByPrefix(token.tokenPrefix);
-      expect(results.some(t => t.id === token.id)).toBe(true);
+      expect(results.some((t) => t.id === token.id)).toBe(true);
     });
 
     it('returns empty when no prefix matches', async () => {

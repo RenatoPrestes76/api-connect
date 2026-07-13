@@ -22,9 +22,9 @@ import type { PrometheusStore } from '../../../services/prometheus-store.js';
 interface AnalyzeSchemaRequest {
   schema: DatabaseSchema;
   source?: {
-    host?:        string;
-    port?:        number;
-    database?:    string;
+    host?: string;
+    port?: number;
+    database?: string;
     connectorId?: string;
   };
 }
@@ -32,7 +32,7 @@ interface AnalyzeSchemaRequest {
 // ─── Response serialisation ───────────────────────────────────────────────────
 
 function flattenEntities(
-  entities: DatabaseIntelligenceReport['entities'],
+  entities: DatabaseIntelligenceReport['entities']
 ): ReturnType<typeof serializeClassification>[] {
   const result: ReturnType<typeof serializeClassification>[] = [];
   for (const classifications of Object.values(entities)) {
@@ -45,25 +45,28 @@ function flattenEntities(
 
 function serializeClassification(cls: EntityClassification) {
   return {
-    table:          `${cls.tableSchema}.${cls.tableName}`,
-    entity:         cls.entity,
-    confidence:     cls.confidence,
-    isAuxiliary:    cls.isAuxiliary,
+    table: `${cls.tableSchema}.${cls.tableName}`,
+    entity: cls.entity,
+    confidence: cls.confidence,
+    isAuxiliary: cls.isAuxiliary,
     isJunctionTable: cls.isJunctionTable,
-    estimatedRows:  cls.estimatedRows,
-    alternatives:   cls.alternatives,
-    fieldRoles:     Object.fromEntries(
-      [...cls.fieldRoles.entries()].map(([col, a]) => [col, { role: a.role, confidence: a.confidence }]),
+    estimatedRows: cls.estimatedRows,
+    alternatives: cls.alternatives,
+    fieldRoles: Object.fromEntries(
+      [...cls.fieldRoles.entries()].map(([col, a]) => [
+        col,
+        { role: a.role, confidence: a.confidence },
+      ])
     ),
   };
 }
 
 function serializeSuggestion(s: IntegrationSuggestion) {
   return {
-    priority:     s.priority,
-    entity:       s.entity,
-    table:        s.table,
-    reason:       s.reason,
+    priority: s.priority,
+    entity: s.entity,
+    table: s.table,
+    reason: s.reason,
     fieldMapping: Object.fromEntries(s.fieldMapping),
   };
 }
@@ -84,26 +87,26 @@ export function createAnalyzeSchemaHandler(store: PrometheusStore): RouteHandler
     }
 
     const input = adaptDatabaseSchema(body.schema, {
-      host:     body.source?.host,
-      port:     body.source?.port,
+      host: body.source?.host,
+      port: body.source?.port,
       database: body.source?.database,
     });
 
-    const report     = await _scanner.scan(input);
+    const report = await _scanner.scan(input);
     const analysisId = crypto.randomUUID();
     store.set(analysisId, report);
 
     json(res, {
       analysisId,
       generatedAt: report.generatedAt,
-      durationMs:  report.durationMs,
-      database:    report.database,
-      host:        report.host,
-      port:        report.port,
-      summary:     report.summary,
-      entities:    flattenEntities(report.entities),
+      durationMs: report.durationMs,
+      database: report.database,
+      host: report.host,
+      port: report.port,
+      summary: report.summary,
+      entities: flattenEntities(report.entities),
       suggestions: report.suggestions.map(serializeSuggestion),
-      risks:       report.risks,
+      risks: report.risks,
     });
   };
 }

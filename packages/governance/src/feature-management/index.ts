@@ -12,30 +12,30 @@ import type { GovernanceResult } from '../policies/index';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
-export type FeatureFlagId     = Branded<string, 'FeatureFlagId'>;
-export type FlagRuleId        = Branded<string, 'FlagRuleId'>;
-export type ExperimentId      = Branded<string, 'ExperimentId'>;
+export type FeatureFlagId = Branded<string, 'FeatureFlagId'>;
+export type FlagRuleId = Branded<string, 'FlagRuleId'>;
+export type ExperimentId = Branded<string, 'ExperimentId'>;
 
 // ─── Feature Flag ────────────────────────────────────────────────────────────
 
-export type FlagValueType    = 'boolean' | 'string' | 'number' | 'json';
-export type FlagLifecycle    = 'permanent' | 'release' | 'experiment' | 'kill-switch' | 'ops';
+export type FlagValueType = 'boolean' | 'string' | 'number' | 'json';
+export type FlagLifecycle = 'permanent' | 'release' | 'experiment' | 'kill-switch' | 'ops';
 
 export interface FeatureFlag {
   readonly id: FeatureFlagId;
-  readonly key: string;                    // e.g. "atlas.cloud.multi-region"
+  readonly key: string; // e.g. "atlas.cloud.multi-region"
   readonly name: string;
   readonly description: string;
   readonly lifecycle: FlagLifecycle;
   readonly valueType: FlagValueType;
   readonly defaultValue: unknown;
-  readonly enabled: boolean;               // globally enabled/disabled
+  readonly enabled: boolean; // globally enabled/disabled
   readonly rules: FlagRule[];
   readonly experimentId?: ExperimentId;
   readonly scope: FlagScope;
   readonly tags: string[];
   readonly owner?: string;
-  readonly expiresAt?: Date;               // prompt to clean up release flags
+  readonly expiresAt?: Date; // prompt to clean up release flags
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -54,21 +54,29 @@ export interface FlagRule {
   readonly priority: number;
   readonly conditions: FlagCondition[];
   readonly value: unknown;
-  readonly rolloutPercentage?: number;     // 0–100; null = 100% for matched
+  readonly rolloutPercentage?: number; // 0–100; null = 100% for matched
   readonly enabled: boolean;
 }
 
 export interface FlagCondition {
-  readonly attribute: string;             // e.g. "organizationId", "tier", "userId"
+  readonly attribute: string; // e.g. "organizationId", "tier", "userId"
   readonly operator: FlagConditionOperator;
   readonly value: unknown;
 }
 
 export type FlagConditionOperator =
-  | 'eq' | 'neq' | 'in' | 'not-in'
-  | 'contains' | 'starts-with' | 'ends-with'
-  | 'gt' | 'gte' | 'lt' | 'lte'
-  | 'matches';                            // regex
+  | 'eq'
+  | 'neq'
+  | 'in'
+  | 'not-in'
+  | 'contains'
+  | 'starts-with'
+  | 'ends-with'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte'
+  | 'matches'; // regex
 
 // ─── Evaluation ──────────────────────────────────────────────────────────────
 
@@ -122,7 +130,7 @@ export interface ExperimentVariant {
   readonly key: string;
   readonly name: string;
   readonly value: unknown;
-  readonly allocationPercent: number;     // must sum to 100
+  readonly allocationPercent: number; // must sum to 100
 }
 
 // ─── Service Interface ───────────────────────────────────────────────────────

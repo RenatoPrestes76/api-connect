@@ -48,6 +48,7 @@ test(sdk): add comprehensive test suite
 ### File Structure
 
 Place new code in appropriate packages:
+
 - UI components → `packages/ui/src`
 - Database logic → `packages/database/src`
 - Shared utilities → `packages/shared/src`

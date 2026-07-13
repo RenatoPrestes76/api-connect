@@ -19,9 +19,7 @@
  *   - Prompt performance signals (forwarded to prompt-registry)
  */
 
-import type {
-  AIResult, AgentId, AITaskType,
-} from '../providers/index';
+import type { AIResult, AgentId, AITaskType } from '../providers/index';
 import type { FeedbackRecord, FeedbackAggregate } from '../feedback/index';
 import type { MemoryEntryInput } from '../memory/index';
 
@@ -106,15 +104,15 @@ export interface AILearningPattern {
 }
 
 export type AILearningPatternKind =
-  | 'naming-convention'       // entity/field naming patterns for an ERP
-  | 'structural-signature'    // field composition that identifies an entity kind
-  | 'type-heuristic'          // type patterns that indicate field kinds
-  | 'erp-prefix-stripping'    // ERP-specific prefix/suffix to remove
-  | 'abbreviation-expansion'  // abbreviation → full word mapping
-  | 'multilingual-synonym'    // word in another language → CBL term
-  | 'confidence-calibration'  // agent overestimates/underestimates for context
-  | 'conflict-resolution'     // how a specific conflict type should be resolved
-  | 'rejection-pattern';      // patterns that were consistently rejected
+  | 'naming-convention' // entity/field naming patterns for an ERP
+  | 'structural-signature' // field composition that identifies an entity kind
+  | 'type-heuristic' // type patterns that indicate field kinds
+  | 'erp-prefix-stripping' // ERP-specific prefix/suffix to remove
+  | 'abbreviation-expansion' // abbreviation → full word mapping
+  | 'multilingual-synonym' // word in another language → CBL term
+  | 'confidence-calibration' // agent overestimates/underestimates for context
+  | 'conflict-resolution' // how a specific conflict type should be resolved
+  | 'rejection-pattern'; // patterns that were consistently rejected
 
 export type AILearningPatternPayload =
   | NamingConventionPattern

@@ -1,29 +1,31 @@
 import { postJson } from '../utils/http-client.js';
 
 export interface VersionCheckResult {
-  current:     string;
-  latest:      string;
+  current: string;
+  latest: string;
   updateAvailable: boolean;
-  releaseUrl?:  string;
+  releaseUrl?: string;
 }
 
 interface VersionResponse {
-  version:    string;
+  version: string;
   releaseUrl?: string;
 }
 
 export async function checkForUpdates(
-  apiBaseUrl:      string,
-  currentVersion:  string,
+  apiBaseUrl: string,
+  currentVersion: string
 ): Promise<VersionCheckResult | null> {
   try {
-    const url    = `${apiBaseUrl.replace(/\/$/, '')}/api/v1/installer/version`;
-    const latest = await postJson<{ currentVersion: string }, VersionResponse>(url, { currentVersion });
+    const url = `${apiBaseUrl.replace(/\/$/, '')}/api/v1/installer/version`;
+    const latest = await postJson<{ currentVersion: string }, VersionResponse>(url, {
+      currentVersion,
+    });
     return {
-      current:         currentVersion,
-      latest:          latest.version,
+      current: currentVersion,
+      latest: latest.version,
       updateAvailable: isNewer(latest.version, currentVersion),
-      releaseUrl:      latest.releaseUrl,
+      releaseUrl: latest.releaseUrl,
     };
   } catch {
     // Version check is non-critical — silently skip if the endpoint is unavailable

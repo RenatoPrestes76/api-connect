@@ -4,7 +4,7 @@ Discovery Engine — introspects any connected source and maps its full structur
 
 ## Purpose
 
-Answers the question: *"What exists in this data source?"* without requiring the developer to know the source in advance. The Discovery Engine is the foundation of Seltriva Connect's auto-mapping and visual schema editor features.
+Answers the question: _"What exists in this data source?"_ without requiring the developer to know the source in advance. The Discovery Engine is the foundation of Seltriva Connect's auto-mapping and visual schema editor features.
 
 ## Core Interface
 
@@ -37,14 +37,14 @@ DiscoveryReport
 
 Each connector type extends `DiscoveryEngine` with domain-specific methods:
 
-| Engine | Extra Methods |
-|--------|---------------|
+| Engine                      | Extra Methods                                                                                                                                                                      |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `RelationalDiscoveryEngine` | `discoverDatabases`, `discoverSchemas`, `discoverTables`, `discoverColumns`, `discoverIndexes`, `discoverProcedures`, `discoverViews`, `discoverTriggers`, `discoverRelationships` |
-| `DocumentDiscoveryEngine` | `discoverCollections`, `discoverDocumentShape`, `discoverIndexes` |
-| `ApiDiscoveryEngine` | `discoverEndpoints`, `discoverOperations`, `discoverSchemas`, `loadOpenApiSpec` |
-| `FileDiscoveryEngine` | `discoverFiles`, `discoverStructure` |
-| `CloudDiscoveryEngine` | `discoverBuckets`, `discoverObjects` |
-| `QueueDiscoveryEngine` | `discoverQueues`, `discoverTopics`, `discoverConsumerGroups`, `discoverMessageSchema` |
+| `DocumentDiscoveryEngine`   | `discoverCollections`, `discoverDocumentShape`, `discoverIndexes`                                                                                                                  |
+| `ApiDiscoveryEngine`        | `discoverEndpoints`, `discoverOperations`, `discoverSchemas`, `loadOpenApiSpec`                                                                                                    |
+| `FileDiscoveryEngine`       | `discoverFiles`, `discoverStructure`                                                                                                                                               |
+| `CloudDiscoveryEngine`      | `discoverBuckets`, `discoverObjects`                                                                                                                                               |
+| `QueueDiscoveryEngine`      | `discoverQueues`, `discoverTopics`, `discoverConsumerGroups`, `discoverMessageSchema`                                                                                              |
 
 ## Discovery Strategies
 
@@ -52,9 +52,15 @@ The `DiscoveryStrategy` interface allows pluggable discovery algorithms per conn
 
 ```typescript
 class PostgreSQLDiscoveryStrategy implements DiscoveryStrategy {
-  getStrategyName() { return 'postgresql'; }
-  getSupportedTypes() { return ['table', 'view', 'procedure', 'trigger']; }
-  async discover(context) { /* query information_schema */ }
+  getStrategyName() {
+    return 'postgresql';
+  }
+  getSupportedTypes() {
+    return ['table', 'view', 'procedure', 'trigger'];
+  }
+  async discover(context) {
+    /* query information_schema */
+  }
 }
 ```
 

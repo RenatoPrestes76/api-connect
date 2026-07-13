@@ -14,7 +14,12 @@
  */
 
 import type {
-  AIResult, FeedbackId, RecommendationId, AgentId, AITaskType, SessionId,
+  AIResult,
+  FeedbackId,
+  RecommendationId,
+  AgentId,
+  AITaskType,
+  SessionId,
 } from '../providers/index';
 import type { AIRecommendation } from '../recommendations/index';
 import type { DecisionRecord } from '../decision-engine/index';
@@ -110,21 +115,21 @@ export interface FeedbackInput {
 // ─── Feedback Kinds ───────────────────────────────────────────────────────
 
 export type FeedbackKind =
-  | 'positive'     // AI was correct
-  | 'negative'     // AI was wrong
-  | 'corrective'   // AI was wrong — human provided correction
-  | 'implicit';    // inferred from downstream behavior
+  | 'positive' // AI was correct
+  | 'negative' // AI was wrong
+  | 'corrective' // AI was wrong — human provided correction
+  | 'implicit'; // inferred from downstream behavior
 
 // ─── Feedback Signal ──────────────────────────────────────────────────────
 
 export type FeedbackSignal =
-  | 'approved'              // human explicitly approved
-  | 'rejected'              // human explicitly rejected
+  | 'approved' // human explicitly approved
+  | 'rejected' // human explicitly rejected
   | 'modified-and-approved' // human corrected and approved
-  | 'ignored'               // recommendation was not acted on
-  | 'revoked-later'         // was approved but later revoked
-  | 'confirmed-correct'     // external validation confirmed AI was right
-  | 'confirmed-incorrect';  // external validation confirmed AI was wrong
+  | 'ignored' // recommendation was not acted on
+  | 'revoked-later' // was approved but later revoked
+  | 'confirmed-correct' // external validation confirmed AI was right
+  | 'confirmed-incorrect'; // external validation confirmed AI was wrong
 
 // ─── Feedback Correction ──────────────────────────────────────────────────
 
@@ -148,9 +153,9 @@ export type CorrectionType =
 // ─── Reasoning Quality ────────────────────────────────────────────────────
 
 export type ReasoningQualityRating =
-  | 'sound'           // reasoning was valid even if conclusion was wrong
+  | 'sound' // reasoning was valid even if conclusion was wrong
   | 'partially-sound' // some reasoning steps were valid
-  | 'flawed'          // reasoning contained logical errors
+  | 'flawed' // reasoning contained logical errors
   | 'not-evaluated';
 
 // ─── Feedback Query ───────────────────────────────────────────────────────

@@ -18,7 +18,7 @@ export interface Mapper {
   ): void;
   registerObjectMapping<
     TSource extends Record<string, unknown>,
-    TTarget extends Record<string, unknown>
+    TTarget extends Record<string, unknown>,
   >(
     sourceName: string,
     targetName: string,

@@ -1,16 +1,17 @@
 import type { ConnectorMetadata } from '@seltriva/connector-sdk';
 
 export const ERP_METADATA: ConnectorMetadata = {
-  id:          'com.seltriva.connector-erp',
-  name:        'connector-erp',
+  id: 'com.seltriva.connector-erp',
+  name: 'connector-erp',
   displayName: 'Generic ERP Provider',
-  version:     '0.1.0',
-  sdkVersion:  '0.1.0',
-  vendor:      'Seltriva',
-  category:    'erp',
-  description: 'Generic ERP connector that simulates bi-directional data synchronization with any ERP system.',
+  version: '0.1.0',
+  sdkVersion: '0.1.0',
+  vendor: 'Seltriva',
+  category: 'erp',
+  description:
+    'Generic ERP connector that simulates bi-directional data synchronization with any ERP system.',
   compatibility: { min: '0.1.0' },
-  dependencies:  [],
+  dependencies: [],
   permissions: [
     'network:outbound',
     'credentials:read',
@@ -19,13 +20,13 @@ export const ERP_METADATA: ConnectorMetadata = {
     'scheduler:register',
   ],
   capabilities: {
-    canDiscover:    true,
+    canDiscover: true,
     canSynchronize: true,
-    canValidate:    true,
-    canStream:      false,
-    canBulkWrite:   false,
-    supportsSSL:    true,
+    canValidate: true,
+    canStream: false,
+    canBulkWrite: false,
+    supportsSSL: true,
   },
   updatable: true,
-  homepage:  'https://seltriva.com/connectors/erp',
+  homepage: 'https://seltriva.com/connectors/erp',
 };

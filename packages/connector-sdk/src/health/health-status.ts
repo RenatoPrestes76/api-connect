@@ -8,12 +8,12 @@ export function isHealthy(status: ConnectorHealthStatus): boolean {
 /** Aggregate multiple health statuses into the worst-case single status. */
 export function aggregateStatus(statuses: HealthStatusKind[]): HealthStatusKind {
   if (statuses.some((s) => s === 'unhealthy')) return 'unhealthy';
-  if (statuses.some((s) => s === 'degraded'))  return 'degraded';
+  if (statuses.some((s) => s === 'degraded')) return 'degraded';
   return 'healthy';
 }
 
 export interface HealthSnapshot {
   readonly connectorId: string;
-  readonly status:      ConnectorHealthStatus;
-  readonly snapshotAt:  Date;
+  readonly status: ConnectorHealthStatus;
+  readonly snapshotAt: Date;
 }

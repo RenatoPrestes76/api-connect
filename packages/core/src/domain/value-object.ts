@@ -26,10 +26,7 @@ export abstract class ValueObject<TProps extends Record<string, unknown>> {
     if (keysA.length !== keysB.length) return false;
 
     return keysA.every((key) =>
-      this.deepEqual(
-        (a as Record<string, unknown>)[key],
-        (b as Record<string, unknown>)[key],
-      ),
+      this.deepEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])
     );
   }
 

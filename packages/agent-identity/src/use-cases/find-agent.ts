@@ -1,15 +1,14 @@
-import type { AtlasAgent }            from '../entity/atlas-agent.js';
+import type { AtlasAgent } from '../entity/atlas-agent.js';
 import type { AtlasAgentRepository } from '../repository/atlas-agent-repository.js';
 
-export type FindAgentError =
-  | { code: 'AGENT_NOT_FOUND'; agentId: string };
+export type FindAgentError = { code: 'AGENT_NOT_FOUND'; agentId: string };
 
 export type FindAgentOutput =
-  | { ok: true;  value: AtlasAgent }
+  | { ok: true; value: AtlasAgent }
   | { ok: false; error: FindAgentError };
 
 export type FindAgentsByCompanyOutput =
-  | { ok: true;  value: AtlasAgent[] }
+  | { ok: true; value: AtlasAgent[] }
   | { ok: false; error: never };
 
 export class FindAgent {

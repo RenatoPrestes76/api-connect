@@ -5,6 +5,7 @@
 In the Atlas Platform, **governance** is the set of rules, policies, and processes that control who can do what, where, and when. Everything that affects organizational data, infrastructure, or security is governed.
 
 Governance is:
+
 - **Policy-driven**: rules are data, not code
 - **Auditable**: every decision leaves a tamper-evident trail
 - **Modular**: each domain has its own governance contract
@@ -84,18 +85,18 @@ if (result.decision === 'allow') {
   // proceed
 } else if (result.decision === 'deny') {
   // blocked by policy
-  throw new Error(`Denied by: ${result.matchedRules.map(r => r.name).join(', ')}`);
+  throw new Error(`Denied by: ${result.matchedRules.map((r) => r.name).join(', ')}`);
 }
 ```
 
 ### Conflict Resolution Strategies
 
-| Strategy | Behavior |
-|----------|----------|
-| `deny-overrides` | A single deny rule blocks the action (default for production) |
-| `allow-overrides` | A single allow rule permits the action |
-| `first-applicable` | First matching rule (by priority) decides |
-| `only-one` | Exactly one rule must match; error if multiple match |
+| Strategy           | Behavior                                                      |
+| ------------------ | ------------------------------------------------------------- |
+| `deny-overrides`   | A single deny rule blocks the action (default for production) |
+| `allow-overrides`  | A single allow rule permits the action                        |
+| `first-applicable` | First matching rule (by priority) decides                     |
+| `only-one`         | Exactly one rule must match; error if multiple match          |
 
 ---
 
@@ -132,7 +133,7 @@ await rbacService.assignRole({
 // Check a single permission
 const canDeploy = await rbacService.checkPermission(
   rbacContext,
-  PLATFORM_PERMISSIONS.ENVIRONMENTS_WRITE,
+  PLATFORM_PERMISSIONS.ENVIRONMENTS_WRITE
 );
 
 // Assert (throws FORBIDDEN if false)
@@ -155,7 +156,7 @@ const canDoAll = await permissionGuard.checkAll(rbacContext, [
 // 1. Check if action needs approval
 const required = await approvalService.requiresApproval(
   'environment:deploy:production',
-  organizationId,
+  organizationId
 );
 
 if (required) {
@@ -256,14 +257,11 @@ await envGovernanceService.freezeChangeWindow(
   'env_production',
   addDays(new Date(), 7),
   'Release freeze for v1.4.0',
-  adminId,
+  adminId
 );
 
 // Check before deploying
-const allowed = await envGovernanceService.isChangeAllowed(
-  'env_production',
-  'deploy',
-);
+const allowed = await envGovernanceService.isChangeAllowed('env_production', 'deploy');
 // allowed.allowed === false, allowed.changeWindowStatus === 'closed'
 ```
 
@@ -275,7 +273,7 @@ await envGovernanceService.lockEnvironment(
   'env_production',
   'Active security incident INC-2024-0042',
   adminId,
-  addHours(new Date(), 4),  // auto-unlock in 4h
+  addHours(new Date(), 4) // auto-unlock in 4h
 );
 ```
 
@@ -286,11 +284,7 @@ await envGovernanceService.lockEnvironment(
 ### Starting an ISO 27001 Assessment
 
 ```typescript
-const assessment = await complianceService.startAssessment(
-  organizationId,
-  'ISO27001',
-  assessorId,
-);
+const assessment = await complianceService.startAssessment(organizationId, 'ISO27001', assessorId);
 
 // Record findings
 await complianceService.recordFinding(assessment.id, {
@@ -314,7 +308,7 @@ console.log(`Score: ${final.value.complianceScore}/100`);
 ```typescript
 const dsrRequest = await complianceService.createLGPDRequest({
   organizationId,
-  type: 'deletion',   // Art. 18, VI
+  type: 'deletion', // Art. 18, VI
   requesterId: dataSubjectId,
   description: 'Request for erasure of personal data.',
 });
@@ -375,9 +369,7 @@ const secret = await secretManager.create({
   value: rawApiKey,
   organizationId,
   rotationPolicyId: quarterlyRotationPolicyId,
-  allowedConsumers: [
-    { type: 'agent', id: agentId, permissions: ['read'] },
-  ],
+  allowedConsumers: [{ type: 'agent', id: agentId, permissions: ['read'] }],
   createdBy: adminId,
 });
 
@@ -402,8 +394,22 @@ await backupGovernance.createPolicy({
   name: 'Production Daily Backup',
   organizationId,
   targets: [
-    { id: 'tgt_db', type: 'database', name: 'PostgreSQL', identifier: 'postgres://...', backupType: 'full', priority: 1 },
-    { id: 'tgt_cfg', type: 'config', name: 'Config Store', identifier: 'config://...', backupType: 'incremental', priority: 2 },
+    {
+      id: 'tgt_db',
+      type: 'database',
+      name: 'PostgreSQL',
+      identifier: 'postgres://...',
+      backupType: 'full',
+      priority: 1,
+    },
+    {
+      id: 'tgt_cfg',
+      type: 'config',
+      name: 'Config Store',
+      identifier: 'config://...',
+      backupType: 'incremental',
+      priority: 2,
+    },
   ],
   schedule: { frequency: 'daily', timezone: 'America/Sao_Paulo', startTime: '03:00' },
   retention: {

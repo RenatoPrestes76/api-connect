@@ -16,13 +16,13 @@ export type ConfigChangeSource = 'admin-ui' | 'api' | 'cli' | 'policy' | 'migrat
 export interface GovernanceConfigEntry {
   readonly id: GovernanceConfigId;
   readonly scope: ConfigScope;
-  readonly scopeId?: string;               // orgId, workspaceId, etc.
+  readonly scopeId?: string; // orgId, workspaceId, etc.
   readonly key: string;
   readonly value: unknown;
   readonly type: ConfigValueType;
   readonly schema?: ConfigSchema;
   readonly encrypted: boolean;
-  readonly overridable: boolean;           // can child scopes override?
+  readonly overridable: boolean; // can child scopes override?
   readonly source: ConfigChangeSource;
   readonly version: number;
   readonly setBy: string;
@@ -67,10 +67,25 @@ export interface IGovernanceConfigService {
   get<T = unknown>(scope: ConfigScope, scopeId: string | undefined, key: string): Promise<T | null>;
   getAll(scope: ConfigScope, scopeId?: string): Promise<GovernanceConfigEntry[]>;
   set(input: SetConfigInput): Promise<GovernanceResult<GovernanceConfigEntry>>;
-  delete(scope: ConfigScope, scopeId: string | undefined, key: string, by: string): Promise<GovernanceResult<void>>;
+  delete(
+    scope: ConfigScope,
+    scopeId: string | undefined,
+    key: string,
+    by: string
+  ): Promise<GovernanceResult<void>>;
   getResolved(scope: ConfigScope, scopeId: string): Promise<Record<string, unknown>>;
-  getHistory(scope: ConfigScope, scopeId: string | undefined, key: string): Promise<GovernanceConfigHistory>;
-  rollback(scope: ConfigScope, scopeId: string | undefined, key: string, toVersion: number, by: string): Promise<GovernanceResult<void>>;
+  getHistory(
+    scope: ConfigScope,
+    scopeId: string | undefined,
+    key: string
+  ): Promise<GovernanceConfigHistory>;
+  rollback(
+    scope: ConfigScope,
+    scopeId: string | undefined,
+    key: string,
+    toVersion: number,
+    by: string
+  ): Promise<GovernanceResult<void>>;
 }
 
 export interface SetConfigInput {

@@ -7,13 +7,13 @@ import type { DbQueryClient } from './db-client.js';
 export class OracleSchemaReader implements SchemaReader {
   constructor(
     private readonly _client: DbQueryClient,
-    private readonly _owner: string,
+    private readonly _owner: string
   ) {}
 
   async listTables(): Promise<string[]> {
     const { rows } = await this._client.query(
       `SELECT TABLE_NAME FROM ALL_TABLES WHERE OWNER = :1 ORDER BY TABLE_NAME`,
-      [this._owner.toUpperCase()],
+      [this._owner.toUpperCase()]
     );
     return rows.map((r) => String(r['TABLE_NAME']));
   }
@@ -32,7 +32,7 @@ export class OracleSchemaReader implements SchemaReader {
   }
 
   private async _readTableDetails(name: string): Promise<Table> {
-    const columns    = await this._readColumns(name);
+    const columns = await this._readColumns(name);
     const { primaryKey, foreignKeys, indexes } = await this._readConstraints(name);
     return { name, schema: this._owner, columns, primaryKey, foreignKeys, indexes };
   }
@@ -43,22 +43,22 @@ export class OracleSchemaReader implements SchemaReader {
        FROM ALL_TAB_COLUMNS
        WHERE OWNER = :1 AND TABLE_NAME = :2
        ORDER BY COLUMN_ID`,
-      [this._owner.toUpperCase(), table],
+      [this._owner.toUpperCase(), table]
     );
     return rows.map((r) => ({
-      name:         String(r['COLUMN_NAME']),
-      type:         String(r['DATA_TYPE']),
-      nullable:     r['NULLABLE'] === 'Y',
+      name: String(r['COLUMN_NAME']),
+      type: String(r['DATA_TYPE']),
+      nullable: r['NULLABLE'] === 'Y',
       isPrimaryKey: false,
       isForeignKey: false,
-      isUnique:     false,
+      isUnique: false,
     }));
   }
 
   private async _readConstraints(table: string): Promise<{
     primaryKey?: PrimaryKey;
     foreignKeys: ForeignKey[];
-    indexes:     Index[];
+    indexes: Index[];
   }> {
     const { rows } = await this._client.query(
       `SELECT ac.CONSTRAINT_TYPE, ac.CONSTRAINT_NAME,
@@ -76,7 +76,7 @@ export class OracleSchemaReader implements SchemaReader {
          ON rac.CONSTRAINT_NAME = racc.CONSTRAINT_NAME
         AND rac.OWNER           = racc.OWNER
        WHERE ac.OWNER = :1 AND ac.TABLE_NAME = :2`,
-      [this._owner.toUpperCase(), table],
+      [this._owner.toUpperCase(), table]
     );
 
     const pkCols: string[] = [];
@@ -84,7 +84,7 @@ export class OracleSchemaReader implements SchemaReader {
     const indexMap = new Map<string, Index>();
 
     for (const r of rows) {
-      const col   = String(r['COLUMN_NAME']);
+      const col = String(r['COLUMN_NAME']);
       const ctype = String(r['CONSTRAINT_TYPE']);
       const cname = String(r['CONSTRAINT_NAME']);
 
@@ -98,8 +98,8 @@ export class OracleSchemaReader implements SchemaReader {
 
       if (ctype === 'R' && r['FK_TABLE']) {
         foreignKeys.push({
-          column:           col,
-          referencedTable:  String(r['FK_TABLE']),
+          column: col,
+          referencedTable: String(r['FK_TABLE']),
           referencedColumn: String(r['FK_COLUMN'] ?? col),
         });
       }
@@ -113,9 +113,9 @@ export class OracleSchemaReader implements SchemaReader {
     }
 
     return {
-      primaryKey:  pkCols.length ? { columns: pkCols } : undefined,
+      primaryKey: pkCols.length ? { columns: pkCols } : undefined,
       foreignKeys,
-      indexes:     [...indexMap.values()],
+      indexes: [...indexMap.values()],
     };
   }
 
@@ -124,11 +124,11 @@ export class OracleSchemaReader implements SchemaReader {
     for (const table of tables) {
       for (const fk of table.foreignKeys) {
         relations.push({
-          fromTable:  table.name,
+          fromTable: table.name,
           fromColumn: fk.column,
-          toTable:    fk.referencedTable,
-          toColumn:   fk.referencedColumn,
-          type:       'many-to-one',
+          toTable: fk.referencedTable,
+          toColumn: fk.referencedColumn,
+          type: 'many-to-one',
         });
       }
     }

@@ -130,6 +130,7 @@ pnpm clean --filter @seltriva/ui
 ### Visual Studio Code
 
 **Recommended Extensions:**
+
 - ES7+ React/Redux/React-Native snippets
 - TypeScript Vue Plugin
 - Prettier - Code formatter
@@ -138,6 +139,7 @@ pnpm clean --filter @seltriva/ui
 - Thunder Client / REST Client
 
 **Settings (`settings.json`):**
+
 ```json
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -236,6 +238,7 @@ git push origin feature/my-feature
 ### Strict Mode
 
 All code uses TypeScript strict mode:
+
 ```json
 {
   "compilerOptions": {

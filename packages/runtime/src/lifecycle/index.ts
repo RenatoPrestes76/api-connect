@@ -16,7 +16,13 @@
  * coordinates ordered startup / shutdown.
  */
 
-import type { RuntimeResult, ModuleId, ModuleDescriptor, RuntimeContext, Disposable } from '../kernel/index';
+import type {
+  RuntimeResult,
+  ModuleId,
+  ModuleDescriptor,
+  RuntimeContext,
+  Disposable,
+} from '../kernel/index';
 
 // ─── Lifecycle State ──────────────────────────────────────────────────────
 

@@ -33,46 +33,51 @@ Packages (Shared Libraries)
 
 ### Technology Stack
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Frontend** | Next.js 15, React 19 | Server-rendered UIs |
-| **Styling** | Tailwind CSS, shadcn/ui | Enterprise UI components |
-| **Backend** | Node.js, Express | API services |
-| **Database** | Supabase, PostgreSQL | Data persistence |
-| **ORM** | Prisma | Type-safe database access |
-| **Auth** | Supabase Auth | Authentication |
-| **Build** | Turborepo, pnpm | Monorepo management |
-| **DevOps** | Docker, GitHub Actions | Deployment & CI/CD |
+| Layer        | Technology              | Purpose                   |
+| ------------ | ----------------------- | ------------------------- |
+| **Frontend** | Next.js 15, React 19    | Server-rendered UIs       |
+| **Styling**  | Tailwind CSS, shadcn/ui | Enterprise UI components  |
+| **Backend**  | Node.js, Express        | API services              |
+| **Database** | Supabase, PostgreSQL    | Data persistence          |
+| **ORM**      | Prisma                  | Type-safe database access |
+| **Auth**     | Supabase Auth           | Authentication            |
+| **Build**    | Turborepo, pnpm         | Monorepo management       |
+| **DevOps**   | Docker, GitHub Actions  | Deployment & CI/CD        |
 
 ## Package Organization
 
 ### Apps
 
 #### Cloud (`apps/cloud`)
+
 - **Purpose**: Main dashboard and management interface
 - **Technology**: Next.js, React
 - **Dependencies**: ui, types, config, logger
 - **Port**: 3000 (development)
 
 #### API (`apps/api`)
+
 - **Purpose**: Core backend API services
 - **Technology**: Node.js
 - **Dependencies**: database, types, logger, config
 - **Port**: 3001 (development)
 
 #### Studio (`apps/studio`)
+
 - **Purpose**: Development and testing interface
 - **Technology**: Next.js, React
 - **Dependencies**: ui, types, config, sdk
 - **Port**: 3002 (development)
 
 #### Agent (`apps/agent`)
+
 - **Purpose**: Autonomous task processing and workflow automation
 - **Technology**: Node.js
 - **Dependencies**: database, types, ai, logger, config
 - **Port**: 3003 (development)
 
 #### Docs (`apps/docs`)
+
 - **Purpose**: Platform documentation and guides
 - **Technology**: Next.js, React
 - **Dependencies**: ui
@@ -81,6 +86,7 @@ Packages (Shared Libraries)
 ### Packages
 
 #### UI (`packages/ui`)
+
 - **Purpose**: Reusable React component library
 - **Foundation**: shadcn/ui + Radix UI
 - **Styling**: Tailwind CSS
@@ -88,48 +94,57 @@ Packages (Shared Libraries)
 - **Consumers**: All apps
 
 #### Database (`packages/database`)
+
 - **Purpose**: Data layer with Prisma ORM
 - **Responsibilities**: Schema management, migrations, client
 - **Prisma Schema**: `prisma/schema.prisma`
 - **Consumers**: API, Agent
 
 #### Auth (`packages/auth`)
+
 - **Purpose**: Authentication and authorization
 - **Provider**: Supabase
 - **Responsibilities**: User auth, session management
 - **Consumers**: Cloud, API, Studio
 
 #### Config (`packages/config`)
+
 - **Purpose**: Environment and configuration management
 - **Responsibilities**: Env validation, config loading
 - **Consumers**: All packages
 
 #### Logger (`packages/logger`)
+
 - **Purpose**: Structured logging utility
 - **Responsibilities**: Log formatting, levels, outputs
 - **Consumers**: All packages
 
 #### Types (`packages/types`)
+
 - **Purpose**: Shared TypeScript type definitions
 - **Responsibilities**: Domain types, interfaces, enums
 - **Consumers**: All packages
 
 #### Shared (`packages/shared`)
+
 - **Purpose**: Utility functions and helpers
 - **Responsibilities**: Common functions, validators
 - **Consumers**: All packages
 
 #### Drivers (`packages/drivers`)
+
 - **Purpose**: External service integrations
 - **Responsibilities**: Provider integrations, connectors
 - **Consumers**: API, Agent
 
 #### SDK (`packages/sdk`)
+
 - **Purpose**: Client library for API integration
 - **Responsibilities**: API client, types, utilities
 - **Consumers**: Cloud, Studio
 
 #### AI (`packages/ai`)
+
 - **Purpose**: AI/ML integrations and utilities
 - **Responsibilities**: LLM integration, processing
 - **Consumers**: Agent, API
@@ -223,16 +238,19 @@ Artifact output to dist/
 ## Configuration Hierarchy
 
 ### TypeScript (`tsconfig.json`)
+
 - Root configuration with strict mode
 - App/package configs extend root
 - Path aliases for imports
 
 ### ESLint (`.eslintrc.cjs`)
+
 - Shared rules at root
 - Overrides per file type
 - Turbo-aware linting
 
 ### Prettier (`.prettierrc.json`)
+
 - Single format config
 - Applied across all files
 - Integrated with ESLint
@@ -240,12 +258,14 @@ Artifact output to dist/
 ## Database Schema
 
 ### Prisma Setup
+
 - Schema file: `packages/database/prisma/schema.prisma`
 - Migrations: `packages/database/prisma/migrations/`
 - Client generation: `pnpm db:generate`
 - Schema push: `pnpm db:push`
 
 ### Database Provider
+
 - PostgreSQL via Supabase
 - Connection: `DATABASE_URL` env variable
 - Automatic client generation
@@ -255,12 +275,14 @@ Artifact output to dist/
 ### GitHub Actions
 
 #### CI Workflow (`.github/workflows/ci.yml`)
+
 - Triggers on push and PR
 - Runs lint, type-check, build
 - Runs security audit
 - Caches dependencies
 
 #### Format Workflow (`.github/workflows/format.yml`)
+
 - Auto-fixes code style
 - Commits formatting changes
 - Runs on main branch
@@ -268,12 +290,14 @@ Artifact output to dist/
 ## Error Handling
 
 ### Logging Strategy
+
 - Structured JSON logs
 - Log levels: debug, info, warn, error
 - Context and stack traces
 - Performance metrics
 
 ### Error Recovery
+
 - Graceful degradation
 - Retry mechanisms
 - Fallback handlers
@@ -282,12 +306,14 @@ Artifact output to dist/
 ## Performance Optimization
 
 ### Build Optimization
+
 - Code splitting
 - Tree shaking
 - Minification
 - Compression
 
 ### Runtime Optimization
+
 - Caching strategy
 - Database query optimization
 - Component memoization
@@ -296,12 +322,14 @@ Artifact output to dist/
 ## Security Considerations
 
 ### API Security
+
 - Authentication required
 - Authorization checks
 - Input validation
 - Rate limiting
 
 ### Data Security
+
 - Encrypted connections
 - Environment variable secrets
 - No credentials in code
@@ -310,16 +338,19 @@ Artifact output to dist/
 ## Testing Strategy
 
 ### Unit Tests
+
 - Located near implementation
 - Run with `pnpm test`
 - Minimum 80% coverage target
 
 ### Integration Tests
+
 - API endpoint testing
 - Database integration
 - External service mocking
 
 ### E2E Tests
+
 - User workflow testing
 - Cross-browser compatibility
 - Performance testing
@@ -328,13 +359,13 @@ Artifact output to dist/
 
 ### Services
 
-| Service | Technology | Environment |
-|---------|-----------|-------------|
-| Cloud | Vercel | Serverless |
-| API | Docker | Container |
-| Agent | Docker | Container |
-| Database | Supabase | Managed |
-| Cache | Redis | Optional |
+| Service  | Technology | Environment |
+| -------- | ---------- | ----------- |
+| Cloud    | Vercel     | Serverless  |
+| API      | Docker     | Container   |
+| Agent    | Docker     | Container   |
+| Database | Supabase   | Managed     |
+| Cache    | Redis      | Optional    |
 
 ## Future Considerations
 

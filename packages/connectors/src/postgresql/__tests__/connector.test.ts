@@ -11,53 +11,64 @@ import type { PostgreSQLConnectorConfig } from '../types.js';
 // ─── Module Mocks ─────────────────────────────────────────────────────────────
 
 const mockConnManager = {
-  connect:     vi.fn().mockResolvedValue(undefined),
-  disconnect:  vi.fn().mockResolvedValue(undefined),
-  acquire:     vi.fn(),
-  query:       vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
-  ping:        vi.fn().mockResolvedValue({ latencyMs: 5, serverVersion: 'PostgreSQL 15.3' }),
-  poolStats:   vi.fn().mockReturnValue({ total: 2, idle: 1, waiting: 0 }),
-  onError:     vi.fn().mockReturnValue(() => undefined),
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  acquire: vi.fn(),
+  query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+  ping: vi.fn().mockResolvedValue({ latencyMs: 5, serverVersion: 'PostgreSQL 15.3' }),
+  poolStats: vi.fn().mockReturnValue({ total: 2, idle: 1, waiting: 0 }),
+  onError: vi.fn().mockReturnValue(() => undefined),
   isConnected: true,
   connectedAt: new Date(),
 };
 
 const mockRunner = {
-  query:         vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+  query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
   recentMetrics: [],
 };
 
 const mockDiscovery = {
-  getServerInfo:     vi.fn().mockResolvedValue({ serverVersion: '15.3', encoding: 'UTF8', collation: 'en-US', timezone: 'UTC' }),
-  getExtensions:     vi.fn().mockResolvedValue([]),
-  getSchemas:        vi.fn().mockResolvedValue([
-    { name: 'public', owner: 'postgres' },
-  ]),
-  getTables:         vi.fn().mockResolvedValue([]),
-  getViews:          vi.fn().mockResolvedValue([]),
+  getServerInfo: vi.fn().mockResolvedValue({
+    serverVersion: '15.3',
+    encoding: 'UTF8',
+    collation: 'en-US',
+    timezone: 'UTC',
+  }),
+  getExtensions: vi.fn().mockResolvedValue([]),
+  getSchemas: vi.fn().mockResolvedValue([{ name: 'public', owner: 'postgres' }]),
+  getTables: vi.fn().mockResolvedValue([]),
+  getViews: vi.fn().mockResolvedValue([]),
   getMaterializedViews: vi.fn().mockResolvedValue([]),
-  getSequences:      vi.fn().mockResolvedValue([]),
-  getEnums:          vi.fn().mockResolvedValue([]),
-  discoverTable:     vi.fn().mockResolvedValue({ name: 'test', columns: [], primaryKey: null, foreignKeys: [], indexes: [], isPartitioned: false, comment: null }),
+  getSequences: vi.fn().mockResolvedValue([]),
+  getEnums: vi.fn().mockResolvedValue([]),
+  discoverTable: vi.fn().mockResolvedValue({
+    name: 'test',
+    columns: [],
+    primaryKey: null,
+    foreignKeys: [],
+    indexes: [],
+    isPartitioned: false,
+    comment: null,
+  }),
 };
 
 const mockStatistics = {
   getTableStatistics: vi.fn().mockResolvedValue({}),
-  profileTable:       vi.fn().mockResolvedValue({}),
+  profileTable: vi.fn().mockResolvedValue({}),
 };
 
 const mockAggregator = {
   buildReport: vi.fn().mockResolvedValue({
-    generatedAt:   new Date().toISOString(),
+    generatedAt: new Date().toISOString(),
     serverVersion: '15.3',
-    encoding:      'UTF8',
-    collation:     'en-US',
-    timezone:      'UTC',
-    extensions:    [],
-    schemas:       [],
-    host:          'localhost',
-    port:          5432,
-    database:      'testdb',
+    encoding: 'UTF8',
+    collation: 'en-US',
+    timezone: 'UTC',
+    extensions: [],
+    schemas: [],
+    host: 'localhost',
+    port: 5432,
+    database: 'testdb',
   }),
 };
 
@@ -66,13 +77,13 @@ vi.mock('../connection.js', () => ({
 }));
 
 vi.mock('../query-runner.js', () => ({
-  QueryRunner:                vi.fn().mockImplementation(() => mockRunner),
-  CircuitBreaker:             vi.fn().mockImplementation(() => ({})),
+  QueryRunner: vi.fn().mockImplementation(() => mockRunner),
+  CircuitBreaker: vi.fn().mockImplementation(() => ({})),
   DEFAULT_QUERY_RUNNER_OPTIONS: {
     statementTimeoutMs: 30_000,
-    maxRetries:         3,
-    retryDelayMs:       500,
-    circuitBreaker:     { failureThreshold: 5, openDurationMs: 30_000, successThreshold: 1 },
+    maxRetries: 3,
+    retryDelayMs: 500,
+    circuitBreaker: { failureThreshold: 5, openDurationMs: 30_000, successThreshold: 1 },
   },
 }));
 
@@ -91,13 +102,13 @@ vi.mock('../metadata.js', () => ({
 // ─── Config Fixture ───────────────────────────────────────────────────────────
 
 const VALID_CONFIG: PostgreSQLConnectorConfig = {
-  id:       'pg-test',
-  name:     'Test PG',
-  type:     'database',
-  host:     'localhost',
-  port:     5432,
+  id: 'pg-test',
+  name: 'Test PG',
+  type: 'database',
+  host: 'localhost',
+  port: 5432,
   database: 'testdb',
-  user:     'atlas',
+  user: 'atlas',
   password: 'secret',
 };
 
@@ -281,9 +292,7 @@ describe('PostgreSQLConnector', () => {
     });
 
     it('returns schemas and tables as discovered items', async () => {
-      mockDiscovery.getSchemas.mockResolvedValueOnce([
-        { name: 'public', owner: 'postgres' },
-      ]);
+      mockDiscovery.getSchemas.mockResolvedValueOnce([{ name: 'public', owner: 'postgres' }]);
       mockDiscovery.getTables.mockResolvedValueOnce([
         { name: 'pedido', comment: null, isPartitioned: false },
       ]);

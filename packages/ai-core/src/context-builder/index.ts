@@ -14,9 +14,7 @@
  * Context is always bounded by a token budget to keep LLM costs predictable.
  */
 
-import type {
-  AIResult, AgentId, AITaskType, AIModelId,
-} from '../providers/index';
+import type { AIResult, AgentId, AITaskType, AIModelId } from '../providers/index';
 import type { MemoryEntry } from '../memory/index';
 
 // ─── Context Builder ──────────────────────────────────────────────────────
@@ -45,7 +43,11 @@ export interface AIContextBuilder {
   /**
    * Build context for a generic agent task
    */
-  forAgent(agentId: AgentId, taskType: AITaskType, raw: Record<string, unknown>): Promise<AIResult<AIContext>>;
+  forAgent(
+    agentId: AgentId,
+    taskType: AITaskType,
+    raw: Record<string, unknown>
+  ): Promise<AIResult<AIContext>>;
 
   /**
    * Estimate the token cost of a context before building it
@@ -200,16 +202,16 @@ export interface ContextEnricher {
 // ─── Token Budget ─────────────────────────────────────────────────────────
 
 export const DEFAULT_TOKEN_BUDGETS: Readonly<Record<AITaskType, number>> = {
-  'schema-analysis':       4000,
-  'mapping-analysis':      4000,
-  'erp-recognition':       2000,
-  'sync-analysis':         3000,
-  'security-analysis':     2000,
-  'performance-analysis':  2000,
-  'change-analysis':       3000,
-  'validation':            2000,
-  'embedding':             8000,
-  'reasoning':             6000,
+  'schema-analysis': 4000,
+  'mapping-analysis': 4000,
+  'erp-recognition': 2000,
+  'sync-analysis': 3000,
+  'security-analysis': 2000,
+  'performance-analysis': 2000,
+  'change-analysis': 3000,
+  validation: 2000,
+  embedding: 8000,
+  reasoning: 6000,
 };
 
 // ─── Context Serializer ───────────────────────────────────────────────────

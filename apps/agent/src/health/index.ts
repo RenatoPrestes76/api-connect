@@ -255,14 +255,14 @@ export interface ThresholdViolation {
 // ─── Health Check IDs ─────────────────────────────────────────────────────
 
 export const HEALTH_CHECK_IDS = {
-  SYSTEM_CPU:             'hc-system-cpu',
-  SYSTEM_MEMORY:          'hc-system-memory',
-  SYSTEM_DISK:            'hc-system-disk',
-  DATABASE_CONNECTIVITY:  'hc-database-connectivity',
-  CLOUD_CONNECTIVITY:     'hc-cloud-connectivity',
-  SYNC_ENGINE:            'hc-sync-engine',
-  OFFLINE_QUEUE:          'hc-offline-queue',
-  SCHEDULER:              'hc-scheduler',
+  SYSTEM_CPU: 'hc-system-cpu',
+  SYSTEM_MEMORY: 'hc-system-memory',
+  SYSTEM_DISK: 'hc-system-disk',
+  DATABASE_CONNECTIVITY: 'hc-database-connectivity',
+  CLOUD_CONNECTIVITY: 'hc-cloud-connectivity',
+  SYNC_ENGINE: 'hc-sync-engine',
+  OFFLINE_QUEUE: 'hc-offline-queue',
+  SCHEDULER: 'hc-scheduler',
 } as const;
 
 // ─── Events ───────────────────────────────────────────────────────────────
@@ -270,7 +270,7 @@ export const HEALTH_CHECK_IDS = {
 export type HealthStatusChangeHandler = (
   previous: HealthStatus,
   current: HealthStatus,
-  report: HealthReport,
+  report: HealthReport
 ) => void;
 
 export interface HealthSubscription {

@@ -201,10 +201,7 @@ export interface PluginTestHarness {
    * Run the full UDCF compliance suite against a connector instance.
    * This tests: connect, health, discover, metadata, capabilities, disconnect.
    */
-  runComplianceSuite(
-    plugin: ConnectorPlugin,
-    config: ConnectorConfig
-  ): Promise<ComplianceReport>;
+  runComplianceSuite(plugin: ConnectorPlugin, config: ConnectorConfig): Promise<ComplianceReport>;
 
   /** Test only the config validation flow */
   testConfigValidation(
@@ -235,7 +232,13 @@ export interface ComplianceReport {
 
 export interface ComplianceTestResult {
   readonly test: string;
-  readonly category: 'core' | 'capabilities' | 'metadata' | 'health' | 'discovery' | 'error-handling';
+  readonly category:
+    | 'core'
+    | 'capabilities'
+    | 'metadata'
+    | 'health'
+    | 'discovery'
+    | 'error-handling';
   readonly passed: boolean;
   readonly durationMs: number;
   readonly error?: string;

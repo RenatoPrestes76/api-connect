@@ -41,27 +41,22 @@ my-plugin/
 
 ### Capabilities
 
-| Capability | What it allows |
-|---|---|
-| `connector` | Register custom database connector types |
-| `sync-strategy` | Register custom sync strategies |
-| `health-check` | Register custom health checks |
-| `telemetry-exporter` | Register custom telemetry exporters |
-| `cli-command` | Add commands to the CLI |
-| `event-hook` | Subscribe to sync lifecycle events |
-| `spawn-process` | Spawn child processes (requires explicit approval) |
+| Capability           | What it allows                                     |
+| -------------------- | -------------------------------------------------- |
+| `connector`          | Register custom database connector types           |
+| `sync-strategy`      | Register custom sync strategies                    |
+| `health-check`       | Register custom health checks                      |
+| `telemetry-exporter` | Register custom telemetry exporters                |
+| `cli-command`        | Add commands to the CLI                            |
+| `event-hook`         | Subscribe to sync lifecycle events                 |
+| `spawn-process`      | Spawn child processes (requires explicit approval) |
 
 ---
 
 ## Implementing a Plugin
 
 ```typescript
-import type {
-  AgentPlugin,
-  PluginManifest,
-  PluginContext,
-  AgentResult,
-} from '@seltriva/agent';
+import type { AgentPlugin, PluginManifest, PluginContext, AgentResult } from '@seltriva/agent';
 
 export default class MyPlugin implements AgentPlugin {
   readonly manifest: PluginManifest = {
@@ -200,7 +195,13 @@ class MyServiceHealthCheck implements HealthCheck {
 ## Adding a Custom Telemetry Exporter
 
 ```typescript
-import type { TelemetryExporter, LogRecord, MetricSnapshot, ExportedSpan, AgentResult } from '@seltriva/agent';
+import type {
+  TelemetryExporter,
+  LogRecord,
+  MetricSnapshot,
+  ExportedSpan,
+  AgentResult,
+} from '@seltriva/agent';
 
 class MyTelemetryExporter implements TelemetryExporter {
   readonly id = 'exporter-my-service';
@@ -241,7 +242,7 @@ class MyTelemetryExporter implements TelemetryExporter {
 # agent.yaml
 plugins:
   directories:
-    - "/var/lib/seltriva/plugins"
+    - '/var/lib/seltriva/plugins'
 ```
 
 3. Restart the agent:
@@ -266,17 +267,17 @@ The agent discovers and loads plugins automatically on startup.
 
 ## Plugin Events Reference
 
-| Event | Fired when |
-|---|---|
-| `agent.ready` | Agent finishes bootstrap |
-| `agent.shutdown` | Graceful shutdown initiated |
-| `sync.started` | A sync job begins |
-| `sync.completed` | A sync job completes |
-| `sync.failed` | A sync job fails |
-| `connector.connected` | A database connector opens |
-| `connector.disconnected` | A database connector closes |
-| `queue.flushing` | Offline queue flush started |
-| `queue.flushed` | Offline queue flush complete |
-| `update.available` | A newer version is available |
-| `health.degraded` | Agent health drops to degraded |
-| `health.restored` | Agent health returns to healthy |
+| Event                    | Fired when                      |
+| ------------------------ | ------------------------------- |
+| `agent.ready`            | Agent finishes bootstrap        |
+| `agent.shutdown`         | Graceful shutdown initiated     |
+| `sync.started`           | A sync job begins               |
+| `sync.completed`         | A sync job completes            |
+| `sync.failed`            | A sync job fails                |
+| `connector.connected`    | A database connector opens      |
+| `connector.disconnected` | A database connector closes     |
+| `queue.flushing`         | Offline queue flush started     |
+| `queue.flushed`          | Offline queue flush complete    |
+| `update.available`       | A newer version is available    |
+| `health.degraded`        | Agent health drops to degraded  |
+| `health.restored`        | Agent health returns to healthy |

@@ -19,14 +19,14 @@ export interface IPluginGenerator {
 // ─── Generator Input / Output ────────────────────────────────────────────────
 
 export interface GeneratorInput {
-  readonly pluginName: string;         // e.g. "my-connector"
-  readonly pluginId: string;           // e.g. "com.acme.my-connector"
+  readonly pluginName: string; // e.g. "my-connector"
+  readonly pluginId: string; // e.g. "com.acme.my-connector"
   readonly type: PluginType;
-  readonly template?: string;          // optional template override
+  readonly template?: string; // optional template override
   readonly author: GeneratorAuthor;
   readonly description?: string;
-  readonly license?: string;           // SPDX, default "MIT"
-  readonly version?: string;           // default "0.1.0"
+  readonly license?: string; // SPDX, default "MIT"
+  readonly version?: string; // default "0.1.0"
   readonly outputDir: string;
   readonly options?: GeneratorOptions;
 }
@@ -62,13 +62,7 @@ export interface GeneratedFile {
   readonly created: boolean;
 }
 
-export type FileCategory =
-  | 'manifest'
-  | 'source'
-  | 'config'
-  | 'test'
-  | 'documentation'
-  | 'tooling';
+export type FileCategory = 'manifest' | 'source' | 'config' | 'test' | 'documentation' | 'tooling';
 
 export interface NextStep {
   readonly order: number;
@@ -252,7 +246,13 @@ export const BUILT_IN_TEMPLATES: TemplateDescriptor[] = [
     exampleUseCase: 'Connect PostgreSQL, MySQL, SQL Server, or Oracle databases',
     files: [],
     variables: [
-      { name: 'driverType', type: 'enum', description: 'Database driver type', choices: ['postgres', 'mysql', 'mssql', 'oracle', 'sqlite'], required: true },
+      {
+        name: 'driverType',
+        type: 'enum',
+        description: 'Database driver type',
+        choices: ['postgres', 'mysql', 'mssql', 'oracle', 'sqlite'],
+        required: true,
+      },
     ],
   },
   {

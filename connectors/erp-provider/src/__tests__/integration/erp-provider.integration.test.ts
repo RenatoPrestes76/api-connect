@@ -12,13 +12,13 @@ import { makeContext } from '../helpers.js';
 import type { SyncContext } from '@seltriva/connector-sdk';
 
 const ERP_CONFIG = {
-  host:     process.env['ERP_HOST']     ?? 'localhost',
-  port:     Number(process.env['ERP_PORT'] ?? 5435),
+  host: process.env['ERP_HOST'] ?? 'localhost',
+  port: Number(process.env['ERP_PORT'] ?? 5435),
   database: process.env['ERP_DATABASE'] ?? 'erp_seltriva',
   username: process.env['ERP_USERNAME'] ?? 'erp_user',
   password: process.env['ERP_PASSWORD'] ?? 'erp_pass',
-  ssl:      false,
-  timeout:  10_000,
+  ssl: false,
+  timeout: 10_000,
 };
 
 function job(overrides: Partial<SyncContext> = {}): SyncContext {
@@ -33,8 +33,8 @@ beforeAll(async () => {
   if (!res.ok) {
     throw new Error(
       `Could not connect to ERP Docker database at ${ERP_CONFIG.host}:${ERP_CONFIG.port}. ` +
-      `Start it with: cd connectors/erp-provider/docker && docker compose up -d\n` +
-      `Error: ${res.error?.message}`,
+        `Start it with: cd connectors/erp-provider/docker && docker compose up -d\n` +
+        `Error: ${res.error?.message}`
     );
   }
 });
@@ -53,7 +53,7 @@ describe('Discovery (real ERP schema)', () => {
   });
 
   it('discovers products, customers, and inventory entities', async () => {
-    const res   = await connector.discover();
+    const res = await connector.discover();
     const names = res.data!.entities.map((e) => e.name);
     expect(names).toContain('products');
     expect(names).toContain('customers');
@@ -61,10 +61,10 @@ describe('Discovery (real ERP schema)', () => {
   });
 
   it('entity extra.table points to the resolved Portuguese table name', async () => {
-    const res    = await connector.discover();
-    const prod   = res.data!.entities.find((e) => e.name === 'products')!;
+    const res = await connector.discover();
+    const prod = res.data!.entities.find((e) => e.name === 'products')!;
     expect(prod.extra?.['table']).toBe('produtos');
-    const cust   = res.data!.entities.find((e) => e.name === 'customers')!;
+    const cust = res.data!.entities.find((e) => e.name === 'customers')!;
     expect(cust.extra?.['table']).toBe('clientes');
   });
 
@@ -102,7 +102,7 @@ describe('Products sync (real data)', () => {
   });
 
   it('incremental sync returns only recently modified products', async () => {
-    const cutoff = new Date(Date.now() - 90 * 60 * 1000);  // 90 min ago
+    const cutoff = new Date(Date.now() - 90 * 60 * 1000); // 90 min ago
     const { result } = await connector['_products'].sync(job({ since: cutoff }));
     // seed sets 2 products modified 1 hour ago
     expect(result.synced).toBeGreaterThanOrEqual(2);
@@ -133,7 +133,7 @@ describe('Customers sync (real data)', () => {
   });
 
   it('incremental sync returns only recently modified customers', async () => {
-    const cutoff = new Date(Date.now() - 60 * 60 * 1000);  // 1 hour ago
+    const cutoff = new Date(Date.now() - 60 * 60 * 1000); // 1 hour ago
     const { result } = await connector['_customers'].sync(job({ since: cutoff }));
     // seed sets 1 customer modified 30 min ago
     expect(result.synced).toBeGreaterThanOrEqual(1);
@@ -183,12 +183,12 @@ describe('Full synchronize() pipeline', () => {
   });
 
   it('emits sync.started and sync.finished events', async () => {
-    const ctx     = makeContext('int-events', ERP_CONFIG);
-    const conn    = new ErpConnector(ctx);
+    const ctx = makeContext('int-events', ERP_CONFIG);
+    const conn = new ErpConnector(ctx);
     await conn.connect();
     const started = [] as unknown[];
     const finished = [] as unknown[];
-    ctx.eventBus.on('sync.started',  (e) => started.push(e));
+    ctx.eventBus.on('sync.started', (e) => started.push(e));
     ctx.eventBus.on('sync.finished', (e) => finished.push(e));
     await conn.synchronize(job());
     await conn.disconnect();

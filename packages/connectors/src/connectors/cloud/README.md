@@ -4,12 +4,12 @@ Cloud Storage Connector interfaces — object/blob storage for S3, Azure Blob, G
 
 ## Supported Providers
 
-| Connector | Subtype | Provider | Auth |
-|-----------|---------|----------|------|
-| `S3Connector` | `s3` | Amazon S3 + S3-compatible | Access Key, Session Token |
-| `AzureBlobConnector` | `azure-blob` | Azure Blob Storage | Connection String, AAD, SAS |
-| `GCSConnector` | `gcs` | Google Cloud Storage | Service Account Key, ADC |
-| `SupabaseStorageConnector` | `supabase-storage` | Supabase Storage | Service Role Key |
+| Connector                  | Subtype            | Provider                  | Auth                        |
+| -------------------------- | ------------------ | ------------------------- | --------------------------- |
+| `S3Connector`              | `s3`               | Amazon S3 + S3-compatible | Access Key, Session Token   |
+| `AzureBlobConnector`       | `azure-blob`       | Azure Blob Storage        | Connection String, AAD, SAS |
+| `GCSConnector`             | `gcs`              | Google Cloud Storage      | Service Account Key, ADC    |
+| `SupabaseStorageConnector` | `supabase-storage` | Supabase Storage          | Service Role Key            |
 
 ## Interface Hierarchy
 

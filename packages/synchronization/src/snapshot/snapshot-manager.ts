@@ -8,31 +8,27 @@
  * Storage: in-memory Map (pluggable via SnapshotStore interface).
  */
 import { randomUUID } from 'crypto';
-import type {
-  SyncJobId,
-  TenantId,
-  CorrelationId,
-} from '../types/index.js';
+import type { SyncJobId, TenantId, CorrelationId } from '../types/index.js';
 
 export interface TableSnapshot {
-  readonly schema:       string;
-  readonly table:        string;
-  readonly rowCount:     number;
-  readonly checksum:     string;
-  readonly snapshotAt:   string;
+  readonly schema: string;
+  readonly table: string;
+  readonly rowCount: number;
+  readonly checksum: string;
+  readonly snapshotAt: string;
 }
 
 export interface DatabaseSnapshot {
-  readonly id:            string;
-  readonly jobId:         SyncJobId;
-  readonly tenantId:      TenantId;
+  readonly id: string;
+  readonly jobId: SyncJobId;
+  readonly tenantId: TenantId;
   readonly correlationId: CorrelationId;
-  readonly createdAt:     string;
-  readonly database:      string;
-  readonly host:          string;
-  readonly tables:        readonly TableSnapshot[];
-  readonly totalRows:     number;
-  readonly note?:         string;
+  readonly createdAt: string;
+  readonly database: string;
+  readonly host: string;
+  readonly tables: readonly TableSnapshot[];
+  readonly totalRows: number;
+  readonly note?: string;
 }
 
 export class SnapshotManager {
@@ -41,7 +37,7 @@ export class SnapshotManager {
   create(params: Omit<DatabaseSnapshot, 'id' | 'createdAt' | 'totalRows'>): DatabaseSnapshot {
     const snapshot: DatabaseSnapshot = {
       ...params,
-      id:        randomUUID(),
+      id: randomUUID(),
       createdAt: new Date().toISOString(),
       totalRows: params.tables.reduce((s, t) => s + t.rowCount, 0),
     };
@@ -54,8 +50,9 @@ export class SnapshotManager {
   }
 
   latest(tenantId: TenantId, database: string): DatabaseSnapshot | null {
-    const matching = [...this._snapshots.values()]
-      .filter((s) => s.tenantId === tenantId && s.database === database);
+    const matching = [...this._snapshots.values()].filter(
+      (s) => s.tenantId === tenantId && s.database === database
+    );
     // Map iterates in insertion order; newest snapshot is always last
     return matching.at(-1) ?? null;
   }
@@ -74,10 +71,14 @@ export class SnapshotManager {
     const beforeMap = new Map(before.tables.map((t) => [`${t.schema}.${t.table}`, t]));
 
     for (const afterTable of after.tables) {
-      const key    = `${afterTable.schema}.${afterTable.table}`;
+      const key = `${afterTable.schema}.${afterTable.table}`;
       const before = beforeMap.get(key);
 
-      if (!before || before.checksum !== afterTable.checksum || before.rowCount !== afterTable.rowCount) {
+      if (
+        !before ||
+        before.checksum !== afterTable.checksum ||
+        before.rowCount !== afterTable.rowCount
+      ) {
         changed.push(key);
       }
     }
@@ -85,5 +86,7 @@ export class SnapshotManager {
     return changed;
   }
 
-  get size(): number { return this._snapshots.size; }
+  get size(): number {
+    return this._snapshots.size;
+  }
 }

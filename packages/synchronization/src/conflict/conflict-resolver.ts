@@ -8,24 +8,21 @@
  *  VERSION    — compare version/updated_at; higher version wins
  *  CUSTOM     — user-supplied resolver function
  */
-import type {
-  ConflictResolutionStrategy,
-  SyncRecord,
-} from '../types/index.js';
+import type { ConflictResolutionStrategy, SyncRecord } from '../types/index.js';
 
 export interface ConflictContext {
-  readonly schema:    string;
-  readonly table:     string;
-  readonly incoming:  SyncRecord;
-  readonly existing:  SyncRecord;
-  readonly strategy:  ConflictResolutionStrategy;
+  readonly schema: string;
+  readonly table: string;
+  readonly incoming: SyncRecord;
+  readonly existing: SyncRecord;
+  readonly strategy: ConflictResolutionStrategy;
 }
 
 export interface ConflictResolutionResult {
-  readonly action:   'SKIP' | 'WRITE';
-  readonly record:   SyncRecord;
+  readonly action: 'SKIP' | 'WRITE';
+  readonly record: SyncRecord;
   readonly strategy: ConflictResolutionStrategy;
-  readonly reason:   string;
+  readonly reason: string;
 }
 
 export type CustomResolverFn = (ctx: ConflictContext) => ConflictResolutionResult;
@@ -41,18 +38,18 @@ export class ConflictResolver {
     switch (ctx.strategy) {
       case 'SKIP':
         return {
-          action:   'SKIP',
-          record:   ctx.existing,
+          action: 'SKIP',
+          record: ctx.existing,
           strategy: 'SKIP',
-          reason:   'Incoming record skipped; existing record preserved',
+          reason: 'Incoming record skipped; existing record preserved',
         };
 
       case 'OVERWRITE':
         return {
-          action:   'WRITE',
-          record:   ctx.incoming,
+          action: 'WRITE',
+          record: ctx.incoming,
           strategy: 'OVERWRITE',
-          reason:   'Existing record overwritten with incoming',
+          reason: 'Existing record overwritten with incoming',
         };
 
       case 'MERGE': {
@@ -63,10 +60,10 @@ export class ConflictResolver {
           }
         }
         return {
-          action:   'WRITE',
-          record:   merged as SyncRecord,
+          action: 'WRITE',
+          record: merged as SyncRecord,
           strategy: 'MERGE',
-          reason:   'Records merged; incoming fields overwrite existing where non-null',
+          reason: 'Records merged; incoming fields overwrite existing where non-null',
         };
       }
 
@@ -76,29 +73,29 @@ export class ConflictResolver {
 
         if (incomingVersion > existingVersion) {
           return {
-            action:   'WRITE',
-            record:   ctx.incoming,
+            action: 'WRITE',
+            record: ctx.incoming,
             strategy: 'VERSION',
-            reason:   `Incoming version (${incomingVersion}) > existing (${existingVersion})`,
+            reason: `Incoming version (${incomingVersion}) > existing (${existingVersion})`,
           };
         }
         return {
-          action:   'SKIP',
-          record:   ctx.existing,
+          action: 'SKIP',
+          record: ctx.existing,
           strategy: 'VERSION',
-          reason:   `Existing version (${existingVersion}) >= incoming (${incomingVersion}); skip`,
+          reason: `Existing version (${existingVersion}) >= incoming (${incomingVersion}); skip`,
         };
       }
 
       case 'CUSTOM': {
-        const key      = `${ctx.schema}.${ctx.table}`;
+        const key = `${ctx.schema}.${ctx.table}`;
         const resolver = this._customResolvers.get(key) ?? this._customResolvers.get('*');
         if (!resolver) {
           return {
-            action:   'SKIP',
-            record:   ctx.existing,
+            action: 'SKIP',
+            record: ctx.existing,
             strategy: 'CUSTOM',
-            reason:   'No custom resolver registered; defaulting to SKIP',
+            reason: 'No custom resolver registered; defaulting to SKIP',
           };
         }
         return resolver(ctx);
@@ -106,17 +103,24 @@ export class ConflictResolver {
 
       default:
         return {
-          action:   'SKIP',
-          record:   ctx.existing,
+          action: 'SKIP',
+          record: ctx.existing,
           strategy: ctx.strategy,
-          reason:   `Unknown strategy "${ctx.strategy as string}"; defaulting to SKIP`,
+          reason: `Unknown strategy "${ctx.strategy as string}"; defaulting to SKIP`,
         };
     }
   }
 
   private _extractVersion(record: SyncRecord): number {
     // Try common version columns
-    const versionKeys = ['version', 'versao', '_version', 'row_version', 'updated_at', 'atualizado_em'];
+    const versionKeys = [
+      'version',
+      'versao',
+      '_version',
+      'row_version',
+      'updated_at',
+      'atualizado_em',
+    ];
     for (const k of versionKeys) {
       const v = record[k];
       if (v == null) continue;

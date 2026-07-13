@@ -10,12 +10,12 @@ import {
 import type { TableSyncConfig } from '../types/index.js';
 
 const TABLE_CFG: TableSyncConfig = {
-  schema:    'public',
-  table:     'produto',
-  mode:      'FULL',
+  schema: 'public',
+  table: 'produto',
+  mode: 'FULL',
   detection: 'UPDATED_AT',
-  conflict:  'OVERWRITE',
-  priority:  1,
+  conflict: 'OVERWRITE',
+  priority: 1,
 };
 
 describe('assertReadOnly()', () => {
@@ -99,7 +99,15 @@ describe('selectStrategy()', () => {
 
 describe('buildExtractSql()', () => {
   it('generates safe SELECT with LIMIT and OFFSET', () => {
-    const { sql } = buildExtractSql('public', 'produto', TABLE_CFG, ['id', 'nome', 'updated_at'], null, 0, 1000);
+    const { sql } = buildExtractSql(
+      'public',
+      'produto',
+      TABLE_CFG,
+      ['id', 'nome', 'updated_at'],
+      null,
+      0,
+      1000
+    );
     assertReadOnly(sql);
     expect(sql).toContain('LIMIT');
     expect(sql).toContain('OFFSET');
@@ -107,7 +115,15 @@ describe('buildExtractSql()', () => {
   });
 
   it('includes WHERE clause when since is provided', () => {
-    const { sql, params } = buildExtractSql('public', 'produto', TABLE_CFG, ['id', 'nome', 'updated_at'], '2024-01-01T00:00:00Z', 0, 1000);
+    const { sql, params } = buildExtractSql(
+      'public',
+      'produto',
+      TABLE_CFG,
+      ['id', 'nome', 'updated_at'],
+      '2024-01-01T00:00:00Z',
+      0,
+      1000
+    );
     assertReadOnly(sql);
     expect(params).toContain('2024-01-01T00:00:00Z');
   });
@@ -120,13 +136,29 @@ describe('buildExtractSql()', () => {
   });
 
   it('returns sinceCol for UPDATED_AT strategy', () => {
-    const { sinceCol } = buildExtractSql('public', 'produto', TABLE_CFG, ['id', 'updated_at'], null, 0, 100);
+    const { sinceCol } = buildExtractSql(
+      'public',
+      'produto',
+      TABLE_CFG,
+      ['id', 'updated_at'],
+      null,
+      0,
+      100
+    );
     expect(sinceCol).toBe('updated_at');
   });
 
   it('sinceCol is null for ROW_HASH strategy', () => {
     const hashCfg = { ...TABLE_CFG, detection: 'ROW_HASH' as const };
-    const { sinceCol } = buildExtractSql('public', 'produto', hashCfg, ['id', 'nome'], null, 0, 100);
+    const { sinceCol } = buildExtractSql(
+      'public',
+      'produto',
+      hashCfg,
+      ['id', 'nome'],
+      null,
+      0,
+      100
+    );
     expect(sinceCol).toBeNull();
   });
 });
@@ -149,11 +181,14 @@ describe('ChangeDetector', () => {
   it('estimateChanges returns DetectedChange with count', async () => {
     const detector = new ChangeDetector();
     const result = await detector.estimateChanges(
-      'public', 'produto', 'UPDATED_AT', '2024-01-01',
+      'public',
+      'produto',
+      'UPDATED_AT',
+      '2024-01-01',
       async (sql, _p) => {
         assertReadOnly(sql);
         return [{ n: 500 }];
-      },
+      }
     );
     expect(result.estimated).toBe(500);
     expect(result.schema).toBe('public');
@@ -163,8 +198,11 @@ describe('ChangeDetector', () => {
   it('estimateChanges handles null estimate', async () => {
     const detector = new ChangeDetector();
     const result = await detector.estimateChanges(
-      'public', 'produto', 'ROW_HASH', null,
-      async () => [{}],
+      'public',
+      'produto',
+      'ROW_HASH',
+      null,
+      async () => [{}]
     );
     expect(result.estimated).toBeNull();
   });
@@ -182,7 +220,9 @@ describe('ChangeDetector', () => {
 
   it('extractSinceValue returns CREATED_AT column value', () => {
     const detector = new ChangeDetector();
-    expect(detector.extractSinceValue({ id: 1, criado_em: '2024-01-01' }, 'CREATED_AT')).toBe('2024-01-01');
+    expect(detector.extractSinceValue({ id: 1, criado_em: '2024-01-01' }, 'CREATED_AT')).toBe(
+      '2024-01-01'
+    );
   });
 
   it('extractSinceValue returns null for CREATED_AT when no matching column', () => {
@@ -193,13 +233,16 @@ describe('ChangeDetector', () => {
   it('estimateChanges uses XMIN strategy', async () => {
     const detector = new ChangeDetector();
     const result = await detector.estimateChanges(
-      'public', 'produto', 'XMIN', '12345',
+      'public',
+      'produto',
+      'XMIN',
+      '12345',
       async (sql, params) => {
         assertReadOnly(sql);
         expect(sql).toContain('xmin');
         expect(params[0]).toBe('12345');
         return [{ n: 99 }];
-      },
+      }
     );
     expect(result.estimated).toBe(99);
   });

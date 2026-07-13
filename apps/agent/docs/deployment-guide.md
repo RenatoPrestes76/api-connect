@@ -2,14 +2,14 @@
 
 ## System Requirements
 
-| Requirement | Minimum | Recommended |
-|---|---|---|
-| OS | Linux (Ubuntu 20.04+, RHEL 8+), Windows Server 2019+, macOS 12+ | Linux |
-| Node.js | 18.0.0 | 20 LTS |
-| RAM | 256 MB | 512 MB |
-| Disk | 500 MB | 2 GB |
-| CPU | 1 core | 2 cores |
-| Network | Outbound HTTPS (443) | — |
+| Requirement | Minimum                                                         | Recommended |
+| ----------- | --------------------------------------------------------------- | ----------- |
+| OS          | Linux (Ubuntu 20.04+, RHEL 8+), Windows Server 2019+, macOS 12+ | Linux       |
+| Node.js     | 18.0.0                                                          | 20 LTS      |
+| RAM         | 256 MB                                                          | 512 MB      |
+| Disk        | 500 MB                                                          | 2 GB        |
+| CPU         | 1 core                                                          | 2 cores     |
+| Network     | Outbound HTTPS (443)                                            | —           |
 
 The agent requires **outbound-only** network access. No inbound ports are opened.
 
@@ -131,11 +131,11 @@ ALTER ROLE db_datareader ADD MEMBER seltriva_agent;
 
 The agent requires only **outbound** HTTPS access:
 
-| Destination | Port | Protocol | Purpose |
-|---|---|---|---|
-| `connect.seltriva.com` | 443 | HTTPS/WSS | Cloud sync + commands |
-| Your database hosts | varies | TCP | Schema discovery |
-| `updates.seltriva.com` | 443 | HTTPS | Update checks |
+| Destination            | Port   | Protocol  | Purpose               |
+| ---------------------- | ------ | --------- | --------------------- |
+| `connect.seltriva.com` | 443    | HTTPS/WSS | Cloud sync + commands |
+| Your database hosts    | varies | TCP       | Schema discovery      |
+| `updates.seltriva.com` | 443    | HTTPS     | Update checks         |
 
 No inbound firewall rules are required.
 
@@ -164,14 +164,14 @@ seltriva-agent status
 
 ## Environment Variables
 
-| Variable | Description |
-|---|---|
-| `SELTRIVA_AGENT_CONFIG` | Path to config file |
-| `SELTRIVA_AGENT_DATA_DIR` | Data directory |
-| `SELTRIVA_AGENT_ID` | Agent ID (overrides config) |
-| `SELTRIVA_AGENT_TOKEN` | Auth token (overrides credential store) |
-| `NODE_ENV` | `development` / `staging` / `production` |
-| `LOG_LEVEL` | Override log level from config |
+| Variable                  | Description                              |
+| ------------------------- | ---------------------------------------- |
+| `SELTRIVA_AGENT_CONFIG`   | Path to config file                      |
+| `SELTRIVA_AGENT_DATA_DIR` | Data directory                           |
+| `SELTRIVA_AGENT_ID`       | Agent ID (overrides config)              |
+| `SELTRIVA_AGENT_TOKEN`    | Auth token (overrides credential store)  |
+| `NODE_ENV`                | `development` / `staging` / `production` |
+| `LOG_LEVEL`               | Override log level from config           |
 
 ---
 

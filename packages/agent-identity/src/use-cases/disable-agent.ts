@@ -1,17 +1,16 @@
 import type { AtlasAgentRepository } from '../repository/atlas-agent-repository.js';
-import type { AgentDomainEvent }       from '../events/agent-events.js';
+import type { AgentDomainEvent } from '../events/agent-events.js';
 
 export interface DisableAgentResult {
-  readonly agentId:    string;
+  readonly agentId: string;
   readonly disabledAt: Date;
-  readonly events:     readonly AgentDomainEvent[];
+  readonly events: readonly AgentDomainEvent[];
 }
 
-export type DisableAgentError =
-  | { code: 'AGENT_NOT_FOUND'; agentId: string };
+export type DisableAgentError = { code: 'AGENT_NOT_FOUND'; agentId: string };
 
 export type DisableAgentOutput =
-  | { ok: true;  value: DisableAgentResult }
+  | { ok: true; value: DisableAgentResult }
   | { ok: false; error: DisableAgentError };
 
 export class DisableAgent {

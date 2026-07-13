@@ -24,7 +24,9 @@ export class Hostname {
     return new Hostname(v);
   }
 
-  toString(): string { return this._value; }
+  toString(): string {
+    return this._value;
+  }
 
   equals(other: Hostname): boolean {
     return this._value === other._value;

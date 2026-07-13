@@ -2,7 +2,13 @@
   "name": "@seltriva/sdk",
   "version": "0.1.0",
   "description": "Official Seltriva Connect SDK — Atlas Cloud client for external developers",
-  "keywords": ["seltriva", "connect", "sdk", "atlas", "enterprise"],
+  "keywords": [
+    "seltriva",
+    "connect",
+    "sdk",
+    "atlas",
+    "enterprise"
+  ],
   "license": "MIT",
   "private": false,
   "type": "module",

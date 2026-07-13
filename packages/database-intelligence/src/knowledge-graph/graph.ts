@@ -15,7 +15,7 @@ import type {
 export class KnowledgeGraph {
   private readonly _nodes = new Map<string, KnowledgeNode>();
   private readonly _adjOut = new Map<string, KnowledgeEdge[]>();
-  private readonly _adjIn  = new Map<string, KnowledgeEdge[]>();
+  private readonly _adjIn = new Map<string, KnowledgeEdge[]>();
 
   // ─── Mutations ─────────────────────────────────────────────────────────────
 
@@ -23,17 +23,17 @@ export class KnowledgeGraph {
     const id = nodeId(classification.tableSchema, classification.tableName);
     this._nodes.set(id, {
       id,
-      entity:         classification.entity,
-      confidence:     classification.confidence,
+      entity: classification.entity,
+      confidence: classification.confidence,
       classification,
     });
     if (!this._adjOut.has(id)) this._adjOut.set(id, []);
-    if (!this._adjIn.has(id))  this._adjIn.set(id, []);
+    if (!this._adjIn.has(id)) this._adjIn.set(id, []);
   }
 
   addEdge(edge: KnowledgeEdge): void {
     if (!this._adjOut.has(edge.fromId)) this._adjOut.set(edge.fromId, []);
-    if (!this._adjIn.has(edge.toId))    this._adjIn.set(edge.toId, []);
+    if (!this._adjIn.has(edge.toId)) this._adjIn.set(edge.toId, []);
 
     this._adjOut.get(edge.fromId)!.push(edge);
     this._adjIn.get(edge.toId)!.push(edge);
@@ -55,7 +55,10 @@ export class KnowledgeGraph {
     for (const list of this._adjOut.values()) {
       for (const e of list) {
         const key = `${e.fromId}→${e.toId}:${e.kind}`;
-        if (!seen.has(key)) { seen.add(key); edges.push(e); }
+        if (!seen.has(key)) {
+          seen.add(key);
+          edges.push(e);
+        }
       }
     }
     return edges;
@@ -113,8 +116,12 @@ export class KnowledgeGraph {
     return this.allEdges().filter((e) => e.kind === kind);
   }
 
-  get nodeCount(): number { return this._nodes.size; }
-  get edgeCount(): number { return this.allEdges().length; }
+  get nodeCount(): number {
+    return this._nodes.size;
+  }
+  get edgeCount(): number {
+    return this.allEdges().length;
+  }
 }
 
 export function nodeId(schema: string, table: string): string {

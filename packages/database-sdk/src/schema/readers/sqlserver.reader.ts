@@ -7,7 +7,7 @@ import type { DbQueryClient } from './db-client.js';
 export class SQLServerSchemaReader implements SchemaReader {
   constructor(
     private readonly _client: DbQueryClient,
-    private readonly _schema = 'dbo',
+    private readonly _schema = 'dbo'
   ) {}
 
   async listTables(): Promise<string[]> {
@@ -15,7 +15,7 @@ export class SQLServerSchemaReader implements SchemaReader {
       `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
        WHERE TABLE_SCHEMA = @p1 AND TABLE_TYPE = 'BASE TABLE'
        ORDER BY TABLE_NAME`,
-      [this._schema],
+      [this._schema]
     );
     return rows.map((r) => String(r['TABLE_NAME']));
   }
@@ -34,7 +34,7 @@ export class SQLServerSchemaReader implements SchemaReader {
   }
 
   private async _readTableDetails(name: string): Promise<Table> {
-    const columns    = await this._readColumns(name);
+    const columns = await this._readColumns(name);
     const { primaryKey, foreignKeys, indexes } = await this._readConstraints(name);
     return { name, schema: this._schema, columns, primaryKey, foreignKeys, indexes };
   }
@@ -45,22 +45,22 @@ export class SQLServerSchemaReader implements SchemaReader {
        FROM INFORMATION_SCHEMA.COLUMNS
        WHERE TABLE_SCHEMA = @p1 AND TABLE_NAME = @p2
        ORDER BY ORDINAL_POSITION`,
-      [this._schema, table],
+      [this._schema, table]
     );
     return rows.map((r) => ({
-      name:         String(r['COLUMN_NAME']),
-      type:         String(r['DATA_TYPE']),
-      nullable:     r['IS_NULLABLE'] === 'YES',
+      name: String(r['COLUMN_NAME']),
+      type: String(r['DATA_TYPE']),
+      nullable: r['IS_NULLABLE'] === 'YES',
       isPrimaryKey: false,
       isForeignKey: false,
-      isUnique:     false,
+      isUnique: false,
     }));
   }
 
   private async _readConstraints(table: string): Promise<{
     primaryKey?: PrimaryKey;
     foreignKeys: ForeignKey[];
-    indexes:     Index[];
+    indexes: Index[];
   }> {
     const { rows } = await this._client.query(
       `SELECT tc.CONSTRAINT_TYPE, tc.CONSTRAINT_NAME,
@@ -74,7 +74,7 @@ export class SQLServerSchemaReader implements SchemaReader {
   LEFT JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE  AS ccu
          ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME
        WHERE tc.TABLE_SCHEMA = @p1 AND tc.TABLE_NAME = @p2`,
-      [this._schema, table],
+      [this._schema, table]
     );
 
     const pkCols: string[] = [];
@@ -82,7 +82,7 @@ export class SQLServerSchemaReader implements SchemaReader {
     const indexMap = new Map<string, Index>();
 
     for (const r of rows) {
-      const col   = String(r['COLUMN_NAME']);
+      const col = String(r['COLUMN_NAME']);
       const ctype = String(r['CONSTRAINT_TYPE']);
       const cname = String(r['CONSTRAINT_NAME']);
 
@@ -96,17 +96,17 @@ export class SQLServerSchemaReader implements SchemaReader {
 
       if (ctype === 'FOREIGN KEY' && r['FK_TABLE']) {
         foreignKeys.push({
-          column:           col,
-          referencedTable:  String(r['FK_TABLE']),
+          column: col,
+          referencedTable: String(r['FK_TABLE']),
           referencedColumn: String(r['FK_COLUMN']),
         });
       }
     }
 
     return {
-      primaryKey:  pkCols.length ? { columns: pkCols } : undefined,
+      primaryKey: pkCols.length ? { columns: pkCols } : undefined,
       foreignKeys,
-      indexes:     [...indexMap.values()],
+      indexes: [...indexMap.values()],
     };
   }
 
@@ -115,11 +115,11 @@ export class SQLServerSchemaReader implements SchemaReader {
     for (const table of tables) {
       for (const fk of table.foreignKeys) {
         relations.push({
-          fromTable:  table.name,
+          fromTable: table.name,
           fromColumn: fk.column,
-          toTable:    fk.referencedTable,
-          toColumn:   fk.referencedColumn,
-          type:       'many-to-one',
+          toTable: fk.referencedTable,
+          toColumn: fk.referencedColumn,
+          type: 'many-to-one',
         });
       }
     }

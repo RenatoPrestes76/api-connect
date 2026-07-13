@@ -11,10 +11,7 @@
  *   - Distributed operation coordination
  */
 
-import type {
-  RuntimeResult, ModuleId, CorrelationId,
-  Priority, Disposable,
-} from '../kernel/index';
+import type { RuntimeResult, ModuleId, CorrelationId, Priority, Disposable } from '../kernel/index';
 
 // ─── Orchestrator ─────────────────────────────────────────────────────────
 
@@ -27,7 +24,10 @@ export interface Orchestrator {
   /**
    * Execute a predefined workflow
    */
-  executeWorkflow(workflowId: string, input?: Record<string, unknown>): Promise<RuntimeResult<OrchestrationResult>>;
+  executeWorkflow(
+    workflowId: string,
+    input?: Record<string, unknown>
+  ): Promise<RuntimeResult<OrchestrationResult>>;
 
   /**
    * Cancel an in-progress orchestration
@@ -197,15 +197,15 @@ export interface WorkflowDefinition {
 // ─── Built-in Workflows ───────────────────────────────────────────────────
 
 export const WORKFLOW_IDS = {
-  PLATFORM_STARTUP:      'workflow-platform-startup',
-  PLATFORM_SHUTDOWN:     'workflow-platform-shutdown',
-  PLUGIN_INSTALL:        'workflow-plugin-install',
-  PLUGIN_UNINSTALL:      'workflow-plugin-uninstall',
-  MODULE_HOT_RELOAD:     'workflow-module-hot-reload',
-  CONNECTOR_REGISTER:    'workflow-connector-register',
-  CONNECTOR_DEREGISTER:  'workflow-connector-deregister',
-  SCHEMA_REGISTRATION:   'workflow-schema-registration',
-  SYNC_INITIALIZATION:   'workflow-sync-initialization',
+  PLATFORM_STARTUP: 'workflow-platform-startup',
+  PLATFORM_SHUTDOWN: 'workflow-platform-shutdown',
+  PLUGIN_INSTALL: 'workflow-plugin-install',
+  PLUGIN_UNINSTALL: 'workflow-plugin-uninstall',
+  MODULE_HOT_RELOAD: 'workflow-module-hot-reload',
+  CONNECTOR_REGISTER: 'workflow-connector-register',
+  CONNECTOR_DEREGISTER: 'workflow-connector-deregister',
+  SCHEMA_REGISTRATION: 'workflow-schema-registration',
+  SYNC_INITIALIZATION: 'workflow-sync-initialization',
 } as const;
 
 // ─── Events ───────────────────────────────────────────────────────────────

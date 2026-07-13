@@ -4,27 +4,63 @@
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type {
-  SyncJobId, TenantId, CorrelationId, TraceId, CheckpointId, BatchId,
-  SyncMode, SyncStatus, ConflictResolutionStrategy, ChangeDetectionStrategyKind,
-  BatchConfig, RetryConfig, PipelineConfig, CompressionConfig, EncryptionConfig,
-  TableSyncConfig, SyncConfig,
-  RecordValue, SyncRecord, RecordOperation,
-  ExtractedRecord, ValidatedRecord, CompressedBatch, EncryptedBatch,
-  TableCheckpoint, SyncCheckpoint,
-  SyncEventKind, SyncEvent,
-  LogLevel, StructuredLog,
-  TableMetrics, SyncMetrics, SyncProgressDTO,
-  SyncResult, SyncError,
-  QueuePriority, QueueItem,
+  SyncJobId,
+  TenantId,
+  CorrelationId,
+  TraceId,
+  CheckpointId,
+  BatchId,
+  SyncMode,
+  SyncStatus,
+  ConflictResolutionStrategy,
+  ChangeDetectionStrategyKind,
+  BatchConfig,
+  RetryConfig,
+  PipelineConfig,
+  CompressionConfig,
+  EncryptionConfig,
+  TableSyncConfig,
+  SyncConfig,
+  RecordValue,
+  SyncRecord,
+  RecordOperation,
+  ExtractedRecord,
+  ValidatedRecord,
+  CompressedBatch,
+  EncryptedBatch,
+  TableCheckpoint,
+  SyncCheckpoint,
+  SyncEventKind,
+  SyncEvent,
+  LogLevel,
+  StructuredLog,
+  TableMetrics,
+  SyncMetrics,
+  SyncProgressDTO,
+  SyncResult,
+  SyncError,
+  QueuePriority,
+  QueueItem,
   DetectedChange,
-  DispatchTarget, DispatchResult,
-  FieldSchema, TableSchema, ValidationResult,
+  DispatchTarget,
+  DispatchResult,
+  FieldSchema,
+  TableSchema,
+  ValidationResult,
 } from './types/index.js';
 
 export {
-  asSyncJobId, asTenantId, asCorrelationId, asTraceId, asCheckpointId, asBatchId,
-  syncOk, syncFail,
-  DEFAULT_BATCH_CONFIG, DEFAULT_RETRY_CONFIG, DEFAULT_PIPELINE_CONFIG,
+  asSyncJobId,
+  asTenantId,
+  asCorrelationId,
+  asTraceId,
+  asCheckpointId,
+  asBatchId,
+  syncOk,
+  syncFail,
+  DEFAULT_BATCH_CONFIG,
+  DEFAULT_RETRY_CONFIG,
+  DEFAULT_PIPELINE_CONFIG,
 } from './types/index.js';
 
 // ─── Engine ───────────────────────────────────────────────────────────────────
@@ -38,13 +74,20 @@ export { SyncPipeline, type PipelineContext, type ExtractInput } from './pipelin
 
 // ─── Change Detection ────────────────────────────────────────────────────────
 export {
-  ChangeDetector, ReadOnlyViolationError, assertReadOnly,
-  selectStrategy, buildExtractSql, hashRecord,
+  ChangeDetector,
+  ReadOnlyViolationError,
+  assertReadOnly,
+  selectStrategy,
+  buildExtractSql,
+  hashRecord,
 } from './detection/index.js';
 
 // ─── Queue ────────────────────────────────────────────────────────────────────
 export {
-  PriorityQueue, RetryQueue, DeadLetterQueue, QueueManager,
+  PriorityQueue,
+  RetryQueue,
+  DeadLetterQueue,
+  QueueManager,
   type DeadLetterEntry,
 } from './queue/index.js';
 
@@ -66,7 +109,9 @@ export { ValidationEngine } from './validation/index.js';
 // ─── Conflict Resolution ─────────────────────────────────────────────────────
 export {
   ConflictResolver,
-  type ConflictContext, type ConflictResolutionResult, type CustomResolverFn,
+  type ConflictContext,
+  type ConflictResolutionResult,
+  type CustomResolverFn,
 } from './conflict/index.js';
 
 // ─── Telemetry ────────────────────────────────────────────────────────────────
@@ -79,13 +124,7 @@ export { MetricsCollector } from './metrics/index.js';
 export { CloudDispatcher, type DispatchOptions } from './dispatcher/index.js';
 
 // ─── Scheduler ───────────────────────────────────────────────────────────────
-export {
-  SyncScheduler,
-  type ScheduledJob, type ScheduledJobRunner,
-} from './scheduler/index.js';
+export { SyncScheduler, type ScheduledJob, type ScheduledJobRunner } from './scheduler/index.js';
 
 // ─── Snapshot ────────────────────────────────────────────────────────────────
-export {
-  SnapshotManager,
-  type DatabaseSnapshot, type TableSnapshot,
-} from './snapshot/index.js';
+export { SnapshotManager, type DatabaseSnapshot, type TableSnapshot } from './snapshot/index.js';

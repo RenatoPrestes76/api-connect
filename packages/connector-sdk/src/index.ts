@@ -1,17 +1,27 @@
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 export type {
-  Connector, ConnectorFactory,
-  ConnectorResult, ConnectorError,
-  DiscoveredEntity, DiscoveryResult,
-  ValidationResult, ValidationIssue,
-  SyncContext, SyncResult, SyncError,
-  ConnectorHealthStatus, HealthStatusKind,
+  Connector,
+  ConnectorFactory,
+  ConnectorResult,
+  ConnectorError,
+  DiscoveredEntity,
+  DiscoveryResult,
+  ValidationResult,
+  ValidationIssue,
+  SyncContext,
+  SyncResult,
+  SyncError,
+  ConnectorHealthStatus,
+  HealthStatusKind,
 } from './interfaces/connector.js';
 export { ok, fail } from './interfaces/connector.js';
 
 export type {
-  ConnectorMetadata, ConnectorCategory,
-  ConnectorCapabilities, ConnectorDependency, ConnectorPermission,
+  ConnectorMetadata,
+  ConnectorCategory,
+  ConnectorCapabilities,
+  ConnectorDependency,
+  ConnectorPermission,
 } from './interfaces/metadata.js';
 
 export type { VersionRange } from './interfaces/version.js';
@@ -19,10 +29,15 @@ export { compareVersions, satisfiesRange, isValidVersion } from './interfaces/ve
 
 // ─── Events ───────────────────────────────────────────────────────────────────
 export type {
-  ConnectorEventMap, ConnectorEventType,
-  ConnectorStartedEvent, ConnectorStoppedEvent, ConnectorFailedEvent,
-  SyncStartedEvent, SyncFinishedEvent,
-  HealthChangedEvent, DiscoveryFinishedEvent,
+  ConnectorEventMap,
+  ConnectorEventType,
+  ConnectorStartedEvent,
+  ConnectorStoppedEvent,
+  ConnectorFailedEvent,
+  SyncStartedEvent,
+  SyncFinishedEvent,
+  HealthChangedEvent,
+  DiscoveryFinishedEvent,
 } from './events/connector-events.js';
 export { EventBus } from './events/event-bus.js';
 
@@ -33,14 +48,14 @@ export { ConnectorScheduler } from './scheduler/connector-scheduler.js';
 // ─── Security ─────────────────────────────────────────────────────────────────
 export { sha256, verifyHash, HashMismatchError } from './security/hash-verifier.js';
 export {
-  TrustedKeyRegistry, SignatureVerifier, SignatureVerificationError,
+  TrustedKeyRegistry,
+  SignatureVerifier,
+  SignatureVerificationError,
 } from './security/signature-verifier.js';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 export type { ConfigField, ConfigSchema } from './configuration/config-schema.js';
-export {
-  ConfigValidationError, validateConfig,
-} from './configuration/config-schema.js';
+export { ConfigValidationError, validateConfig } from './configuration/config-schema.js';
 export type { ConfigStore } from './configuration/config-store.js';
 export { InMemoryConfigStore, ConfigMissingError } from './configuration/config-store.js';
 

@@ -7,7 +7,11 @@
  */
 
 // ─── Concrete Implementations ─────────────────────────────────────────────
-export { RESTConnectorImpl, createRESTConnector, REST_CONNECTOR_DESCRIPTOR } from './connectors/rest/index.js';
+export {
+  RESTConnectorImpl,
+  createRESTConnector,
+  REST_CONNECTOR_DESCRIPTOR,
+} from './connectors/rest/index.js';
 export type { RESTRequestOptions, RESTResponse } from './connectors/rest/index.js';
 export { inferSchema, schemaToMarkdown } from './connectors/rest/schema-inference.js';
 export type { InferredSchema, InferredField } from './connectors/rest/schema-inference.js';
@@ -60,14 +64,14 @@ export type {
 
 // PostgreSQL-specific types aliased to avoid collision with generic metadata interfaces
 export type {
-  PostgreSQLConnectorConfig   as PgConnectorConfig,
-  SchemaMetadata              as PgSchemaMetadata,
-  TableMetadata               as PgTableMetadata,
-  ColumnMetadata              as PgColumnMetadata,
-  IndexMetadata               as PgIndexMetadata,
-  ForeignKeyMetadata          as PgForeignKeyMetadata,
-  ViewMetadata                as PgViewMetadata,
-  SequenceMetadata            as PgSequenceMetadata,
+  PostgreSQLConnectorConfig as PgConnectorConfig,
+  SchemaMetadata as PgSchemaMetadata,
+  TableMetadata as PgTableMetadata,
+  ColumnMetadata as PgColumnMetadata,
+  IndexMetadata as PgIndexMetadata,
+  ForeignKeyMetadata as PgForeignKeyMetadata,
+  ViewMetadata as PgViewMetadata,
+  SequenceMetadata as PgSequenceMetadata,
 } from './postgresql/index.js';
 
 // ─── Core ─────────────────────────────────────────────────────────────────

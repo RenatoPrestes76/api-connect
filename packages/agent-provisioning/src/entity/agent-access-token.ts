@@ -12,8 +12,8 @@ import { createHash, randomBytes } from 'node:crypto';
 
 // ─── Token generation helpers ─────────────────────────────────────────────────
 
-const TOKEN_PREFIX_TAG = 'aat_';    // Atlas Agent Token
-const TOKEN_RANDOM_BYTES = 32;       // 256 bits of entropy
+const TOKEN_PREFIX_TAG = 'aat_'; // Atlas Agent Token
+const TOKEN_RANDOM_BYTES = 32; // 256 bits of entropy
 
 /** Deterministic SHA-256 hash of a raw agent access token (hex string, 64 chars). */
 export function hashAgentToken(rawToken: string): string {
@@ -28,38 +28,38 @@ export function extractAgentTokenPrefix(rawToken: string): string {
 // ─── Snapshot ─────────────────────────────────────────────────────────────────
 
 export interface AgentAccessTokenSnapshot {
-  readonly id:          string;
-  readonly agentId:     string;
-  readonly tokenHash:   string;
+  readonly id: string;
+  readonly agentId: string;
+  readonly tokenHash: string;
   readonly tokenPrefix: string;
-  readonly expiresAt:   Date;
-  readonly revokedAt:   Date | null;
-  readonly lastUsedAt:  Date | null;
-  readonly createdAt:   Date;
-  readonly updatedAt:   Date;
+  readonly expiresAt: Date;
+  readonly revokedAt: Date | null;
+  readonly lastUsedAt: Date | null;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
 }
 
 // ─── Entity ───────────────────────────────────────────────────────────────────
 
 export class AgentAccessToken {
-  private _revokedAt:  Date | null;
+  private _revokedAt: Date | null;
   private _lastUsedAt: Date | null;
-  private _updatedAt:  Date;
+  private _updatedAt: Date;
 
   private constructor(
-    private readonly _id:          string,
-    private readonly _agentId:     string,
-    private readonly _tokenHash:   string,
+    private readonly _id: string,
+    private readonly _agentId: string,
+    private readonly _tokenHash: string,
     private readonly _tokenPrefix: string,
-    private readonly _expiresAt:   Date,
-    revokedAt:   Date | null,
-    lastUsedAt:  Date | null,
+    private readonly _expiresAt: Date,
+    revokedAt: Date | null,
+    lastUsedAt: Date | null,
     private readonly _createdAt: Date,
-    updatedAt:   Date,
+    updatedAt: Date
   ) {
-    this._revokedAt  = revokedAt;
+    this._revokedAt = revokedAt;
     this._lastUsedAt = lastUsedAt;
-    this._updatedAt  = updatedAt;
+    this._updatedAt = updatedAt;
   }
 
   // ─── Factory: new token ─────────────────────────────────────────────────────
@@ -70,9 +70,9 @@ export class AgentAccessToken {
    * The raw token is never recoverable after this call.
    */
   static generate(
-    agentId:     string,
-    expiresAt:   Date,
-    idGenerator: () => string = defaultId,
+    agentId: string,
+    expiresAt: Date,
+    idGenerator: () => string = defaultId
   ): { token: AgentAccessToken; rawToken: string } {
     if (!agentId?.trim()) {
       throw new AgentAccessTokenError('agentId is required');
@@ -82,8 +82,8 @@ export class AgentAccessToken {
     }
 
     const rawToken = TOKEN_PREFIX_TAG + randomBytes(TOKEN_RANDOM_BYTES).toString('hex');
-    const now      = new Date();
-    const token    = new AgentAccessToken(
+    const now = new Date();
+    const token = new AgentAccessToken(
       idGenerator(),
       agentId.trim(),
       hashAgentToken(rawToken),
@@ -92,7 +92,7 @@ export class AgentAccessToken {
       null,
       null,
       now,
-      now,
+      now
     );
 
     return { token, rawToken };
@@ -110,25 +110,31 @@ export class AgentAccessToken {
       snap.revokedAt,
       snap.lastUsedAt,
       snap.createdAt,
-      snap.updatedAt,
+      snap.updatedAt
     );
   }
 
   // ─── Domain methods ─────────────────────────────────────────────────────────
 
   /** True when the token has passed its expiry date. */
-  isExpired(): boolean { return new Date() >= this._expiresAt; }
+  isExpired(): boolean {
+    return new Date() >= this._expiresAt;
+  }
 
   /** True when the token has been explicitly revoked. */
-  isRevoked(): boolean { return this._revokedAt !== null; }
+  isRevoked(): boolean {
+    return this._revokedAt !== null;
+  }
 
   /** True when the token is neither expired nor revoked. */
-  isValid(): boolean { return !this.isExpired() && !this.isRevoked(); }
+  isValid(): boolean {
+    return !this.isExpired() && !this.isRevoked();
+  }
 
   /** Revokes the token permanently. Idempotent. */
   revoke(): void {
     if (this._revokedAt !== null) return;
-    const now       = new Date();
+    const now = new Date();
     this._revokedAt = now;
     this._updatedAt = now;
   }
@@ -138,37 +144,55 @@ export class AgentAccessToken {
     if (!this.isValid()) {
       throw new AgentAccessTokenError('Cannot mark an invalid token as used');
     }
-    const now        = new Date();
+    const now = new Date();
     this._lastUsedAt = now;
-    this._updatedAt  = now;
+    this._updatedAt = now;
   }
 
   /** Snapshot for persistence. */
   toSnapshot(): AgentAccessTokenSnapshot {
     return {
-      id:          this._id,
-      agentId:     this._agentId,
-      tokenHash:   this._tokenHash,
+      id: this._id,
+      agentId: this._agentId,
+      tokenHash: this._tokenHash,
       tokenPrefix: this._tokenPrefix,
-      expiresAt:   this._expiresAt,
-      revokedAt:   this._revokedAt,
-      lastUsedAt:  this._lastUsedAt,
-      createdAt:   this._createdAt,
-      updatedAt:   this._updatedAt,
+      expiresAt: this._expiresAt,
+      revokedAt: this._revokedAt,
+      lastUsedAt: this._lastUsedAt,
+      createdAt: this._createdAt,
+      updatedAt: this._updatedAt,
     };
   }
 
   // ─── Accessors ──────────────────────────────────────────────────────────────
 
-  get id():          string    { return this._id; }
-  get agentId():     string    { return this._agentId; }
-  get tokenHash():   string    { return this._tokenHash; }
-  get tokenPrefix(): string    { return this._tokenPrefix; }
-  get expiresAt():   Date      { return this._expiresAt; }
-  get revokedAt():   Date|null { return this._revokedAt; }
-  get lastUsedAt():  Date|null { return this._lastUsedAt; }
-  get createdAt():   Date      { return this._createdAt; }
-  get updatedAt():   Date      { return this._updatedAt; }
+  get id(): string {
+    return this._id;
+  }
+  get agentId(): string {
+    return this._agentId;
+  }
+  get tokenHash(): string {
+    return this._tokenHash;
+  }
+  get tokenPrefix(): string {
+    return this._tokenPrefix;
+  }
+  get expiresAt(): Date {
+    return this._expiresAt;
+  }
+  get revokedAt(): Date | null {
+    return this._revokedAt;
+  }
+  get lastUsedAt(): Date | null {
+    return this._lastUsedAt;
+  }
+  get createdAt(): Date {
+    return this._createdAt;
+  }
+  get updatedAt(): Date {
+    return this._updatedAt;
+  }
 }
 
 // ─── Domain Error ─────────────────────────────────────────────────────────────

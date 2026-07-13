@@ -17,16 +17,20 @@
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
 
-export type PolicyId     = Branded<string, 'PolicyId'>;
-export type PolicySetId  = Branded<string, 'PolicySetId'>;
-export type RuleId       = Branded<string, 'RuleId'>;
+export type PolicyId = Branded<string, 'PolicyId'>;
+export type PolicySetId = Branded<string, 'PolicySetId'>;
+export type RuleId = Branded<string, 'RuleId'>;
 
 // ─── Policy Effect ──────────────────────────────────────────────────────────
 
-export type PolicyEffect      = 'allow' | 'deny';
-export type ConflictResolution = 'deny-overrides' | 'allow-overrides' | 'first-applicable' | 'only-one';
-export type PolicyDecision    = 'allow' | 'deny' | 'not-applicable' | 'indeterminate';
-export type ObligationKind    = 'before' | 'after';
+export type PolicyEffect = 'allow' | 'deny';
+export type ConflictResolution =
+  | 'deny-overrides'
+  | 'allow-overrides'
+  | 'first-applicable'
+  | 'only-one';
+export type PolicyDecision = 'allow' | 'deny' | 'not-applicable' | 'indeterminate';
+export type ObligationKind = 'before' | 'after';
 
 // ─── Policy Subject ─────────────────────────────────────────────────────────
 
@@ -103,26 +107,26 @@ export interface PolicyContext {
 // ─── Policy Condition ───────────────────────────────────────────────────────
 
 export interface PolicyCondition {
-  readonly attribute: string;            // Attribute path (e.g. "subject.roles", "resource.environmentId")
+  readonly attribute: string; // Attribute path (e.g. "subject.roles", "resource.environmentId")
   readonly operator: ConditionOperator;
   readonly value: unknown;
   readonly negate?: boolean;
 }
 
 export type ConditionOperator =
-  | 'eq'          // equal
-  | 'neq'         // not equal
-  | 'in'          // value in array
-  | 'not-in'      // value not in array
-  | 'contains'    // array contains value
+  | 'eq' // equal
+  | 'neq' // not equal
+  | 'in' // value in array
+  | 'not-in' // value not in array
+  | 'contains' // array contains value
   | 'starts-with' // string starts with
-  | 'ends-with'   // string ends with
-  | 'matches'     // regex match
-  | 'gt'          // greater than
-  | 'gte'         // greater than or equal
-  | 'lt'          // less than
-  | 'lte'         // less than or equal
-  | 'exists'      // attribute exists
+  | 'ends-with' // string ends with
+  | 'matches' // regex match
+  | 'gt' // greater than
+  | 'gte' // greater than or equal
+  | 'lt' // less than
+  | 'lte' // less than or equal
+  | 'exists' // attribute exists
   | 'not-exists'; // attribute does not exist
 
 // ─── Policy Obligation ──────────────────────────────────────────────────────
@@ -141,12 +145,12 @@ export interface PolicyRule {
   readonly name: string;
   readonly description?: string;
   readonly effect: PolicyEffect;
-  readonly subjects?: PolicyCondition[];      // conditions on the subject
-  readonly resources?: PolicyCondition[];     // conditions on the resource
-  readonly actions?: string[];                // specific actions this rule covers ('*' = all)
-  readonly conditions?: PolicyCondition[];    // environmental/contextual conditions
+  readonly subjects?: PolicyCondition[]; // conditions on the subject
+  readonly resources?: PolicyCondition[]; // conditions on the resource
+  readonly actions?: string[]; // specific actions this rule covers ('*' = all)
+  readonly conditions?: PolicyCondition[]; // environmental/contextual conditions
   readonly obligations?: PolicyObligation[];
-  readonly priority?: number;                 // higher = evaluated first (default: 0)
+  readonly priority?: number; // higher = evaluated first (default: 0)
 }
 
 // ─── Policy ─────────────────────────────────────────────────────────────────
@@ -168,10 +172,10 @@ export interface Policy {
 }
 
 export interface PolicyScope {
-  readonly organizationId?: string;           // null = platform-wide
+  readonly organizationId?: string; // null = platform-wide
   readonly workspaceId?: string;
   readonly environmentId?: string;
-  readonly resourceTypes?: ResourceType[];     // empty = all resources
+  readonly resourceTypes?: ResourceType[]; // empty = all resources
 }
 
 // ─── Policy Set ─────────────────────────────────────────────────────────────
@@ -290,20 +294,20 @@ export interface UpdatePolicyInput {
 // ─── Built-in Policy IDs ───────────────────────────────────────────────────
 
 export const BUILT_IN_POLICIES = {
-  DENY_ALL:                    'pol-builtin-deny-all',
-  ALLOW_OWNER:                 'pol-builtin-allow-owner',
-  REQUIRE_MFA_ADMIN:           'pol-builtin-require-mfa-admin',
-  RESTRICT_PROD_WRITES:        'pol-builtin-restrict-prod-writes',
-  AUDIT_ALL_MUTATIONS:         'pol-builtin-audit-all-mutations',
-  REQUIRE_APPROVAL_RELEASE:    'pol-builtin-require-approval-release',
-  ENFORCE_TENANT_ISOLATION:    'pol-builtin-tenant-isolation',
-  RESTRICT_SECRETS_READ:       'pol-builtin-restrict-secrets-read',
+  DENY_ALL: 'pol-builtin-deny-all',
+  ALLOW_OWNER: 'pol-builtin-allow-owner',
+  REQUIRE_MFA_ADMIN: 'pol-builtin-require-mfa-admin',
+  RESTRICT_PROD_WRITES: 'pol-builtin-restrict-prod-writes',
+  AUDIT_ALL_MUTATIONS: 'pol-builtin-audit-all-mutations',
+  REQUIRE_APPROVAL_RELEASE: 'pol-builtin-require-approval-release',
+  ENFORCE_TENANT_ISOLATION: 'pol-builtin-tenant-isolation',
+  RESTRICT_SECRETS_READ: 'pol-builtin-restrict-secrets-read',
 } as const;
 
 // ─── Governance Result ──────────────────────────────────────────────────────
 
 export type GovernanceResult<T> =
-  | { readonly ok: true;  readonly value: T }
+  | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly error: GovernanceError };
 
 export interface GovernanceError {

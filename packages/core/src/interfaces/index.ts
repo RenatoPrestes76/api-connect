@@ -110,7 +110,11 @@ export interface DomainService {
  * Inversion-of-Control container — the composition root
  */
 export interface DIContainer {
-  register<T>(token: string | symbol, implementation: new (...args: unknown[]) => T, options?: DIRegistrationOptions): void;
+  register<T>(
+    token: string | symbol,
+    implementation: new (...args: unknown[]) => T,
+    options?: DIRegistrationOptions
+  ): void;
   registerValue<T>(token: string | symbol, value: T): void;
   registerFactory<T>(token: string | symbol, factory: () => T | Promise<T>): void;
   resolve<T>(token: string | symbol): T;

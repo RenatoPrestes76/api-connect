@@ -7,7 +7,7 @@ import { LOG_POLL_MS } from '@/lib/constants';
 export function useLogs(query: LogQuery = {}, live = false) {
   return useQuery({
     queryKey: ['logs', query],
-    queryFn:  ({ signal }) => getLogs(query, signal),
+    queryFn: ({ signal }) => getLogs(query, signal),
     refetchInterval: live ? LOG_POLL_MS : false,
   });
 }

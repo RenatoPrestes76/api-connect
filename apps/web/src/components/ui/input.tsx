@@ -15,12 +15,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
           'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-50',
           error && 'border-rose-400 focus:ring-rose-500',
-          className,
+          className
         )}
         {...props}
       />
       {error && <p className="text-xs text-rose-600">{error}</p>}
     </div>
-  ),
+  )
 );
 Input.displayName = 'Input';

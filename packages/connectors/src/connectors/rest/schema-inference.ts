@@ -72,12 +72,15 @@ function inferField(key: string, values: unknown[]): InferredField {
   }
 
   if (dominantType === 'object') {
-    const objects = nonNull.filter((v): v is Record<string, unknown> =>
-      typeof v === 'object' && !Array.isArray(v) && v !== null,
+    const objects = nonNull.filter(
+      (v): v is Record<string, unknown> => typeof v === 'object' && !Array.isArray(v) && v !== null
     );
     const allKeys = new Set(objects.flatMap((o) => Object.keys(o)));
     field.children = [...allKeys].map((childKey) =>
-      inferField(childKey, objects.map((o) => o[childKey] ?? null)),
+      inferField(
+        childKey,
+        objects.map((o) => o[childKey] ?? null)
+      )
     );
   }
 
@@ -110,16 +113,21 @@ export function inferSchema(data: unknown, sampleSize = 1): InferredSchema {
     if (typeof firstItem === 'object' && firstItem !== null && !Array.isArray(firstItem)) {
       const allKeys = new Set(
         sample
-          .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
-          .flatMap((item) => Object.keys(item)),
+          .filter(
+            (item): item is Record<string, unknown> => typeof item === 'object' && item !== null
+          )
+          .flatMap((item) => Object.keys(item))
       );
       schema.fields = [...allKeys].map((key) =>
         inferField(
           key,
-          sample.map((item) =>
-            (typeof item === 'object' && item !== null ? (item as Record<string, unknown>)[key] : null) ?? null,
-          ),
-        ),
+          sample.map(
+            (item) =>
+              (typeof item === 'object' && item !== null
+                ? (item as Record<string, unknown>)[key]
+                : null) ?? null
+          )
+        )
       );
     }
 
@@ -149,13 +157,19 @@ export function inferSchema(data: unknown, sampleSize = 1): InferredSchema {
 }
 
 export function schemaToMarkdown(schema: InferredSchema, name = 'Response'): string {
-  const lines: string[] = [`## ${name} Schema\n`, '| Field | Type | Nullable | Format | Example |', '|-------|------|----------|--------|---------|'];
+  const lines: string[] = [
+    `## ${name} Schema\n`,
+    '| Field | Type | Nullable | Format | Example |',
+    '|-------|------|----------|--------|---------|',
+  ];
 
   const renderFields = (fields: InferredField[], prefix = ''): void => {
     for (const f of fields) {
       const fieldName = prefix ? `${prefix}.${f.key}` : f.key;
       const example = f.example !== undefined ? String(f.example).slice(0, 30) : '';
-      lines.push(`| \`${fieldName}\` | ${f.type} | ${f.nullable ? 'yes' : 'no'} | ${f.format ?? ''} | ${example} |`);
+      lines.push(
+        `| \`${fieldName}\` | ${f.type} | ${f.nullable ? 'yes' : 'no'} | ${f.format ?? ''} | ${example} |`
+      );
       if (f.children) renderFields(f.children, fieldName);
     }
   };

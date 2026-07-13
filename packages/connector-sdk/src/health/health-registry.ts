@@ -35,5 +35,7 @@ export class HealthRegistry {
     return aggregateStatus(statuses);
   }
 
-  get size(): number { return this._snapshots.size; }
+  get size(): number {
+    return this._snapshots.size;
+  }
 }

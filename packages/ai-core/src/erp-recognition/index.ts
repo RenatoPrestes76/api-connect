@@ -15,9 +15,7 @@
  *   - Known structural signatures
  */
 
-import type {
-  AIResult, AgentId,
-} from '../providers/index';
+import type { AIResult, AgentId } from '../providers/index';
 import type { AIRecommendation } from '../recommendations/index';
 
 // ─── ERP Recognition Engine ───────────────────────────────────────────────
@@ -31,7 +29,9 @@ export interface ERPRecognitionEngine {
   /**
    * Identify the ERP module within a known ERP
    */
-  identifyModule(input: ERPModuleIdentificationInput): Promise<AIResult<ERPModuleIdentificationResult>>;
+  identifyModule(
+    input: ERPModuleIdentificationInput
+  ): Promise<AIResult<ERPModuleIdentificationResult>>;
 
   /**
    * Analyze naming conventions for a recognized ERP
@@ -137,7 +137,13 @@ export interface ERPConventionAnalysisInput {
 export interface ERPConventionAnalysis {
   readonly erpProfileId: string;
   readonly detectedConventions: ERPConvention[];
-  readonly namingConvention: 'snake_case' | 'SCREAMING_SNAKE' | 'PascalCase' | 'camelCase' | 'mixed' | 'unknown';
+  readonly namingConvention:
+    | 'snake_case'
+    | 'SCREAMING_SNAKE'
+    | 'PascalCase'
+    | 'camelCase'
+    | 'mixed'
+    | 'unknown';
   readonly commonPrefixes: string[];
   readonly commonSuffixes: string[];
   readonly strippingInstructions: string[];
@@ -204,21 +210,21 @@ export interface ERPFingerprintRegistry {
 // ─── Known ERP Modules ────────────────────────────────────────────────────
 
 export const ERP_MODULE_IDS = {
-  SAP_MM: 'sap-mm',   // Materials Management
-  SAP_FI: 'sap-fi',   // Financial Accounting
-  SAP_SD: 'sap-sd',   // Sales & Distribution
-  SAP_PP: 'sap-pp',   // Production Planning
+  SAP_MM: 'sap-mm', // Materials Management
+  SAP_FI: 'sap-fi', // Financial Accounting
+  SAP_SD: 'sap-sd', // Sales & Distribution
+  SAP_PP: 'sap-pp', // Production Planning
   SAP_HCM: 'sap-hcm', // Human Capital Management
 
-  TOTVS_ESTOQUE: 'totvs-estoque',     // Inventory
-  TOTVS_COMPRAS: 'totvs-compras',     // Purchasing
+  TOTVS_ESTOQUE: 'totvs-estoque', // Inventory
+  TOTVS_COMPRAS: 'totvs-compras', // Purchasing
   TOTVS_FINANCEIRO: 'totvs-financeiro', // Financial
-  TOTVS_CONTABILIDADE: 'totvs-cont',  // Accounting
-  TOTVS_VENDAS: 'totvs-vendas',       // Sales
+  TOTVS_CONTABILIDADE: 'totvs-cont', // Accounting
+  TOTVS_VENDAS: 'totvs-vendas', // Sales
 
-  ORACLE_INV: 'oracle-inv',  // Inventory
-  ORACLE_AP: 'oracle-ap',    // Accounts Payable
-  ORACLE_AR: 'oracle-ar',    // Accounts Receivable
-  ORACLE_GL: 'oracle-gl',    // General Ledger
-  ORACLE_PO: 'oracle-po',    // Purchasing
+  ORACLE_INV: 'oracle-inv', // Inventory
+  ORACLE_AP: 'oracle-ap', // Accounts Payable
+  ORACLE_AR: 'oracle-ar', // Accounts Receivable
+  ORACLE_GL: 'oracle-gl', // General Ledger
+  ORACLE_PO: 'oracle-po', // Purchasing
 } as const;

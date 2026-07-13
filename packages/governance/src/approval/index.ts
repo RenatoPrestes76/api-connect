@@ -13,11 +13,18 @@ import type { GovernanceResult } from '../policies/index';
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
 export type ApprovalRequestId = Branded<string, 'ApprovalRequestId'>;
-export type ApprovalPolicyId  = Branded<string, 'ApprovalPolicyId'>;
+export type ApprovalPolicyId = Branded<string, 'ApprovalPolicyId'>;
 
 // ─── Approval Status ─────────────────────────────────────────────────────────
 
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'expired' | 'withdrawn' | 'escalated' | 'delegated';
+export type ApprovalStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'expired'
+  | 'withdrawn'
+  | 'escalated'
+  | 'delegated';
 export type ApproverStatus = 'pending' | 'approved' | 'rejected' | 'delegated' | 'abstained';
 export type ApprovalUrgency = 'low' | 'normal' | 'high' | 'critical' | 'emergency';
 
@@ -27,7 +34,7 @@ export interface ApprovalPolicy {
   readonly id: ApprovalPolicyId;
   readonly name: string;
   readonly description: string;
-  readonly appliesTo: string[];             // action patterns this policy covers
+  readonly appliesTo: string[]; // action patterns this policy covers
   readonly stages: ApprovalStage[];
   readonly conflictOfInterest: ConflictOfInterestRule;
   readonly notifyOnDecision: boolean;
@@ -39,16 +46,16 @@ export interface ApprovalStage {
   readonly order: number;
   readonly name: string;
   readonly approvers: ApproverSelector;
-  readonly requiredCount: number;           // minimum approvals needed in this stage
+  readonly requiredCount: number; // minimum approvals needed in this stage
   readonly timeoutMinutes: number;
   readonly escalationPolicy?: EscalationPolicy;
-  readonly conditions?: string[];           // stage only required if conditions true
+  readonly conditions?: string[]; // stage only required if conditions true
 }
 
 export interface ApproverSelector {
   readonly type: 'role' | 'user-list' | 'group' | 'owner' | 'manager';
   readonly value: string | string[];
-  readonly excludeSelf: boolean;           // cannot approve own request
+  readonly excludeSelf: boolean; // cannot approve own request
 }
 
 export interface EscalationPolicy {
@@ -72,17 +79,17 @@ export interface ApprovalRequest {
   readonly requesterId: string;
   readonly requesterEmail: string;
   readonly organizationId: string;
-  readonly action: string;                  // What is being approved
+  readonly action: string; // What is being approved
   readonly resourceType: string;
   readonly resourceId?: string;
   readonly title: string;
   readonly description: string;
-  readonly payload: unknown;               // The change payload (what will be applied on approval)
+  readonly payload: unknown; // The change payload (what will be applied on approval)
   readonly urgency: ApprovalUrgency;
   readonly status: ApprovalStatus;
   readonly stages: ApprovalStageState[];
   readonly currentStage: number;
-  readonly approvalToken: string;          // Secure token for email-based approval
+  readonly approvalToken: string; // Secure token for email-based approval
   readonly expiresAt: Date;
   readonly approvedAt?: Date;
   readonly rejectedAt?: Date;
@@ -131,7 +138,11 @@ export interface IApprovalWorkflowService {
   /**
    * Delegate approval to another approver.
    */
-  delegate(requestId: ApprovalRequestId, fromApprover: string, toApprover: string): Promise<GovernanceResult<void>>;
+  delegate(
+    requestId: ApprovalRequestId,
+    fromApprover: string,
+    toApprover: string
+  ): Promise<GovernanceResult<void>>;
 
   /**
    * Withdraw a pending approval request.
@@ -185,7 +196,7 @@ export interface ApprovalDecisionInput {
   readonly approverId: string;
   readonly decision: 'approve' | 'reject' | 'abstain';
   readonly comment?: string;
-  readonly approvalToken?: string;         // from email link
+  readonly approvalToken?: string; // from email link
 }
 
 export interface ApprovalPolicyRequired {

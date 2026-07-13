@@ -5,7 +5,7 @@ import { QueryError } from '../errors/database-errors.js';
 export type DialectName = 'postgres' | 'mysql' | 'sqlserver' | 'oracle' | 'firebird';
 
 export interface RenderedQuery {
-  readonly sql:    string;
+  readonly sql: string;
   readonly params: unknown[];
 }
 
@@ -17,10 +17,18 @@ export class SqlRenderer {
     let sql: string;
 
     switch (query.type) {
-      case 'SELECT': sql = this._renderSelect(query, params); break;
-      case 'INSERT': sql = this._renderInsert(query, params); break;
-      case 'UPDATE': sql = this._renderUpdate(query, params); break;
-      case 'DELETE': sql = this._renderDelete(query, params); break;
+      case 'SELECT':
+        sql = this._renderSelect(query, params);
+        break;
+      case 'INSERT':
+        sql = this._renderInsert(query, params);
+        break;
+      case 'UPDATE':
+        sql = this._renderUpdate(query, params);
+        break;
+      case 'DELETE':
+        sql = this._renderDelete(query, params);
+        break;
       case 'RAW':
         sql = query.sql;
         if (query.params) params.push(...query.params);
@@ -76,15 +84,15 @@ export class SqlRenderer {
         }
         break;
       case 'firebird': {
-        const first = limit  !== undefined ? `FIRST ${limit} `  : '';
-        const skip  = offset !== undefined ? `SKIP ${offset} ` : '';
+        const first = limit !== undefined ? `FIRST ${limit} ` : '';
+        const skip = offset !== undefined ? `SKIP ${offset} ` : '';
         if (first || skip) {
           sql = sql.replace(/^SELECT /, `SELECT ${first}${skip}`);
         }
         break;
       }
       default: // postgres, mysql
-        if (limit  !== undefined) sql += ` LIMIT ${limit}`;
+        if (limit !== undefined) sql += ` LIMIT ${limit}`;
         if (offset !== undefined) sql += ` OFFSET ${offset}`;
     }
     return sql;
@@ -99,19 +107,28 @@ export class SqlRenderer {
     }
 
     // TypeScript narrows f to SimpleFilter here
-    const sf  = f as SimpleFilter;
+    const sf = f as SimpleFilter;
     const col = this._id(sf.field);
 
     switch (sf.operator) {
-      case 'eq':       return `${col} = ${this._p(params, sf.value)}`;
-      case 'neq':      return `${col} != ${this._p(params, sf.value)}`;
-      case 'gt':       return `${col} > ${this._p(params, sf.value)}`;
-      case 'gte':      return `${col} >= ${this._p(params, sf.value)}`;
-      case 'lt':       return `${col} < ${this._p(params, sf.value)}`;
-      case 'lte':      return `${col} <= ${this._p(params, sf.value)}`;
-      case 'like':     return `${col} LIKE ${this._p(params, sf.value)}`;
-      case 'isNull':   return `${col} IS NULL`;
-      case 'isNotNull': return `${col} IS NOT NULL`;
+      case 'eq':
+        return `${col} = ${this._p(params, sf.value)}`;
+      case 'neq':
+        return `${col} != ${this._p(params, sf.value)}`;
+      case 'gt':
+        return `${col} > ${this._p(params, sf.value)}`;
+      case 'gte':
+        return `${col} >= ${this._p(params, sf.value)}`;
+      case 'lt':
+        return `${col} < ${this._p(params, sf.value)}`;
+      case 'lte':
+        return `${col} <= ${this._p(params, sf.value)}`;
+      case 'like':
+        return `${col} LIKE ${this._p(params, sf.value)}`;
+      case 'isNull':
+        return `${col} IS NULL`;
+      case 'isNotNull':
+        return `${col} IS NOT NULL`;
       case 'in': {
         const vals = Array.isArray(sf.value) ? sf.value : [sf.value];
         return `${col} IN (${vals.map((v) => this._p(params, v)).join(', ')})`;
@@ -129,10 +146,17 @@ export class SqlRenderer {
 
   private _renderInsert(q: InsertQuery, params: unknown[]): string {
     if (!q.values.length) throw new QueryError('INSERT requires at least one row');
-    const first   = q.values[0]!;
-    const cols    = Object.keys(first).map((c) => this._id(c)).join(', ');
+    const first = q.values[0]!;
+    const cols = Object.keys(first)
+      .map((c) => this._id(c))
+      .join(', ');
     const rowSets = q.values
-      .map((row) => `(${Object.values(row).map((v) => this._p(params, v)).join(', ')})`)
+      .map(
+        (row) =>
+          `(${Object.values(row)
+            .map((v) => this._p(params, v))
+            .join(', ')})`
+      )
       .join(', ');
     let sql = `INSERT INTO ${this._id(q.table)} (${cols}) VALUES ${rowSets}`;
     if (q.returning?.length) sql += ` RETURNING ${q.returning.map((c) => this._id(c)).join(', ')}`;
@@ -144,23 +168,28 @@ export class SqlRenderer {
       .map(([k, v]) => `${this._id(k)} = ${this._p(params, v)}`)
       .join(', ');
     let sql = `UPDATE ${this._id(q.table)} SET ${sets}`;
-    if (q.where?.length) sql += ' WHERE ' + q.where.map((f) => this._renderFilter(f, params)).join(' AND ');
+    if (q.where?.length)
+      sql += ' WHERE ' + q.where.map((f) => this._renderFilter(f, params)).join(' AND ');
     if (q.returning?.length) sql += ` RETURNING ${q.returning.map((c) => this._id(c)).join(', ')}`;
     return sql;
   }
 
   private _renderDelete(q: DeleteQuery, params: unknown[]): string {
     let sql = `DELETE FROM ${this._id(q.table)}`;
-    if (q.where?.length) sql += ' WHERE ' + q.where.map((f) => this._renderFilter(f, params)).join(' AND ');
+    if (q.where?.length)
+      sql += ' WHERE ' + q.where.map((f) => this._renderFilter(f, params)).join(' AND ');
     if (q.returning?.length) sql += ` RETURNING ${q.returning.map((c) => this._id(c)).join(', ')}`;
     return sql;
   }
 
   private _id(name: string): string {
     switch (this._dialect) {
-      case 'mysql':     return `\`${name}\``;
-      case 'sqlserver': return `[${name}]`;
-      default:          return `"${name}"`;
+      case 'mysql':
+        return `\`${name}\``;
+      case 'sqlserver':
+        return `[${name}]`;
+      default:
+        return `"${name}"`;
     }
   }
 
@@ -168,10 +197,14 @@ export class SqlRenderer {
     params.push(value);
     const i = params.length;
     switch (this._dialect) {
-      case 'postgres':  return `$${i}`;
-      case 'sqlserver': return `@p${i}`;
-      case 'oracle':    return `:${i}`;
-      default:          return '?'; // mysql, firebird
+      case 'postgres':
+        return `$${i}`;
+      case 'sqlserver':
+        return `@p${i}`;
+      case 'oracle':
+        return `:${i}`;
+      default:
+        return '?'; // mysql, firebird
     }
   }
 }

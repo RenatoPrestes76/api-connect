@@ -13,9 +13,7 @@
  * it is available through the internal diagnostics interface only.
  */
 
-import type {
-  RuntimeResult, ModuleId, Severity, TimeRange,
-} from '../kernel/index';
+import type { RuntimeResult, ModuleId, Severity, TimeRange } from '../kernel/index';
 import type { LifecycleState } from '../lifecycle/index';
 import type { HealthStatus } from '../health/index';
 import type { CircuitState } from '../resilience/index';

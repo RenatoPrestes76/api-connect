@@ -52,7 +52,9 @@ class InMemoryCheckpointStore implements CheckpointStore {
     return [...this._store.values()].filter((c) => c.tenantId === tenantId);
   }
 
-  get size(): number { return this._store.size; }
+  get size(): number {
+    return this._store.size;
+  }
 }
 
 // ─── CheckpointManager ────────────────────────────────────────────────────────
@@ -66,11 +68,15 @@ export class CheckpointManager {
 
   /** Create a new checkpoint for a sync job. */
   async create(params: {
-    jobId:         SyncJobId;
-    tenantId:      TenantId;
+    jobId: SyncJobId;
+    tenantId: TenantId;
     correlationId: CorrelationId;
-    mode:          SyncMode;
-    tables:        ReadonlyArray<{ schema: string; table: string; detection: ChangeDetectionStrategyKind }>;
+    mode: SyncMode;
+    tables: ReadonlyArray<{
+      schema: string;
+      table: string;
+      detection: ChangeDetectionStrategyKind;
+    }>;
   }): Promise<SyncResult<SyncCheckpoint>> {
     const now = new Date().toISOString();
     const tableMap = new Map<string, TableCheckpoint>();
@@ -78,34 +84,34 @@ export class CheckpointManager {
     for (const t of params.tables) {
       const key = `${t.schema}.${t.table}`;
       tableMap.set(key, {
-        schema:        t.schema,
-        table:         t.table,
-        lastSyncedAt:  now,
-        lastValue:     null,
-        lastOffset:    0,
+        schema: t.schema,
+        table: t.table,
+        lastSyncedAt: now,
+        lastValue: null,
+        lastOffset: 0,
         recordsSynced: 0,
-        status:        'PENDING',
-        detection:     t.detection,
+        status: 'PENDING',
+        detection: t.detection,
       });
     }
 
     const checkpoint: SyncCheckpoint = {
-      id:               asCheckpointId(`${params.jobId}:${Date.now()}`),
-      jobId:            params.jobId,
-      tenantId:         params.tenantId,
-      correlationId:    params.correlationId,
-      createdAt:        now,
-      updatedAt:        now,
-      mode:             params.mode,
-      status:           'PENDING',
-      totalTables:      params.tables.length,
-      completedTables:  0,
-      totalRecords:     0,
-      syncedRecords:    0,
-      failedRecords:    0,
-      tables:           tableMap,
-      lastError:        null,
-      retryCount:       0,
+      id: asCheckpointId(`${params.jobId}:${Date.now()}`),
+      jobId: params.jobId,
+      tenantId: params.tenantId,
+      correlationId: params.correlationId,
+      createdAt: now,
+      updatedAt: now,
+      mode: params.mode,
+      status: 'PENDING',
+      totalTables: params.tables.length,
+      completedTables: 0,
+      totalRecords: 0,
+      syncedRecords: 0,
+      failedRecords: 0,
+      tables: tableMap,
+      lastError: null,
+      retryCount: 0,
     };
 
     await this._store.save(checkpoint);
@@ -126,10 +132,10 @@ export class CheckpointManager {
 
   /** Update table progress within a checkpoint. */
   async updateTable(
-    jobId:         SyncJobId,
-    schema:        string,
-    table:         string,
-    update: Partial<Omit<TableCheckpoint, 'schema' | 'table'>>,
+    jobId: SyncJobId,
+    schema: string,
+    table: string,
+    update: Partial<Omit<TableCheckpoint, 'schema' | 'table'>>
   ): Promise<SyncResult<SyncCheckpoint>> {
     const checkpoint = await this._store.load(jobId);
     if (!checkpoint) {
@@ -150,10 +156,10 @@ export class CheckpointManager {
 
     const updatedCheckpoint: SyncCheckpoint = {
       ...checkpoint,
-      updatedAt:       new Date().toISOString(),
-      tables:          newTables,
+      updatedAt: new Date().toISOString(),
+      tables: newTables,
       completedTables,
-      syncedRecords:   [...newTables.values()].reduce((s, t) => s + t.recordsSynced, 0),
+      syncedRecords: [...newTables.values()].reduce((s, t) => s + t.recordsSynced, 0),
     };
 
     await this._store.save(updatedCheckpoint);
@@ -162,9 +168,9 @@ export class CheckpointManager {
 
   /** Mark the sync job status (RUNNING, PAUSED, COMPLETED, etc.). */
   async updateStatus(
-    jobId:  SyncJobId,
+    jobId: SyncJobId,
     status: SyncStatus,
-    extra?: { error?: string; totalRecords?: number; failedRecords?: number },
+    extra?: { error?: string; totalRecords?: number; failedRecords?: number }
   ): Promise<SyncResult<SyncCheckpoint>> {
     const checkpoint = await this._store.load(jobId);
     if (!checkpoint) {
@@ -174,8 +180,8 @@ export class CheckpointManager {
     const updated: SyncCheckpoint = {
       ...checkpoint,
       status,
-      updatedAt:    new Date().toISOString(),
-      lastError:    extra?.error ?? checkpoint.lastError,
+      updatedAt: new Date().toISOString(),
+      lastError: extra?.error ?? checkpoint.lastError,
       totalRecords: extra?.totalRecords ?? checkpoint.totalRecords,
       failedRecords: extra?.failedRecords ?? checkpoint.failedRecords,
     };
@@ -194,8 +200,8 @@ export class CheckpointManager {
     const updated: SyncCheckpoint = {
       ...checkpoint,
       retryCount: checkpoint.retryCount + 1,
-      updatedAt:  new Date().toISOString(),
-      status:     'RECOVERING',
+      updatedAt: new Date().toISOString(),
+      status: 'RECOVERING',
     };
 
     await this._store.save(updated);
@@ -221,5 +227,7 @@ export class CheckpointManager {
   }
 
   /** Expose store for testing. */
-  get store(): CheckpointStore { return this._store; }
+  get store(): CheckpointStore {
+    return this._store;
+  }
 }

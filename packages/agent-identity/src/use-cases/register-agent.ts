@@ -1,10 +1,10 @@
 import { AtlasAgent, RegisterAgentParams } from '../entity/atlas-agent.js';
-import type { AtlasAgentRepository }         from '../repository/atlas-agent-repository.js';
-import type { AgentDomainEvent }              from '../events/agent-events.js';
+import type { AtlasAgentRepository } from '../repository/atlas-agent-repository.js';
+import type { AgentDomainEvent } from '../events/agent-events.js';
 
 export interface RegisterAgentResult {
   readonly agentId: string;
-  readonly events:  readonly AgentDomainEvent[];
+  readonly events: readonly AgentDomainEvent[];
 }
 
 export type RegisterAgentError =
@@ -12,7 +12,7 @@ export type RegisterAgentError =
   | { code: 'VALIDATION_ERROR'; message: string };
 
 export type RegisterAgentOutput =
-  | { ok: true;  value: RegisterAgentResult }
+  | { ok: true; value: RegisterAgentResult }
   | { ok: false; error: RegisterAgentError };
 
 export class RegisterAgent {

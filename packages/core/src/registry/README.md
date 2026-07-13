@@ -8,14 +8,14 @@ Gives the application a single place to look up any driver or provider by key, t
 
 ## Registries
 
-| Interface | Registered Type | Lookup Methods |
-|-----------|----------------|----------------|
-| `DatabaseDriverRegistry` | Database drivers | by dialect, by capability |
-| `ERPDriverRegistry` | ERP system drivers | by system name/version, by capability |
-| `AIProviderRegistry` | AI model providers | by capability, by model name |
-| `AuthenticationProviderRegistry` | Auth strategies | by strategy, enabled only |
-| `StorageProviderRegistry` | Object/file storage | by storage type, by location |
-| `NotificationProviderRegistry` | Notification channels | by channel, enabled only |
+| Interface                        | Registered Type       | Lookup Methods                        |
+| -------------------------------- | --------------------- | ------------------------------------- |
+| `DatabaseDriverRegistry`         | Database drivers      | by dialect, by capability             |
+| `ERPDriverRegistry`              | ERP system drivers    | by system name/version, by capability |
+| `AIProviderRegistry`             | AI model providers    | by capability, by model name          |
+| `AuthenticationProviderRegistry` | Auth strategies       | by strategy, enabled only             |
+| `StorageProviderRegistry`        | Object/file storage   | by storage type, by location          |
+| `NotificationProviderRegistry`   | Notification channels | by channel, enabled only              |
 
 ## Generic Base
 
@@ -23,14 +23,14 @@ All registries extend `Registry<T>`:
 
 ```typescript
 interface Registry<T> {
-  register(key, item): void
-  get(key): T | null
-  has(key): boolean
-  getAll(): Record<string, T>
-  keys(): string[]
-  count(): number
-  clear(): void
-  unregister(key): boolean
+  register(key, item): void;
+  get(key): T | null;
+  has(key): boolean;
+  getAll(): Record<string, T>;
+  keys(): string[];
+  count(): number;
+  clear(): void;
+  unregister(key): boolean;
 }
 ```
 
@@ -38,10 +38,10 @@ interface Registry<T> {
 
 ```typescript
 const dbRegistry = registryManager.getDatabaseDriverRegistry();
-const pgDriver   = dbRegistry.get('postgresql');
+const pgDriver = dbRegistry.get('postgresql');
 
 const aiRegistry = registryManager.getAIProviderRegistry();
-const bestAI     = aiRegistry.getDefault();
+const bestAI = aiRegistry.getDefault();
 ```
 
 ## Constraints

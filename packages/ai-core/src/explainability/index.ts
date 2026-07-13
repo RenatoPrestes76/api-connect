@@ -14,7 +14,12 @@
  */
 
 import type {
-  AIResult, AIConfidenceValue, AIConfidenceTier, RecommendationId, AgentId, AITaskType,
+  AIResult,
+  AIConfidenceValue,
+  AIConfidenceTier,
+  RecommendationId,
+  AgentId,
+  AITaskType,
 } from '../providers/index';
 import type { ReasoningChain, Evidence } from '../reasoning/index';
 
@@ -29,7 +34,10 @@ export interface ExplainabilityEngine {
   /**
    * Simplify an existing explanation to a given verbosity level
    */
-  simplify(explanation: Explanation<unknown>, verbosity: ExplanationVerbosity): Explanation<unknown>;
+  simplify(
+    explanation: Explanation<unknown>,
+    verbosity: ExplanationVerbosity
+  ): Explanation<unknown>;
 
   /**
    * Compare two explanations and produce a contrast view
@@ -117,16 +125,16 @@ export interface ExplanationEvidence {
 }
 
 export type ExplanationEvidenceType =
-  | 'name-similarity'      // source name matches CBL alias
-  | 'type-match'           // field type compatible
-  | 'structural-match'     // entity structure matches known pattern
-  | 'erp-profile-match'    // known ERP pattern matched
-  | 'memory-recall'        // confirmed in previous integration
-  | 'dictionary-match'     // found in business dictionary
-  | 'graph-coherence'      // consistent with knowledge graph
-  | 'learning-history'     // pattern learned from past confirmations
-  | 'position-context'     // position within entity is typical
-  | 'negative-evidence';   // evidence that contradicts
+  | 'name-similarity' // source name matches CBL alias
+  | 'type-match' // field type compatible
+  | 'structural-match' // entity structure matches known pattern
+  | 'erp-profile-match' // known ERP pattern matched
+  | 'memory-recall' // confirmed in previous integration
+  | 'dictionary-match' // found in business dictionary
+  | 'graph-coherence' // consistent with knowledge graph
+  | 'learning-history' // pattern learned from past confirmations
+  | 'position-context' // position within entity is typical
+  | 'negative-evidence'; // evidence that contradicts
 
 // ─── Alternatives ─────────────────────────────────────────────────────────
 
@@ -149,16 +157,16 @@ export interface ExplanationStaleness {
 // ─── Verbosity / Audience ─────────────────────────────────────────────────
 
 export type ExplanationVerbosity =
-  | 'brief'    // 1–2 sentences
+  | 'brief' // 1–2 sentences
   | 'standard' // structured paragraph with evidence
   | 'detailed' // full chain of reasoning
   | 'technical'; // full reasoning chain + evidence weights
 
 export type ExplanationAudience =
-  | 'administrator'  // non-technical, business-focused
-  | 'integrator'     // technical, integration-focused
-  | 'developer'      // deep technical detail
-  | 'auditor';       // compliance-oriented, full trace
+  | 'administrator' // non-technical, business-focused
+  | 'integrator' // technical, integration-focused
+  | 'developer' // deep technical detail
+  | 'auditor'; // compliance-oriented, full trace
 
 // ─── Output Formats ───────────────────────────────────────────────────────
 

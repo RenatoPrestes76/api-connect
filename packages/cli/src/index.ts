@@ -106,7 +106,7 @@ export interface CreateCommandResult {
 
 // ─── atlas build ─────────────────────────────────────────────────────────────
 
-export interface BuildCommandArgs { }
+export interface BuildCommandArgs {}
 
 export interface BuildCommandOptions {
   readonly production?: boolean;
@@ -127,7 +127,7 @@ export interface BuildResult {
 
 // ─── atlas package ───────────────────────────────────────────────────────────
 
-export interface PackageCommandArgs { }
+export interface PackageCommandArgs {}
 
 export interface PackageCommandOptions {
   readonly output?: string;
@@ -148,7 +148,7 @@ export interface PackageResult {
 
 // ─── atlas publish ───────────────────────────────────────────────────────────
 
-export interface PublishCommandArgs { }
+export interface PublishCommandArgs {}
 
 export interface PublishCommandOptions {
   readonly channel?: 'stable' | 'beta' | 'edge';
@@ -168,7 +168,7 @@ export interface PublishResult {
 
 // ─── atlas doctor ────────────────────────────────────────────────────────────
 
-export interface DoctorCommandArgs { }
+export interface DoctorCommandArgs {}
 
 export interface DoctorCommandOptions {
   readonly fix?: boolean;
@@ -207,23 +207,23 @@ export type DoctorCheckCategory =
   | 'network';
 
 export const DOCTOR_CHECK_IDS = {
-  NODE_VERSION:           'dc-node-version',
-  NPM_PNPM_INSTALLED:     'dc-pnpm-installed',
-  ATLAS_AUTH:             'dc-atlas-auth',
-  MANIFEST_EXISTS:        'dc-manifest-exists',
-  MANIFEST_VALID:         'dc-manifest-valid',
-  ENTRY_POINT_EXISTS:     'dc-entry-point-exists',
-  DEPS_INSTALLED:         'dc-deps-installed',
-  SDK_VERSION:            'dc-sdk-version',
-  BUILD_OUTPUT:           'dc-build-output',
-  NETWORK_CLOUD:          'dc-network-cloud',
-  SIGNING_KEY:            'dc-signing-key',
-  TS_CONFIG:              'dc-ts-config',
+  NODE_VERSION: 'dc-node-version',
+  NPM_PNPM_INSTALLED: 'dc-pnpm-installed',
+  ATLAS_AUTH: 'dc-atlas-auth',
+  MANIFEST_EXISTS: 'dc-manifest-exists',
+  MANIFEST_VALID: 'dc-manifest-valid',
+  ENTRY_POINT_EXISTS: 'dc-entry-point-exists',
+  DEPS_INSTALLED: 'dc-deps-installed',
+  SDK_VERSION: 'dc-sdk-version',
+  BUILD_OUTPUT: 'dc-build-output',
+  NETWORK_CLOUD: 'dc-network-cloud',
+  SIGNING_KEY: 'dc-signing-key',
+  TS_CONFIG: 'dc-ts-config',
 } as const;
 
 // ─── atlas login ─────────────────────────────────────────────────────────────
 
-export interface LoginCommandArgs { }
+export interface LoginCommandArgs {}
 
 export interface LoginCommandOptions {
   readonly token?: string;
@@ -233,7 +233,7 @@ export interface LoginCommandOptions {
 
 // ─── atlas logout ────────────────────────────────────────────────────────────
 
-export interface LogoutCommandArgs { }
+export interface LogoutCommandArgs {}
 
 export interface LogoutCommandOptions {
   readonly profile?: string;
@@ -242,7 +242,7 @@ export interface LogoutCommandOptions {
 
 // ─── atlas test ──────────────────────────────────────────────────────────────
 
-export interface TestCommandArgs { }
+export interface TestCommandArgs {}
 
 export interface TestCommandOptions {
   readonly coverage?: boolean;
@@ -310,7 +310,7 @@ export interface AtlasTestConfig {
 
 // ─── Config File Paths ───────────────────────────────────────────────────────
 
-export const CLI_CONFIG_DIR       = '.atlas';
-export const CLI_PROJECT_FILE     = 'atlas.yaml';
+export const CLI_CONFIG_DIR = '.atlas';
+export const CLI_PROJECT_FILE = 'atlas.yaml';
 export const CLI_CREDENTIALS_FILE = '.atlas/credentials.json';
-export const CLI_VERSION          = '0.1.0';
+export const CLI_VERSION = '0.1.0';

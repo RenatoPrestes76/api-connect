@@ -1,18 +1,18 @@
 import type { AtlasAgentRepository } from '../repository/atlas-agent-repository.js';
-import type { AgentDomainEvent }       from '../events/agent-events.js';
+import type { AgentDomainEvent } from '../events/agent-events.js';
 
 export interface UpdateHeartbeatResult {
-  readonly agentId:     string;
+  readonly agentId: string;
   readonly heartbeatAt: Date;
-  readonly events:      readonly AgentDomainEvent[];
+  readonly events: readonly AgentDomainEvent[];
 }
 
 export type UpdateHeartbeatError =
   | { code: 'AGENT_NOT_FOUND'; agentId: string }
-  | { code: 'AGENT_DISABLED';  agentId: string };
+  | { code: 'AGENT_DISABLED'; agentId: string };
 
 export type UpdateHeartbeatOutput =
-  | { ok: true;  value: UpdateHeartbeatResult }
+  | { ok: true; value: UpdateHeartbeatResult }
   | { ok: false; error: UpdateHeartbeatError };
 
 export class UpdateHeartbeat {

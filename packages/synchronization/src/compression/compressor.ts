@@ -9,17 +9,17 @@ import { promisify } from 'util';
 import type { CompressionConfig, SyncResult } from '../types/index.js';
 import { syncOk, syncFail } from '../types/index.js';
 
-const gzipAsync         = promisify(gzip);
-const gunzipAsync       = promisify(gunzip);
-const brotliCompressAsync   = promisify(brotliCompress);
+const gzipAsync = promisify(gzip);
+const gunzipAsync = promisify(gunzip);
+const brotliCompressAsync = promisify(brotliCompress);
 const brotliDecompressAsync = promisify(brotliDecompress);
 
 export interface CompressResult {
-  readonly data:           Buffer;
-  readonly algorithm:      string;
-  readonly originalSize:   number;
+  readonly data: Buffer;
+  readonly algorithm: string;
+  readonly originalSize: number;
   readonly compressedSize: number;
-  readonly ratio:          number;
+  readonly ratio: number;
 }
 
 export class Compressor {
@@ -30,11 +30,11 @@ export class Compressor {
 
     if (!this._config.enabled || this._config.algorithm === 'none') {
       return syncOk({
-        data:           buf,
-        algorithm:      'none',
-        originalSize:   buf.length,
+        data: buf,
+        algorithm: 'none',
+        originalSize: buf.length,
         compressedSize: buf.length,
-        ratio:          1,
+        ratio: 1,
       });
     }
 
@@ -48,15 +48,18 @@ export class Compressor {
           params: { [constants.BROTLI_PARAM_QUALITY]: this._config.level },
         });
       } else {
-        return syncFail('UNSUPPORTED_ALGORITHM', `Unsupported compression: ${this._config.algorithm as string}`);
+        return syncFail(
+          'UNSUPPORTED_ALGORITHM',
+          `Unsupported compression: ${this._config.algorithm as string}`
+        );
       }
 
       return syncOk({
-        data:           compressed,
-        algorithm:      this._config.algorithm,
-        originalSize:   buf.length,
+        data: compressed,
+        algorithm: this._config.algorithm,
+        originalSize: buf.length,
         compressedSize: compressed.length,
-        ratio:          buf.length > 0 ? compressed.length / buf.length : 1,
+        ratio: buf.length > 0 ? compressed.length / buf.length : 1,
       });
     } catch (err) {
       return syncFail('COMPRESSION_FAILED', `Compression failed: ${(err as Error).message}`, {

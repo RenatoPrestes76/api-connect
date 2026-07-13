@@ -1,13 +1,16 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import {
-  startTestServer, stopServer, seedToken, provisionAgent,
+  startTestServer,
+  stopServer,
+  seedToken,
+  provisionAgent,
   type TestAtlasServer,
 } from './helpers.js';
 
 describe('POST /api/v1/heartbeat', () => {
-  let ctx:         TestAtlasServer;
+  let ctx: TestAtlasServer;
   let accessToken: string;
-  let agentId:     string;
+  let agentId: string;
 
   beforeAll(async () => {
     ctx = await startTestServer();
@@ -24,22 +27,22 @@ describe('POST /api/v1/heartbeat', () => {
 
   async function beat(body: unknown = {}, token = accessToken): Promise<Response> {
     return fetch(`${ctx.baseUrl}/api/v1/heartbeat`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body:    JSON.stringify(body),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
     });
   }
 
   it('returns 200 with status ONLINE', async () => {
-    const res  = await beat();
+    const res = await beat();
     expect(res.status).toBe(200);
-    const body = await res.json() as { data: { status: string } };
+    const body = (await res.json()) as { data: { status: string } };
     expect(body.data.status).toBe('ONLINE');
   });
 
   it('response contains agentId and lastHeartbeat', async () => {
-    const res  = await beat();
-    const body = await res.json() as { data: { agentId: string; lastHeartbeat: string } };
+    const res = await beat();
+    const body = (await res.json()) as { data: { agentId: string; lastHeartbeat: string } };
     expect(body.data.agentId).toBe(agentId);
     expect(body.data.lastHeartbeat).toBeDefined();
   });
@@ -52,9 +55,9 @@ describe('POST /api/v1/heartbeat', () => {
 
   it('returns 401 when Authorization header is missing', async () => {
     const res = await fetch(`${ctx.baseUrl}/api/v1/heartbeat`, {
-      method:  'POST',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    '{}',
+      body: '{}',
     });
     expect(res.status).toBe(401);
   });
@@ -66,15 +69,15 @@ describe('POST /api/v1/heartbeat', () => {
 
   it('returns 401 for a non-aat_ bearer token', async () => {
     const res = await fetch(`${ctx.baseUrl}/api/v1/heartbeat`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer some-jwt' },
-      body:    '{}',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer some-jwt' },
+      body: '{}',
     });
     expect(res.status).toBe(401);
   });
 
   it('accepts optional hostname update', async () => {
-    const res  = await beat({ hostname: 'updated.local' });
+    const res = await beat({ hostname: 'updated.local' });
     expect(res.status).toBe(200);
     const agent = await ctx.agentRepo.findById(agentId);
     expect(agent!.hostname.toString()).toBe('updated.local');
@@ -88,7 +91,7 @@ describe('POST /api/v1/heartbeat', () => {
   });
 
   it('ignores non-newer version silently', async () => {
-    const res  = await beat({ version: '0.0.1' });
+    const res = await beat({ version: '0.0.1' });
     expect(res.status).toBe(200); // no error
   });
 });

@@ -7,7 +7,7 @@ import type { DbQueryClient } from './db-client.js';
 export class PostgresSchemaReader implements SchemaReader {
   constructor(
     private readonly _client: DbQueryClient,
-    private readonly _schema = 'public',
+    private readonly _schema = 'public'
   ) {}
 
   async listTables(): Promise<string[]> {
@@ -15,7 +15,7 @@ export class PostgresSchemaReader implements SchemaReader {
       `SELECT table_name FROM information_schema.tables
        WHERE table_schema = $1 AND table_type = 'BASE TABLE'
        ORDER BY table_name`,
-      [this._schema],
+      [this._schema]
     );
     return rows.map((r) => String(r['table_name']));
   }
@@ -34,7 +34,7 @@ export class PostgresSchemaReader implements SchemaReader {
   }
 
   private async _readTableDetails(name: string): Promise<Table> {
-    const columns    = await this._readColumns(name);
+    const columns = await this._readColumns(name);
     const { primaryKey, foreignKeys, indexes } = await this._readConstraints(name);
     return { name, schema: this._schema, columns, primaryKey, foreignKeys, indexes };
   }
@@ -45,22 +45,22 @@ export class PostgresSchemaReader implements SchemaReader {
        FROM information_schema.columns
        WHERE table_schema = $1 AND table_name = $2
        ORDER BY ordinal_position`,
-      [this._schema, table],
+      [this._schema, table]
     );
     return rows.map((r) => ({
-      name:         String(r['column_name']),
-      type:         String(r['data_type']),
-      nullable:     r['is_nullable'] === 'YES',
+      name: String(r['column_name']),
+      type: String(r['data_type']),
+      nullable: r['is_nullable'] === 'YES',
       isPrimaryKey: false,
       isForeignKey: false,
-      isUnique:     false,
+      isUnique: false,
     }));
   }
 
   private async _readConstraints(table: string): Promise<{
     primaryKey?: PrimaryKey;
     foreignKeys: ForeignKey[];
-    indexes:     Index[];
+    indexes: Index[];
   }> {
     const { rows } = await this._client.query(
       `SELECT tc.constraint_type, tc.constraint_name,
@@ -76,7 +76,7 @@ export class PostgresSchemaReader implements SchemaReader {
          ON tc.constraint_name = ccu.constraint_name
         AND tc.table_schema    = ccu.table_schema
        WHERE tc.table_schema = $1 AND tc.table_name = $2`,
-      [this._schema, table],
+      [this._schema, table]
     );
 
     const pkCols: string[] = [];
@@ -84,9 +84,9 @@ export class PostgresSchemaReader implements SchemaReader {
     const indexMap = new Map<string, Index>();
 
     for (const r of rows) {
-      const col        = String(r['column_name']);
-      const ctype      = String(r['constraint_type']);
-      const cname      = String(r['constraint_name']);
+      const col = String(r['column_name']);
+      const ctype = String(r['constraint_type']);
+      const cname = String(r['constraint_name']);
 
       if (ctype === 'PRIMARY KEY') {
         pkCols.push(col);
@@ -98,8 +98,8 @@ export class PostgresSchemaReader implements SchemaReader {
 
       if (ctype === 'FOREIGN KEY') {
         foreignKeys.push({
-          column:           col,
-          referencedTable:  String(r['foreign_table']),
+          column: col,
+          referencedTable: String(r['foreign_table']),
           referencedColumn: String(r['foreign_column']),
         });
       }
@@ -113,9 +113,9 @@ export class PostgresSchemaReader implements SchemaReader {
     }
 
     return {
-      primaryKey:  pkCols.length ? { columns: pkCols } : undefined,
+      primaryKey: pkCols.length ? { columns: pkCols } : undefined,
       foreignKeys,
-      indexes:     [...indexMap.values()],
+      indexes: [...indexMap.values()],
     };
   }
 
@@ -124,11 +124,11 @@ export class PostgresSchemaReader implements SchemaReader {
     for (const table of tables) {
       for (const fk of table.foreignKeys) {
         relations.push({
-          fromTable:  table.name,
+          fromTable: table.name,
           fromColumn: fk.column,
-          toTable:    fk.referencedTable,
-          toColumn:   fk.referencedColumn,
-          type:       'many-to-one',
+          toTable: fk.referencedTable,
+          toColumn: fk.referencedColumn,
+          type: 'many-to-one',
         });
       }
     }

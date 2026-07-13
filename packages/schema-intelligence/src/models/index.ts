@@ -5,13 +5,13 @@
 
 // ─── Branded IDs ──────────────────────────────────────────────────────────
 
-export type SchemaId        = string & { readonly __brand: 'SchemaId' };
-export type EntityId        = string & { readonly __brand: 'EntityId' };
-export type FieldId         = string & { readonly __brand: 'FieldId' };
-export type RelationshipId  = string & { readonly __brand: 'RelationshipId' };
-export type VersionId       = string & { readonly __brand: 'VersionId' };
-export type FingerprintId   = string & { readonly __brand: 'FingerprintId' };
-export type PatternId       = string & { readonly __brand: 'PatternId' };
+export type SchemaId = string & { readonly __brand: 'SchemaId' };
+export type EntityId = string & { readonly __brand: 'EntityId' };
+export type FieldId = string & { readonly __brand: 'FieldId' };
+export type RelationshipId = string & { readonly __brand: 'RelationshipId' };
+export type VersionId = string & { readonly __brand: 'VersionId' };
+export type FingerprintId = string & { readonly __brand: 'FingerprintId' };
+export type PatternId = string & { readonly __brand: 'PatternId' };
 
 // ─── Schema Source Type ───────────────────────────────────────────────────
 

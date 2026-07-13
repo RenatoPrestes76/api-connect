@@ -12,20 +12,29 @@
 
 export enum AgentStatusKind {
   REGISTERING = 'REGISTERING',
-  ONLINE      = 'ONLINE',
-  OFFLINE     = 'OFFLINE',
-  SYNCING     = 'SYNCING',
-  ERROR       = 'ERROR',
-  DISABLED    = 'DISABLED',
+  ONLINE = 'ONLINE',
+  OFFLINE = 'OFFLINE',
+  SYNCING = 'SYNCING',
+  ERROR = 'ERROR',
+  DISABLED = 'DISABLED',
 }
 
 const VALID_TRANSITIONS: Readonly<Record<AgentStatusKind, readonly AgentStatusKind[]>> = {
   [AgentStatusKind.REGISTERING]: [AgentStatusKind.ONLINE],
-  [AgentStatusKind.ONLINE]:      [AgentStatusKind.OFFLINE, AgentStatusKind.SYNCING, AgentStatusKind.ERROR, AgentStatusKind.DISABLED],
-  [AgentStatusKind.OFFLINE]:     [AgentStatusKind.ONLINE, AgentStatusKind.DISABLED],
-  [AgentStatusKind.SYNCING]:     [AgentStatusKind.ONLINE, AgentStatusKind.ERROR],
-  [AgentStatusKind.ERROR]:       [AgentStatusKind.ONLINE, AgentStatusKind.OFFLINE, AgentStatusKind.DISABLED],
-  [AgentStatusKind.DISABLED]:    [AgentStatusKind.REGISTERING],
+  [AgentStatusKind.ONLINE]: [
+    AgentStatusKind.OFFLINE,
+    AgentStatusKind.SYNCING,
+    AgentStatusKind.ERROR,
+    AgentStatusKind.DISABLED,
+  ],
+  [AgentStatusKind.OFFLINE]: [AgentStatusKind.ONLINE, AgentStatusKind.DISABLED],
+  [AgentStatusKind.SYNCING]: [AgentStatusKind.ONLINE, AgentStatusKind.ERROR],
+  [AgentStatusKind.ERROR]: [
+    AgentStatusKind.ONLINE,
+    AgentStatusKind.OFFLINE,
+    AgentStatusKind.DISABLED,
+  ],
+  [AgentStatusKind.DISABLED]: [AgentStatusKind.REGISTERING],
 };
 
 export class AgentStatus {
@@ -53,17 +62,33 @@ export class AgentStatus {
     return VALID_TRANSITIONS[this._value].includes(next);
   }
 
-  get value(): AgentStatusKind { return this._value; }
+  get value(): AgentStatusKind {
+    return this._value;
+  }
 
-  isDisabled(): boolean  { return this._value === AgentStatusKind.DISABLED; }
-  isOnline(): boolean    { return this._value === AgentStatusKind.ONLINE; }
-  isSyncing(): boolean   { return this._value === AgentStatusKind.SYNCING; }
-  isOffline(): boolean   { return this._value === AgentStatusKind.OFFLINE; }
-  isError(): boolean     { return this._value === AgentStatusKind.ERROR; }
+  isDisabled(): boolean {
+    return this._value === AgentStatusKind.DISABLED;
+  }
+  isOnline(): boolean {
+    return this._value === AgentStatusKind.ONLINE;
+  }
+  isSyncing(): boolean {
+    return this._value === AgentStatusKind.SYNCING;
+  }
+  isOffline(): boolean {
+    return this._value === AgentStatusKind.OFFLINE;
+  }
+  isError(): boolean {
+    return this._value === AgentStatusKind.ERROR;
+  }
 
-  equals(other: AgentStatus): boolean { return this._value === other._value; }
+  equals(other: AgentStatus): boolean {
+    return this._value === other._value;
+  }
 
-  toString(): string { return this._value; }
+  toString(): string {
+    return this._value;
+  }
 }
 
 export class InvalidStatusTransitionError extends Error {

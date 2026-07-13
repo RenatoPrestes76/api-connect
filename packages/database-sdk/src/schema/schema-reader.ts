@@ -3,7 +3,7 @@ export type { DatabaseSchema } from './metadata.js';
 import type { DatabaseSchema } from './metadata.js';
 
 export interface SchemaReader {
-  readSchema():            Promise<DatabaseSchema>;
+  readSchema(): Promise<DatabaseSchema>;
   readTable(name: string): Promise<Table | null>;
-  listTables():            Promise<string[]>;
+  listTables(): Promise<string[]>;
 }

@@ -1,8 +1,5 @@
 import type { ActivationTokenRepository } from './activation-token-repository.js';
-import {
-  ActivationToken,
-  type ActivationTokenSnapshot,
-} from '../entity/activation-token.js';
+import { ActivationToken, type ActivationTokenSnapshot } from '../entity/activation-token.js';
 
 export class InMemoryActivationTokenRepository implements ActivationTokenRepository {
   private readonly _store = new Map<string, ActivationTokenSnapshot>();
@@ -25,7 +22,7 @@ export class InMemoryActivationTokenRepository implements ActivationTokenReposit
 
   async findByCompanyId(companyId: string): Promise<ActivationToken[]> {
     return Array.from(this._store.values())
-      .filter(s => s.companyId === companyId)
+      .filter((s) => s.companyId === companyId)
       .map(ActivationToken.fromSnapshot.bind(ActivationToken));
   }
 
@@ -34,6 +31,10 @@ export class InMemoryActivationTokenRepository implements ActivationTokenReposit
   }
 
   // Test helpers
-  get size(): number { return this._store.size; }
-  clear(): void      { this._store.clear(); }
+  get size(): number {
+    return this._store.size;
+  }
+  clear(): void {
+    this._store.clear();
+  }
 }

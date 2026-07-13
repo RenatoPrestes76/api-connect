@@ -8,21 +8,21 @@ Separates write operations (Commands) from read operations (Queries). All state 
 
 ## Interfaces
 
-| Interface | Role |
-|-----------|------|
-| `Command` | Base contract for all write operations |
-| `CommandResult<T>` | Typed result after command execution |
-| `CommandHandler<C, R>` | Handles a single command type |
-| `CommandPublisher` | Dispatches commands (single or batch) |
-| `CommandHandlerRegistry` | Maps command types → handlers |
-| `CommandBus` | Central hub — Publisher + Registry |
-| `CommandValidator<C>` | Pre-dispatch validation |
-| `CommandValidationResult` | Validation outcome with field errors |
-| `ValidationRule<C>` | Single validation rule composable |
+| Interface                 | Role                                   |
+| ------------------------- | -------------------------------------- |
+| `Command`                 | Base contract for all write operations |
+| `CommandResult<T>`        | Typed result after command execution   |
+| `CommandHandler<C, R>`    | Handles a single command type          |
+| `CommandPublisher`        | Dispatches commands (single or batch)  |
+| `CommandHandlerRegistry`  | Maps command types → handlers          |
+| `CommandBus`              | Central hub — Publisher + Registry     |
+| `CommandValidator<C>`     | Pre-dispatch validation                |
+| `CommandValidationResult` | Validation outcome with field errors   |
+| `ValidationRule<C>`       | Single validation rule composable      |
 | `CommandMiddleware<C, R>` | Pipeline step (logging, auth, tracing) |
-| `Query` | Base contract for all read operations |
-| `QueryHandler<Q, R>` | Handles a single query type |
-| `QueryBus` | Dispatches queries to their handlers |
+| `Query`                   | Base contract for all read operations  |
+| `QueryHandler<Q, R>`      | Handles a single query type            |
+| `QueryBus`                | Dispatches queries to their handlers   |
 
 ## Architecture
 

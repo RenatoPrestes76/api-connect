@@ -8,20 +8,20 @@ Provides the cross-cutting concern contracts that wrap every service call: reque
 
 ## Interfaces
 
-| Interface | Role |
-|-----------|------|
-| `Middleware<Req, Res>` | Single step in a request/response pipeline |
-| `RequestContext` | Immutable request envelope with correlation metadata |
-| `ResponseContext` | Immutable response envelope with status and error |
-| `Pipeline<Req, Res>` | Ordered collection of Middleware — compose and execute |
-| `Interceptor<T>` | Pre/post-process any typed value |
-| `InterceptorChain<T>` | Ordered sequence of Interceptors |
-| `ErrorInterceptor` | Single-error-type boundary with priority |
-| `ErrorMiddleware<Req, Res>` | Middleware that specialises in error recovery |
-| `HealthCheck` | Single health probe |
-| `HealthCheckResult` | Outcome: healthy / degraded / unhealthy |
-| `HealthCheckRegistry` | Aggregates all probes and computes overall status |
-| `Logger` | Structured log levels + child loggers with context |
+| Interface                   | Role                                                   |
+| --------------------------- | ------------------------------------------------------ |
+| `Middleware<Req, Res>`      | Single step in a request/response pipeline             |
+| `RequestContext`            | Immutable request envelope with correlation metadata   |
+| `ResponseContext`           | Immutable response envelope with status and error      |
+| `Pipeline<Req, Res>`        | Ordered collection of Middleware — compose and execute |
+| `Interceptor<T>`            | Pre/post-process any typed value                       |
+| `InterceptorChain<T>`       | Ordered sequence of Interceptors                       |
+| `ErrorInterceptor`          | Single-error-type boundary with priority               |
+| `ErrorMiddleware<Req, Res>` | Middleware that specialises in error recovery          |
+| `HealthCheck`               | Single health probe                                    |
+| `HealthCheckResult`         | Outcome: healthy / degraded / unhealthy                |
+| `HealthCheckRegistry`       | Aggregates all probes and computes overall status      |
+| `Logger`                    | Structured log levels + child loggers with context     |
 
 ## Architecture
 

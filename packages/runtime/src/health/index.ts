@@ -133,16 +133,16 @@ export interface HealthStatusChange {
 // ─── Built-in Health Check IDs ────────────────────────────────────────────
 
 export const HEALTH_CHECK_IDS = {
-  DATABASE_CONNECTIVITY:   'hc-database-connectivity',
-  SUPABASE_CONNECTIVITY:   'hc-supabase-connectivity',
-  EVENT_BUS_LIVENESS:      'hc-event-bus-liveness',
-  COMMAND_BUS_LIVENESS:    'hc-command-bus-liveness',
-  SCHEDULER_LIVENESS:      'hc-scheduler-liveness',
-  WORKER_POOL_READINESS:   'hc-worker-pool-readiness',
-  MEMORY_USAGE:            'hc-memory-usage',
-  DISK_USAGE:              'hc-disk-usage',
+  DATABASE_CONNECTIVITY: 'hc-database-connectivity',
+  SUPABASE_CONNECTIVITY: 'hc-supabase-connectivity',
+  EVENT_BUS_LIVENESS: 'hc-event-bus-liveness',
+  COMMAND_BUS_LIVENESS: 'hc-command-bus-liveness',
+  SCHEDULER_LIVENESS: 'hc-scheduler-liveness',
+  WORKER_POOL_READINESS: 'hc-worker-pool-readiness',
+  MEMORY_USAGE: 'hc-memory-usage',
+  DISK_USAGE: 'hc-disk-usage',
   PLUGIN_MANAGER_LIVENESS: 'hc-plugin-manager-liveness',
-  TELEMETRY_EXPORTER:      'hc-telemetry-exporter',
+  TELEMETRY_EXPORTER: 'hc-telemetry-exporter',
 } as const;
 
 // ─── Health Endpoint Formatter ────────────────────────────────────────────

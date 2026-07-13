@@ -23,7 +23,11 @@ export interface ConfigurationException extends CoreException {
  * Dependency injection related exceptions
  */
 export interface DIException extends CoreException {
-  readonly code: 'DI_NOT_FOUND' | 'DI_ALREADY_REGISTERED' | 'DI_CIRCULAR_DEPENDENCY' | 'DI_RESOLUTION_ERROR';
+  readonly code:
+    | 'DI_NOT_FOUND'
+    | 'DI_ALREADY_REGISTERED'
+    | 'DI_CIRCULAR_DEPENDENCY'
+    | 'DI_RESOLUTION_ERROR';
 }
 
 /**

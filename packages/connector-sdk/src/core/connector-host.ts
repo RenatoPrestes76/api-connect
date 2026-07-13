@@ -10,7 +10,7 @@ export interface ConnectorHostOptions {
   /** Interval (ms) between automatic health polls. Default: 30 000. */
   healthPollIntervalMs?: number;
   /** Interval (ms) between automatic sync jobs. 0 = disabled. Default: 0. */
-  syncIntervalMs?:       number;
+  syncIntervalMs?: number;
 }
 
 const DEFAULT_HEALTH_POLL_MS = 30_000;
@@ -34,12 +34,12 @@ export class ConnectorHost {
   private readonly _syncIntervalMs: number;
 
   constructor(
-    private readonly _eventBus:       EventBus,
-    private readonly _healthRegistry:  HealthRegistry,
-    private readonly _scheduler:       ConnectorScheduler,
-    private readonly _opts:            ConnectorHostOptions = {},
+    private readonly _eventBus: EventBus,
+    private readonly _healthRegistry: HealthRegistry,
+    private readonly _scheduler: ConnectorScheduler,
+    private readonly _opts: ConnectorHostOptions = {}
   ) {
-    this._registry     = new PluginRegistry();
+    this._registry = new PluginRegistry();
     this._healthPollMs = _opts.healthPollIntervalMs ?? DEFAULT_HEALTH_POLL_MS;
     this._syncIntervalMs = _opts.syncIntervalMs ?? 0;
   }
@@ -56,9 +56,15 @@ export class ConnectorHost {
     this._registry.unregister(id);
   }
 
-  get(id: string) { return this._registry.get(id); }
-  list()          { return this._registry.all(); }
-  get size()      { return this._registry.size; }
+  get(id: string) {
+    return this._registry.get(id);
+  }
+  list() {
+    return this._registry.all();
+  }
+  get size() {
+    return this._registry.size;
+  }
 
   // ── Lifecycle ────────────────────────────────────────────────────────────────
 
@@ -69,27 +75,27 @@ export class ConnectorHost {
     this._registry.setStatus(id, 'starting');
 
     const connector = entry.plugin.connector;
-    const result    = await this._safeCall(id, () => connector.connect());
+    const result = await this._safeCall(id, () => connector.connect());
 
     if (!result.ok) {
       this._registry.recordFailure(id, new Error(result.error?.message ?? 'connect() failed'));
       this._eventBus.emit('connector.failed', {
         connectorId: id,
-        error:       result.error?.message ?? 'connect() failed',
-        code:        result.error?.code    ?? 'CONNECT_FAILED',
-        failedAt:    new Date(),
-        retryable:   result.error?.retryable ?? false,
+        error: result.error?.message ?? 'connect() failed',
+        code: result.error?.code ?? 'CONNECT_FAILED',
+        failedAt: new Date(),
+        retryable: result.error?.retryable ?? false,
       });
       return;
     }
 
-    entry.status    = 'running';
+    entry.status = 'running';
     entry.startedAt = new Date();
 
     this._eventBus.emit('connector.started', {
       connectorId: id,
-      version:     entry.plugin.manifest.version,
-      startedAt:   entry.startedAt,
+      version: entry.plugin.manifest.version,
+      startedAt: entry.startedAt,
     });
 
     this._scheduleHealthPoll(id, connector);
@@ -108,14 +114,14 @@ export class ConnectorHost {
     const connector = entry.plugin.connector;
     await this._safeCall(id, () => connector.disconnect());
 
-    entry.status    = 'stopped';
+    entry.status = 'stopped';
     entry.stoppedAt = new Date();
 
     this._healthRegistry.remove(id);
     this._eventBus.emit('connector.stopped', {
       connectorId: id,
-      stoppedAt:   entry.stoppedAt,
-      graceful:    true,
+      stoppedAt: entry.stoppedAt,
+      graceful: true,
     });
   }
 
@@ -147,7 +153,7 @@ export class ConnectorHost {
 
   private async _safeCall<T>(
     connectorId: string,
-    fn: () => Promise<T>,
+    fn: () => Promise<T>
   ): Promise<T extends { ok: boolean } ? T : { ok: true; data: T }> {
     try {
       const result = await fn();
@@ -160,18 +166,21 @@ export class ConnectorHost {
       this._registry.recordFailure(connectorId, err as Error);
       this._eventBus.emit('connector.failed', {
         connectorId,
-        error:     (err as Error).message,
-        code:      'UNHANDLED_EXCEPTION',
-        failedAt:  new Date(),
+        error: (err as Error).message,
+        code: 'UNHANDLED_EXCEPTION',
+        failedAt: new Date(),
         retryable: false,
       });
-      return { ok: false, error: { code: 'UNHANDLED_EXCEPTION', message: (err as Error).message, retryable: false } } as never;
+      return {
+        ok: false,
+        error: { code: 'UNHANDLED_EXCEPTION', message: (err as Error).message, retryable: false },
+      } as never;
     }
   }
 
   private _scheduleHealthPoll(id: string, connector: Connector): void {
     this._scheduler.schedule(id, {
-      label:      `${id}:health`,
+      label: `${id}:health`,
       intervalMs: this._healthPollMs,
       task: async () => {
         const result = await this._safeCall(id, () => connector.health());
@@ -180,10 +189,10 @@ export class ConnectorHost {
           this._healthRegistry.update(id, result.data);
           if (prev && prev !== result.data.status) {
             this._eventBus.emit('health.changed', {
-              connectorId:    id,
+              connectorId: id,
               previousStatus: prev,
-              currentStatus:  result.data.status,
-              changedAt:      new Date(),
+              currentStatus: result.data.status,
+              changedAt: new Date(),
             });
           }
         }
@@ -193,22 +202,22 @@ export class ConnectorHost {
 
   private _scheduleSyncJob(id: string, connector: Connector): void {
     this._scheduler.schedule(id, {
-      label:      `${id}:sync`,
+      label: `${id}:sync`,
       intervalMs: this._syncIntervalMs,
       task: async () => {
         const jobId: string = randomUUID();
         this._eventBus.emit('sync.started', { connectorId: id, jobId, startedAt: new Date() });
-        const started  = Date.now();
+        const started = Date.now();
         const ctx: SyncContext = { jobId };
-        const result   = await this._safeCall(id, () => connector.synchronize(ctx));
+        const result = await this._safeCall(id, () => connector.synchronize(ctx));
         const duration = Date.now() - started;
         this._eventBus.emit('sync.finished', {
           connectorId: id,
           jobId,
-          synced:      result.ok ? (result.data?.synced ?? 0) : 0,
-          failed:      result.ok ? (result.data?.failed ?? 0) : 1,
-          durationMs:  duration,
-          finishedAt:  new Date(),
+          synced: result.ok ? (result.data?.synced ?? 0) : 0,
+          failed: result.ok ? (result.data?.failed ?? 0) : 1,
+          durationMs: duration,
+          finishedAt: new Date(),
         });
       },
     });

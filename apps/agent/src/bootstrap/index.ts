@@ -160,7 +160,7 @@ export interface AgentPhaseResult {
 
 export type AgentBootstrapHook = (
   phase: AgentBootstrapPhase,
-  context: Partial<AgentContext>,
+  context: Partial<AgentContext>
 ) => void | Promise<void>;
 
 // ─── Bootstrap Observer ───────────────────────────────────────────────────
@@ -176,45 +176,45 @@ export interface AgentBootstrapObserver {
 
 export const AGENT_BOOTSTRAP_TASK_IDS = {
   // Configuration
-  FIND_CONFIG_FILE:           'abt-find-config',
-  LOAD_CONFIG:                'abt-load-config',
-  VALIDATE_CONFIG:            'abt-validate-config',
-  RESOLVE_ENV_OVERRIDES:      'abt-resolve-env-overrides',
+  FIND_CONFIG_FILE: 'abt-find-config',
+  LOAD_CONFIG: 'abt-load-config',
+  VALIDATE_CONFIG: 'abt-validate-config',
+  RESOLVE_ENV_OVERRIDES: 'abt-resolve-env-overrides',
 
   // Security
-  INIT_ENCRYPTION:            'abt-init-encryption',
-  INIT_CREDENTIAL_STORE:      'abt-init-credential-store',
-  INIT_TLS_MANAGER:           'abt-init-tls-manager',
-  VALIDATE_CLOUD_CERT:        'abt-validate-cloud-cert',
-  INIT_TOKEN_MANAGER:         'abt-init-token-manager',
+  INIT_ENCRYPTION: 'abt-init-encryption',
+  INIT_CREDENTIAL_STORE: 'abt-init-credential-store',
+  INIT_TLS_MANAGER: 'abt-init-tls-manager',
+  VALIDATE_CLOUD_CERT: 'abt-validate-cloud-cert',
+  INIT_TOKEN_MANAGER: 'abt-init-token-manager',
 
   // Services
-  INIT_CACHE:                 'abt-init-cache',
-  INIT_TELEMETRY:             'abt-init-telemetry',
-  INIT_LOG_MANAGER:           'abt-init-log-manager',
-  INIT_SERVICE_REGISTRY:      'abt-init-service-registry',
-  INIT_HEALTH_MONITOR:        'abt-init-health-monitor',
+  INIT_CACHE: 'abt-init-cache',
+  INIT_TELEMETRY: 'abt-init-telemetry',
+  INIT_LOG_MANAGER: 'abt-init-log-manager',
+  INIT_SERVICE_REGISTRY: 'abt-init-service-registry',
+  INIT_HEALTH_MONITOR: 'abt-init-health-monitor',
 
   // Connectors
-  INIT_CONNECTOR_MANAGER:     'abt-init-connector-manager',
-  CONNECT_ALL_DATABASES:      'abt-connect-databases',
+  INIT_CONNECTOR_MANAGER: 'abt-init-connector-manager',
+  CONNECT_ALL_DATABASES: 'abt-connect-databases',
 
   // Scheduler
-  INIT_SCHEDULER:             'abt-init-scheduler',
-  REGISTER_BUILT_IN_JOBS:     'abt-register-jobs',
-  START_SCHEDULER:            'abt-start-scheduler',
+  INIT_SCHEDULER: 'abt-init-scheduler',
+  REGISTER_BUILT_IN_JOBS: 'abt-register-jobs',
+  START_SCHEDULER: 'abt-start-scheduler',
 
   // Plugins
-  DISCOVER_PLUGINS:           'abt-discover-plugins',
-  LOAD_PLUGINS:               'abt-load-plugins',
-  START_PLUGINS:              'abt-start-plugins',
+  DISCOVER_PLUGINS: 'abt-discover-plugins',
+  LOAD_PLUGINS: 'abt-load-plugins',
+  START_PLUGINS: 'abt-start-plugins',
 
   // Ready
-  RUN_PREFLIGHT:              'abt-run-preflight',
-  REGISTER_AGENT:             'abt-register-agent',
-  START_HEARTBEAT:            'abt-start-heartbeat',
-  START_QUEUE_FLUSHER:        'abt-start-queue-flusher',
-  EMIT_READY_EVENT:           'abt-emit-ready',
+  RUN_PREFLIGHT: 'abt-run-preflight',
+  REGISTER_AGENT: 'abt-register-agent',
+  START_HEARTBEAT: 'abt-start-heartbeat',
+  START_QUEUE_FLUSHER: 'abt-start-queue-flusher',
+  EMIT_READY_EVENT: 'abt-emit-ready',
 } as const;
 
 // ─── Factory ──────────────────────────────────────────────────────────────

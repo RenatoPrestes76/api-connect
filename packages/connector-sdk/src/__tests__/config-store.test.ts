@@ -57,15 +57,20 @@ describe('InMemoryConfigStore', () => {
 
 describe('validateConfig', () => {
   const schema: ConfigSchema = [
-    { key: 'host',     type: 'string',  label: 'Host',     required: true },
-    { key: 'port',     type: 'number',  label: 'Port',     required: true },
-    { key: 'ssl',      type: 'boolean', label: 'SSL',      required: false },
-    { key: 'env',      type: 'enum',    label: 'Env',      options: ['prod', 'dev'] },
-    { key: 'password', type: 'secret',  label: 'Password', required: true },
+    { key: 'host', type: 'string', label: 'Host', required: true },
+    { key: 'port', type: 'number', label: 'Port', required: true },
+    { key: 'ssl', type: 'boolean', label: 'SSL', required: false },
+    { key: 'env', type: 'enum', label: 'Env', options: ['prod', 'dev'] },
+    { key: 'password', type: 'secret', label: 'Password', required: true },
   ];
 
   it('returns empty errors for valid config', () => {
-    const errors = validateConfig(schema, { host: 'localhost', port: 5432, password: 'secret', env: 'prod' });
+    const errors = validateConfig(schema, {
+      host: 'localhost',
+      port: 5432,
+      password: 'secret',
+      env: 'prod',
+    });
     expect(errors).toHaveLength(0);
   });
 
@@ -81,7 +86,12 @@ describe('validateConfig', () => {
   });
 
   it('reports invalid enum value', () => {
-    const errors = validateConfig(schema, { host: 'localhost', port: 5432, password: 'x', env: 'staging' });
+    const errors = validateConfig(schema, {
+      host: 'localhost',
+      port: 5432,
+      password: 'x',
+      env: 'staging',
+    });
     expect(errors.some((e) => e.field === 'env')).toBe(true);
   });
 });

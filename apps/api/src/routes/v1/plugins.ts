@@ -33,9 +33,17 @@ export async function listPlugins(ctx: RouteContext, res: ServerResponse): Promi
       take: pageSize,
       orderBy: { createdAt: 'desc' },
       select: {
-        id: true, slug: true, name: true, description: true,
-        version: true, category: true, tags: true, status: true,
-        iconUrl: true, homepage: true, createdAt: true,
+        id: true,
+        slug: true,
+        name: true,
+        description: true,
+        version: true,
+        category: true,
+        tags: true,
+        status: true,
+        iconUrl: true,
+        homepage: true,
+        createdAt: true,
         _count: { select: { organizations: true } },
       },
     }),
@@ -48,7 +56,10 @@ export async function listPlugins(ctx: RouteContext, res: ServerResponse): Promi
 // GET /api/v1/plugins/:id
 export async function getPlugin(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const { id } = ctx.params;
-  if (!id) { apiError(res, 'Missing id', 400, 'BAD_REQUEST'); return; }
+  if (!id) {
+    apiError(res, 'Missing id', 400, 'BAD_REQUEST');
+    return;
+  }
 
   const plugin = await prisma.plugin.findFirst({
     where: {
@@ -66,7 +77,10 @@ export async function getPlugin(ctx: RouteContext, res: ServerResponse): Promise
     },
   });
 
-  if (!plugin) { apiError(res, 'Plugin not found', 404, 'NOT_FOUND'); return; }
+  if (!plugin) {
+    apiError(res, 'Plugin not found', 404, 'NOT_FOUND');
+    return;
+  }
 
   json(res, { data: plugin });
 }
@@ -74,13 +88,23 @@ export async function getPlugin(ctx: RouteContext, res: ServerResponse): Promise
 // GET /api/v1/organizations/:orgId/plugins
 export async function listInstalledPlugins(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const orgId = ctx.params['orgId'] ?? ctx.orgId;
-  if (!orgId) { apiError(res, 'Organization ID required', 400, 'BAD_REQUEST'); return; }
+  if (!orgId) {
+    apiError(res, 'Organization ID required', 400, 'BAD_REQUEST');
+    return;
+  }
 
   const installed = await prisma.organizationPlugin.findMany({
     where: { organizationId: orgId },
     include: {
       plugin: {
-        select: { id: true, slug: true, name: true, description: true, category: true, iconUrl: true },
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          description: true,
+          category: true,
+          iconUrl: true,
+        },
       },
     },
     orderBy: { installedAt: 'desc' },
@@ -103,13 +127,19 @@ export async function installPlugin(ctx: RouteContext, res: ServerResponse): Pro
     where: { id: pluginId, status: 'PUBLISHED', deletedAt: null },
   });
 
-  if (!plugin) { apiError(res, 'Plugin not found or not published', 404, 'NOT_FOUND'); return; }
+  if (!plugin) {
+    apiError(res, 'Plugin not found or not published', 404, 'NOT_FOUND');
+    return;
+  }
 
   const existing = await prisma.organizationPlugin.findUnique({
     where: { organizationId_pluginId: { organizationId: orgId, pluginId } },
   });
 
-  if (existing) { apiError(res, 'Plugin already installed', 409, 'CONFLICT'); return; }
+  if (existing) {
+    apiError(res, 'Plugin already installed', 409, 'CONFLICT');
+    return;
+  }
 
   const body = ctx.body as Record<string, unknown> | undefined;
 

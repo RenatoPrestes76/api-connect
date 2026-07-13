@@ -26,22 +26,21 @@ export class EventBus {
   }
 
   /** Subscribe to a typed event. Returns an unsubscribe function. */
-  on<K extends ConnectorEventType>(
-    event:   K,
-    handler: Handler<ConnectorEventMap[K]>,
-  ): Unsubscribe {
+  on<K extends ConnectorEventType>(event: K, handler: Handler<ConnectorEventMap[K]>): Unsubscribe {
     if (!this._handlers.has(event)) {
       this._handlers.set(event, new Set());
     }
     const handlers = this._handlers.get(event)!;
     handlers.add(handler as Handler<unknown>);
-    return () => { handlers.delete(handler as Handler<unknown>); };
+    return () => {
+      handlers.delete(handler as Handler<unknown>);
+    };
   }
 
   /** Subscribe to an event and automatically unsubscribe after the first call. */
   once<K extends ConnectorEventType>(
-    event:   K,
-    handler: Handler<ConnectorEventMap[K]>,
+    event: K,
+    handler: Handler<ConnectorEventMap[K]>
   ): Unsubscribe {
     const unsub = this.on(event, (payload) => {
       unsub();

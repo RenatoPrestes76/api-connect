@@ -10,9 +10,7 @@ export default function HubLayout({ children }: { children: ReactNode }) {
         <Sidebar />
         <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
           <Topbar />
-          <main className="flex-1 overflow-y-auto p-6">
-            {children}
-          </main>
+          <main className="flex-1 overflow-y-auto p-6">{children}</main>
         </div>
       </div>
     </Providers>

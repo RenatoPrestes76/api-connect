@@ -12,7 +12,7 @@ export class TokenFormatError extends Error {
   constructor(token: string) {
     super(
       `Invalid activation token format: "${token}"\n` +
-      `Expected format: ATLAS-XXXX-XXXX-XXXX (uppercase alphanumeric segments)`,
+        `Expected format: ATLAS-XXXX-XXXX-XXXX (uppercase alphanumeric segments)`
     );
     this.name = 'TokenFormatError';
   }

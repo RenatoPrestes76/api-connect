@@ -6,29 +6,27 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryRunner, CircuitBreaker, DEFAULT_QUERY_RUNNER_OPTIONS } from '../query-runner.js';
-import {
-  ReadOnlyViolationError,
-  QueryTimeoutError,
-  CircuitOpenError,
-} from '../types.js';
+import { ReadOnlyViolationError, QueryTimeoutError, CircuitOpenError } from '../types.js';
 import type { PostgreSQLConnectionManager } from '../connection.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function makeConn(
-  queryImpl?: (sql: string) => Promise<{ rows: unknown[]; rowCount: number }>,
+  queryImpl?: (sql: string) => Promise<{ rows: unknown[]; rowCount: number }>
 ): PostgreSQLConnectionManager {
   const clientMock = {
-    query: vi.fn().mockImplementation((sql: string) =>
-      queryImpl ? queryImpl(sql) : Promise.resolve({ rows: [], rowCount: 0 }),
-    ),
+    query: vi
+      .fn()
+      .mockImplementation((sql: string) =>
+        queryImpl ? queryImpl(sql) : Promise.resolve({ rows: [], rowCount: 0 })
+      ),
     release: vi.fn(),
   };
 
   return {
     isConnected: true,
     acquire: vi.fn().mockResolvedValue(clientMock),
-    query:   vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+    query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
   } as unknown as PostgreSQLConnectionManager;
 }
 
@@ -47,7 +45,7 @@ describe('ReadOnly enforcement', () => {
     'REVOKE SELECT ON t FROM user',
     'VACUUM t',
     'REINDEX TABLE t',
-    '  insert into t values (1)',   // leading whitespace
+    '  insert into t values (1)', // leading whitespace
     '\nDELETE FROM t',
   ];
 
@@ -77,12 +75,20 @@ describe('ReadOnly enforcement', () => {
 
 describe('CircuitBreaker', () => {
   it('starts CLOSED', () => {
-    const cb = new CircuitBreaker({ failureThreshold: 3, openDurationMs: 1000, successThreshold: 1 });
+    const cb = new CircuitBreaker({
+      failureThreshold: 3,
+      openDurationMs: 1000,
+      successThreshold: 1,
+    });
     expect(cb.state).toBe('CLOSED');
   });
 
   it('stays CLOSED below failure threshold', async () => {
-    const cb = new CircuitBreaker({ failureThreshold: 3, openDurationMs: 1000, successThreshold: 1 });
+    const cb = new CircuitBreaker({
+      failureThreshold: 3,
+      openDurationMs: 1000,
+      successThreshold: 1,
+    });
     const fail = () => Promise.reject(new Error('fail'));
 
     await cb.execute(fail).catch(() => undefined);
@@ -91,7 +97,11 @@ describe('CircuitBreaker', () => {
   });
 
   it('opens after reaching failure threshold', async () => {
-    const cb = new CircuitBreaker({ failureThreshold: 3, openDurationMs: 1000, successThreshold: 1 });
+    const cb = new CircuitBreaker({
+      failureThreshold: 3,
+      openDurationMs: 1000,
+      successThreshold: 1,
+    });
     const fail = () => Promise.reject(new Error('fail'));
 
     for (let i = 0; i < 3; i++) {
@@ -101,7 +111,11 @@ describe('CircuitBreaker', () => {
   });
 
   it('throws CircuitOpenError when OPEN', async () => {
-    const cb = new CircuitBreaker({ failureThreshold: 1, openDurationMs: 60_000, successThreshold: 1 });
+    const cb = new CircuitBreaker({
+      failureThreshold: 1,
+      openDurationMs: 60_000,
+      successThreshold: 1,
+    });
     await cb.execute(() => Promise.reject(new Error('fail'))).catch(() => undefined);
 
     expect(cb.state).toBe('OPEN');
@@ -131,7 +145,11 @@ describe('CircuitBreaker', () => {
   });
 
   it('resets to CLOSED on manual reset()', () => {
-    const cb = new CircuitBreaker({ failureThreshold: 1, openDurationMs: 1000, successThreshold: 1 });
+    const cb = new CircuitBreaker({
+      failureThreshold: 1,
+      openDurationMs: 1000,
+      successThreshold: 1,
+    });
     cb.reset();
     expect(cb.state).toBe('CLOSED');
     expect(cb.failureCount).toBe(0);

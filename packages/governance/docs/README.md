@@ -10,14 +10,14 @@ It defines the **governance contracts** for the entire Atlas Platform — pure p
 
 ## Design Principles
 
-| Principle | Description |
-|-----------|-------------|
-| **Policy-driven** | Every action is subject to policy evaluation. No hardcoded rules. |
-| **Hexagonal** | Only interfaces and types — no infrastructure dependencies |
-| **DDD** | Domain entities, value objects, and bounded contexts |
-| **Immutability** | Audit entries, approved decisions, and snapshots are immutable |
-| **Zero-trust** | All cross-tenant access is denied by default |
-| **Chain-of-custody** | Critical operations leave tamper-evident audit trails |
+| Principle            | Description                                                       |
+| -------------------- | ----------------------------------------------------------------- |
+| **Policy-driven**    | Every action is subject to policy evaluation. No hardcoded rules. |
+| **Hexagonal**        | Only interfaces and types — no infrastructure dependencies        |
+| **DDD**              | Domain entities, value objects, and bounded contexts              |
+| **Immutability**     | Audit entries, approved decisions, and snapshots are immutable    |
+| **Zero-trust**       | All cross-tenant access is denied by default                      |
+| **Chain-of-custody** | Critical operations leave tamper-evident audit trails             |
 
 ## Modules
 
@@ -60,8 +60,8 @@ import * as Governance from '@seltriva/governance';
 
 // Sub-path import (tree-shakeable)
 import type { IComplianceService, ComplianceFramework } from '@seltriva/governance/compliance';
-import type { IPolicyEngine, PolicyDecision }           from '@seltriva/governance/policies';
-import type { IRBACService, RBACContext }               from '@seltriva/governance/rbac';
+import type { IPolicyEngine, PolicyDecision } from '@seltriva/governance/policies';
+import type { IRBACService, RBACContext } from '@seltriva/governance/rbac';
 ```
 
 ## Result Pattern
@@ -74,7 +74,7 @@ import type { GovernanceResult } from '@seltriva/governance';
 const result: GovernanceResult<ComplianceAssessment> = await complianceService.startAssessment(
   organizationId,
   'ISO27001',
-  userId,
+  userId
 );
 
 if (result.ok) {
@@ -86,31 +86,31 @@ if (result.ok) {
 
 ### Error Codes
 
-| Code | Description |
-|------|-------------|
-| `POLICY_DENIED` | A policy explicitly denied the action |
-| `POLICY_NOT_FOUND` | Referenced policy does not exist |
-| `VALIDATION_ERROR` | Input data failed validation |
-| `CONFLICT` | Conflicting state (e.g., duplicate resource) |
-| `NOT_FOUND` | Resource not found |
-| `UNAUTHORIZED` | Identity could not be authenticated |
-| `FORBIDDEN` | Authenticated but not authorized |
-| `INVALID_STATE` | Resource is in an incompatible state for the action |
-| `QUOTA_EXCEEDED` | Tier or resource limit exceeded |
-| `APPROVAL_REQUIRED` | Action requires approval before proceeding |
-| `CHANGE_FROZEN` | Environment or change window is frozen |
-| `TENANT_VIOLATION` | Cross-tenant access boundary was violated |
-| `COMPLIANCE_VIOLATION` | Action would violate a compliance requirement |
-| `UNKNOWN` | Unexpected internal error |
+| Code                   | Description                                         |
+| ---------------------- | --------------------------------------------------- |
+| `POLICY_DENIED`        | A policy explicitly denied the action               |
+| `POLICY_NOT_FOUND`     | Referenced policy does not exist                    |
+| `VALIDATION_ERROR`     | Input data failed validation                        |
+| `CONFLICT`             | Conflicting state (e.g., duplicate resource)        |
+| `NOT_FOUND`            | Resource not found                                  |
+| `UNAUTHORIZED`         | Identity could not be authenticated                 |
+| `FORBIDDEN`            | Authenticated but not authorized                    |
+| `INVALID_STATE`        | Resource is in an incompatible state for the action |
+| `QUOTA_EXCEEDED`       | Tier or resource limit exceeded                     |
+| `APPROVAL_REQUIRED`    | Action requires approval before proceeding          |
+| `CHANGE_FROZEN`        | Environment or change window is frozen              |
+| `TENANT_VIOLATION`     | Cross-tenant access boundary was violated           |
+| `COMPLIANCE_VIOLATION` | Action would violate a compliance requirement       |
+| `UNKNOWN`              | Unexpected internal error                           |
 
 ## Compliance Support
 
-| Framework | Coverage |
-|-----------|----------|
-| **LGPD** | Legal basis tracking, data subject rights (Art. 18), processing records, DPIA |
+| Framework     | Coverage                                                                         |
+| ------------- | -------------------------------------------------------------------------------- |
+| **LGPD**      | Legal basis tracking, data subject rights (Art. 18), processing records, DPIA    |
 | **ISO 27001** | All 14 control domains (A.5 – A.18), evidence collection, certification tracking |
-| **SOC 2** | All 9 Common Criteria (CC1–CC9), trust category mapping |
-| **NIST CSF** | All 5 functions (Identify, Protect, Detect, Respond, Recover) |
+| **SOC 2**     | All 9 Common Criteria (CC1–CC9), trust category mapping                          |
+| **NIST CSF**  | All 5 functions (Identify, Protect, Detect, Respond, Recover)                    |
 
 ## License
 

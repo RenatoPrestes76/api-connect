@@ -208,6 +208,11 @@ export interface CBMDiff {
   readonly remappedEntities: Array<{ entity: string; from: CBLEntityTerm; to: CBLEntityTerm }>;
   readonly addedFields: Array<{ entity: string; field: CBMField }>;
   readonly removedFields: Array<{ entity: string; fieldName: string }>;
-  readonly remappedFields: Array<{ entity: string; field: string; from: CBLFieldTerm; to: CBLFieldTerm }>;
+  readonly remappedFields: Array<{
+    entity: string;
+    field: string;
+    from: CBLFieldTerm;
+    to: CBLFieldTerm;
+  }>;
   readonly hasChanges: boolean;
 }

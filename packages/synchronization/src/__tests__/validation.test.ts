@@ -4,12 +4,12 @@ import type { TableSchema } from '../types/index.js';
 
 const SCHEMA: TableSchema = {
   schema: 'public',
-  table:  'produto',
+  table: 'produto',
   fields: [
-    { name: 'id',    type: 'integer', required: true,  nullable: false },
-    { name: 'nome',  type: 'varchar', required: true,  nullable: false },
-    { name: 'preco', type: 'numeric', required: true,  nullable: false },
-    { name: 'ativo', type: 'boolean', required: false, nullable: true  },
+    { name: 'id', type: 'integer', required: true, nullable: false },
+    { name: 'nome', type: 'varchar', required: true, nullable: false },
+    { name: 'preco', type: 'numeric', required: true, nullable: false },
+    { name: 'ativo', type: 'boolean', required: false, nullable: true },
   ],
 };
 

@@ -126,6 +126,7 @@ plugin-name-1.0.0.atlasp
 ```
 
 Manifest is updated during packaging to include:
+
 - `checksums.sha256`: SHA-256 of the compiled entry point
 - `signature`: Ed25519 signature of the manifest JSON hash
 

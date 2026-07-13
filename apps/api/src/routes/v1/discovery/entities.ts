@@ -23,8 +23,8 @@ export function createEntitiesHandler(store: PrometheusStore): RouteHandler {
 
     let entities = flattenEntities(report.entities);
 
-    const entityFilter   = ctx.query.get('entity')?.toUpperCase();
-    const minConfidence  = Number(ctx.query.get('minConfidence') ?? '0');
+    const entityFilter = ctx.query.get('entity')?.toUpperCase();
+    const minConfidence = Number(ctx.query.get('minConfidence') ?? '0');
 
     if (entityFilter) {
       entities = entities.filter((e) => e.entity === entityFilter);
@@ -36,7 +36,7 @@ export function createEntitiesHandler(store: PrometheusStore): RouteHandler {
     json(res, {
       analysisId,
       database: report.database,
-      total:    entities.length,
+      total: entities.length,
       entities,
     });
   };

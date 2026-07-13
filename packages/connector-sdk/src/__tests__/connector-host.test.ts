@@ -11,29 +11,41 @@ import type { LoadedPlugin } from '../loader/plugin-loader.js';
 
 function makeConnector(overrides: Partial<Connector> = {}): Connector {
   const metadata: ConnectorMetadata = {
-    id: 'com.test.conn', name: 'Test', displayName: 'Test Connector',
-    version: '1.0.0', sdkVersion: '0.1.0', vendor: 'test',
-    category: 'database', description: 'test', compatibility: { min: '0.1.0' },
-    dependencies: [], permissions: [],
+    id: 'com.test.conn',
+    name: 'Test',
+    displayName: 'Test Connector',
+    version: '1.0.0',
+    sdkVersion: '0.1.0',
+    vendor: 'test',
+    category: 'database',
+    description: 'test',
+    compatibility: { min: '0.1.0' },
+    dependencies: [],
+    permissions: [],
     capabilities: {
-      canDiscover: true, canSynchronize: true, canValidate: true,
-      canStream: false, canBulkWrite: false, supportsSSL: false,
+      canDiscover: true,
+      canSynchronize: true,
+      canValidate: true,
+      canStream: false,
+      canBulkWrite: false,
+      supportsSSL: false,
     },
     updatable: true,
   };
 
   const health: ConnectorHealthStatus = {
-    status: 'healthy', responseTimeMs: 5,
+    status: 'healthy',
+    responseTimeMs: 5,
   };
 
   return {
-    metadata:     () => metadata,
-    connect:      vi.fn().mockResolvedValue({ ok: true, durationMs: 0 }),
-    disconnect:   vi.fn().mockResolvedValue({ ok: true, durationMs: 0 }),
-    validate:     vi.fn(),
-    discover:     vi.fn(),
-    synchronize:  vi.fn(),
-    health:       vi.fn().mockResolvedValue({ ok: true, data: health, durationMs: 5 }),
+    metadata: () => metadata,
+    connect: vi.fn().mockResolvedValue({ ok: true, durationMs: 0 }),
+    disconnect: vi.fn().mockResolvedValue({ ok: true, durationMs: 0 }),
+    validate: vi.fn(),
+    discover: vi.fn(),
+    synchronize: vi.fn(),
+    health: vi.fn().mockResolvedValue({ ok: true, data: health, durationMs: 5 }),
     ...overrides,
   };
 }
@@ -41,12 +53,24 @@ function makeConnector(overrides: Partial<Connector> = {}): Connector {
 function makePlugin(id: string, connector: Connector): LoadedPlugin {
   return {
     manifest: {
-      id, name: id, version: '1.0.0', sdkVersion: '0.1.0',
-      vendor: 'test', category: 'database', description: 'test',
-      entry: 'index.js', hash: 'a'.repeat(64), signature: '', publicKeyId: '',
+      id,
+      name: id,
+      version: '1.0.0',
+      sdkVersion: '0.1.0',
+      vendor: 'test',
+      category: 'database',
+      description: 'test',
+      entry: 'index.js',
+      hash: 'a'.repeat(64),
+      signature: '',
+      publicKeyId: '',
       capabilities: {
-        canDiscover: true, canSynchronize: true, canValidate: true,
-        canStream: false, canBulkWrite: false, supportsSSL: false,
+        canDiscover: true,
+        canSynchronize: true,
+        canValidate: true,
+        canStream: false,
+        canBulkWrite: false,
+        supportsSSL: false,
       },
       updatable: true,
     },
@@ -55,10 +79,10 @@ function makePlugin(id: string, connector: Connector): LoadedPlugin {
 }
 
 function makeHost(healthPollIntervalMs = 60_000) {
-  const bus       = new EventBus();
+  const bus = new EventBus();
   const healthReg = new HealthRegistry();
   const scheduler = new ConnectorScheduler();
-  const host      = new ConnectorHost(bus, healthReg, scheduler, { healthPollIntervalMs });
+  const host = new ConnectorHost(bus, healthReg, scheduler, { healthPollIntervalMs });
   return { host, bus, healthReg, scheduler };
 }
 
@@ -68,7 +92,7 @@ describe('ConnectorHost — registration', () => {
   it('registers a plugin and finds it by id', () => {
     const { host } = makeHost();
     const connector = makeConnector();
-    const plugin    = makePlugin('conn-a', connector);
+    const plugin = makePlugin('conn-a', connector);
 
     host.register(plugin);
     expect(host.get('conn-a')).not.toBeNull();
@@ -84,8 +108,12 @@ describe('ConnectorHost — registration', () => {
 });
 
 describe('ConnectorHost — lifecycle', () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(()  => { vi.useRealTimers(); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
   it('start() calls connect() and emits connector.started', async () => {
     const { host, bus } = makeHost();
@@ -107,7 +135,8 @@ describe('ConnectorHost — lifecycle', () => {
     bus.on('connector.failed', failed);
 
     const failResult: ConnectorResult<void> = {
-      ok: false, error: { code: 'CONNECT_FAILED', message: 'refused', retryable: true },
+      ok: false,
+      error: { code: 'CONNECT_FAILED', message: 'refused', retryable: true },
       durationMs: 0,
     };
     const connector = makeConnector({

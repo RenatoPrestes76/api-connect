@@ -4,16 +4,16 @@ Database Connector interfaces — Relational and Document databases.
 
 ## Supported Databases
 
-| Connector | Subtype | Type | Protocol |
-|-----------|---------|------|----------|
-| `PostgreSQLConnector` | `postgresql` | Relational | TCP/SSL |
-| `SQLServerConnector` | `sqlserver` | Relational | TCP/TDS |
-| `OracleConnector` | `oracle` | Relational | TCP/Net8 |
-| `FirebirdConnector` | `firebird` | Relational | TCP/FirebirdWire |
-| `MySQLConnector` | `mysql` | Relational | TCP/MySQL |
-| `MariaDBConnector` | `mariadb` | Relational | TCP/MySQL |
-| `SQLiteConnector` | `sqlite` | Relational | File/In-memory |
-| `MongoDBConnector` | `mongodb` | Document | TCP/MongoWire |
+| Connector             | Subtype      | Type       | Protocol         |
+| --------------------- | ------------ | ---------- | ---------------- |
+| `PostgreSQLConnector` | `postgresql` | Relational | TCP/SSL          |
+| `SQLServerConnector`  | `sqlserver`  | Relational | TCP/TDS          |
+| `OracleConnector`     | `oracle`     | Relational | TCP/Net8         |
+| `FirebirdConnector`   | `firebird`   | Relational | TCP/FirebirdWire |
+| `MySQLConnector`      | `mysql`      | Relational | TCP/MySQL        |
+| `MariaDBConnector`    | `mariadb`    | Relational | TCP/MySQL        |
+| `SQLiteConnector`     | `sqlite`     | Relational | File/In-memory   |
+| `MongoDBConnector`    | `mongodb`    | Document   | TCP/MongoWire    |
 
 ## Interface Hierarchy
 

@@ -257,10 +257,7 @@ export interface StructureAnalyzer extends AnalysisStrategy {
   /**
    * Score how well a set of fields matches the expected structure for an entity kind
    */
-  scoreEntityStructure(
-    fieldNames: string[],
-    entityKind: CBLEntityKind
-  ): ConfidenceValue;
+  scoreEntityStructure(fieldNames: string[], entityKind: CBLEntityKind): ConfidenceValue;
 
   /**
    * Given field names, suggest which entity kinds best fit

@@ -20,8 +20,8 @@ export default function SettingsPage() {
   }, [data]);
 
   if (isLoading) return <PageLoading />;
-  if (error)     return <ErrorState message="Could not load settings." />;
-  if (!form)     return null;
+  if (error) return <ErrorState message="Could not load settings." />;
+  if (!form) return null;
 
   const handleSave = async (e: FormEvent) => {
     e.preventDefault();
@@ -30,14 +30,14 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const setSync   = (key: keyof HubSettings['sync'],  value: number | boolean) =>
-    setForm((f) => f ? { ...f, sync:   { ...f.sync,  [key]: value } } : f);
-  const setCache  = (key: keyof HubSettings['cache'], value: number) =>
-    setForm((f) => f ? { ...f, cache:  { ...f.cache, [key]: value } } : f);
-  const setDisc   = (key: keyof HubSettings['discovery'], value: number | boolean) =>
-    setForm((f) => f ? { ...f, discovery: { ...f.discovery, [key]: value } } : f);
-  const setNotif  = (key: keyof HubSettings['notifications'], value: string | boolean) =>
-    setForm((f) => f ? { ...f, notifications: { ...f.notifications, [key]: value } } : f);
+  const setSync = (key: keyof HubSettings['sync'], value: number | boolean) =>
+    setForm((f) => (f ? { ...f, sync: { ...f.sync, [key]: value } } : f));
+  const setCache = (key: keyof HubSettings['cache'], value: number) =>
+    setForm((f) => (f ? { ...f, cache: { ...f.cache, [key]: value } } : f));
+  const setDisc = (key: keyof HubSettings['discovery'], value: number | boolean) =>
+    setForm((f) => (f ? { ...f, discovery: { ...f.discovery, [key]: value } } : f));
+  const setNotif = (key: keyof HubSettings['notifications'], value: string | boolean) =>
+    setForm((f) => (f ? { ...f, notifications: { ...f.notifications, [key]: value } } : f));
 
   return (
     <div className="space-y-4 max-w-2xl">
@@ -46,23 +46,37 @@ export default function SettingsPage() {
       <form onSubmit={(e) => void handleSave(e)} className="space-y-4">
         {/* Sync */}
         <Card>
-          <CardHeader><CardTitle>Sync</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Sync</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-3">
             <FieldRow label="Interval (ms)">
-              <Input type="number" value={form.sync.intervalMs}
-                onChange={(e) => setSync('intervalMs', Number(e.target.value))} />
+              <Input
+                type="number"
+                value={form.sync.intervalMs}
+                onChange={(e) => setSync('intervalMs', Number(e.target.value))}
+              />
             </FieldRow>
             <FieldRow label="Retry Attempts">
-              <Input type="number" value={form.sync.retryAttempts}
-                onChange={(e) => setSync('retryAttempts', Number(e.target.value))} />
+              <Input
+                type="number"
+                value={form.sync.retryAttempts}
+                onChange={(e) => setSync('retryAttempts', Number(e.target.value))}
+              />
             </FieldRow>
             <FieldRow label="Timeout (ms)">
-              <Input type="number" value={form.sync.timeoutMs}
-                onChange={(e) => setSync('timeoutMs', Number(e.target.value))} />
+              <Input
+                type="number"
+                value={form.sync.timeoutMs}
+                onChange={(e) => setSync('timeoutMs', Number(e.target.value))}
+              />
             </FieldRow>
             <FieldRow label="Batch Size">
-              <Input type="number" value={form.sync.batchSize}
-                onChange={(e) => setSync('batchSize', Number(e.target.value))} />
+              <Input
+                type="number"
+                value={form.sync.batchSize}
+                onChange={(e) => setSync('batchSize', Number(e.target.value))}
+              />
             </FieldRow>
             <FieldRow label="Incremental Sync">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -80,22 +94,32 @@ export default function SettingsPage() {
 
         {/* Cache */}
         <Card>
-          <CardHeader><CardTitle>Cache</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Cache</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-3">
             <FieldRow label="TTL (ms)">
-              <Input type="number" value={form.cache.ttlMs}
-                onChange={(e) => setCache('ttlMs', Number(e.target.value))} />
+              <Input
+                type="number"
+                value={form.cache.ttlMs}
+                onChange={(e) => setCache('ttlMs', Number(e.target.value))}
+              />
             </FieldRow>
             <FieldRow label="Max Entries">
-              <Input type="number" value={form.cache.maxEntries}
-                onChange={(e) => setCache('maxEntries', Number(e.target.value))} />
+              <Input
+                type="number"
+                value={form.cache.maxEntries}
+                onChange={(e) => setCache('maxEntries', Number(e.target.value))}
+              />
             </FieldRow>
           </CardContent>
         </Card>
 
         {/* Discovery */}
         <Card>
-          <CardHeader><CardTitle>Discovery</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Discovery</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-3">
             <FieldRow label="Auto-run on Connect">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -109,23 +133,34 @@ export default function SettingsPage() {
               </label>
             </FieldRow>
             <FieldRow label="Min Confidence (%)">
-              <Input type="number" value={form.discovery.confidenceMinimum}
-                onChange={(e) => setDisc('confidenceMinimum', Number(e.target.value))} />
+              <Input
+                type="number"
+                value={form.discovery.confidenceMinimum}
+                onChange={(e) => setDisc('confidenceMinimum', Number(e.target.value))}
+              />
             </FieldRow>
             <FieldRow label="Schema TTL (ms)">
-              <Input type="number" value={form.discovery.schemaTtlMs}
-                onChange={(e) => setDisc('schemaTtlMs', Number(e.target.value))} />
+              <Input
+                type="number"
+                value={form.discovery.schemaTtlMs}
+                onChange={(e) => setDisc('schemaTtlMs', Number(e.target.value))}
+              />
             </FieldRow>
           </CardContent>
         </Card>
 
         {/* Notifications */}
         <Card>
-          <CardHeader><CardTitle>Notifications</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Notifications</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-3">
             <FieldRow label="Alert Email">
-              <Input type="email" value={form.notifications.alertEmail}
-                onChange={(e) => setNotif('alertEmail', e.target.value)} />
+              <Input
+                type="email"
+                value={form.notifications.alertEmail}
+                onChange={(e) => setNotif('alertEmail', e.target.value)}
+              />
             </FieldRow>
             <FieldRow label="Email Alerts">
               <label className="flex items-center gap-2 cursor-pointer">

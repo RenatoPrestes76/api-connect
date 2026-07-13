@@ -123,24 +123,24 @@ seltriva-agent connector test --id main-erp
 
 ## Module Reference
 
-| Module | Purpose |
-|---|---|
-| `bootstrap/` | 7-phase startup sequence, `AgentBuilder`, `AgentInstance` |
-| `runtime/` | Process management, signal handling, PID file, graceful shutdown |
-| `configuration/` | YAML config loading, Zod validation, hot-reload |
-| `security/` | AES-256-GCM credentials, TLS 1.3, token rotation, update signatures |
-| `connectors/` | Database connectors (read-only), cloud bridge (Supabase) |
-| `sync/` | Schema discovery, incremental diff, payload assembly, offline queue |
-| `scheduler/` | Manual/cron/interval/event-driven job scheduling |
-| `health/` | CPU/memory/disk/latency monitoring, heartbeat |
-| `telemetry/` | Structured logging, metrics, distributed tracing |
-| `updates/` | Signed auto-updates, rollback |
-| `plugins/` | Plugin loading, lifecycle, capability-based API |
-| `cache/` | SQLite-backed schema cache and KV store |
-| `diagnostics/` | Diagnostic checks, preflight, support bundles |
-| `cli/` | Commander.js CLI commands |
-| `logs/` | Log rotation, retention, streaming |
-| `services/` | Heartbeat, registration, cloud bridge, queue flusher |
+| Module           | Purpose                                                             |
+| ---------------- | ------------------------------------------------------------------- |
+| `bootstrap/`     | 7-phase startup sequence, `AgentBuilder`, `AgentInstance`           |
+| `runtime/`       | Process management, signal handling, PID file, graceful shutdown    |
+| `configuration/` | YAML config loading, Zod validation, hot-reload                     |
+| `security/`      | AES-256-GCM credentials, TLS 1.3, token rotation, update signatures |
+| `connectors/`    | Database connectors (read-only), cloud bridge (Supabase)            |
+| `sync/`          | Schema discovery, incremental diff, payload assembly, offline queue |
+| `scheduler/`     | Manual/cron/interval/event-driven job scheduling                    |
+| `health/`        | CPU/memory/disk/latency monitoring, heartbeat                       |
+| `telemetry/`     | Structured logging, metrics, distributed tracing                    |
+| `updates/`       | Signed auto-updates, rollback                                       |
+| `plugins/`       | Plugin loading, lifecycle, capability-based API                     |
+| `cache/`         | SQLite-backed schema cache and KV store                             |
+| `diagnostics/`   | Diagnostic checks, preflight, support bundles                       |
+| `cli/`           | Commander.js CLI commands                                           |
+| `logs/`          | Log rotation, retention, streaming                                  |
+| `services/`      | Heartbeat, registration, cloud bridge, queue flusher                |
 
 ---
 
@@ -177,6 +177,7 @@ See [docs/security-guide.md](docs/security-guide.md) for the full security guide
 ## Deployment
 
 See [docs/deployment-guide.md](docs/deployment-guide.md) for:
+
 - System requirements
 - Installation (standalone, systemd, Docker)
 - Network requirements (outbound only)
@@ -194,15 +195,15 @@ See [docs/extension-guide.md](docs/extension-guide.md) for the plugin developmen
 
 ## Package Info
 
-| Field | Value |
-|---|---|
-| Name | `@seltriva/agent` |
-| Codename | Sentinel |
-| Version | `0.1.0` |
-| Runtime | Node.js 18+ |
-| TypeScript | `strict: true` |
-| Config | YAML + Zod validation |
-| Storage | SQLite (better-sqlite3) |
-| Cloud | Supabase |
-| Deployment | Standalone daemon or Docker |
+| Field        | Value                            |
+| ------------ | -------------------------------- |
+| Name         | `@seltriva/agent`                |
+| Codename     | Sentinel                         |
+| Version      | `0.1.0`                          |
+| Runtime      | Node.js 18+                      |
+| TypeScript   | `strict: true`                   |
+| Config       | YAML + Zod validation            |
+| Storage      | SQLite (better-sqlite3)          |
+| Cloud        | Supabase                         |
+| Deployment   | Standalone daemon or Docker      |
 | Architecture | Hexagonal, Modular, Plugin-ready |

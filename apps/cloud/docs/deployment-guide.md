@@ -2,13 +2,13 @@
 
 ## System Requirements
 
-| Component     | Minimum     | Recommended        |
-|---------------|-------------|--------------------|
-| Node.js       | 20.x LTS    | 22.x LTS           |
-| PostgreSQL    | 15.x        | 16.x (Supabase)    |
-| Redis         | 7.x         | 7.2+ (upstash)     |
-| Memory        | 512 MB      | 2 GB               |
-| CPU           | 1 vCPU      | 2+ vCPU            |
+| Component  | Minimum  | Recommended     |
+| ---------- | -------- | --------------- |
+| Node.js    | 20.x LTS | 22.x LTS        |
+| PostgreSQL | 15.x     | 16.x (Supabase) |
+| Redis      | 7.x      | 7.2+ (upstash)  |
+| Memory     | 512 MB   | 2 GB            |
+| CPU        | 1 vCPU   | 2+ vCPU         |
 
 ## Vercel Deployment (Recommended)
 
@@ -49,29 +49,29 @@ vercel --prod
 
 ### Required
 
-| Variable                       | Description                              |
-|--------------------------------|------------------------------------------|
-| NEXT_PUBLIC_SUPABASE_URL       | Supabase project REST URL                |
-| NEXT_PUBLIC_SUPABASE_ANON_KEY  | Supabase anon key (public)               |
-| SUPABASE_SERVICE_ROLE_KEY      | Supabase service role (server-only)      |
-| DATABASE_URL                   | Prisma connection pooler URL             |
-| DIRECT_URL                     | Prisma direct connection URL (migrations)|
-| ENCRYPTION_KEY                 | 32-byte hex key for AES-256              |
-| JWT_SECRET                     | HS256 JWT signing secret (min 32 chars)  |
+| Variable                      | Description                               |
+| ----------------------------- | ----------------------------------------- |
+| NEXT_PUBLIC_SUPABASE_URL      | Supabase project REST URL                 |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY | Supabase anon key (public)                |
+| SUPABASE_SERVICE_ROLE_KEY     | Supabase service role (server-only)       |
+| DATABASE_URL                  | Prisma connection pooler URL              |
+| DIRECT_URL                    | Prisma direct connection URL (migrations) |
+| ENCRYPTION_KEY                | 32-byte hex key for AES-256               |
+| JWT_SECRET                    | HS256 JWT signing secret (min 32 chars)   |
 
 ### Optional
 
-| Variable              | Default     | Description                        |
-|-----------------------|-------------|-------------------------------------|
-| REDIS_URL             | —           | Redis URL (disables caching if unset)|
-| SMTP_HOST             | —           | SMTP relay host                     |
-| SMTP_PORT             | 587         | SMTP port                           |
-| SMTP_USER             | —           | SMTP user                           |
-| SMTP_PASS             | —           | SMTP password                       |
-| SMTP_FROM             | —           | From address for emails             |
-| LOG_LEVEL             | info        | Pino log level                      |
-| RATE_LIMIT_ENABLED    | true        | Enable rate limiting                |
-| TELEMETRY_ENDPOINT    | —           | OpenTelemetry OTLP endpoint         |
+| Variable           | Default | Description                           |
+| ------------------ | ------- | ------------------------------------- |
+| REDIS_URL          | —       | Redis URL (disables caching if unset) |
+| SMTP_HOST          | —       | SMTP relay host                       |
+| SMTP_PORT          | 587     | SMTP port                             |
+| SMTP_USER          | —       | SMTP user                             |
+| SMTP_PASS          | —       | SMTP password                         |
+| SMTP_FROM          | —       | From address for emails               |
+| LOG_LEVEL          | info    | Pino log level                        |
+| RATE_LIMIT_ENABLED | true    | Enable rate limiting                  |
+| TELEMETRY_ENDPOINT | —       | OpenTelemetry OTLP endpoint           |
 
 ## Supabase Setup
 
@@ -118,11 +118,11 @@ Atlas Cloud is stateless — all state lives in Supabase + Redis.
 
 ## Health Probes
 
-| Endpoint            | Purpose       | Expected Response       |
-|---------------------|---------------|-------------------------|
-| GET /api/health     | Full report   | 200 `{ status, checks }`|
-| GET /api/health/live| Liveness      | 200 `{ alive: true }`   |
-| GET /api/health/ready| Readiness    | 200/503                 |
+| Endpoint              | Purpose     | Expected Response        |
+| --------------------- | ----------- | ------------------------ |
+| GET /api/health       | Full report | 200 `{ status, checks }` |
+| GET /api/health/live  | Liveness    | 200 `{ alive: true }`    |
+| GET /api/health/ready | Readiness   | 200/503                  |
 
 Configure Vercel health check → `/api/health/live`.
 
@@ -142,6 +142,7 @@ vercel rollback [deployment-url]
 ```
 
 If the rollback requires reversing a database migration:
+
 ```bash
 pnpm db:migrate:rollback --to <migration-name>
 ```

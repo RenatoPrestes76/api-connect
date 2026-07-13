@@ -3,13 +3,13 @@ import { validateConfig } from '@seltriva/connector-sdk';
 import { ERP_CONFIG_SCHEMA } from '../config/schema.js';
 
 const VALID_CONFIG = {
-  host:            'erp.local',
-  port:            8080,
-  database:        'erp_main',
-  username:        'svc',
-  password:        'secret',
-  ssl:             false,
-  timeout:         5000,
+  host: 'erp.local',
+  port: 8080,
+  database: 'erp_main',
+  username: 'svc',
+  password: 'secret',
+  ssl: false,
+  timeout: 5000,
   pollingInterval: 60_000,
 };
 

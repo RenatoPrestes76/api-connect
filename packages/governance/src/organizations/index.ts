@@ -20,7 +20,7 @@ export interface OrgGovernancePolicy {
   readonly membershipRules: MembershipRule[];
   readonly tierRules: TierRule[];
   readonly securityProfile: OrgSecurityProfile;
-  readonly complianceRequirements: string[];   // compliance framework IDs
+  readonly complianceRequirements: string[]; // compliance framework IDs
   readonly retentionPolicy: RetentionPolicy;
   readonly updatedAt: Date;
 }
@@ -28,7 +28,7 @@ export interface OrgGovernancePolicy {
 export interface MembershipRule {
   readonly id: string;
   readonly name: string;
-  readonly condition: string;               // expression: e.g. "@.email ends-with '@acme.com'"
+  readonly condition: string; // expression: e.g. "@.email ends-with '@acme.com'"
   readonly autoAssignRole: RoleId;
   readonly requireMFA: boolean;
   readonly requireSSO: boolean;
@@ -61,7 +61,7 @@ export interface RetentionPolicy {
   readonly auditLogDays: number;
   readonly metricsDays: number;
   readonly notificationDays: number;
-  readonly softDeleteDays: number;           // days before hard delete
+  readonly softDeleteDays: number; // days before hard delete
   readonly backupRetentionDays: number;
 }
 
@@ -70,7 +70,10 @@ export interface RetentionPolicy {
 export interface IOrgGovernanceService {
   getPolicy(organizationId: string): Promise<OrgGovernancePolicy | null>;
   setPolicy(input: SetOrgGovernancePolicyInput): Promise<GovernanceResult<OrgGovernancePolicy>>;
-  evaluateMembershipRules(organizationId: string, candidate: MembershipCandidate): Promise<MembershipEvaluationResult>;
+  evaluateMembershipRules(
+    organizationId: string,
+    candidate: MembershipCandidate
+  ): Promise<MembershipEvaluationResult>;
   enforceTierLimits(organizationId: string): Promise<TierLimitReport>;
   getSecurityProfile(organizationId: string): Promise<OrgSecurityProfile>;
 }
@@ -101,9 +104,9 @@ export interface MembershipEvaluationResult {
 export interface TierLimitReport {
   readonly organizationId: string;
   readonly tier: string;
-  readonly agents:     { current: number; limit: number; exceeded: boolean };
+  readonly agents: { current: number; limit: number; exceeded: boolean };
   readonly workspaces: { current: number; limit: number; exceeded: boolean };
-  readonly users:      { current: number; limit: number; exceeded: boolean };
-  readonly plugins:    { current: number; limit: number; exceeded: boolean };
+  readonly users: { current: number; limit: number; exceeded: boolean };
+  readonly plugins: { current: number; limit: number; exceeded: boolean };
   readonly generatedAt: Date;
 }

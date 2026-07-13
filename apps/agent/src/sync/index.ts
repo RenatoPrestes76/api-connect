@@ -19,9 +19,7 @@
  *   The next sync computes a diff and transmits only changes.
  */
 
-import type {
-  AgentResult, ConnectorId, SyncJobId, AgentId,
-} from '../configuration/index';
+import type { AgentResult, ConnectorId, SyncJobId, AgentId } from '../configuration/index';
 import type { SchemaDescriptor, TableDescriptor, ColumnDescriptor } from '../connectors/index';
 
 // ─── Sync Engine ──────────────────────────────────────────────────────────
@@ -144,10 +142,7 @@ export interface SyncDiffEngine {
   /**
    * Compare two checkpoints and return what changed
    */
-  diff(
-    previous: SyncCheckpoint,
-    current: SyncCheckpoint,
-  ): SyncDiff;
+  diff(previous: SyncCheckpoint, current: SyncCheckpoint): SyncDiff;
 
   /**
    * Compute a fingerprint for a schema snapshot

@@ -30,7 +30,14 @@ export interface ClusterNode {
   readonly lastHeartbeatAt?: Date;
 }
 
-export type NodeStatus = 'registering' | 'ready' | 'not-ready' | 'draining' | 'drained' | 'evicted' | 'retired';
+export type NodeStatus =
+  | 'registering'
+  | 'ready'
+  | 'not-ready'
+  | 'draining'
+  | 'drained'
+  | 'evicted'
+  | 'retired';
 
 export interface NodeTaint {
   readonly key: string;

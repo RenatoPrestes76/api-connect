@@ -122,8 +122,14 @@ export interface SerializedConnectorConfig {
  * Factory scoped to a specific connector category
  */
 export interface DatabaseConnectorFactory extends ConnectorFactory {
-  createRelational(subtype: RelationalDatabaseType, config: ConnectorConfig): Promise<ConnectorResult<Connector>>;
-  createDocument(subtype: DocumentDatabaseType, config: ConnectorConfig): Promise<ConnectorResult<Connector>>;
+  createRelational(
+    subtype: RelationalDatabaseType,
+    config: ConnectorConfig
+  ): Promise<ConnectorResult<Connector>>;
+  createDocument(
+    subtype: DocumentDatabaseType,
+    config: ConnectorConfig
+  ): Promise<ConnectorResult<Connector>>;
 }
 
 export type RelationalDatabaseType =

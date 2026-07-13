@@ -32,20 +32,20 @@ import {
   syncFail,
   DEFAULT_BATCH_CONFIG,
 } from '../types/index.js';
-import { CheckpointManager }      from '../checkpoint/checkpoint-manager.js';
-import { RetryEngine }            from '../retry/retry-engine.js';
+import { CheckpointManager } from '../checkpoint/checkpoint-manager.js';
+import { RetryEngine } from '../retry/retry-engine.js';
 import { assertReadOnly, buildExtractSql } from '../detection/change-detector.js';
-import { CloudDispatcher }        from '../dispatcher/cloud-dispatcher.js';
-import { SyncPipeline }           from '../pipeline/sync-pipeline.js';
-import { MetricsCollector }       from '../metrics/metrics-collector.js';
-import { Telemetry }              from '../telemetry/telemetry.js';
-import { WorkerPool }             from '../workers/worker-pool.js';
+import { CloudDispatcher } from '../dispatcher/cloud-dispatcher.js';
+import { SyncPipeline } from '../pipeline/sync-pipeline.js';
+import { MetricsCollector } from '../metrics/metrics-collector.js';
+import { Telemetry } from '../telemetry/telemetry.js';
+import { WorkerPool } from '../workers/worker-pool.js';
 
 // ─── Query function interface (injected; decoupled from pg) ───────────────────
 
 export type QueryFn = (
-  sql:    string,
-  params: readonly RecordValue[],
+  sql: string,
+  params: readonly RecordValue[]
 ) => Promise<readonly SyncRecord[]>;
 
 export type EventHandler = (event: SyncEvent) => void;
@@ -53,24 +53,24 @@ export type EventHandler = (event: SyncEvent) => void;
 // ─── Internal event context kept during a sync run ───────────────────────────
 
 interface RunContext {
-  jobId:         SyncJobId;
-  tenantId:      TenantId;
+  jobId: SyncJobId;
+  tenantId: TenantId;
   correlationId: CorrelationId;
-  traceId:       TraceId;
+  traceId: TraceId;
 }
 
 // ─── Engine ───────────────────────────────────────────────────────────────────
 
 export class SynchronizationEngine {
   private readonly _checkpoint = new CheckpointManager();
-  private readonly _events:    EventHandler[] = [];
-  private          _status:    SyncStatus = 'IDLE';
-  private          _abortCtrl: AbortController = new AbortController();
-  private          _runCtx:    RunContext | null = null;
+  private readonly _events: EventHandler[] = [];
+  private _status: SyncStatus = 'IDLE';
+  private _abortCtrl: AbortController = new AbortController();
+  private _runCtx: RunContext | null = null;
 
   constructor(
     private readonly _dispatcher: CloudDispatcher,
-    private readonly _log:        Telemetry = new Telemetry({}, 'INFO'),
+    private readonly _log: Telemetry = new Telemetry({}, 'INFO')
   ) {}
 
   // ─── Public API ─────────────────────────────────────────────────────────
@@ -83,7 +83,9 @@ export class SynchronizationEngine {
     };
   }
 
-  get status(): SyncStatus { return this._status; }
+  get status(): SyncStatus {
+    return this._status;
+  }
 
   async start(config: SyncConfig, queryFn: QueryFn): Promise<SyncResult<void>> {
     if (this._status === 'RUNNING') {
@@ -91,19 +93,19 @@ export class SynchronizationEngine {
     }
 
     this._abortCtrl = new AbortController();
-    this._status    = 'RUNNING';
+    this._status = 'RUNNING';
 
     const traceId = asTraceId(randomUUID());
-    this._runCtx  = {
-      jobId:         config.jobId,
-      tenantId:      config.tenantId,
+    this._runCtx = {
+      jobId: config.jobId,
+      tenantId: config.tenantId,
       correlationId: config.correlationId,
       traceId,
     };
 
     const log = this._log.child({
-      jobId:         config.jobId,
-      tenantId:      config.tenantId,
+      jobId: config.jobId,
+      tenantId: config.tenantId,
       correlationId: config.correlationId,
       traceId,
     });
@@ -111,13 +113,13 @@ export class SynchronizationEngine {
     log.info(`HERMES: Starting ${config.mode} sync`, { tables: config.tables.length });
 
     const cpResult = await this._checkpoint.create({
-      jobId:         config.jobId,
-      tenantId:      config.tenantId,
+      jobId: config.jobId,
+      tenantId: config.tenantId,
       correlationId: config.correlationId,
-      mode:          config.mode,
-      tables:        config.tables.map((t) => ({
-        schema:    t.schema,
-        table:     t.table,
+      mode: config.mode,
+      tables: config.tables.map((t) => ({
+        schema: t.schema,
+        table: t.table,
         detection: t.detection,
       })),
     });
@@ -128,9 +130,9 @@ export class SynchronizationEngine {
     await this._checkpoint.updateStatus(config.jobId, 'RUNNING');
 
     const metrics = new MetricsCollector(config.jobId, config.mode);
-    const retry   = new RetryEngine(config.retry);
+    const retry = new RetryEngine(config.retry);
 
-    const tables  = [...config.tables].sort((a, b) => a.priority - b.priority);
+    const tables = [...config.tables].sort((a, b) => a.priority - b.priority);
 
     const pool = new WorkerPool<TableSyncConfig, void>(
       config.workers,
@@ -138,7 +140,7 @@ export class SynchronizationEngine {
         if (signal.aborted || this._abortCtrl.signal.aborted) return;
 
         const cpLoad = await this._checkpoint.load(config.jobId);
-        const cp     = cpLoad.ok ? cpLoad.value : null;
+        const cp = cpLoad.ok ? cpLoad.value : null;
 
         if (cp && this._checkpoint.isTableComplete(cp, tableConfig.schema, tableConfig.table)) {
           log.info(`HERMES: Skipping completed table ${tableConfig.schema}.${tableConfig.table}`);
@@ -152,14 +154,14 @@ export class SynchronizationEngine {
           metrics,
           log.child({ schema: tableConfig.schema, table: tableConfig.table }),
           this._checkpoint,
-          this._dispatcher,
+          this._dispatcher
         );
 
         await this._syncTable(tableConfig, config, queryFn, pipeline, metrics, retry, log, traceId);
 
         metrics.completeTable(tableConfig.schema, tableConfig.table);
       },
-      this._abortCtrl.signal,
+      this._abortCtrl.signal
     );
 
     try {
@@ -232,19 +234,19 @@ export class SynchronizationEngine {
 
   private async _syncTable(
     tableConfig: TableSyncConfig,
-    config:      SyncConfig,
-    queryFn:     QueryFn,
-    pipeline:    SyncPipeline,
-    metrics:     MetricsCollector,
-    retry:       RetryEngine,
-    log:         Telemetry,
-    traceId:     TraceId,
+    config: SyncConfig,
+    queryFn: QueryFn,
+    pipeline: SyncPipeline,
+    metrics: MetricsCollector,
+    retry: RetryEngine,
+    log: Telemetry,
+    traceId: TraceId
   ): Promise<void> {
     const { schema, table } = tableConfig;
     const batchCfg = { ...DEFAULT_BATCH_CONFIG, ...(tableConfig.batchConfig ?? {}) };
 
     const cpLoad = await this._checkpoint.load(config.jobId);
-    const cp     = cpLoad.ok ? cpLoad.value : null;
+    const cp = cpLoad.ok ? cpLoad.value : null;
     const since: RecordValue = cp ? this._checkpoint.getLastValue(cp, schema, table) : null;
 
     await this._checkpoint.updateTable(config.jobId, schema, table, { status: 'IN_PROGRESS' });
@@ -255,22 +257,30 @@ export class SynchronizationEngine {
     const colRows = await queryFn(colSql, [schema, table]);
     const columns = colRows.map((r) => String(r['column_name'] ?? ''));
 
-    let offset      = cp?.tables.get(`${schema}.${table}`)?.lastOffset ?? 0;
-    let lastValue:  RecordValue = since;
+    let offset = cp?.tables.get(`${schema}.${table}`)?.lastOffset ?? 0;
+    let lastValue: RecordValue = since;
     let totalSynced = 0;
 
     while (!this._abortCtrl.signal.aborted && this._status !== 'PAUSED') {
       const { sql, params, sinceCol } = buildExtractSql(
-        schema, table, tableConfig, columns, since, offset, batchCfg.size,
+        schema,
+        table,
+        tableConfig,
+        columns,
+        since,
+        offset,
+        batchCfg.size
       );
 
       const result = await retry.execute(
         async () => queryFn(sql, params),
-        `${schema}.${table} offset=${offset}`,
+        `${schema}.${table} offset=${offset}`
       );
 
       if (!result.ok) {
-        log.error(`HERMES: Extract failed for ${schema}.${table}`, undefined, { error: result.error.message });
+        log.error(`HERMES: Extract failed for ${schema}.${table}`, undefined, {
+          error: result.error.message,
+        });
         await this._checkpoint.updateTable(config.jobId, schema, table, { status: 'FAILED' });
         this._emit({ kind: 'TableFailed', schema, table, error: result.error.message });
         throw new Error(result.error.message);
@@ -287,13 +297,13 @@ export class SynchronizationEngine {
       const batchResult = await pipeline.processBatch(
         { records: rows, schema, table },
         {
-          jobId:           config.jobId,
+          jobId: config.jobId,
           tableConfig,
           dispatchOptions: {
             correlationId: config.correlationId,
-            tenantId:      config.tenantId,
+            tenantId: config.tenantId,
           },
-        },
+        }
       );
 
       if (!batchResult.ok) {
@@ -303,10 +313,10 @@ export class SynchronizationEngine {
 
       const dispatched = batchResult.ok ? batchResult.value : 0;
       totalSynced += dispatched;
-      offset      += rows.length;
+      offset += rows.length;
 
       await this._checkpoint.updateTable(config.jobId, schema, table, {
-        lastOffset:    offset,
+        lastOffset: offset,
         lastValue,
         recordsSynced: totalSynced,
       });
@@ -320,7 +330,7 @@ export class SynchronizationEngine {
     }
 
     await this._checkpoint.updateTable(config.jobId, schema, table, {
-      status:        'COMPLETED',
+      status: 'COMPLETED',
       lastValue,
       recordsSynced: totalSynced,
     });
@@ -330,30 +340,34 @@ export class SynchronizationEngine {
   // ─── Event emission ──────────────────────────────────────────────────────
 
   private _emit(partial: {
-    kind:      SyncEventKind;
-    schema?:   string;
-    table?:    string;
-    records?:  number;
-    error?:    string;
+    kind: SyncEventKind;
+    schema?: string;
+    table?: string;
+    records?: number;
+    error?: string;
     metadata?: Readonly<Record<string, unknown>>;
   }): void {
     const ctx = this._runCtx;
     const event: SyncEvent = {
-      kind:          partial.kind,
-      jobId:         ctx?.jobId         ?? asSyncJobId(''),
-      tenantId:      ctx?.tenantId      ?? asTenantId(''),
+      kind: partial.kind,
+      jobId: ctx?.jobId ?? asSyncJobId(''),
+      tenantId: ctx?.tenantId ?? asTenantId(''),
       correlationId: ctx?.correlationId ?? asCorrelationId(''),
-      traceId:       ctx?.traceId       ?? asTraceId(''),
-      timestamp:     new Date().toISOString(),
-      schema:        partial.schema,
-      table:         partial.table,
-      records:       partial.records,
-      error:         partial.error,
-      metadata:      partial.metadata ?? {},
+      traceId: ctx?.traceId ?? asTraceId(''),
+      timestamp: new Date().toISOString(),
+      schema: partial.schema,
+      table: partial.table,
+      records: partial.records,
+      error: partial.error,
+      metadata: partial.metadata ?? {},
     };
 
     for (const handler of this._events) {
-      try { handler(event); } catch { /* observer errors must not affect sync logic */ }
+      try {
+        handler(event);
+      } catch {
+        /* observer errors must not affect sync logic */
+      }
     }
   }
 }

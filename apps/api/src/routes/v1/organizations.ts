@@ -16,10 +16,16 @@ export async function listOrganizations(ctx: RouteContext, res: ServerResponse):
 // GET /api/v1/organizations/:id
 export async function getOrganization(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const { id } = ctx.params;
-  if (!id) { apiError(res, 'Missing id', 400, 'BAD_REQUEST'); return; }
+  if (!id) {
+    apiError(res, 'Missing id', 400, 'BAD_REQUEST');
+    return;
+  }
 
   const org = await OrganizationService.findById(id);
-  if (!org) { apiError(res, 'Organization not found', 404, 'NOT_FOUND'); return; }
+  if (!org) {
+    apiError(res, 'Organization not found', 404, 'NOT_FOUND');
+    return;
+  }
 
   json(res, { data: org });
 }
@@ -52,13 +58,22 @@ export async function createOrganization(ctx: RouteContext, res: ServerResponse)
 // PUT /api/v1/organizations/:id
 export async function updateOrganization(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const { id } = ctx.params;
-  if (!id) { apiError(res, 'Missing id', 400, 'BAD_REQUEST'); return; }
+  if (!id) {
+    apiError(res, 'Missing id', 400, 'BAD_REQUEST');
+    return;
+  }
 
   const body = ctx.body as Record<string, unknown> | undefined;
-  if (!body) { apiError(res, 'Body required', 400, 'BAD_REQUEST'); return; }
+  if (!body) {
+    apiError(res, 'Body required', 400, 'BAD_REQUEST');
+    return;
+  }
 
   const org = await OrganizationService.findById(id);
-  if (!org) { apiError(res, 'Organization not found', 404, 'NOT_FOUND'); return; }
+  if (!org) {
+    apiError(res, 'Organization not found', 404, 'NOT_FOUND');
+    return;
+  }
 
   const updated = await OrganizationService.update(id, {
     name: body['name'] as string | undefined,
@@ -72,10 +87,16 @@ export async function updateOrganization(ctx: RouteContext, res: ServerResponse)
 // DELETE /api/v1/organizations/:id
 export async function deleteOrganization(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const { id } = ctx.params;
-  if (!id) { apiError(res, 'Missing id', 400, 'BAD_REQUEST'); return; }
+  if (!id) {
+    apiError(res, 'Missing id', 400, 'BAD_REQUEST');
+    return;
+  }
 
   const org = await OrganizationService.findById(id);
-  if (!org) { apiError(res, 'Organization not found', 404, 'NOT_FOUND'); return; }
+  if (!org) {
+    apiError(res, 'Organization not found', 404, 'NOT_FOUND');
+    return;
+  }
 
   await OrganizationService.softDelete(id);
   json(res, { success: true });
@@ -84,7 +105,10 @@ export async function deleteOrganization(ctx: RouteContext, res: ServerResponse)
 // GET /api/v1/organizations/:id/workspaces
 export async function listOrgWorkspaces(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const { id } = ctx.params;
-  if (!id) { apiError(res, 'Missing id', 400, 'BAD_REQUEST'); return; }
+  if (!id) {
+    apiError(res, 'Missing id', 400, 'BAD_REQUEST');
+    return;
+  }
 
   const workspaces = await OrganizationService.getWorkspaces(id);
   json(res, { data: workspaces, meta: { total: workspaces.length } });
@@ -93,7 +117,10 @@ export async function listOrgWorkspaces(ctx: RouteContext, res: ServerResponse):
 // GET /api/v1/organizations/:id/members
 export async function listOrgMembers(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const { id } = ctx.params;
-  if (!id) { apiError(res, 'Missing id', 400, 'BAD_REQUEST'); return; }
+  if (!id) {
+    apiError(res, 'Missing id', 400, 'BAD_REQUEST');
+    return;
+  }
 
   const members = await OrganizationService.getMembers(id);
   json(res, { data: members, meta: { total: members.length } });

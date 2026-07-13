@@ -4,9 +4,9 @@ import type { UserRole } from '@/types/index';
 
 const ROLE_RANK: Record<UserRole, number> = {
   SUPER_ADMIN: 4,
-  ADMIN:       3,
-  OPERATOR:    2,
-  READ_ONLY:   1,
+  ADMIN: 3,
+  OPERATOR: 2,
+  READ_ONLY: 1,
 };
 
 export function hasRole(userRole: UserRole, required: UserRole): boolean {
@@ -18,7 +18,7 @@ export function hasRole(userRole: UserRole, required: UserRole): boolean {
 export type Permission =
   | 'connectors:read'
   | 'connectors:write'
-  | 'connectors:lifecycle'   // start / stop / restart
+  | 'connectors:lifecycle' // start / stop / restart
   | 'agents:read'
   | 'agents:write'
   | 'agents:disable'
@@ -38,26 +38,26 @@ export type Permission =
   | 'users:delete';
 
 const PERMISSIONS: Record<Permission, UserRole> = {
-  'connectors:read':      'READ_ONLY',
-  'connectors:write':     'ADMIN',
+  'connectors:read': 'READ_ONLY',
+  'connectors:write': 'ADMIN',
   'connectors:lifecycle': 'OPERATOR',
-  'agents:read':          'READ_ONLY',
-  'agents:write':         'ADMIN',
-  'agents:disable':       'ADMIN',
-  'databases:read':       'READ_ONLY',
-  'sync:read':            'READ_ONLY',
-  'sync:run':             'OPERATOR',
-  'sync:cancel':          'OPERATOR',
-  'discovery:read':       'READ_ONLY',
-  'discovery:run':        'OPERATOR',
-  'health:read':          'READ_ONLY',
-  'logs:read':            'READ_ONLY',
-  'logs:export':          'OPERATOR',
-  'settings:read':        'ADMIN',
-  'settings:write':       'ADMIN',
-  'users:read':           'ADMIN',
-  'users:write':          'ADMIN',
-  'users:delete':         'SUPER_ADMIN',
+  'agents:read': 'READ_ONLY',
+  'agents:write': 'ADMIN',
+  'agents:disable': 'ADMIN',
+  'databases:read': 'READ_ONLY',
+  'sync:read': 'READ_ONLY',
+  'sync:run': 'OPERATOR',
+  'sync:cancel': 'OPERATOR',
+  'discovery:read': 'READ_ONLY',
+  'discovery:run': 'OPERATOR',
+  'health:read': 'READ_ONLY',
+  'logs:read': 'READ_ONLY',
+  'logs:export': 'OPERATOR',
+  'settings:read': 'ADMIN',
+  'settings:write': 'ADMIN',
+  'users:read': 'ADMIN',
+  'users:write': 'ADMIN',
+  'users:delete': 'SUPER_ADMIN',
 };
 
 export function can(userRole: UserRole, permission: Permission): boolean {
@@ -77,14 +77,14 @@ export function canAny(userRole: UserRole, permissions: Permission[]): boolean {
 
 export const SECTION_PERMISSIONS: Partial<Record<string, Permission>> = {
   connectors: 'connectors:read',
-  agents:     'agents:read',
-  databases:  'databases:read',
-  discovery:  'discovery:read',
-  sync:       'sync:read',
-  health:     'health:read',
-  logs:       'logs:read',
-  settings:   'settings:read',
-  users:      'users:read',
+  agents: 'agents:read',
+  databases: 'databases:read',
+  discovery: 'discovery:read',
+  sync: 'sync:read',
+  health: 'health:read',
+  logs: 'logs:read',
+  settings: 'settings:read',
+  users: 'users:read',
 };
 
 export function isSectionVisible(userRole: UserRole, section: string): boolean {

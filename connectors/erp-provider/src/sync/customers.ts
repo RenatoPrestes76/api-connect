@@ -7,22 +7,25 @@ import { rowToErpCustomer } from '../db/row-mapper.js';
 import { resolveTable } from '../db/table-resolver.js';
 
 export interface CustomersSyncResult {
-  result:    SyncResult;
+  result: SyncResult;
   customers: AtlasCustomer[];
 }
 
 export class CustomersSync {
   constructor(
     private readonly _ctx: ConnectorContext,
-    private readonly _db:  DatabaseAdapter,
+    private readonly _db: DatabaseAdapter
   ) {}
 
   async sync(context: SyncContext): Promise<CustomersSyncResult> {
     const start = Date.now();
     this._ctx.logger.info('Syncing customers', { jobId: context.jobId });
 
-    const schema    = await this._db.schema();
-    const tableName = resolveTable('customers', schema.tables.map((t) => t.name));
+    const schema = await this._db.schema();
+    const tableName = resolveTable(
+      'customers',
+      schema.tables.map((t) => t.name)
+    );
 
     if (!tableName) {
       this._ctx.logger.warn('Customers table not found — skipping');
@@ -39,11 +42,14 @@ export class CustomersSync {
     const query = builder.build();
 
     type Row = Record<string, unknown>;
-    const rows      = await this._db.execute<Row>(query);
+    const rows = await this._db.execute<Row>(query);
     const customers = rows.map((r) => mapCustomer(rowToErpCustomer(r)));
-    const count     = customers.length;
+    const count = customers.length;
 
-    this._ctx.logger.debug('Customers sync complete', { synced: count, durationMs: Date.now() - start });
+    this._ctx.logger.debug('Customers sync complete', {
+      synced: count,
+      durationMs: Date.now() - start,
+    });
     return {
       result: { synced: count, skipped: 0, failed: 0, errors: [], finishedAt: new Date() },
       customers,

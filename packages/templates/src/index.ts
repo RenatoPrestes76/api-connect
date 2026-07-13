@@ -189,16 +189,16 @@ export const TEMPLATE_CATALOG: TemplateSummary[] = [
 ];
 
 export const DEFAULT_TEMPLATES: Record<PluginType, string> = {
-  'connector':         'connector-basic',
-  'erp-profile':       'erp-profile-rest',
-  'ai-provider':       'ai-provider-openai',
-  'notification':      'notification-webhook',
-  'storage':           'storage-s3',
-  'transformation':    'transformation-field',
-  'validator':         'validator-schema',
-  'sync-strategy':     'sync-strategy-incremental',
-  'mapping-strategy':  'mapping-strategy-auto',
+  connector: 'connector-basic',
+  'erp-profile': 'erp-profile-rest',
+  'ai-provider': 'ai-provider-openai',
+  notification: 'notification-webhook',
+  storage: 'storage-s3',
+  transformation: 'transformation-field',
+  validator: 'validator-schema',
+  'sync-strategy': 'sync-strategy-incremental',
+  'mapping-strategy': 'mapping-strategy-auto',
   'security-provider': 'security-provider-oauth2',
-  'license-provider':  'license-provider-offline',
-  'export-provider':   'export-provider-csv',
+  'license-provider': 'license-provider-offline',
+  'export-provider': 'export-provider-csv',
 } as const;

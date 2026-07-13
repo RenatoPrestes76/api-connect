@@ -8,17 +8,17 @@ Enables third-party and first-party feature modules to integrate into Seltriva C
 
 ## Interfaces
 
-| Interface | Role |
-|-----------|------|
-| `Plugin` | Core contract every plugin must implement |
-| `PluginContext` | Runtime services injected at initialization |
-| `PluginMetadata` | Immutable descriptor (id, version, capabilities) |
-| `PluginManager` | Lifecycle orchestrator (register, enable, disable) |
-| `PluginDependencyTree` | Graph node for dependency resolution |
-| `PluginLoader` | Loads plugin modules dynamically from filesystem |
-| `PluginHook` | Named extension point registered by a plugin |
-| `PluginHookSystem` | Executes all hooks registered for a given name |
-| `PluginLifecycleObserver` | Reacts to lifecycle state transitions |
+| Interface                 | Role                                               |
+| ------------------------- | -------------------------------------------------- |
+| `Plugin`                  | Core contract every plugin must implement          |
+| `PluginContext`           | Runtime services injected at initialization        |
+| `PluginMetadata`          | Immutable descriptor (id, version, capabilities)   |
+| `PluginManager`           | Lifecycle orchestrator (register, enable, disable) |
+| `PluginDependencyTree`    | Graph node for dependency resolution               |
+| `PluginLoader`            | Loads plugin modules dynamically from filesystem   |
+| `PluginHook`              | Named extension point registered by a plugin       |
+| `PluginHookSystem`        | Executes all hooks registered for a given name     |
+| `PluginLifecycleObserver` | Reacts to lifecycle state transitions              |
 
 ## Lifecycle
 
@@ -35,7 +35,9 @@ Plugins can extend each other's behavior without tight coupling:
 hookSystem.registerHook({
   name: 'sync:before-push',
   pluginId: 'my-plugin',
-  callback: async (ctx) => { /* transform data */ },
+  callback: async (ctx) => {
+    /* transform data */
+  },
   priority: 10,
 });
 ```

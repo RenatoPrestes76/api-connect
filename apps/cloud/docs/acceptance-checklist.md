@@ -29,29 +29,29 @@
 
 ## Modules (23 total)
 
-- [x] `domain`         — entities, value objects, repository ports, domain events
-- [x] `application`    — commands, queries, CQRS interfaces
+- [x] `domain` — entities, value objects, repository ports, domain events
+- [x] `application` — commands, queries, CQRS interfaces
 - [x] `infrastructure` — DI tokens, provider interfaces, auth adapter
-- [x] `api`            — API contracts, routes, scopes, middleware interfaces
-- [x] `runtime`        — cloud lifecycle, bootstrap phases, task IDs
-- [x] `services`       — service container, event bus, startable registry
-- [x] `agents`         — registration, heartbeat, commands, fleet queries
-- [x] `audit`          — immutable append-only audit log, export, stats
-- [x] `configuration`  — config distribution, feature flags
-- [x] `health`         — liveness/readiness, pluggable health checks
-- [x] `jobs`           — job engine: enqueue, retry, handler registry
-- [x] `licenses`       — activation, validation, tier gates, capacity
-- [x] `metrics`        — time-series, aggregation, org and agent summaries
-- [x] `monitoring`     — fleet status, alert lifecycle
-- [x] `notifications`  — multi-channel: in-app, email, webhook, Slack
-- [x] `organizations`  — org lifecycle, member invitations, role management
-- [x] `plugins`        — registry, publishing, install/uninstall, manifest validation
-- [x] `scheduler`      — cloud cron/interval scheduler, 10 built-in jobs
-- [x] `security`       — auth, authz, API keys, rate limiting, security headers
-- [x] `storage`        — upload, download, signed URLs, usage tracking
-- [x] `telemetry`      — structured logs, distributed tracing, agent ingestion
-- [x] `users`          — profile management, auth sync
-- [x] `tests`          — entity builders, fixtures, mock helpers
+- [x] `api` — API contracts, routes, scopes, middleware interfaces
+- [x] `runtime` — cloud lifecycle, bootstrap phases, task IDs
+- [x] `services` — service container, event bus, startable registry
+- [x] `agents` — registration, heartbeat, commands, fleet queries
+- [x] `audit` — immutable append-only audit log, export, stats
+- [x] `configuration` — config distribution, feature flags
+- [x] `health` — liveness/readiness, pluggable health checks
+- [x] `jobs` — job engine: enqueue, retry, handler registry
+- [x] `licenses` — activation, validation, tier gates, capacity
+- [x] `metrics` — time-series, aggregation, org and agent summaries
+- [x] `monitoring` — fleet status, alert lifecycle
+- [x] `notifications` — multi-channel: in-app, email, webhook, Slack
+- [x] `organizations` — org lifecycle, member invitations, role management
+- [x] `plugins` — registry, publishing, install/uninstall, manifest validation
+- [x] `scheduler` — cloud cron/interval scheduler, 10 built-in jobs
+- [x] `security` — auth, authz, API keys, rate limiting, security headers
+- [x] `storage` — upload, download, signed URLs, usage tracking
+- [x] `telemetry` — structured logs, distributed tracing, agent ingestion
+- [x] `users` — profile management, auth sync
+- [x] `tests` — entity builders, fixtures, mock helpers
 
 ## Security
 

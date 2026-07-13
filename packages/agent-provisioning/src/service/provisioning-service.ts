@@ -10,25 +10,21 @@
  *  5. Mark the provisioning token as used.
  *  6. Return the new agentId, the raw access token, and domain events.
  */
-import {
-  AtlasAgent,
-  RegisterAgentParams,
-  AgentDomainEvent,
-} from '@seltriva/agent-identity';
+import { AtlasAgent, RegisterAgentParams, AgentDomainEvent } from '@seltriva/agent-identity';
 import type { AtlasAgentRepository } from '@seltriva/agent-identity';
-import { hashProvisioningToken }       from '../entity/provisioning-token.js';
-import { AgentAccessToken }            from '../entity/agent-access-token.js';
-import type { ProvisioningTokenRepository }   from '../repository/provisioning-token-repository.js';
-import type { AgentAccessTokenRepository }    from '../repository/agent-access-token-repository.js';
+import { hashProvisioningToken } from '../entity/provisioning-token.js';
+import { AgentAccessToken } from '../entity/agent-access-token.js';
+import type { ProvisioningTokenRepository } from '../repository/provisioning-token-repository.js';
+import type { AgentAccessTokenRepository } from '../repository/agent-access-token-repository.js';
 
 const ACCESS_TOKEN_TTL_MS = 365 * 24 * 60 * 60 * 1_000; // 365 days
 
 // ─── Result types ─────────────────────────────────────────────────────────────
 
 export interface ProvisionedAgent {
-  readonly agentId:  string;
-  readonly rawToken: string;  // Agent Access Token — deliver once, never re-issued
-  readonly events:   readonly AgentDomainEvent[];
+  readonly agentId: string;
+  readonly rawToken: string; // Agent Access Token — deliver once, never re-issued
+  readonly events: readonly AgentDomainEvent[];
 }
 
 export type ProvisioningError =
@@ -40,25 +36,25 @@ export type ProvisioningError =
   | { code: 'VALIDATION_ERROR'; message: string };
 
 export type ProvisioningResult =
-  | { ok: true;  value: ProvisionedAgent }
+  | { ok: true; value: ProvisionedAgent }
   | { ok: false; error: ProvisioningError };
 
 export type ValidateTokenResult =
-  | { ok: true;  value: { companyId: string; tokenId: string } }
+  | { ok: true; value: { companyId: string; tokenId: string } }
   | { ok: false; error: ProvisioningError };
 
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 export class ProvisioningService {
   constructor(
-    private readonly _tokenRepo:       ProvisioningTokenRepository,
-    private readonly _agentRepo:       AtlasAgentRepository,
-    private readonly _accessTokenRepo: AgentAccessTokenRepository,
+    private readonly _tokenRepo: ProvisioningTokenRepository,
+    private readonly _agentRepo: AtlasAgentRepository,
+    private readonly _accessTokenRepo: AgentAccessTokenRepository
   ) {}
 
   /** Validate a raw provisioning token (existence, expiry, revocation). */
   async validateToken(rawToken: string): Promise<ValidateTokenResult> {
-    const hash  = hashProvisioningToken(rawToken);
+    const hash = hashProvisioningToken(rawToken);
     const token = await this._tokenRepo.findByHash(hash);
 
     if (!token) {
@@ -79,10 +75,7 @@ export class ProvisioningService {
    *   token → validate → check machine uniqueness → register agent
    *   → issue access token → mark token used
    */
-  async registerAgent(
-    rawToken: string,
-    params:   RegisterAgentParams,
-  ): Promise<ProvisioningResult> {
+  async registerAgent(rawToken: string, params: RegisterAgentParams): Promise<ProvisioningResult> {
     // 1. Validate provisioning token
     const tokenResult = await this.validateToken(rawToken);
     if (!tokenResult.ok) return tokenResult;
@@ -94,7 +87,7 @@ export class ProvisioningService {
       return {
         ok: false,
         error: {
-          code:               'COMPANY_MISMATCH',
+          code: 'COMPANY_MISMATCH',
           tokenCompanyId,
           requestedCompanyId: params.companyId,
         },
@@ -126,7 +119,7 @@ export class ProvisioningService {
     // 5. Issue agent access token
     const { token: accessToken, rawToken: rawAccessToken } = AgentAccessToken.generate(
       agent.id.toString(),
-      new Date(Date.now() + ACCESS_TOKEN_TTL_MS),
+      new Date(Date.now() + ACCESS_TOKEN_TTL_MS)
     );
     await this._accessTokenRepo.save(accessToken);
 

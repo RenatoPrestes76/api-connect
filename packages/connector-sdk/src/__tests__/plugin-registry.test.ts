@@ -7,19 +7,23 @@ function makePlugin(id: string): LoadedPlugin {
   return {
     manifest: {
       id,
-      name:         id,
-      version:      '1.0.0',
-      sdkVersion:   '0.1.0',
-      vendor:       'test',
-      category:     'database',
-      description:  'test connector',
-      entry:        'index.js',
-      hash:         'a'.repeat(64),
-      signature:    '',
-      publicKeyId:  '',
+      name: id,
+      version: '1.0.0',
+      sdkVersion: '0.1.0',
+      vendor: 'test',
+      category: 'database',
+      description: 'test connector',
+      entry: 'index.js',
+      hash: 'a'.repeat(64),
+      signature: '',
+      publicKeyId: '',
       capabilities: {
-        canDiscover: true, canSynchronize: true, canValidate: true,
-        canStream: false,  canBulkWrite: false,  supportsSSL: true,
+        canDiscover: true,
+        canSynchronize: true,
+        canValidate: true,
+        canStream: false,
+        canBulkWrite: false,
+        supportsSSL: true,
       },
       updatable: true,
     },
@@ -30,7 +34,7 @@ function makePlugin(id: string): LoadedPlugin {
 describe('PluginRegistry', () => {
   it('registers a plugin and retrieves it by id', () => {
     const registry = new PluginRegistry();
-    const plugin   = makePlugin('com.test.db');
+    const plugin = makePlugin('com.test.db');
     registry.register(plugin);
 
     const entry = registry.get('com.test.db');

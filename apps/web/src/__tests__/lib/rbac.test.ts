@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  hasRole, can, canAll, canAny, isSectionVisible,
-  type Permission,
-} from '@/lib/rbac';
+import { hasRole, can, canAll, canAny, isSectionVisible, type Permission } from '@/lib/rbac';
 import type { UserRole } from '@/types/index';
 
 describe('hasRole', () => {

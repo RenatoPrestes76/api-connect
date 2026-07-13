@@ -16,8 +16,11 @@ const SNAP = () => ({
 describe('HeartbeatRecord.create', () => {
   it('creates a record with all fields', () => {
     const r = HeartbeatRecord.create({
-      agentId: 'agent-1', receivedAt: new Date(), version: '1.0.0',
-      hostname: 'host.local', status: 'ONLINE',
+      agentId: 'agent-1',
+      receivedAt: new Date(),
+      version: '1.0.0',
+      hostname: 'host.local',
+      status: 'ONLINE',
     });
     expect(r.agentId).toBe('agent-1');
     expect(r.status).toBe('ONLINE');
@@ -27,9 +30,14 @@ describe('HeartbeatRecord.create', () => {
 
   it('accepts optional numeric fields', () => {
     const r = HeartbeatRecord.create({
-      agentId: 'ag-2', receivedAt: new Date(), version: '2.0.0',
-      hostname: 'h.local', status: 'ONLINE',
-      memoryUsage: 1024, uptime: 7200, queueSize: 0,
+      agentId: 'ag-2',
+      receivedAt: new Date(),
+      version: '2.0.0',
+      hostname: 'h.local',
+      status: 'ONLINE',
+      memoryUsage: 1024,
+      uptime: 7200,
+      queueSize: 0,
     });
     expect(r.memoryUsage).toBe(1024);
     expect(r.uptime).toBe(7200);
@@ -38,28 +46,50 @@ describe('HeartbeatRecord.create', () => {
 
   it('uses provided id', () => {
     const r = HeartbeatRecord.create({
-      id: 'custom-id', agentId: 'ag', receivedAt: new Date(),
-      version: '1.0.0', hostname: 'h', status: 'ONLINE',
+      id: 'custom-id',
+      agentId: 'ag',
+      receivedAt: new Date(),
+      version: '1.0.0',
+      hostname: 'h',
+      status: 'ONLINE',
     });
     expect(r.id).toBe('custom-id');
   });
 
   it('throws on empty agentId', () => {
-    expect(() => HeartbeatRecord.create({
-      agentId: '', receivedAt: new Date(), version: '1.0.0', hostname: 'h', status: 'ONLINE',
-    })).toThrow(HeartbeatRecordError);
+    expect(() =>
+      HeartbeatRecord.create({
+        agentId: '',
+        receivedAt: new Date(),
+        version: '1.0.0',
+        hostname: 'h',
+        status: 'ONLINE',
+      })
+    ).toThrow(HeartbeatRecordError);
   });
 
   it('throws on empty version', () => {
-    expect(() => HeartbeatRecord.create({
-      agentId: 'ag', receivedAt: new Date(), version: '', hostname: 'h', status: 'ONLINE',
-    })).toThrow(HeartbeatRecordError);
+    expect(() =>
+      HeartbeatRecord.create({
+        agentId: 'ag',
+        receivedAt: new Date(),
+        version: '',
+        hostname: 'h',
+        status: 'ONLINE',
+      })
+    ).toThrow(HeartbeatRecordError);
   });
 
   it('throws on empty hostname', () => {
-    expect(() => HeartbeatRecord.create({
-      agentId: 'ag', receivedAt: new Date(), version: '1.0.0', hostname: '', status: 'ONLINE',
-    })).toThrow(HeartbeatRecordError);
+    expect(() =>
+      HeartbeatRecord.create({
+        agentId: 'ag',
+        receivedAt: new Date(),
+        version: '1.0.0',
+        hostname: '',
+        status: 'ONLINE',
+      })
+    ).toThrow(HeartbeatRecordError);
   });
 });
 
@@ -71,7 +101,12 @@ describe('HeartbeatRecord.fromSnapshot / toSnapshot', () => {
   });
 
   it('fromSnapshot accepts null optional fields', () => {
-    const r = HeartbeatRecord.fromSnapshot({ ...SNAP(), memoryUsage: null, uptime: null, queueSize: null });
+    const r = HeartbeatRecord.fromSnapshot({
+      ...SNAP(),
+      memoryUsage: null,
+      uptime: null,
+      queueSize: null,
+    });
     expect(r.memoryUsage).toBeNull();
   });
 });

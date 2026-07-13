@@ -46,9 +46,9 @@ describe('ErpConnector — connect', () => {
   });
 
   it('connect() returns CONNECT_FAILED when _simulateConnectFailure=true', async () => {
-    const ctx  = makeContext('test', { ...DEFAULT_CONFIG, _simulateConnectFailure: true });
+    const ctx = makeContext('test', { ...DEFAULT_CONFIG, _simulateConnectFailure: true });
     const conn = new ErpConnector(ctx, mockDbFactory);
-    const res  = await conn.connect();
+    const res = await conn.connect();
     expect(res.ok).toBe(false);
     expect(res.error!.code).toBe('CONNECT_FAILED');
     expect(conn.state).toBe('disconnected');
@@ -72,7 +72,7 @@ describe('ErpConnector — disconnect', () => {
 
   it('disconnect() is idempotent — second call returns ok immediately', async () => {
     const conn = new ErpConnector(makeContext(), mockDbFactory);
-    const res  = await conn.disconnect();
+    const res = await conn.disconnect();
     expect(res.ok).toBe(true);
     expect(conn.state).toBe('disconnected');
   });
@@ -80,8 +80,8 @@ describe('ErpConnector — disconnect', () => {
 
 describe('ErpConnector — validate', () => {
   it('returns valid=true with complete config and credentials', async () => {
-    const ctx  = await makeContextWithCredentials();
-    const res  = await new ErpConnector(ctx, mockDbFactory).validate();
+    const ctx = await makeContextWithCredentials();
+    const res = await new ErpConnector(ctx, mockDbFactory).validate();
     expect(res.ok).toBe(true);
     expect(res.data!.valid).toBe(true);
   });
@@ -104,7 +104,7 @@ describe('ErpConnector — discover', () => {
   it('entity names include expected types', async () => {
     const conn = new ErpConnector(makeContext(), mockDbFactory);
     await conn.connect();
-    const res   = await conn.discover();
+    const res = await conn.discover();
     const names = res.data!.entities.map((e) => e.name);
     expect(names).toContain('products');
     expect(names).toContain('customers');
@@ -134,7 +134,7 @@ describe('ErpConnector — synchronize', () => {
   });
 
   it('emits sync.started event', async () => {
-    const ctx  = makeContext();
+    const ctx = makeContext();
     const conn = new ErpConnector(ctx, mockDbFactory);
     await conn.connect();
     const handler = vi.fn();
@@ -145,7 +145,7 @@ describe('ErpConnector — synchronize', () => {
   });
 
   it('emits sync.finished event with correct synced count', async () => {
-    const ctx  = makeContext();
+    const ctx = makeContext();
     const conn = new ErpConnector(ctx, mockDbFactory);
     await conn.connect();
     const handler = vi.fn();
@@ -189,7 +189,7 @@ describe('ErpConnector — health', () => {
 
 describe('ErpConnector — full lifecycle', () => {
   it('completes connect → validate → discover → sync → health → disconnect', async () => {
-    const ctx  = await makeContextWithCredentials();
+    const ctx = await makeContextWithCredentials();
     const conn = new ErpConnector(ctx, mockDbFactory);
 
     await conn.connect();
@@ -217,7 +217,7 @@ describe('ErpConnector — full lifecycle', () => {
 
 describe('factory', () => {
   it('factory function creates an ErpConnector instance', () => {
-    const ctx  = makeContext();
+    const ctx = makeContext();
     const conn = factory(ctx);
     expect(conn).toBeInstanceOf(ErpConnector);
   });

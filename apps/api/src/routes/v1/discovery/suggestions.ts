@@ -30,8 +30,8 @@ export function createSuggestionsHandler(store: PrometheusStore): RouteHandler {
 
     json(res, {
       analysisId,
-      database:    report.database,
-      total:       filtered.length,
+      database: report.database,
+      total: filtered.length,
       suggestions: filtered,
     });
   };

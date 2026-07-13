@@ -9,7 +9,10 @@ import { ConnectionFailedError, QueryError } from '../errors/database-errors.js'
 import { PostgresSchemaReader } from '../schema/readers/postgres.reader.js';
 import type { DbQueryClient } from '../schema/readers/db-client.js';
 
-export type PgPool = Pick<pg.Pool, 'connect' | 'query' | 'end' | 'totalCount' | 'idleCount' | 'waitingCount'>;
+export type PgPool = Pick<
+  pg.Pool,
+  'connect' | 'query' | 'end' | 'totalCount' | 'idleCount' | 'waitingCount'
+>;
 export type PgPoolFactory = (config: pg.PoolConfig) => PgPool;
 
 const defaultPgFactory: PgPoolFactory = (cfg) => new pg.Pool(cfg);
@@ -22,19 +25,19 @@ export class PostgresDriver extends SqlAdapter implements SchemaReader {
   constructor(
     config: DriverConfig,
     private readonly _poolFactory: PgPoolFactory = defaultPgFactory,
-    private readonly _schemaReaderFactory?: (client: DbQueryClient, schema: string) => SchemaReader,
+    private readonly _schemaReaderFactory?: (client: DbQueryClient, schema: string) => SchemaReader
   ) {
     super(config, 'postgres');
   }
 
   async connect(): Promise<void> {
     this._pool = this._poolFactory({
-      host:                    this._config.host,
-      port:                    this._config.port,
-      database:                this._config.database,
-      user:                    this._config.username,
-      password:                this._config.password,
-      ssl:                     this._config.ssl,
+      host: this._config.host,
+      port: this._config.port,
+      database: this._config.database,
+      user: this._config.username,
+      password: this._config.password,
+      ssl: this._config.ssl,
       connectionTimeoutMillis: this._config.timeout,
     });
     const client = await this._pool.connect();
@@ -44,7 +47,7 @@ export class PostgresDriver extends SqlAdapter implements SchemaReader {
 
   async disconnect(): Promise<void> {
     await this._pool?.end();
-    this._pool        = null;
+    this._pool = null;
     this._isConnected = false;
   }
 
@@ -58,31 +61,47 @@ export class PostgresDriver extends SqlAdapter implements SchemaReader {
       if (err instanceof ConnectionFailedError) throw err;
       throw new QueryError(
         err instanceof Error ? err.message : String(err),
-        err instanceof Error ? err : undefined,
+        err instanceof Error ? err : undefined
       );
     }
   }
 
   async health(): Promise<DatabaseHealth> {
     if (!this._pool) {
-      return { connected: false, latency: 0, databaseVersion: '', activeConnections: 0, poolUsage: 0, status: 'unhealthy' };
+      return {
+        connected: false,
+        latency: 0,
+        databaseVersion: '',
+        activeConnections: 0,
+        poolUsage: 0,
+        status: 'unhealthy',
+      };
     }
     try {
-      const start  = Date.now();
-      const result = await this._pool.query('SELECT version()') as pg.QueryResult<{ version: string }>;
+      const start = Date.now();
+      const result = (await this._pool.query('SELECT version()')) as pg.QueryResult<{
+        version: string;
+      }>;
       const latency = Date.now() - start;
-      const total  = this._pool.totalCount;
-      const idle   = this._pool.idleCount;
+      const total = this._pool.totalCount;
+      const idle = this._pool.idleCount;
       return {
-        connected:         true,
+        connected: true,
         latency,
-        databaseVersion:   result.rows[0]?.version ?? '',
+        databaseVersion: result.rows[0]?.version ?? '',
         activeConnections: total - idle,
-        poolUsage:         total > 0 ? (total - idle) / total : 0,
-        status:            'healthy',
+        poolUsage: total > 0 ? (total - idle) / total : 0,
+        status: 'healthy',
       };
     } catch {
-      return { connected: false, latency: 0, databaseVersion: '', activeConnections: 0, poolUsage: 0, status: 'unhealthy' };
+      return {
+        connected: false,
+        latency: 0,
+        databaseVersion: '',
+        activeConnections: 0,
+        poolUsage: 0,
+        status: 'unhealthy',
+      };
     }
   }
 
@@ -95,8 +114,12 @@ export class PostgresDriver extends SqlAdapter implements SchemaReader {
     return reader.readSchema();
   }
 
-  async readSchema():            Promise<DatabaseSchema> { return this.schema(); }
-  async listTables():            Promise<string[]>        { return (await this.schema()).tables.map((t) => t.name); }
+  async readSchema(): Promise<DatabaseSchema> {
+    return this.schema();
+  }
+  async listTables(): Promise<string[]> {
+    return (await this.schema()).tables.map((t) => t.name);
+  }
   async readTable(name: string): Promise<Table | null> {
     return (await this.schema()).tables.find((t) => t.name === name) ?? null;
   }

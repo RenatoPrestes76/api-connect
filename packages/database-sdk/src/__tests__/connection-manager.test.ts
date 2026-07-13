@@ -19,16 +19,29 @@ function makeMockAdapter(opts?: { failTimes?: number; connectDelay?: number }): 
       }
     }),
     disconnect: vi.fn(async () => {}),
-    reconnect:  vi.fn(async () => {}),
-    execute:    vi.fn(async () => []),
-    transaction: vi.fn(async <T>(cb: () => Promise<T>): Promise<T> => cb()) as unknown as DatabaseAdapter['transaction'],
-    health: vi.fn(async (): Promise<DatabaseHealth> => ({
-      connected: true, latency: 1, databaseVersion: 'mock 1.0',
-      activeConnections: 1, poolUsage: 0, status: 'healthy',
-    })),
-    schema: vi.fn(async (): Promise<DatabaseSchema> => ({
-      name: 'mock', tables: [], relations: [], discoveredAt: new Date(),
-    })),
+    reconnect: vi.fn(async () => {}),
+    execute: vi.fn(async () => []),
+    transaction: vi.fn(
+      async <T>(cb: () => Promise<T>): Promise<T> => cb()
+    ) as unknown as DatabaseAdapter['transaction'],
+    health: vi.fn(
+      async (): Promise<DatabaseHealth> => ({
+        connected: true,
+        latency: 1,
+        databaseVersion: 'mock 1.0',
+        activeConnections: 1,
+        poolUsage: 0,
+        status: 'healthy',
+      })
+    ),
+    schema: vi.fn(
+      async (): Promise<DatabaseSchema> => ({
+        name: 'mock',
+        tables: [],
+        relations: [],
+        discoveredAt: new Date(),
+      })
+    ),
   };
 }
 
@@ -58,7 +71,11 @@ describe('ConnectionManager — connect (legacy options)', () => {
 
   it('throws TimeoutError when connection exceeds timeout', async () => {
     const adapter = makeMockAdapter({ connectDelay: 500 });
-    const manager = new ConnectionManager(adapter, { maxRetries: 0, timeoutMs: 50, retryDelayMs: 0 });
+    const manager = new ConnectionManager(adapter, {
+      maxRetries: 0,
+      timeoutMs: 50,
+      retryDelayMs: 0,
+    });
     await expect(manager.connect()).rejects.toThrow(TimeoutError);
   });
 });

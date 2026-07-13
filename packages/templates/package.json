@@ -2,7 +2,12 @@
   "name": "@seltriva/templates",
   "version": "0.1.0",
   "description": "Atlas plugin project templates — complete ready-to-build scaffolds",
-  "keywords": ["seltriva", "atlas", "templates", "plugin"],
+  "keywords": [
+    "seltriva",
+    "atlas",
+    "templates",
+    "plugin"
+  ],
   "license": "MIT",
   "private": false,
   "type": "module",

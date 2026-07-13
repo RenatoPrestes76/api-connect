@@ -11,19 +11,19 @@
 // ─── AtlasAgent ──────────────────────────────────────────────────────────────
 
 export interface PrismaAtlasAgent {
-  id:                  string;
-  companyId:           string;
-  name:                string;
-  machineId:           string;
-  hostname:            string;
-  connectorType:       string;
-  version:             string;
-  status:              string;
-  lastHeartbeat:       Date | null;
+  id: string;
+  companyId: string;
+  name: string;
+  machineId: string;
+  hostname: string;
+  connectorType: string;
+  version: string;
+  status: string;
+  lastHeartbeat: Date | null;
   lastSynchronization: Date | null;
-  createdAt:           Date;
-  updatedAt:           Date;
-  deletedAt:           Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 export type PrismaAtlasAgentCreate = Omit<PrismaAtlasAgent, 'createdAt' | 'updatedAt'>;
@@ -51,20 +51,25 @@ export interface AgentDbDelegate {
 // ─── ProvisioningToken ───────────────────────────────────────────────────────
 
 export interface PrismaProvisioningToken {
-  id:          string;
-  companyId:   string;
-  tokenHash:   string;
+  id: string;
+  companyId: string;
+  tokenHash: string;
   tokenPrefix: string;
   description: string;
-  expiresAt:   Date;
-  revokedAt:   Date | null;
-  lastUsedAt:  Date | null;
-  createdAt:   Date;
-  updatedAt:   Date;
+  expiresAt: Date;
+  revokedAt: Date | null;
+  lastUsedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export type PrismaProvisioningTokenCreate = Omit<PrismaProvisioningToken, 'createdAt' | 'updatedAt'>;
-export type PrismaProvisioningTokenUpdate = Partial<Omit<PrismaProvisioningToken, 'id' | 'createdAt'>>;
+export type PrismaProvisioningTokenCreate = Omit<
+  PrismaProvisioningToken,
+  'createdAt' | 'updatedAt'
+>;
+export type PrismaProvisioningTokenUpdate = Partial<
+  Omit<PrismaProvisioningToken, 'id' | 'createdAt'>
+>;
 
 export interface ProvisioningTokenDbDelegate {
   create(args: { data: PrismaProvisioningTokenCreate }): Promise<PrismaProvisioningToken>;
@@ -88,19 +93,21 @@ export interface ProvisioningTokenDbDelegate {
 // ─── AgentAccessToken ────────────────────────────────────────────────────────
 
 export interface PrismaAgentAccessToken {
-  id:          string;
-  agentId:     string;
-  tokenHash:   string;
+  id: string;
+  agentId: string;
+  tokenHash: string;
   tokenPrefix: string;
-  expiresAt:   Date;
-  revokedAt:   Date | null;
-  lastUsedAt:  Date | null;
-  createdAt:   Date;
-  updatedAt:   Date;
+  expiresAt: Date;
+  revokedAt: Date | null;
+  lastUsedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export type PrismaAgentAccessTokenCreate = Omit<PrismaAgentAccessToken, 'createdAt' | 'updatedAt'>;
-export type PrismaAgentAccessTokenUpdate = Partial<Omit<PrismaAgentAccessToken, 'id' | 'createdAt'>>;
+export type PrismaAgentAccessTokenUpdate = Partial<
+  Omit<PrismaAgentAccessToken, 'id' | 'createdAt'>
+>;
 
 export interface AgentAccessTokenDbDelegate {
   create(args: { data: PrismaAgentAccessTokenCreate }): Promise<PrismaAgentAccessToken>;
@@ -111,15 +118,13 @@ export interface AgentAccessTokenDbDelegate {
   findUnique(args: {
     where: { tokenHash?: string; id?: string };
   }): Promise<PrismaAgentAccessToken | null>;
-  findMany(args: {
-    where?: { agentId?: string };
-  }): Promise<PrismaAgentAccessToken[]>;
+  findMany(args: { where?: { agentId?: string } }): Promise<PrismaAgentAccessToken[]>;
 }
 
 // ─── Combined client interface ────────────────────────────────────────────────
 
 export interface AgentProvisioningDbClient {
-  atlasAgent:        AgentDbDelegate;
+  atlasAgent: AgentDbDelegate;
   provisioningToken: ProvisioningTokenDbDelegate;
-  agentAccessToken:  AgentAccessTokenDbDelegate;
+  agentAccessToken: AgentAccessTokenDbDelegate;
 }

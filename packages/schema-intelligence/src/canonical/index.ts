@@ -149,12 +149,7 @@ export interface CanonicalConstraint {
   readonly onUpdate?: ReferentialAction;
 }
 
-export type ReferentialAction =
-  | 'cascade'
-  | 'restrict'
-  | 'set-null'
-  | 'set-default'
-  | 'no-action';
+export type ReferentialAction = 'cascade' | 'restrict' | 'set-null' | 'set-default' | 'no-action';
 
 // ─── Canonical Index ──────────────────────────────────────────────────────
 
@@ -243,12 +238,32 @@ export type PatchOperation =
   | AddRelationshipOperation
   | RemoveRelationshipOperation;
 
-export interface AddEntityOperation    { readonly op: 'add-entity';    readonly entity: CanonicalEntity; }
-export interface RemoveEntityOperation { readonly op: 'remove-entity'; readonly entityId: EntityId; }
-export interface AddFieldOperation     { readonly op: 'add-field';     readonly entityId: EntityId; readonly field: CanonicalField; }
-export interface RemoveFieldOperation  { readonly op: 'remove-field';  readonly entityId: EntityId; readonly fieldId: FieldId; }
-export interface AddRelationshipOperation    { readonly op: 'add-relationship';    readonly relationship: CanonicalRelationship; }
-export interface RemoveRelationshipOperation { readonly op: 'remove-relationship'; readonly relationshipId: RelationshipId; }
+export interface AddEntityOperation {
+  readonly op: 'add-entity';
+  readonly entity: CanonicalEntity;
+}
+export interface RemoveEntityOperation {
+  readonly op: 'remove-entity';
+  readonly entityId: EntityId;
+}
+export interface AddFieldOperation {
+  readonly op: 'add-field';
+  readonly entityId: EntityId;
+  readonly field: CanonicalField;
+}
+export interface RemoveFieldOperation {
+  readonly op: 'remove-field';
+  readonly entityId: EntityId;
+  readonly fieldId: FieldId;
+}
+export interface AddRelationshipOperation {
+  readonly op: 'add-relationship';
+  readonly relationship: CanonicalRelationship;
+}
+export interface RemoveRelationshipOperation {
+  readonly op: 'remove-relationship';
+  readonly relationshipId: RelationshipId;
+}
 
 export interface ModifyFieldOperation {
   readonly op: 'modify-field';

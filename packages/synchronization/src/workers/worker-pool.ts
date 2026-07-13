@@ -10,32 +10,34 @@
  */
 
 export interface WorkItem<TInput, TOutput> {
-  input:   TInput;
+  input: TInput;
   resolve: (value: TOutput) => void;
-  reject:  (reason: unknown) => void;
+  reject: (reason: unknown) => void;
 }
 
 export interface WorkerPoolStats {
-  readonly active:   number;
-  readonly queued:   number;
+  readonly active: number;
+  readonly queued: number;
   readonly completed: number;
-  readonly failed:   number;
+  readonly failed: number;
 }
 
 export class WorkerPool<TInput, TOutput> {
-  private readonly _queue:     Array<WorkItem<TInput, TOutput>> = [];
-  private          _active     = 0;
-  private          _completed  = 0;
-  private          _failed     = 0;
-  private          _aborted    = false;
+  private readonly _queue: Array<WorkItem<TInput, TOutput>> = [];
+  private _active = 0;
+  private _completed = 0;
+  private _failed = 0;
+  private _aborted = false;
 
   constructor(
     private readonly _concurrency: number,
-    private readonly _processor:   (input: TInput, signal: AbortSignal) => Promise<TOutput>,
-    private readonly _signal?:     AbortSignal,
+    private readonly _processor: (input: TInput, signal: AbortSignal) => Promise<TOutput>,
+    private readonly _signal?: AbortSignal
   ) {
     if (_signal) {
-      _signal.addEventListener('abort', () => { this._aborted = true; });
+      _signal.addEventListener('abort', () => {
+        this._aborted = true;
+      });
     }
   }
 
@@ -57,19 +59,15 @@ export class WorkerPool<TInput, TOutput> {
 
   /** Like runAll but tolerates failures; errors become null in the result array. */
   async runAllSettled(items: readonly TInput[]): Promise<ReadonlyArray<TOutput | null>> {
-    return Promise.all(
-      items.map((item) =>
-        this.submit(item).catch(() => null as TOutput | null),
-      ),
-    );
+    return Promise.all(items.map((item) => this.submit(item).catch(() => null as TOutput | null)));
   }
 
   stats(): WorkerPoolStats {
     return {
-      active:    this._active,
-      queued:    this._queue.length,
+      active: this._active,
+      queued: this._queue.length,
       completed: this._completed,
-      failed:    this._failed,
+      failed: this._failed,
     };
   }
 
@@ -106,7 +104,7 @@ export class WorkerPool<TInput, TOutput> {
         this._failed++;
         item.reject(err);
         this._drain();
-      },
+      }
     );
   }
 }
@@ -114,9 +112,9 @@ export class WorkerPool<TInput, TOutput> {
 // ─── Simple concurrent map ────────────────────────────────────────────────────
 
 export async function pMap<TInput, TOutput>(
-  items:       readonly TInput[],
-  fn:          (item: TInput, index: number) => Promise<TOutput>,
-  concurrency: number,
+  items: readonly TInput[],
+  fn: (item: TInput, index: number) => Promise<TOutput>,
+  concurrency: number
 ): Promise<readonly TOutput[]> {
   const results: TOutput[] = new Array(items.length);
   let nextIndex = 0;
@@ -128,10 +126,7 @@ export async function pMap<TInput, TOutput>(
     }
   }
 
-  const workers = Array.from(
-    { length: Math.min(concurrency, items.length || 1) },
-    () => worker(),
-  );
+  const workers = Array.from({ length: Math.min(concurrency, items.length || 1) }, () => worker());
 
   await Promise.all(workers);
   return results;

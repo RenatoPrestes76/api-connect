@@ -8,15 +8,15 @@ Defines the contracts (ports) that adapters must implement to integrate external
 
 ## Driver Types
 
-| Interface | `type` | External System |
-|-----------|--------|-----------------|
-| `DatabaseDriver` | `database` | PostgreSQL, MySQL, SQLite, MSSQL |
-| `ERPDriver` | `erp` | SAP, TOTVS, Dynamics, Oracle |
-| `CacheDriver` | `cache` | Redis, Memcached, in-memory |
-| `StorageDriver` | `storage` | S3, GCS, Azure Blob, local FS |
-| `NotificationDriver` | `notification` | SMTP, Twilio, FCM, Webhooks |
-| `AIProviderDriver` | `ai` | OpenAI, Anthropic, Gemini, Mistral |
-| `AuthDriver` | `auth` | OAuth2, OIDC, LDAP, SAML |
+| Interface            | `type`         | External System                    |
+| -------------------- | -------------- | ---------------------------------- |
+| `DatabaseDriver`     | `database`     | PostgreSQL, MySQL, SQLite, MSSQL   |
+| `ERPDriver`          | `erp`          | SAP, TOTVS, Dynamics, Oracle       |
+| `CacheDriver`        | `cache`        | Redis, Memcached, in-memory        |
+| `StorageDriver`      | `storage`      | S3, GCS, Azure Blob, local FS      |
+| `NotificationDriver` | `notification` | SMTP, Twilio, FCM, Webhooks        |
+| `AIProviderDriver`   | `ai`           | OpenAI, Anthropic, Gemini, Mistral |
+| `AuthDriver`         | `auth`         | OAuth2, OIDC, LDAP, SAML           |
 
 ## Architecture
 
@@ -31,6 +31,7 @@ External Systems
 ## Base Contract
 
 All drivers extend `Driver`:
+
 - `initialize()` / `shutdown()` — lifecycle hooks
 - `isReady()` — health status
 - `getMetadata()` — name, version, capabilities

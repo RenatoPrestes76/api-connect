@@ -208,31 +208,31 @@ export interface UpDownCounter {
 
 export const METRIC_NAMES = {
   // Bootstrap
-  BOOTSTRAP_DURATION_MS:       'crp.bootstrap.duration_ms',
+  BOOTSTRAP_DURATION_MS: 'crp.bootstrap.duration_ms',
   // Modules
-  MODULE_INIT_DURATION_MS:     'crp.module.init_duration_ms',
-  MODULE_START_DURATION_MS:    'crp.module.start_duration_ms',
-  MODULE_ERROR_TOTAL:          'crp.module.errors_total',
+  MODULE_INIT_DURATION_MS: 'crp.module.init_duration_ms',
+  MODULE_START_DURATION_MS: 'crp.module.start_duration_ms',
+  MODULE_ERROR_TOTAL: 'crp.module.errors_total',
   // Workers
-  WORKER_ACTIVE:               'crp.worker.active',
-  WORKER_QUEUE_DEPTH:          'crp.worker.queue_depth',
-  WORKER_TASK_DURATION_MS:     'crp.worker.task_duration_ms',
-  WORKER_TASK_ERRORS_TOTAL:    'crp.worker.task_errors_total',
+  WORKER_ACTIVE: 'crp.worker.active',
+  WORKER_QUEUE_DEPTH: 'crp.worker.queue_depth',
+  WORKER_TASK_DURATION_MS: 'crp.worker.task_duration_ms',
+  WORKER_TASK_ERRORS_TOTAL: 'crp.worker.task_errors_total',
   // Scheduler
-  JOB_EXECUTIONS_TOTAL:        'crp.job.executions_total',
-  JOB_DURATION_MS:             'crp.job.duration_ms',
-  JOB_ERRORS_TOTAL:            'crp.job.errors_total',
+  JOB_EXECUTIONS_TOTAL: 'crp.job.executions_total',
+  JOB_DURATION_MS: 'crp.job.duration_ms',
+  JOB_ERRORS_TOTAL: 'crp.job.errors_total',
   // Event bus
-  EVENTS_PUBLISHED_TOTAL:      'crp.events.published_total',
-  EVENTS_CONSUMED_TOTAL:       'crp.events.consumed_total',
+  EVENTS_PUBLISHED_TOTAL: 'crp.events.published_total',
+  EVENTS_CONSUMED_TOTAL: 'crp.events.consumed_total',
   // Commands
-  COMMANDS_DISPATCHED_TOTAL:   'crp.commands.dispatched_total',
-  COMMAND_DURATION_MS:         'crp.commands.duration_ms',
+  COMMANDS_DISPATCHED_TOTAL: 'crp.commands.dispatched_total',
+  COMMAND_DURATION_MS: 'crp.commands.duration_ms',
   // Resilience
-  CIRCUIT_BREAKER_STATE:       'crp.resilience.circuit_breaker_state',
-  RETRY_ATTEMPTS_TOTAL:        'crp.resilience.retry_attempts_total',
+  CIRCUIT_BREAKER_STATE: 'crp.resilience.circuit_breaker_state',
+  RETRY_ATTEMPTS_TOTAL: 'crp.resilience.retry_attempts_total',
   // Health
-  HEALTH_CHECK_DURATION_MS:    'crp.health.check_duration_ms',
+  HEALTH_CHECK_DURATION_MS: 'crp.health.check_duration_ms',
 } as const;
 
 // ─── Telemetry Exporter (plugin interface) ────────────────────────────────

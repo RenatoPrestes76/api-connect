@@ -15,12 +15,14 @@ export abstract class SqlAdapter implements DatabaseAdapter {
 
   constructor(
     protected readonly _config: DriverConfig,
-    dialect: DialectName,
+    dialect: DialectName
   ) {
     this._renderer = new SqlRenderer(dialect);
   }
 
-  get isConnected(): boolean { return this._isConnected; }
+  get isConnected(): boolean {
+    return this._isConnected;
+  }
 
   async reconnect(): Promise<void> {
     await this.disconnect();
@@ -37,7 +39,7 @@ export abstract class SqlAdapter implements DatabaseAdapter {
       if (err instanceof TransactionError) throw err;
       throw new TransactionError(
         'Transaction rolled back: ' + (err instanceof Error ? err.message : String(err)),
-        err instanceof Error ? err : undefined,
+        err instanceof Error ? err : undefined
       );
     }
   }
@@ -46,50 +48,94 @@ export abstract class SqlAdapter implements DatabaseAdapter {
     const users: Table = {
       name: 'users',
       columns: [
-        { name: 'id',    type: 'integer', nullable: false, isPrimaryKey: true,  isForeignKey: false, isUnique: true  },
-        { name: 'email', type: 'varchar', nullable: false, isPrimaryKey: false, isForeignKey: false, isUnique: true  },
-        { name: 'name',  type: 'varchar', nullable: true,  isPrimaryKey: false, isForeignKey: false, isUnique: false },
+        {
+          name: 'id',
+          type: 'integer',
+          nullable: false,
+          isPrimaryKey: true,
+          isForeignKey: false,
+          isUnique: true,
+        },
+        {
+          name: 'email',
+          type: 'varchar',
+          nullable: false,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isUnique: true,
+        },
+        {
+          name: 'name',
+          type: 'varchar',
+          nullable: true,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isUnique: false,
+        },
       ],
-      primaryKey:  { columns: ['id'] },
+      primaryKey: { columns: ['id'] },
       foreignKeys: [],
       indexes: [
-        { name: 'pk_users', columns: ['id'],    isUnique: true,  isPrimary: true  },
-        { name: 'uq_email', columns: ['email'], isUnique: true,  isPrimary: false },
+        { name: 'pk_users', columns: ['id'], isUnique: true, isPrimary: true },
+        { name: 'uq_email', columns: ['email'], isUnique: true, isPrimary: false },
       ],
     };
 
     const orders: Table = {
       name: 'orders',
       columns: [
-        { name: 'id',      type: 'integer', nullable: false, isPrimaryKey: true,  isForeignKey: false, isUnique: true  },
-        { name: 'user_id', type: 'integer', nullable: false, isPrimaryKey: false, isForeignKey: true,  isUnique: false },
-        { name: 'total',   type: 'decimal', nullable: false, isPrimaryKey: false, isForeignKey: false, isUnique: false },
+        {
+          name: 'id',
+          type: 'integer',
+          nullable: false,
+          isPrimaryKey: true,
+          isForeignKey: false,
+          isUnique: true,
+        },
+        {
+          name: 'user_id',
+          type: 'integer',
+          nullable: false,
+          isPrimaryKey: false,
+          isForeignKey: true,
+          isUnique: false,
+        },
+        {
+          name: 'total',
+          type: 'decimal',
+          nullable: false,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isUnique: false,
+        },
       ],
-      primaryKey:  { columns: ['id'] },
+      primaryKey: { columns: ['id'] },
       foreignKeys: [{ column: 'user_id', referencedTable: 'users', referencedColumn: 'id' }],
       indexes: [
-        { name: 'pk_orders',   columns: ['id'],      isUnique: true,  isPrimary: true  },
+        { name: 'pk_orders', columns: ['id'], isUnique: true, isPrimary: true },
         { name: 'idx_user_id', columns: ['user_id'], isUnique: false, isPrimary: false },
       ],
     };
 
     return {
       name,
-      tables:    [users, orders],
-      relations: [{
-        fromTable:  'orders',
-        fromColumn: 'user_id',
-        toTable:    'users',
-        toColumn:   'id',
-        type:       'many-to-one',
-      }],
+      tables: [users, orders],
+      relations: [
+        {
+          fromTable: 'orders',
+          fromColumn: 'user_id',
+          toTable: 'users',
+          toColumn: 'id',
+          type: 'many-to-one',
+        },
+      ],
       discoveredAt: new Date(),
     };
   }
 
-  abstract connect():    Promise<void>;
+  abstract connect(): Promise<void>;
   abstract disconnect(): Promise<void>;
   abstract execute<T = unknown>(query: Query): Promise<T[]>;
-  abstract health():     Promise<DatabaseHealth>;
-  abstract schema():     Promise<DatabaseSchema>;
+  abstract health(): Promise<DatabaseHealth>;
+  abstract schema(): Promise<DatabaseSchema>;
 }

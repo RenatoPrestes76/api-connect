@@ -27,14 +27,14 @@ import type {
 class MyService {
   constructor(
     private readonly policyEngine: IPolicyEngine,
-    private readonly auditService: IGovernanceAuditService,
+    private readonly auditService: IGovernanceAuditService
   ) {}
 
   async performProtectedAction(
     actorId: string,
     actorRoles: string[],
     resourceId: string,
-    organizationId: string,
+    organizationId: string
   ): Promise<GovernanceResult<MyResult>> {
     // 1. Policy check
     const evalRequest: PolicyEvaluationRequest = {
@@ -57,14 +57,17 @@ class MyService {
         action: 'my-resource.write',
         resource: { type: 'my-resource', id: resourceId, organizationId },
         outcome: 'denied',
-        policyDecision: { decision: evalResult.decision, policyIds: evalResult.matchedPolicies.map(p => p.id) },
+        policyDecision: {
+          decision: evalResult.decision,
+          policyIds: evalResult.matchedPolicies.map((p) => p.id),
+        },
       });
 
       return {
         ok: false,
         error: {
           code: 'POLICY_DENIED',
-          message: `Action denied by policy: ${evalResult.matchedRules.map(r => r.name).join(', ')}`,
+          message: `Action denied by policy: ${evalResult.matchedRules.map((r) => r.name).join(', ')}`,
         },
       };
     }
@@ -162,7 +165,7 @@ class PostgresPolicyRepository implements IPolicyRepository {
   async findById(id: PolicyId): Promise<Policy | null> {
     const row = await this.db.query(
       'SELECT * FROM governance_policies WHERE id = $1 AND deleted_at IS NULL',
-      [id],
+      [id]
     );
     return row ? mapRowToPolicy(row) : null;
   }
@@ -173,15 +176,23 @@ class PostgresPolicyRepository implements IPolicyRepository {
        WHERE (organization_id = $1 OR organization_id IS NULL)
          AND enabled = true
          AND deleted_at IS NULL`,
-      [scope.organizationId],
+      [scope.organizationId]
     );
     return rows.map(mapRowToPolicy);
   }
 
-  async save(policy: Policy): Promise<Policy> { /* ... */ }
-  async delete(id: PolicyId): Promise<void>   { /* ... */ }
-  async listVersions(id: PolicyId)            { /* ... */ }
-  async restoreVersion(id: PolicyId, v: number) { /* ... */ }
+  async save(policy: Policy): Promise<Policy> {
+    /* ... */
+  }
+  async delete(id: PolicyId): Promise<void> {
+    /* ... */
+  }
+  async listVersions(id: PolicyId) {
+    /* ... */
+  }
+  async restoreVersion(id: PolicyId, v: number) {
+    /* ... */
+  }
 }
 ```
 
@@ -229,9 +240,22 @@ class AlwaysAllowPolicyEngine implements IPolicyEngine {
       evaluatedAt: new Date(),
     };
   }
-  async enforce(req) { /* call evaluate + throw on deny */ }
-  async evaluateBatch(reqs) { return reqs.map(_ => ({ decision: 'allow' as const, matchedPolicies: [], matchedRules: [], obligations: [], evaluationId: 'test', evaluatedAt: new Date() })); }
-  async findApplicable(_scope) { return []; }
+  async enforce(req) {
+    /* call evaluate + throw on deny */
+  }
+  async evaluateBatch(reqs) {
+    return reqs.map((_) => ({
+      decision: 'allow' as const,
+      matchedPolicies: [],
+      matchedRules: [],
+      obligations: [],
+      evaluationId: 'test',
+      evaluatedAt: new Date(),
+    }));
+  }
+  async findApplicable(_scope) {
+    return [];
+  }
 }
 ```
 
@@ -282,11 +306,11 @@ Use the `as` cast at system boundaries (API inputs, database reads) and propagat
 
 ### Naming Conventions
 
-| Pattern | Example |
-|---------|---------|
-| ID types | `FooId = Branded<string, 'FooId'>` |
-| Service interface | `IFooService` or `IFooGovernanceService` |
-| Admin interface | `IFooAdminService` |
-| Repository interface | `IFooRepository` |
-| Input types | `CreateFooInput`, `UpdateFooInput` |
-| Result types | `GovernanceResult<Foo>` |
+| Pattern              | Example                                  |
+| -------------------- | ---------------------------------------- |
+| ID types             | `FooId = Branded<string, 'FooId'>`       |
+| Service interface    | `IFooService` or `IFooGovernanceService` |
+| Admin interface      | `IFooAdminService`                       |
+| Repository interface | `IFooRepository`                         |
+| Input types          | `CreateFooInput`, `UpdateFooInput`       |
+| Result types         | `GovernanceResult<Foo>`                  |

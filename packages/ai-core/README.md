@@ -86,16 +86,16 @@ AI provider abstraction. Register any LLM backend without changing business logi
 
 **Supported providers:**
 
-| Provider | ID | Models |
-|---|---|---|
-| OpenAI | `provider-openai` | `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo` |
-| Anthropic | `provider-anthropic` | `claude-opus-4-8`, `claude-sonnet-4-6`, `claude-haiku-4-5` |
-| Google | `provider-google-gemini` | `gemini-2.0-flash`, `gemini-1.5-pro` |
-| Azure OpenAI | `provider-azure-openai` | OpenAI models via Azure |
-| DeepSeek | `provider-deepseek` | `deepseek-r1`, `deepseek-chat` |
-| Mistral | `provider-mistral` | `mistral-large-latest` |
-| Llama | `provider-llama` | `llama-3.1-70b-instruct` |
-| Local | `provider-local` | Ollama, LM Studio, llama.cpp |
+| Provider     | ID                       | Models                                                     |
+| ------------ | ------------------------ | ---------------------------------------------------------- |
+| OpenAI       | `provider-openai`        | `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`                     |
+| Anthropic    | `provider-anthropic`     | `claude-opus-4-8`, `claude-sonnet-4-6`, `claude-haiku-4-5` |
+| Google       | `provider-google-gemini` | `gemini-2.0-flash`, `gemini-1.5-pro`                       |
+| Azure OpenAI | `provider-azure-openai`  | OpenAI models via Azure                                    |
+| DeepSeek     | `provider-deepseek`      | `deepseek-r1`, `deepseek-chat`                             |
+| Mistral      | `provider-mistral`       | `mistral-large-latest`                                     |
+| Llama        | `provider-llama`         | `llama-3.1-70b-instruct`                                   |
+| Local        | `provider-local`         | Ollama, LM Studio, llama.cpp                               |
 
 New providers implement `AIProvider` and register with `AIProviderRegistry`.
 
@@ -105,16 +105,16 @@ New providers implement `AIProvider` and register with `AIProviderRegistry`.
 
 **8 Specialist Agents** — each is a stateless plugin implementing `AIAgent`.
 
-| Agent | ID | Specialization |
-|---|---|---|
-| Schema Analyst | `agent-schema-analyst` | Entity/field CBL classification |
-| Mapping Analyst | `agent-mapping-analyst` | Field mapping conflicts and transformations |
-| ERP Specialist | `agent-erp-specialist` | ERP system/module identification |
-| Performance Analyst | `agent-performance-analyst` | Bottlenecks, optimization |
-| Sync Analyst | `agent-sync-analyst` | Sync strategy, conflict resolution |
-| Security Analyst | `agent-security-analyst` | Data sensitivity, risk assessment |
-| Change Analyst | `agent-change-analyst` | Schema change impact, migration |
-| Validation Analyst | `agent-validation-analyst` | Validation rules, anomaly detection |
+| Agent               | ID                          | Specialization                              |
+| ------------------- | --------------------------- | ------------------------------------------- |
+| Schema Analyst      | `agent-schema-analyst`      | Entity/field CBL classification             |
+| Mapping Analyst     | `agent-mapping-analyst`     | Field mapping conflicts and transformations |
+| ERP Specialist      | `agent-erp-specialist`      | ERP system/module identification            |
+| Performance Analyst | `agent-performance-analyst` | Bottlenecks, optimization                   |
+| Sync Analyst        | `agent-sync-analyst`        | Sync strategy, conflict resolution          |
+| Security Analyst    | `agent-security-analyst`    | Data sensitivity, risk assessment           |
+| Change Analyst      | `agent-change-analyst`      | Schema change impact, migration             |
+| Validation Analyst  | `agent-validation-analyst`  | Validation rules, anomaly detection         |
 
 Agents are orchestrated by `AIAgentOrchestrator` — run single, parallel, or pipeline.
 
@@ -133,13 +133,13 @@ Recommendation → DecisionEngine.evaluate()
 
 **Built-in decision rules:**
 
-| Rule | Effect |
-|---|---|
-| `rule-require-review-destructive` | Remove-entity/remove-field always requires review |
-| `rule-min-confidence` | Block if confidence below 0.20 |
-| `rule-require-reasoning-confirmed` | Confirmed mapping changes need reasoning chain |
-| `rule-require-review-security` | Security reclassification always requires review |
-| `rule-reject-expired` | Block expired recommendations |
+| Rule                               | Effect                                            |
+| ---------------------------------- | ------------------------------------------------- |
+| `rule-require-review-destructive`  | Remove-entity/remove-field always requires review |
+| `rule-min-confidence`              | Block if confidence below 0.20                    |
+| `rule-require-reasoning-confirmed` | Confirmed mapping changes need reasoning chain    |
+| `rule-require-review-security`     | Security reclassification always requires review  |
+| `rule-reject-expired`              | Block expired recommendations                     |
 
 No action is taken without a signed `DecisionRecord`.
 
@@ -156,7 +156,7 @@ All prompts are independent versioned modules — never hardcoded in business lo
 const rendered = await promptRegistry.render(PROMPT_IDS.SCHEMA_ENTITY_CLASSIFICATION, {
   entityName: 'B1_SB1',
   fieldNames: ['CODPROD', 'DESCRPROD', 'VLR_CUSTO', 'VLR_VENDA'],
-  erpContext: 'SAP B1'
+  erpContext: 'SAP B1',
 });
 ```
 
@@ -179,6 +179,7 @@ Every `ReasoningChain` has typed steps: `observation → inference → hypothesi
 Enforces that every recommendation is explainable.
 
 Every `Explanation<T>` contains:
+
 - `reason` — WHY was this recommended?
 - `confidence` + `confidenceRationale` — HOW certain?
 - `evidence[]` — WHAT data supports this?
@@ -193,14 +194,14 @@ Target audiences: `administrator`, `integrator`, `developer`, `auditor`.
 
 Persistent knowledge store. **Never stores business data.**
 
-| Memory Kind | Example |
-|---|---|
-| `schema-structure` | Entity "B1_SB1" has fields CODPROD, DESCRPROD |
-| `semantic-mapping` | CODPROD → FIELD_PRODUCT_CODE (confirmed by admin) |
-| `erp-pattern` | In SAP B1, prefix "B1_" is stripped before analysis |
-| `performance-baseline` | Avg sync duration for ENTITY_PRODUCT: 2,400ms |
-| `sync-pattern` | ENTITY_INVOICE: incremental strategy, 2% conflict rate |
-| `security-classification` | FIELD_TAX_ID → restricted, LGPD applicable |
+| Memory Kind               | Example                                                |
+| ------------------------- | ------------------------------------------------------ |
+| `schema-structure`        | Entity "B1_SB1" has fields CODPROD, DESCRPROD          |
+| `semantic-mapping`        | CODPROD → FIELD_PRODUCT_CODE (confirmed by admin)      |
+| `erp-pattern`             | In SAP B1, prefix "B1\_" is stripped before analysis   |
+| `performance-baseline`    | Avg sync duration for ENTITY_PRODUCT: 2,400ms          |
+| `sync-pattern`            | ENTITY_INVOICE: incremental strategy, 2% conflict rate |
+| `security-classification` | FIELD_TAX_ID → restricted, LGPD applicable             |
 
 Memory is reinforced by confirmations, contradicted by corrections, and consolidated periodically.
 
@@ -212,17 +213,17 @@ Learns from every confirmed decision. **Never reads business data values.**
 
 **9 pattern types:**
 
-| Pattern | Example |
-|---|---|
-| `naming-convention` | SAP B1 uses `B1_` prefix |
-| `structural-signature` | CODPROD + DESCRPROD + VLR_CUSTO = ENTITY_PRODUCT |
-| `type-heuristic` | `NUMERIC(15,4)` → pricing field |
-| `erp-prefix-stripping` | Strip `B1_` before CBL matching |
-| `abbreviation-expansion` | `COD` → `code`, `DESCR` → `description` |
-| `multilingual-synonym` | Portuguese `FORNECEDOR` → SUPPLIER |
-| `confidence-calibration` | Schema Analyst overestimates SAP B1 by 5% |
-| `conflict-resolution` | Concurrent-update in ENTITY_ORDER → latest-timestamp |
-| `rejection-pattern` | "B1_ZXX" pattern consistently rejected as system tables |
+| Pattern                  | Example                                                 |
+| ------------------------ | ------------------------------------------------------- |
+| `naming-convention`      | SAP B1 uses `B1_` prefix                                |
+| `structural-signature`   | CODPROD + DESCRPROD + VLR_CUSTO = ENTITY_PRODUCT        |
+| `type-heuristic`         | `NUMERIC(15,4)` → pricing field                         |
+| `erp-prefix-stripping`   | Strip `B1_` before CBL matching                         |
+| `abbreviation-expansion` | `COD` → `code`, `DESCR` → `description`                 |
+| `multilingual-synonym`   | Portuguese `FORNECEDOR` → SUPPLIER                      |
+| `confidence-calibration` | Schema Analyst overestimates SAP B1 by 5%               |
+| `conflict-resolution`    | Concurrent-update in ENTITY_ORDER → latest-timestamp    |
+| `rejection-pattern`      | "B1_ZXX" pattern consistently rejected as system tables |
 
 ---
 
@@ -324,23 +325,20 @@ Sync strategy recommendation and conflict resolution:
 ## Importing
 
 **Root import:**
+
 ```typescript
-import type {
-  AIRecommendation,
-  DecisionRecord,
-  AIAgent,
-  AIProvider,
-} from '@seltriva/ai-core';
+import type { AIRecommendation, DecisionRecord, AIAgent, AIProvider } from '@seltriva/ai-core';
 ```
 
 **Sub-path import (tree-shaking):**
+
 ```typescript
-import type { AIProvider }         from '@seltriva/ai-core/providers';
-import type { AIAgent }            from '@seltriva/ai-core/agents';
-import type { DecisionEngine }     from '@seltriva/ai-core/decision-engine';
-import type { PromptRegistry }     from '@seltriva/ai-core/prompt-registry';
-import type { AIMemory }           from '@seltriva/ai-core/memory';
-import type { AILearningEngine }   from '@seltriva/ai-core/learning';
+import type { AIProvider } from '@seltriva/ai-core/providers';
+import type { AIAgent } from '@seltriva/ai-core/agents';
+import type { DecisionEngine } from '@seltriva/ai-core/decision-engine';
+import type { PromptRegistry } from '@seltriva/ai-core/prompt-registry';
+import type { AIMemory } from '@seltriva/ai-core/memory';
+import type { AILearningEngine } from '@seltriva/ai-core/learning';
 import type { SchemaAnalysisEngine } from '@seltriva/ai-core/schema-analysis';
 ```
 
@@ -395,10 +393,16 @@ const myRule: DecisionRule = {
   description: 'LGPD compliance: fiscal field changes need human sign-off',
   priority: 100,
   evaluate(recommendation) {
-    const isFiscal = recommendation.payload?.fieldKind?.toString().includes('TAX') ||
-                     recommendation.payload?.fieldKind?.toString().includes('FISCAL');
+    const isFiscal =
+      recommendation.payload?.fieldKind?.toString().includes('TAX') ||
+      recommendation.payload?.fieldKind?.toString().includes('FISCAL');
     if (isFiscal) {
-      return { applies: true, action: 'require-review', reason: 'Fiscal field — LGPD compliance', overridesConfidence: true };
+      return {
+        applies: true,
+        action: 'require-review',
+        reason: 'Fiscal field — LGPD compliance',
+        overridesConfidence: true,
+      };
     }
     return { applies: false, action: 'allow' };
   },
@@ -424,12 +428,12 @@ promptRegistry.setActive(PROMPT_IDS.SCHEMA_ENTITY_CLASSIFICATION, '2.0.0');
 
 ## Package Info
 
-| Field | Value |
-|---|---|
-| Package | `@seltriva/ai-core` |
-| Version | `0.1.0` |
-| Runtime | Node.js 18+, browser-compatible |
-| TypeScript | `strict: true`, `moduleResolution: "bundler"` |
+| Field        | Value                                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------- |
+| Package      | `@seltriva/ai-core`                                                                               |
+| Version      | `0.1.0`                                                                                           |
+| Runtime      | Node.js 18+, browser-compatible                                                                   |
+| TypeScript   | `strict: true`, `moduleResolution: "bundler"`                                                     |
 | Dependencies | `@seltriva/core`, `@seltriva/types`, `@seltriva/schema-intelligence`, `@seltriva/semantic-engine` |
-| Side effects | None |
-| Architecture | Hexagonal, DDD, Plugin, DI, Provider Pattern |
+| Side effects | None                                                                                              |
+| Architecture | Hexagonal, DDD, Plugin, DI, Provider Pattern                                                      |

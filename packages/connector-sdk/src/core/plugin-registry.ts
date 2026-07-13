@@ -1,14 +1,20 @@
 import type { LoadedPlugin } from '../loader/plugin-loader.js';
 
-export type PluginStatus = 'registered' | 'starting' | 'running' | 'stopping' | 'stopped' | 'failed';
+export type PluginStatus =
+  | 'registered'
+  | 'starting'
+  | 'running'
+  | 'stopping'
+  | 'stopped'
+  | 'failed';
 
 export interface PluginEntry {
-  readonly plugin:  LoadedPlugin;
-  status:           PluginStatus;
-  startedAt?:       Date;
-  stoppedAt?:       Date;
-  lastError?:       Error;
-  failureCount:     number;
+  readonly plugin: LoadedPlugin;
+  status: PluginStatus;
+  startedAt?: Date;
+  stoppedAt?: Date;
+  lastError?: Error;
+  failureCount: number;
 }
 
 export class PluginRegistry {
@@ -51,10 +57,12 @@ export class PluginRegistry {
   recordFailure(id: string, error: Error): void {
     const entry = this._plugins.get(id);
     if (!entry) return;
-    entry.status     = 'failed';
-    entry.lastError  = error;
+    entry.status = 'failed';
+    entry.lastError = error;
     entry.failureCount++;
   }
 
-  get size(): number { return this._plugins.size; }
+  get size(): number {
+    return this._plugins.size;
+  }
 }

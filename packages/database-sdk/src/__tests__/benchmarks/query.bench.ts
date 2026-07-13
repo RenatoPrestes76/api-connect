@@ -1,43 +1,45 @@
 import { bench, describe } from 'vitest';
-import { QueryBuilder }    from '../../query/query-builder.js';
-import { SqlRenderer }     from '../../query/sql-renderer.js';
+import { QueryBuilder } from '../../query/query-builder.js';
+import { SqlRenderer } from '../../query/sql-renderer.js';
 import { equals, greaterThan, and, or, isNull } from '../../query/filters.js';
-import { MetadataCache }   from '../../schema/metadata-cache.js';
+import { MetadataCache } from '../../schema/metadata-cache.js';
 import type { SchemaReader, DatabaseSchema } from '../../schema/schema-reader.js';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
 const renderer = new SqlRenderer('postgres');
 
-const simpleSelect = new QueryBuilder()
-  .from('users')
-  .where(equals('id', 1))
-  .build();
+const simpleSelect = new QueryBuilder().from('users').where(equals('id', 1)).build();
 
 const complexSelect = new QueryBuilder()
   .select(['id', 'email', 'name'])
   .from('users')
   .join('LEFT', 'orders', 'users.id = orders.user_id')
-  .where(and(
-    equals('active', true),
-    greaterThan('created_at', '2024-01-01'),
-    or(isNull('deleted_at'), equals('deleted_at', null)),
-  ))
+  .where(
+    and(
+      equals('active', true),
+      greaterThan('created_at', '2024-01-01'),
+      or(isNull('deleted_at'), equals('deleted_at', null))
+    )
+  )
   .orderBy('created_at', 'DESC')
   .limit(20)
   .offset(0)
   .build();
 
-const insertQuery = QueryBuilder.insert('events', Array.from({ length: 50 }, (_, i) => ({
-  user_id:    i + 1,
-  action:     'click',
-  created_at: new Date().toISOString(),
-})));
+const insertQuery = QueryBuilder.insert(
+  'events',
+  Array.from({ length: 50 }, (_, i) => ({
+    user_id: i + 1,
+    action: 'click',
+    created_at: new Date().toISOString(),
+  }))
+);
 
 const updateQuery = QueryBuilder.update(
   'users',
   { name: 'Updated', updated_at: new Date().toISOString() },
-  [equals('id', 42)],
+  [equals('id', 42)]
 );
 
 const deleteQuery = QueryBuilder.deleteFrom('sessions', [
@@ -73,10 +75,13 @@ describe('QueryBuilder — build()', () => {
   });
 
   bench('INSERT 50 rows', () => {
-    QueryBuilder.insert('events', Array.from({ length: 50 }, (_, i) => ({
-      user_id: i + 1,
-      action:  'click',
-    })));
+    QueryBuilder.insert(
+      'events',
+      Array.from({ length: 50 }, (_, i) => ({
+        user_id: i + 1,
+        action: 'click',
+      }))
+    );
   });
 });
 
@@ -113,25 +118,29 @@ describe('SqlRenderer — render()', () => {
 // ─── MetadataCache benchmarks ────────────────────────────────────────────────
 
 const CACHED_SCHEMA: DatabaseSchema = {
-  name:     'bench',
-  tables:   Array.from({ length: 20 }, (_, i) => ({
-    name:        `table_${i}`,
-    columns:     Array.from({ length: 10 }, (_, j) => ({
-      name: `col_${j}`, type: 'varchar', nullable: j > 0,
-      isPrimaryKey: j === 0, isForeignKey: false, isUnique: j === 0,
+  name: 'bench',
+  tables: Array.from({ length: 20 }, (_, i) => ({
+    name: `table_${i}`,
+    columns: Array.from({ length: 10 }, (_, j) => ({
+      name: `col_${j}`,
+      type: 'varchar',
+      nullable: j > 0,
+      isPrimaryKey: j === 0,
+      isForeignKey: false,
+      isUnique: j === 0,
     })),
-    primaryKey:  { columns: ['col_0'] },
+    primaryKey: { columns: ['col_0'] },
     foreignKeys: [],
-    indexes:     [{ name: `pk_${i}`, columns: ['col_0'], isUnique: true, isPrimary: true }],
+    indexes: [{ name: `pk_${i}`, columns: ['col_0'], isUnique: true, isPrimary: true }],
   })),
-  relations:    [],
+  relations: [],
   discoveredAt: new Date(),
 };
 
 const mockReader: SchemaReader = {
-  readSchema:  async () => CACHED_SCHEMA,
-  readTable:   async (n) => CACHED_SCHEMA.tables.find((t) => t.name === n) ?? null,
-  listTables:  async () => CACHED_SCHEMA.tables.map((t) => t.name),
+  readSchema: async () => CACHED_SCHEMA,
+  readTable: async (n) => CACHED_SCHEMA.tables.find((t) => t.name === n) ?? null,
+  listTables: async () => CACHED_SCHEMA.tables.map((t) => t.name),
 };
 
 describe('MetadataCache — load()', () => {

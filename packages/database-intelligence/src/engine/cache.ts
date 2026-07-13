@@ -8,7 +8,7 @@
 import type { DatabaseIntelligenceReport, DatabaseInput } from '../types/index.js';
 
 interface CacheEntry {
-  readonly report:    DatabaseIntelligenceReport;
+  readonly report: DatabaseIntelligenceReport;
   readonly expiresAt: number;
   readonly fingerprint: string;
 }
@@ -50,7 +50,7 @@ export class AnalysisCache {
   set(fingerprint: string, report: DatabaseIntelligenceReport): void {
     this._store.set(fingerprint, {
       report,
-      expiresAt:   Date.now() + this._ttlMs,
+      expiresAt: Date.now() + this._ttlMs,
       fingerprint,
     });
   }
@@ -63,7 +63,9 @@ export class AnalysisCache {
     this._store.clear();
   }
 
-  get size(): number { return this._store.size; }
+  get size(): number {
+    return this._store.size;
+  }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

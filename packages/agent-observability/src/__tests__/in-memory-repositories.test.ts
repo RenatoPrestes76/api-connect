@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { InMemoryHeartbeatRecordRepository } from '../repository/in-memory-heartbeat-record-repository.js';
-import { InMemorySyncRecordRepository }      from '../repository/in-memory-sync-record-repository.js';
-import { HeartbeatRecord }                   from '../entity/heartbeat-record.js';
-import { SyncRecord }                        from '../entity/sync-record.js';
+import { InMemorySyncRecordRepository } from '../repository/in-memory-sync-record-repository.js';
+import { HeartbeatRecord } from '../entity/heartbeat-record.js';
+import { SyncRecord } from '../entity/sync-record.js';
 
 // ─── Heartbeat repo ───────────────────────────────────────────────────────────
 
@@ -19,7 +19,9 @@ function makeHB(agentId: string, minsAgo: number, id?: string): HeartbeatRecord 
 
 describe('InMemoryHeartbeatRecordRepository', () => {
   let repo: InMemoryHeartbeatRecordRepository;
-  beforeEach(() => { repo = new InMemoryHeartbeatRecordRepository(); });
+  beforeEach(() => {
+    repo = new InMemoryHeartbeatRecordRepository();
+  });
 
   it('save and findByAgentId returns records sorted newest-first', async () => {
     await repo.save(makeHB('ag', 5, 'old'));
@@ -42,7 +44,7 @@ describe('InMemoryHeartbeatRecordRepository', () => {
   it('findRecent returns only records after since', async () => {
     const since = new Date(Date.now() - 3 * 60_000);
     await repo.save(makeHB('ag', 10)); // 10 min ago — excluded
-    await repo.save(makeHB('ag', 1));  // 1 min ago  — included
+    await repo.save(makeHB('ag', 1)); // 1 min ago  — included
     const recs = await repo.findRecent(since);
     expect(recs).toHaveLength(1);
   });
@@ -68,7 +70,7 @@ describe('InMemoryHeartbeatRecordRepository', () => {
     expect(await repo.countByAgentId('ag')).toBe(3);
     // remaining should be the 3 most recent
     const remaining = await repo.findByAgentId('ag');
-    expect(remaining.every(r => ['hb-0', 'hb-1', 'hb-2'].includes(r.id))).toBe(true);
+    expect(remaining.every((r) => ['hb-0', 'hb-1', 'hb-2'].includes(r.id))).toBe(true);
   });
 
   it('deleteOldest is a no-op when count <= keepCount', async () => {
@@ -93,15 +95,15 @@ describe('InMemoryHeartbeatRecordRepository', () => {
 // ─── Sync repo ────────────────────────────────────────────────────────────────
 
 function makeSync(agentId: string, minsAgo: number, id?: string): SyncRecord {
-  const end   = new Date(Date.now() - minsAgo * 60_000);
+  const end = new Date(Date.now() - minsAgo * 60_000);
   const start = new Date(end.getTime() - 5_000);
   return SyncRecord.create({
     id,
     agentId,
-    startedAt:       start,
-    finishedAt:      end,
-    recordsSent:     100,
-    recordsFailed:   0,
+    startedAt: start,
+    finishedAt: end,
+    recordsSent: 100,
+    recordsFailed: 0,
     bytesTransferred: 10_240,
     result: 'SUCCESS',
   });
@@ -109,7 +111,9 @@ function makeSync(agentId: string, minsAgo: number, id?: string): SyncRecord {
 
 describe('InMemorySyncRecordRepository', () => {
   let repo: InMemorySyncRecordRepository;
-  beforeEach(() => { repo = new InMemorySyncRecordRepository(); });
+  beforeEach(() => {
+    repo = new InMemorySyncRecordRepository();
+  });
 
   it('save and findByAgentId returns records sorted newest-first', async () => {
     await repo.save(makeSync('ag', 5, 'old'));
@@ -121,7 +125,7 @@ describe('InMemorySyncRecordRepository', () => {
   it('findRecent filters by finishedAt', async () => {
     const since = new Date(Date.now() - 3 * 60_000);
     await repo.save(makeSync('ag', 10)); // excluded
-    await repo.save(makeSync('ag', 1));  // included
+    await repo.save(makeSync('ag', 1)); // included
     const recs = await repo.findRecent(since);
     expect(recs).toHaveLength(1);
   });

@@ -3,10 +3,10 @@
  * No real database connection is needed — the client is injected.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { AtlasAgent }                            from '@seltriva/agent-identity';
-import { PrismaAtlasAgentRepository }            from '../infrastructure/prisma-atlas-agent-repository.js';
-import { PrismaProvisioningTokenRepository }     from '../infrastructure/prisma-provisioning-token-repository.js';
-import { ProvisioningToken }                     from '../entity/provisioning-token.js';
+import { AtlasAgent } from '@seltriva/agent-identity';
+import { PrismaAtlasAgentRepository } from '../infrastructure/prisma-atlas-agent-repository.js';
+import { PrismaProvisioningTokenRepository } from '../infrastructure/prisma-provisioning-token-repository.js';
+import { ProvisioningToken } from '../entity/provisioning-token.js';
 import type {
   AgentProvisioningDbClient,
   PrismaAtlasAgent,
@@ -23,47 +23,47 @@ const AGENT_UUID_2 = '550e8400-e29b-41d4-a716-446655440002';
 
 function makeAgentRow(overrides: Partial<PrismaAtlasAgent> = {}): PrismaAtlasAgent {
   return {
-    id:                  AGENT_UUID_1,
-    companyId:           'co-1',
-    name:                'Test Agent',
-    machineId:           'MACHINE-PR001-TEST',
-    hostname:            'server01',
-    connectorType:       'MSSQL',
-    version:             '1.0.0',
-    status:              'REGISTERING',
-    lastHeartbeat:       null,
+    id: AGENT_UUID_1,
+    companyId: 'co-1',
+    name: 'Test Agent',
+    machineId: 'MACHINE-PR001-TEST',
+    hostname: 'server01',
+    connectorType: 'MSSQL',
+    version: '1.0.0',
+    status: 'REGISTERING',
+    lastHeartbeat: null,
     lastSynchronization: null,
-    createdAt:           new Date('2024-01-01'),
-    updatedAt:           new Date('2024-01-01'),
-    deletedAt:           null,
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
+    deletedAt: null,
     ...overrides,
   };
 }
 
 function makeTokenRow(overrides: Partial<PrismaProvisioningToken> = {}): PrismaProvisioningToken {
   return {
-    id:          'tok-001',
-    companyId:   'co-1',
-    tokenHash:   'a'.repeat(64),
+    id: 'tok-001',
+    companyId: 'co-1',
+    tokenHash: 'a'.repeat(64),
     tokenPrefix: 'slp_aabbccdd',
     description: 'test token',
-    expiresAt:   FUTURE,
-    revokedAt:   null,
-    lastUsedAt:  null,
-    createdAt:   new Date('2024-01-01'),
-    updatedAt:   new Date('2024-01-01'),
+    expiresAt: FUTURE,
+    revokedAt: null,
+    lastUsedAt: null,
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
     ...overrides,
   };
 }
 
 function makeAgentRegisterParams() {
   return {
-    companyId:     'co-1',
-    name:          'Test Agent',
-    hostname:      'server01',
-    machineId:     'MACHINE-PR001-TEST',
+    companyId: 'co-1',
+    name: 'Test Agent',
+    hostname: 'server01',
+    machineId: 'MACHINE-PR001-TEST',
     connectorType: 'MSSQL',
-    version:       '1.0.0',
+    version: '1.0.0',
   };
 }
 
@@ -76,23 +76,23 @@ describe('PrismaAtlasAgentRepository', () => {
   beforeEach(() => {
     mockDb = {
       atlasAgent: {
-        create:     vi.fn(),
-        update:     vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
         findUnique: vi.fn(),
-        findMany:   vi.fn(),
+        findMany: vi.fn(),
         updateMany: vi.fn(),
       },
       provisioningToken: {
-        create:     vi.fn(),
-        update:     vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
         findUnique: vi.fn(),
-        findMany:   vi.fn(),
+        findMany: vi.fn(),
       },
       agentAccessToken: {
-        create:     vi.fn(),
-        update:     vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
         findUnique: vi.fn(),
-        findMany:   vi.fn(),
+        findMany: vi.fn(),
       },
     };
     repo = new PrismaAtlasAgentRepository(mockDb);
@@ -140,7 +140,7 @@ describe('PrismaAtlasAgentRepository', () => {
 
     it('returns null when deletedAt is set (soft-deleted)', async () => {
       vi.mocked(mockDb.atlasAgent.findUnique).mockResolvedValue(
-        makeAgentRow({ deletedAt: new Date() }),
+        makeAgentRow({ deletedAt: new Date() })
       );
       expect(await repo.findById('agent-001')).toBeNull();
     });
@@ -155,7 +155,7 @@ describe('PrismaAtlasAgentRepository', () => {
 
     it('returns null when soft-deleted', async () => {
       vi.mocked(mockDb.atlasAgent.findUnique).mockResolvedValue(
-        makeAgentRow({ deletedAt: new Date() }),
+        makeAgentRow({ deletedAt: new Date() })
       );
       expect(await repo.findByMachineId('MACHINE-PR001-TEST')).toBeNull();
     });
@@ -184,9 +184,7 @@ describe('PrismaAtlasAgentRepository', () => {
 
   describe('findOnline()', () => {
     it('queries with status=ONLINE', async () => {
-      vi.mocked(mockDb.atlasAgent.findMany).mockResolvedValue([
-        makeAgentRow({ status: 'ONLINE' }),
-      ]);
+      vi.mocked(mockDb.atlasAgent.findMany).mockResolvedValue([makeAgentRow({ status: 'ONLINE' })]);
       const results = await repo.findOnline();
       expect(results).toHaveLength(1);
       const call = vi.mocked(mockDb.atlasAgent.findMany).mock.calls[0]![0];
@@ -214,23 +212,23 @@ describe('PrismaProvisioningTokenRepository', () => {
   beforeEach(() => {
     mockDb = {
       atlasAgent: {
-        create:     vi.fn(),
-        update:     vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
         findUnique: vi.fn(),
-        findMany:   vi.fn(),
+        findMany: vi.fn(),
         updateMany: vi.fn(),
       },
       provisioningToken: {
-        create:     vi.fn(),
-        update:     vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
         findUnique: vi.fn(),
-        findMany:   vi.fn(),
+        findMany: vi.fn(),
       },
       agentAccessToken: {
-        create:     vi.fn(),
-        update:     vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
         findUnique: vi.fn(),
-        findMany:   vi.fn(),
+        findMany: vi.fn(),
       },
     };
     repo = new PrismaProvisioningTokenRepository(mockDb);
@@ -240,7 +238,7 @@ describe('PrismaProvisioningTokenRepository', () => {
     it('calls provisioningToken.create with tokenHash and tokenPrefix', async () => {
       const { token } = ProvisioningToken.create(
         { companyId: 'co-1', description: 'x', expiresAt: FUTURE },
-        () => 'tok-id',
+        () => 'tok-id'
       );
       vi.mocked(mockDb.provisioningToken.create).mockResolvedValue(makeTokenRow());
 
@@ -278,7 +276,7 @@ describe('PrismaProvisioningTokenRepository', () => {
   describe('revoke()', () => {
     it('calls provisioningToken.update with revokedAt', async () => {
       vi.mocked(mockDb.provisioningToken.update).mockResolvedValue(
-        makeTokenRow({ revokedAt: new Date() }),
+        makeTokenRow({ revokedAt: new Date() })
       );
       await repo.revoke('tok-001');
       const call = vi.mocked(mockDb.provisioningToken.update).mock.calls[0]![0];

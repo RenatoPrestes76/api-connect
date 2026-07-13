@@ -6,7 +6,7 @@ import { POLL_INTERVAL_MS } from '@/lib/constants';
 export function useDatabases() {
   return useQuery({
     queryKey: ['databases'],
-    queryFn:  ({ signal }) => listDatabases(signal),
+    queryFn: ({ signal }) => listDatabases(signal),
     refetchInterval: POLL_INTERVAL_MS,
   });
 }
@@ -14,8 +14,8 @@ export function useDatabases() {
 export function useDatabase(id: string) {
   return useQuery({
     queryKey: ['databases', id],
-    queryFn:  ({ signal }) => getDatabase(id, signal),
+    queryFn: ({ signal }) => getDatabase(id, signal),
     refetchInterval: POLL_INTERVAL_MS,
-    enabled:  !!id,
+    enabled: !!id,
   });
 }

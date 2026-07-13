@@ -1,6 +1,12 @@
 import type {
-  SelectQuery, InsertQuery, UpdateQuery, DeleteQuery, RawQuery,
-  Filter, OrderBy, Join,
+  SelectQuery,
+  InsertQuery,
+  UpdateQuery,
+  DeleteQuery,
+  RawQuery,
+  Filter,
+  OrderBy,
+  Join,
 } from './query-types.js';
 import { equals } from './filters.js';
 import { SqlRenderer } from './sql-renderer.js';
@@ -8,13 +14,13 @@ import type { RenderedQuery, DialectName } from './sql-renderer.js';
 import { QueryError } from '../errors/database-errors.js';
 
 export class QueryBuilder {
-  private _table    = '';
-  private _columns: string[]  = [];
-  private _filters: Filter[]  = [];
+  private _table = '';
+  private _columns: string[] = [];
+  private _filters: Filter[] = [];
   private _orderBys: OrderBy[] = [];
-  private _joins:    Join[]    = [];
-  private _limit:    number | undefined;
-  private _offset:   number | undefined;
+  private _joins: Join[] = [];
+  private _limit: number | undefined;
+  private _offset: number | undefined;
 
   select(columns: string | string[]): this {
     if (Array.isArray(columns)) {
@@ -66,14 +72,14 @@ export class QueryBuilder {
       throw new QueryError('Table not specified: call .from() before .build()');
     }
     return {
-      type:    'SELECT',
-      table:   this._table,
+      type: 'SELECT',
+      table: this._table,
       columns: this._columns.length ? [...this._columns] : ['*'],
-      where:   this._filters.length  ? [...this._filters]  : undefined,
+      where: this._filters.length ? [...this._filters] : undefined,
       orderBy: this._orderBys.length ? [...this._orderBys] : undefined,
-      limit:   this._limit,
-      offset:  this._offset,
-      joins:   this._joins.length    ? [...this._joins]    : undefined,
+      limit: this._limit,
+      offset: this._offset,
+      joins: this._joins.length ? [...this._joins] : undefined,
     };
   }
 
@@ -85,11 +91,7 @@ export class QueryBuilder {
     return { type: 'INSERT', table, values };
   }
 
-  static update(
-    table:  string,
-    set:    Record<string, unknown>,
-    where?: Filter[],
-  ): UpdateQuery {
+  static update(table: string, set: Record<string, unknown>, where?: Filter[]): UpdateQuery {
     return { type: 'UPDATE', table, set, where };
   }
 

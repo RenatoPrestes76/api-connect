@@ -2,12 +2,12 @@ import { AgentVersion } from '@seltriva/agent-identity';
 import type { AtlasAgentRepository } from '@seltriva/agent-identity';
 
 export type UpdateAgentVersionError =
-  | { code: 'AGENT_NOT_FOUND';    agentId: string }
-  | { code: 'AGENT_DISABLED';     agentId: string }
-  | { code: 'VERSION_NOT_NEWER';  current: string; requested: string };
+  | { code: 'AGENT_NOT_FOUND'; agentId: string }
+  | { code: 'AGENT_DISABLED'; agentId: string }
+  | { code: 'VERSION_NOT_NEWER'; current: string; requested: string };
 
 export type UpdateAgentVersionOutput =
-  | { ok: true;  value: { agentId: string; version: string } }
+  | { ok: true; value: { agentId: string; version: string } }
   | { ok: false; error: UpdateAgentVersionError };
 
 export class UpdateAgentVersion {
@@ -30,8 +30,8 @@ export class UpdateAgentVersion {
       return {
         ok: false,
         error: {
-          code:      'VERSION_NOT_NEWER',
-          current:   agent.version.toString(),
+          code: 'VERSION_NOT_NEWER',
+          current: agent.version.toString(),
           requested: newVersion,
         },
       };
@@ -43,8 +43,8 @@ export class UpdateAgentVersion {
       return {
         ok: false,
         error: {
-          code:      'VERSION_NOT_NEWER',
-          current:   agent.version.toString(),
+          code: 'VERSION_NOT_NEWER',
+          current: agent.version.toString(),
           requested: newVersion,
         },
       };

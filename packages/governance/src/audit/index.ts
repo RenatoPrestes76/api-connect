@@ -17,18 +17,18 @@ import type { GovernanceResult } from '../policies/index';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
-export type GovernanceAuditId    = Branded<string, 'GovernanceAuditId'>;
-export type AuditChainId         = Branded<string, 'AuditChainId'>;
+export type GovernanceAuditId = Branded<string, 'GovernanceAuditId'>;
+export type AuditChainId = Branded<string, 'AuditChainId'>;
 export type ComplianceEvidenceId = Branded<string, 'ComplianceEvidenceId'>;
 
 // ─── Audit Entry ─────────────────────────────────────────────────────────────
 
 export interface GovernanceAuditEntry {
   readonly id: GovernanceAuditId;
-  readonly chainId: AuditChainId;           // groups related operations
-  readonly sequence: number;                // monotonically increasing per chain
-  readonly hash: string;                    // SHA-256 of (previousHash + entry content)
-  readonly previousHash?: string;           // links to previous entry in chain
+  readonly chainId: AuditChainId; // groups related operations
+  readonly sequence: number; // monotonically increasing per chain
+  readonly hash: string; // SHA-256 of (previousHash + entry content)
+  readonly previousHash?: string; // links to previous entry in chain
   readonly organizationId?: string;
   readonly workspaceId?: string;
   readonly environmentId?: string;
@@ -236,7 +236,7 @@ export interface AuditExportRequest {
   readonly organizationId: string;
   readonly format: 'json' | 'csv' | 'jsonl' | 'pdf-report';
   readonly filter: AuditQueryFilter;
-  readonly includeChainProof: boolean;      // include hash chain for tamper evidence
+  readonly includeChainProof: boolean; // include hash chain for tamper evidence
   readonly encryptExport?: boolean;
   readonly requestedBy: string;
 }

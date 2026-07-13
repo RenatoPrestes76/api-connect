@@ -8,12 +8,7 @@
  *  4. Duplicate detection (within a batch; cross-batch is Atlas Cloud's responsibility)
  *  5. Integrity: no circular references in FK values (structural, not relational)
  */
-import type {
-  FieldSchema,
-  SyncRecord,
-  TableSchema,
-  ValidationResult,
-} from '../types/index.js';
+import type { FieldSchema, SyncRecord, TableSchema, ValidationResult } from '../types/index.js';
 
 export class ValidationEngine {
   private readonly _schemas = new Map<string, TableSchema>();
@@ -24,11 +19,7 @@ export class ValidationEngine {
     this._schemas.set(key, schema);
   }
 
-  validate(
-    schema:  string,
-    table:   string,
-    record:  SyncRecord,
-  ): ValidationResult {
+  validate(schema: string, table: string, record: SyncRecord): ValidationResult {
     const violations: string[] = [];
     const key = `${schema}.${table}`;
     const tableSchema = this._schemas.get(key);
@@ -55,13 +46,13 @@ export class ValidationEngine {
   }
 
   validateBatch(
-    schema:  string,
-    table:   string,
-    records: readonly SyncRecord[],
+    schema: string,
+    table: string,
+    records: readonly SyncRecord[]
   ): readonly ValidationResult[] {
     // Reset batch-level duplicate tracker
     const pkSeen = new Set<string>();
-    const key    = `${schema}.${table}`;
+    const key = `${schema}.${table}`;
     this._seenIds.set(key, pkSeen);
 
     return records.map((record) => {
@@ -83,14 +74,25 @@ export class ValidationEngine {
   private _checkType(field: FieldSchema, value: unknown): string | null {
     const dt = field.type.toLowerCase();
 
-    if (dt.includes('int') || dt.includes('numeric') || dt.includes('float') || dt.includes('decimal')) {
+    if (
+      dt.includes('int') ||
+      dt.includes('numeric') ||
+      dt.includes('float') ||
+      dt.includes('decimal')
+    ) {
       if (typeof value === 'string' && isNaN(Number(value))) {
         return `Field "${field.name}" expects numeric type but received "${value}"`;
       }
     }
 
     if (dt.includes('bool')) {
-      if (typeof value !== 'boolean' && value !== 0 && value !== 1 && value !== 'true' && value !== 'false') {
+      if (
+        typeof value !== 'boolean' &&
+        value !== 0 &&
+        value !== 1 &&
+        value !== 'true' &&
+        value !== 'false'
+      ) {
         return `Field "${field.name}" expects boolean but received "${value}"`;
       }
     }
@@ -108,5 +110,7 @@ export class ValidationEngine {
     this._seenIds.clear();
   }
 
-  get schemaCount(): number { return this._schemas.size; }
+  get schemaCount(): number {
+    return this._schemas.size;
+  }
 }

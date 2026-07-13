@@ -3,16 +3,27 @@ import { mapProduct, mapCustomer, mapInventory } from '../mapper.js';
 import type { ErpProduct, ErpCustomer, ErpInventoryItem } from '../mapper.js';
 
 const SAMPLE_PRODUCT: ErpProduct = {
-  sku: 'SKU-001', name: 'Test Widget', price: 9.99, category: 'Test', active: true,
+  sku: 'SKU-001',
+  name: 'Test Widget',
+  price: 9.99,
+  category: 'Test',
+  active: true,
 };
 
 const SAMPLE_CUSTOMER: ErpCustomer = {
-  code: 'C-001', name: 'Acme Inc', email: 'acme@test.com',
-  taxId: '00.000.000/0001-00', creditLimit: 10000, active: true,
+  code: 'C-001',
+  name: 'Acme Inc',
+  email: 'acme@test.com',
+  taxId: '00.000.000/0001-00',
+  creditLimit: 10000,
+  active: true,
 };
 
 const SAMPLE_INVENTORY: ErpInventoryItem = {
-  productSku: 'SKU-001', warehouse: 'WH-A', quantity: 100, reserved: 25,
+  productSku: 'SKU-001',
+  warehouse: 'WH-A',
+  quantity: 100,
+  reserved: 25,
 };
 
 describe('mapProduct', () => {
@@ -59,7 +70,7 @@ describe('mapCustomer', () => {
 
   it('maps active to isActive', () => {
     expect(mapCustomer({ ...SAMPLE_CUSTOMER, active: false }).isActive).toBe(false);
-    expect(mapCustomer({ ...SAMPLE_CUSTOMER, active: true  }).isActive).toBe(true);
+    expect(mapCustomer({ ...SAMPLE_CUSTOMER, active: true }).isActive).toBe(true);
   });
 
   it('externalId equals the original code', () => {

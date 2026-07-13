@@ -21,6 +21,7 @@ This package contains the architectural contracts and abstractions for Seltriva 
 ### Core Interfaces
 
 #### 1. **Domain-Driven Design** (`interfaces/domain.ts`)
+
 Core DDD tactical patterns.
 
 - **ValueObject<T>** - Immutable objects identified by attributes
@@ -35,6 +36,7 @@ Core DDD tactical patterns.
 [📖 Domain Guide](./src/interfaces/README-domain.md)
 
 #### 2. **Dependency Injection** (`interfaces/dependency-injection.ts`)
+
 Service registration and resolution.
 
 - **DIContainer** - Central dependency registry
@@ -44,6 +46,7 @@ Service registration and resolution.
 [📖 DI Guide](./src/interfaces/README-dependency-injection.md)
 
 #### 3. **Event Bus** (`interfaces/event-bus.ts`)
+
 Asynchronous event-driven architecture.
 
 - **Event** - Immutable events
@@ -55,6 +58,7 @@ Asynchronous event-driven architecture.
 [📖 Event Bus Guide](./src/interfaces/README-event-bus.md)
 
 #### 4. **Command Bus** (`interfaces/command-bus.ts`)
+
 CQRS command execution pattern.
 
 - **Command** - Action requests
@@ -66,6 +70,7 @@ CQRS command execution pattern.
 [📖 Command Bus Guide](./src/interfaces/README-command-bus.md)
 
 #### 5. **Drivers** (`interfaces/driver.ts`)
+
 External system integration abstractions.
 
 - **Driver** - Base driver interface
@@ -78,6 +83,7 @@ External system integration abstractions.
 [📖 Driver Guide](./src/interfaces/README-driver.md)
 
 #### 6. **Plugins** (`interfaces/plugin.ts`)
+
 Dynamic plugin system for extensibility.
 
 - **Plugin** - Plugin interface with lifecycle
@@ -88,6 +94,7 @@ Dynamic plugin system for extensibility.
 [📖 Plugin Guide](./src/interfaces/README-plugin.md)
 
 #### 7. **Configuration** (`interfaces/configuration.ts`)
+
 Centralized configuration management.
 
 - **ConfigurationManager** - Central config service
@@ -97,6 +104,7 @@ Centralized configuration management.
 [📖 Configuration Guide](./src/interfaces/README-configuration.md)
 
 #### 8. **Discovery** (`interfaces/discovery.ts`)
+
 Service and type discovery with reflection.
 
 - **ServiceDiscovery** - Service registration and lookup
@@ -106,6 +114,7 @@ Service and type discovery with reflection.
 [📖 Discovery Guide](./src/interfaces/README-discovery.md)
 
 #### 9. **Mapping** (`interfaces/mapping.ts`)
+
 Object transformation and mapping.
 
 - **Mapper** - Object transformation engine
@@ -116,6 +125,7 @@ Object transformation and mapping.
 [📖 Mapping Guide](./src/interfaces/README-mapping.md)
 
 #### 10. **Synchronization** (`interfaces/sync.ts`)
+
 Data synchronization between systems.
 
 - **SyncEngine** - Sync orchestration
@@ -126,6 +136,7 @@ Data synchronization between systems.
 [📖 Sync Guide](./src/interfaces/README-sync.md)
 
 #### 11. **Registry** (`interfaces/registry.ts`)
+
 Component registration and discovery.
 
 - **Registry<T>** - Generic registry pattern
@@ -139,6 +150,7 @@ Component registration and discovery.
 [📖 Registry Guide](./src/interfaces/README-registry.md)
 
 #### 12. **Design Patterns** (`interfaces/patterns.ts`)
+
 Reusable design patterns.
 
 - **Factory<T>** - Object creation
@@ -153,6 +165,7 @@ Reusable design patterns.
 [📖 Patterns Guide](./src/interfaces/README-patterns.md)
 
 #### 13. **Middleware** (`interfaces/middleware.ts`)
+
 Request/response processing pipelines.
 
 - **Middleware<TReq, TRes>** - Pipeline component
@@ -166,29 +179,40 @@ Request/response processing pipelines.
 ### Supporting Files
 
 #### Constants (`src/constants/index.ts`)
+
 ```typescript
 // Module names
-CORE_MODULES
+CORE_MODULES;
 
 // Driver and provider types
-DRIVER_TYPES, PROVIDER_TYPES
+(DRIVER_TYPES, PROVIDER_TYPES);
 
 // Lifecycle events
-PLUGIN_LIFECYCLE
+PLUGIN_LIFECYCLE;
 
 // Priorities and modes
-EVENT_PRIORITIES, SYNC_MODES, MAPPING_TYPES, REGISTRY_SCOPES
+(EVENT_PRIORITIES, SYNC_MODES, MAPPING_TYPES, REGISTRY_SCOPES);
 ```
 
 #### Exceptions (`src/exceptions/index.ts`)
+
 ```typescript
 // Typed exceptions for error handling
-CoreException, ConfigurationException, DIException, RegistryException,
-PluginException, EventBusException, CommandBusException, DiscoveryException,
-DriverException, MappingException, SyncException
+(CoreException,
+  ConfigurationException,
+  DIException,
+  RegistryException,
+  PluginException,
+  EventBusException,
+  CommandBusException,
+  DiscoveryException,
+  DriverException,
+  MappingException,
+  SyncException);
 ```
 
 #### Public Exports (`src/index.ts`)
+
 Central export point for all interfaces and types.
 
 ## Architecture Diagram
@@ -297,7 +321,7 @@ eventBus.subscribe({
   handler: async (event) => {
     // Process order
   },
-  priority: 75
+  priority: 75,
 });
 
 await eventBus.publish({
@@ -326,11 +350,11 @@ class MyPlugin implements Plugin {
   async initialize(context: PluginContext): Promise<void> {
     // Register services in DI
     context.container.register('myService', () => new MyService());
-    
+
     // Subscribe to events
     context.eventBus.subscribe({
       eventType: 'SomeEvent',
-      handler: this.handleEvent
+      handler: this.handleEvent,
     });
   }
 }
@@ -339,41 +363,48 @@ class MyPlugin implements Plugin {
 ## Best Practices
 
 ### 1. Dependency Injection
+
 - Use constructor injection, not service locator
 - Register interfaces, not implementations
 - Manage lifecycles appropriately (singleton vs transient)
 
 ### 2. Domain-Driven Design
+
 - Keep aggregates small and focused
 - Use value objects for attributes
 - Publish domain events from aggregates
 - Repositories are abstraction only
 
 ### 3. Event-Driven Architecture
+
 - Events represent past tense (OrderCreated, PaymentProcessed)
 - Events are immutable
 - Include correlation ID for tracing
 - Handle errors in event handlers gracefully
 
 ### 4. Command Execution
+
 - Commands are imperative (CreateOrder, ProcessPayment)
 - Commands are transactional units
 - Validate before execution
 - Return explicit results
 
 ### 5. Plugin System
+
 - Plugins are isolated in child containers
 - Declare dependencies explicitly
 - Use hooks for extensibility
 - Handle plugin errors independently
 
 ### 6. Configuration Management
+
 - Validate on load
 - Provide sensible defaults
 - Never log secrets
 - Support hierarchical access
 
 ### 7. Error Handling
+
 - Use typed exceptions from exceptions module
 - Include context information
 - Chain original errors
@@ -444,6 +475,7 @@ pnpm format
 ## Future Roadmap
 
 ### Phase 2: Implementation
+
 - Concrete DI container implementation
 - Event bus implementation (memory, Redis)
 - Command bus with middleware chain
@@ -451,12 +483,14 @@ pnpm format
 - Plugin loader and system
 
 ### Phase 3: Tools & Utilities
+
 - Mapping/transformation library
 - Sync engine with strategies
 - Discovery/reflection utilities
 - Registry implementations
 
 ### Phase 4: Extensions
+
 - Distributed tracing support
 - Metrics collection
 - Distributed command/event handling

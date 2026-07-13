@@ -22,7 +22,11 @@ export interface SimilarityEngine {
   /**
    * Compare two schemas and return a full similarity report
    */
-  compareSchemas(a: CanonicalSchema, b: CanonicalSchema, options?: SimilarityOptions): SIEResult<SchemaSimilarityReport>;
+  compareSchemas(
+    a: CanonicalSchema,
+    b: CanonicalSchema,
+    options?: SimilarityOptions
+  ): SIEResult<SchemaSimilarityReport>;
 
   /**
    * Find the most similar entities across two schemas
@@ -222,8 +226,8 @@ export interface SimilarityWeights {
 export const DEFAULT_SIMILARITY_WEIGHTS: SimilarityWeights = {
   nameSimilarity: 0.35,
   typeSimilarity: 0.25,
-  fieldCoverage: 0.20,
-  roleSimilarity: 0.10,
+  fieldCoverage: 0.2,
+  roleSimilarity: 0.1,
   constraintSimilarity: 0.05,
   positionSimilarity: 0.05,
 };

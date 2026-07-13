@@ -4,8 +4,8 @@ import { PriorityQueue, RetryQueue, DeadLetterQueue, QueueManager } from '../que
 describe('PriorityQueue', () => {
   it('dequeues in priority order', () => {
     const q = new PriorityQueue<string>();
-    q.enqueue('low',    3);
-    q.enqueue('high',   1);
+    q.enqueue('low', 3);
+    q.enqueue('high', 1);
     q.enqueue('medium', 2);
 
     expect(q.dequeue()?.payload).toBe('high');
@@ -47,7 +47,9 @@ describe('PriorityQueue', () => {
 
   it('drains all items', () => {
     const q = new PriorityQueue<number>();
-    q.enqueue(1); q.enqueue(2); q.enqueue(3);
+    q.enqueue(1);
+    q.enqueue(2);
+    q.enqueue(3);
     const drained = q.drain();
     expect(drained).toHaveLength(3);
     expect(q.size).toBe(0);
@@ -57,21 +59,37 @@ describe('PriorityQueue', () => {
 describe('RetryQueue', () => {
   it('does not pop items before delay', async () => {
     const q = new RetryQueue<string>();
-    q.schedule({ id: '1', payload: 'test', priority: 3, enqueuedAt: Date.now(), attempts: 1 }, 1000, 'err');
+    q.schedule(
+      { id: '1', payload: 'test', priority: 3, enqueuedAt: Date.now(), attempts: 1 },
+      1000,
+      'err'
+    );
     expect(q.popDue()).toHaveLength(0);
   });
 
   it('pops items after delay', async () => {
     const q = new RetryQueue<string>();
-    q.schedule({ id: '1', payload: 'test', priority: 3, enqueuedAt: Date.now(), attempts: 1 }, 10, 'err');
+    q.schedule(
+      { id: '1', payload: 'test', priority: 3, enqueuedAt: Date.now(), attempts: 1 },
+      10,
+      'err'
+    );
     await new Promise((r) => setTimeout(r, 20));
     expect(q.popDue()).toHaveLength(1);
   });
 
   it('sorts by retry time', async () => {
     const q = new RetryQueue<string>();
-    q.schedule({ id: '2', payload: 'second', priority: 3, enqueuedAt: Date.now(), attempts: 1 }, 50, '');
-    q.schedule({ id: '1', payload: 'first',  priority: 3, enqueuedAt: Date.now(), attempts: 1 }, 5, '');
+    q.schedule(
+      { id: '2', payload: 'second', priority: 3, enqueuedAt: Date.now(), attempts: 1 },
+      50,
+      ''
+    );
+    q.schedule(
+      { id: '1', payload: 'first', priority: 3, enqueuedAt: Date.now(), attempts: 1 },
+      5,
+      ''
+    );
     await new Promise((r) => setTimeout(r, 10));
     const due = q.popDue();
     expect(due[0]?.payload).toBe('first');
@@ -81,7 +99,10 @@ describe('RetryQueue', () => {
 describe('DeadLetterQueue', () => {
   it('enqueues failed items', () => {
     const dlq = new DeadLetterQueue<string>();
-    dlq.enqueue({ id: '1', payload: 'failed', priority: 3, enqueuedAt: Date.now(), attempts: 3 }, 'final error');
+    dlq.enqueue(
+      { id: '1', payload: 'failed', priority: 3, enqueuedAt: Date.now(), attempts: 3 },
+      'final error'
+    );
     expect(dlq.size).toBe(1);
     expect(dlq.entries()[0]?.finalError).toBe('final error');
   });
@@ -89,7 +110,10 @@ describe('DeadLetterQueue', () => {
   it('enforces max size by dropping oldest', () => {
     const dlq = new DeadLetterQueue<number>(3);
     for (let i = 0; i < 5; i++) {
-      dlq.enqueue({ id: String(i), payload: i, priority: 1, enqueuedAt: Date.now(), attempts: 1 }, 'err');
+      dlq.enqueue(
+        { id: String(i), payload: i, priority: 1, enqueuedAt: Date.now(), attempts: 1 },
+        'err'
+      );
     }
     expect(dlq.size).toBe(3);
     expect(dlq.entries()[0]?.item.payload).toBe(2);

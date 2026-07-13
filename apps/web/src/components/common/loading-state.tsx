@@ -1,6 +1,9 @@
 import { cn } from '@/lib/utils';
 
-interface LoadingSpinnerProps { className?: string; size?: 'sm' | 'md' | 'lg' }
+interface LoadingSpinnerProps {
+  className?: string;
+  size?: 'sm' | 'md' | 'lg';
+}
 
 export function LoadingSpinner({ className, size = 'md' }: LoadingSpinnerProps) {
   const sz = { sm: 'h-4 w-4', md: 'h-6 w-6', lg: 'h-8 w-8' }[size];
@@ -12,12 +15,20 @@ export function LoadingSpinner({ className, size = 'md' }: LoadingSpinnerProps) 
       aria-label="Loading"
     >
       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity=".3" />
-      <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <path
+        d="M12 2a10 10 0 0 1 10 10"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
-interface LoadingCardProps { rows?: number; className?: string }
+interface LoadingCardProps {
+  rows?: number;
+  className?: string;
+}
 
 export function LoadingCard({ rows = 3, className }: LoadingCardProps) {
   return (
@@ -31,7 +42,10 @@ export function LoadingCard({ rows = 3, className }: LoadingCardProps) {
   );
 }
 
-interface LoadingTableProps { rows?: number; cols?: number }
+interface LoadingTableProps {
+  rows?: number;
+  cols?: number;
+}
 
 export function LoadingTable({ rows = 5, cols = 4 }: LoadingTableProps) {
   return (
@@ -47,7 +61,9 @@ export function LoadingTable({ rows = 5, cols = 4 }: LoadingTableProps) {
   );
 }
 
-interface PageLoadingProps { message?: string }
+interface PageLoadingProps {
+  message?: string;
+}
 
 export function PageLoading({ message = 'Loading…' }: PageLoadingProps) {
   return (

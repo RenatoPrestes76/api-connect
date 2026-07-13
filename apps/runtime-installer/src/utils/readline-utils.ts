@@ -5,7 +5,7 @@ let _rl: readline.Interface | null = null;
 function getInterface(): readline.Interface {
   if (!_rl) {
     _rl = readline.createInterface({
-      input:  process.stdin,
+      input: process.stdin,
       output: process.stdout,
     });
   }
@@ -45,8 +45,8 @@ export async function promptYesNo(question: string, defaultYes = true): Promise<
 
 export async function promptChoice<T extends string>(
   question: string,
-  choices:  T[],
-  defaultChoice?: T,
+  choices: T[],
+  defaultChoice?: T
 ): Promise<T> {
   const choiceStr = choices
     .map((c) => (c === defaultChoice ? c.toUpperCase() : c.toLowerCase()))

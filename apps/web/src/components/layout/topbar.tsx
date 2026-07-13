@@ -5,22 +5,22 @@ import { logout } from '@/services/auth.service';
 import { Button } from '@/components/ui/button';
 
 const TITLES: Record<string, string> = {
-  '/dashboard':  'Dashboard',
+  '/dashboard': 'Dashboard',
   '/connectors': 'Connectors',
-  '/agents':     'Agents',
-  '/databases':  'Databases',
-  '/discovery':  'Discovery Reports',
-  '/sync':       'Sync Center',
-  '/health':     'Health Monitor',
-  '/logs':       'Logs',
-  '/settings':   'Settings',
-  '/users':      'Users',
+  '/agents': 'Agents',
+  '/databases': 'Databases',
+  '/discovery': 'Discovery Reports',
+  '/sync': 'Sync Center',
+  '/health': 'Health Monitor',
+  '/logs': 'Logs',
+  '/settings': 'Settings',
+  '/users': 'Users',
 };
 
 export function Topbar() {
-  const pathname  = usePathname();
-  const rootPath  = '/' + (pathname.split('/')[1] ?? '');
-  const title     = TITLES[rootPath] ?? 'Atlas Hub';
+  const pathname = usePathname();
+  const rootPath = '/' + (pathname.split('/')[1] ?? '');
+  const title = TITLES[rootPath] ?? 'Atlas Hub';
 
   const handleLogout = async () => {
     await logout();
@@ -47,7 +47,12 @@ export function Topbar() {
           <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
         </div>
 
-        <Button size="icon" variant="ghost" onClick={() => void handleLogout()} aria-label="Log out">
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => void handleLogout()}
+          aria-label="Log out"
+        >
           <LogOut className="h-4 w-4" />
         </Button>
       </div>

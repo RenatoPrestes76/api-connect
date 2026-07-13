@@ -6,9 +6,9 @@
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
 
-export type DeveloperId  = Branded<string, 'DeveloperId'>;
-export type ApiTokenId   = Branded<string, 'ApiTokenId'>;
-export type WebhookId    = Branded<string, 'WebhookId'>;
+export type DeveloperId = Branded<string, 'DeveloperId'>;
+export type ApiTokenId = Branded<string, 'ApiTokenId'>;
+export type WebhookId = Branded<string, 'WebhookId'>;
 export type SubmissionId = Branded<string, 'SubmissionId'>;
 
 // ─── Developer Account ───────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ export type AnalyticsPeriod = '7d' | '30d' | '90d' | '1y';
 // ─── Portal Result ────────────────────────────────────────────────────────────
 
 export type PortalResult<T> =
-  | { readonly ok: true;  readonly value: T }
+  | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly error: PortalError };
 
 export interface PortalError {

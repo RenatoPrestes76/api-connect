@@ -30,7 +30,7 @@ export function formatDateTime(iso: string | undefined): string {
 
 export function formatDuration(ms: number | undefined): string {
   if (ms == null) return '—';
-  if (ms < 1000)  return `${ms}ms`;
+  if (ms < 1000) return `${ms}ms`;
   if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
   return `${(ms / 60000).toFixed(1)}m`;
 }
@@ -64,7 +64,10 @@ export function capitalize(str: string): string {
 }
 
 export function slugify(str: string): string {
-  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 // ─── Arrays ───────────────────────────────────────────────────────────────────
@@ -78,7 +81,11 @@ export function groupBy<T>(arr: T[], key: (item: T) => string): Record<string, T
   }, {});
 }
 
-export function sortBy<T>(arr: T[], key: (item: T) => string | number, dir: 'asc' | 'desc' = 'asc'): T[] {
+export function sortBy<T>(
+  arr: T[],
+  key: (item: T) => string | number,
+  dir: 'asc' | 'desc' = 'asc'
+): T[] {
   return [...arr].sort((a, b) => {
     const ka = key(a);
     const kb = key(b);
@@ -91,10 +98,14 @@ export function sortBy<T>(arr: T[], key: (item: T) => string | number, dir: 'asc
 
 export function healthToStatus(h: string): 'healthy' | 'degraded' | 'unhealthy' | 'unknown' {
   switch (h.toLowerCase()) {
-    case 'healthy':   return 'healthy';
-    case 'degraded':  return 'degraded';
-    case 'unhealthy': return 'unhealthy';
-    default:          return 'unknown';
+    case 'healthy':
+      return 'healthy';
+    case 'degraded':
+      return 'degraded';
+    case 'unhealthy':
+      return 'unhealthy';
+    default:
+      return 'unknown';
   }
 }
 

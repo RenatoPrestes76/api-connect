@@ -14,8 +14,13 @@
  */
 
 import type {
-  RuntimeResult, ModuleId, EventId, CorrelationId,
-  SpanContext, Priority, Disposable,
+  RuntimeResult,
+  ModuleId,
+  EventId,
+  CorrelationId,
+  SpanContext,
+  Priority,
+  Disposable,
 } from '../kernel/index';
 
 // ─── Event Bus ────────────────────────────────────────────────────────────
@@ -37,7 +42,7 @@ export interface EventBus {
   subscribe<T extends DomainEvent>(
     pattern: EventTopicPattern,
     handler: EventHandler<T>,
-    options?: SubscriptionOptions,
+    options?: SubscriptionOptions
   ): Disposable;
 
   /**
@@ -45,7 +50,7 @@ export interface EventBus {
    */
   subscribeOnce<T extends DomainEvent>(
     pattern: EventTopicPattern,
-    handler: EventHandler<T>,
+    handler: EventHandler<T>
   ): Disposable;
 
   /**
@@ -110,46 +115,48 @@ export type EventTopicPattern = string;
  */
 export const EVENT_TOPICS = {
   // Platform
-  PLATFORM_READY:               'platform.kernel.ready',
-  MODULE_STARTED:               'platform.module.started',
-  MODULE_STOPPED:               'platform.module.stopped',
-  MODULE_FAULTED:               'platform.module.faulted',
-  PLUGIN_LOADED:                'platform.plugin.loaded',
-  PLUGIN_UNLOADED:              'platform.plugin.unloaded',
+  PLATFORM_READY: 'platform.kernel.ready',
+  MODULE_STARTED: 'platform.module.started',
+  MODULE_STOPPED: 'platform.module.stopped',
+  MODULE_FAULTED: 'platform.module.faulted',
+  PLUGIN_LOADED: 'platform.plugin.loaded',
+  PLUGIN_UNLOADED: 'platform.plugin.unloaded',
 
   // Connector
-  CONNECTOR_REGISTERED:         'connector.connector.registered',
-  CONNECTOR_CONNECTED:          'connector.connector.connected',
-  CONNECTOR_DISCONNECTED:       'connector.connector.disconnected',
+  CONNECTOR_REGISTERED: 'connector.connector.registered',
+  CONNECTOR_CONNECTED: 'connector.connector.connected',
+  CONNECTOR_DISCONNECTED: 'connector.connector.disconnected',
 
   // Schema
-  SCHEMA_REGISTERED:            'schema.schema.registered',
-  SCHEMA_UPDATED:               'schema.schema.updated',
-  SCHEMA_DELETED:               'schema.schema.deleted',
-  SCHEMA_ANALYZED:              'schema.schema.analyzed',
+  SCHEMA_REGISTERED: 'schema.schema.registered',
+  SCHEMA_UPDATED: 'schema.schema.updated',
+  SCHEMA_DELETED: 'schema.schema.deleted',
+  SCHEMA_ANALYZED: 'schema.schema.analyzed',
 
   // Mapping
-  MAPPING_CONFIRMED:            'mapping.field.confirmed',
-  MAPPING_REJECTED:             'mapping.field.rejected',
-  MAPPING_CONFLICT_DETECTED:    'mapping.conflict.detected',
+  MAPPING_CONFIRMED: 'mapping.field.confirmed',
+  MAPPING_REJECTED: 'mapping.field.rejected',
+  MAPPING_CONFLICT_DETECTED: 'mapping.conflict.detected',
 
   // Sync
-  SYNC_STARTED:                 'sync.job.started',
-  SYNC_COMPLETED:               'sync.job.completed',
-  SYNC_FAILED:                  'sync.job.failed',
-  SYNC_CONFLICT_DETECTED:       'sync.conflict.detected',
-  SYNC_CONFLICT_RESOLVED:       'sync.conflict.resolved',
+  SYNC_STARTED: 'sync.job.started',
+  SYNC_COMPLETED: 'sync.job.completed',
+  SYNC_FAILED: 'sync.job.failed',
+  SYNC_CONFLICT_DETECTED: 'sync.conflict.detected',
+  SYNC_CONFLICT_RESOLVED: 'sync.conflict.resolved',
 
   // AI
-  AI_RECOMMENDATION_GENERATED:  'ai.recommendation.generated',
-  AI_DECISION_MADE:             'ai.decision.made',
+  AI_RECOMMENDATION_GENERATED: 'ai.recommendation.generated',
+  AI_DECISION_MADE: 'ai.decision.made',
 } as const;
 
 export type BuiltInEventTopic = (typeof EVENT_TOPICS)[keyof typeof EVENT_TOPICS];
 
 // ─── Handler ──────────────────────────────────────────────────────────────
 
-export type EventHandler<T extends DomainEvent = DomainEvent> = (event: EventEnvelope<T>) => Promise<void>;
+export type EventHandler<T extends DomainEvent = DomainEvent> = (
+  event: EventEnvelope<T>
+) => Promise<void>;
 
 export interface EventEnvelope<T extends DomainEvent = DomainEvent> {
   readonly event: T;

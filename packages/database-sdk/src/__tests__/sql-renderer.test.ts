@@ -1,14 +1,30 @@
 import { describe, it, expect } from 'vitest';
 import { SqlRenderer } from '../query/sql-renderer.js';
-import type { SelectQuery, InsertQuery, UpdateQuery, DeleteQuery, RawQuery } from '../query/query-types.js';
-import { equals, greaterThan, isNull, inList, between, like, notEquals, and, or } from '../query/filters.js';
+import type {
+  SelectQuery,
+  InsertQuery,
+  UpdateQuery,
+  DeleteQuery,
+  RawQuery,
+} from '../query/query-types.js';
+import {
+  equals,
+  greaterThan,
+  isNull,
+  inList,
+  between,
+  like,
+  notEquals,
+  and,
+  or,
+} from '../query/filters.js';
 import { QueryError } from '../errors/database-errors.js';
 
-const pg  = new SqlRenderer('postgres');
-const my  = new SqlRenderer('mysql');
-const ms  = new SqlRenderer('sqlserver');
+const pg = new SqlRenderer('postgres');
+const my = new SqlRenderer('mysql');
+const ms = new SqlRenderer('sqlserver');
 const ora = new SqlRenderer('oracle');
-const fb  = new SqlRenderer('firebird');
+const fb = new SqlRenderer('firebird');
 
 describe('SqlRenderer — identifier quoting', () => {
   const q: SelectQuery = { type: 'SELECT', table: 'products', columns: ['id', 'name'] };
@@ -63,7 +79,9 @@ describe('SqlRenderer — parameter placeholders', () => {
 describe('SqlRenderer — SELECT with filters', () => {
   it('renders multiple WHERE conditions with AND', () => {
     const q: SelectQuery = {
-      type: 'SELECT', table: 'orders', columns: ['*'],
+      type: 'SELECT',
+      table: 'orders',
+      columns: ['*'],
       where: [greaterThan('total', 100), equals('status', 'paid')],
     };
     const { sql } = pg.render(q);
@@ -72,27 +90,52 @@ describe('SqlRenderer — SELECT with filters', () => {
   });
 
   it('renders IS NULL filter', () => {
-    const q: SelectQuery = { type: 'SELECT', table: 't', columns: ['*'], where: [isNull('deleted_at')] };
+    const q: SelectQuery = {
+      type: 'SELECT',
+      table: 't',
+      columns: ['*'],
+      where: [isNull('deleted_at')],
+    };
     expect(pg.render(q).sql).toContain('IS NULL');
   });
 
   it('renders IN filter', () => {
-    const q: SelectQuery = { type: 'SELECT', table: 't', columns: ['*'], where: [inList('id', [1, 2, 3])] };
+    const q: SelectQuery = {
+      type: 'SELECT',
+      table: 't',
+      columns: ['*'],
+      where: [inList('id', [1, 2, 3])],
+    };
     expect(pg.render(q).sql).toContain('IN ($1, $2, $3)');
   });
 
   it('renders BETWEEN filter', () => {
-    const q: SelectQuery = { type: 'SELECT', table: 't', columns: ['*'], where: [between('price', 10, 50)] };
+    const q: SelectQuery = {
+      type: 'SELECT',
+      table: 't',
+      columns: ['*'],
+      where: [between('price', 10, 50)],
+    };
     expect(pg.render(q).sql).toContain('BETWEEN');
   });
 
   it('renders LIKE filter', () => {
-    const q: SelectQuery = { type: 'SELECT', table: 't', columns: ['*'], where: [like('name', '%test%')] };
+    const q: SelectQuery = {
+      type: 'SELECT',
+      table: 't',
+      columns: ['*'],
+      where: [like('name', '%test%')],
+    };
     expect(pg.render(q).sql).toContain('LIKE');
   });
 
   it('renders != filter', () => {
-    const q: SelectQuery = { type: 'SELECT', table: 't', columns: ['*'], where: [notEquals('status', 'x')] };
+    const q: SelectQuery = {
+      type: 'SELECT',
+      table: 't',
+      columns: ['*'],
+      where: [notEquals('status', 'x')],
+    };
     expect(pg.render(q).sql).toContain('!=');
   });
 });
@@ -100,7 +143,9 @@ describe('SqlRenderer — SELECT with filters', () => {
 describe('SqlRenderer — compound filters (and/or)', () => {
   it('renders AND compound filter with parentheses', () => {
     const q: SelectQuery = {
-      type: 'SELECT', table: 'users', columns: ['*'],
+      type: 'SELECT',
+      table: 'users',
+      columns: ['*'],
       where: [and(equals('active', true), greaterThan('age', 18))],
     };
     const { sql, params } = pg.render(q);
@@ -110,7 +155,9 @@ describe('SqlRenderer — compound filters (and/or)', () => {
 
   it('renders OR compound filter with parentheses', () => {
     const q: SelectQuery = {
-      type: 'SELECT', table: 'users', columns: ['*'],
+      type: 'SELECT',
+      table: 'users',
+      columns: ['*'],
       where: [or(equals('role', 'admin'), equals('role', 'moderator'))],
     };
     const { sql } = pg.render(q);
@@ -120,7 +167,7 @@ describe('SqlRenderer — compound filters (and/or)', () => {
   it('renders nested and/or', () => {
     const nested = and(
       or(equals('status', 'active'), equals('status', 'pending')),
-      equals('verified', true),
+      equals('verified', true)
     );
     const q: SelectQuery = { type: 'SELECT', table: 't', columns: ['*'], where: [nested] };
     const { sql } = pg.render(q);
@@ -131,7 +178,9 @@ describe('SqlRenderer — compound filters (and/or)', () => {
 
   it('renders mysql compound filter with backtick quoting', () => {
     const q: SelectQuery = {
-      type: 'SELECT', table: 'orders', columns: ['*'],
+      type: 'SELECT',
+      table: 'orders',
+      columns: ['*'],
       where: [or(equals('status', 'new'), equals('status', 'open'))],
     };
     const { sql } = my.render(q);
@@ -142,8 +191,12 @@ describe('SqlRenderer — compound filters (and/or)', () => {
 describe('SqlRenderer — ORDER BY, LIMIT, OFFSET', () => {
   it('renders ORDER BY + LIMIT + OFFSET (postgres)', () => {
     const q: SelectQuery = {
-      type: 'SELECT', table: 'p', columns: ['*'],
-      orderBy: [{ column: 'name', direction: 'ASC' }], limit: 10, offset: 20,
+      type: 'SELECT',
+      table: 'p',
+      columns: ['*'],
+      orderBy: [{ column: 'name', direction: 'ASC' }],
+      limit: 10,
+      offset: 20,
     };
     const { sql } = pg.render(q);
     expect(sql).toContain('ORDER BY "name" ASC');
@@ -174,7 +227,9 @@ describe('SqlRenderer — ORDER BY, LIMIT, OFFSET', () => {
 describe('SqlRenderer — JOIN', () => {
   it('renders INNER JOIN', () => {
     const q: SelectQuery = {
-      type: 'SELECT', table: 'orders', columns: ['*'],
+      type: 'SELECT',
+      table: 'orders',
+      columns: ['*'],
       joins: [{ type: 'INNER', table: 'users', on: 'orders.user_id = users.id' }],
     };
     expect(pg.render(q).sql).toContain('INNER JOIN');
@@ -182,7 +237,9 @@ describe('SqlRenderer — JOIN', () => {
 
   it('renders LEFT JOIN', () => {
     const q: SelectQuery = {
-      type: 'SELECT', table: 'orders', columns: ['*'],
+      type: 'SELECT',
+      table: 'orders',
+      columns: ['*'],
       joins: [{ type: 'LEFT', table: 'payments', on: 'orders.id = payments.order_id' }],
     };
     expect(pg.render(q).sql).toContain('LEFT JOIN');
@@ -191,7 +248,11 @@ describe('SqlRenderer — JOIN', () => {
 
 describe('SqlRenderer — INSERT', () => {
   it('renders single-row INSERT', () => {
-    const q: InsertQuery = { type: 'INSERT', table: 'users', values: [{ name: 'Ana', email: 'a@b.com' }] };
+    const q: InsertQuery = {
+      type: 'INSERT',
+      table: 'users',
+      values: [{ name: 'Ana', email: 'a@b.com' }],
+    };
     const { sql, params } = pg.render(q);
     expect(sql).toContain('INSERT INTO "users"');
     expect(params).toEqual(['Ana', 'a@b.com']);
@@ -199,7 +260,8 @@ describe('SqlRenderer — INSERT', () => {
 
   it('renders multi-row INSERT', () => {
     const q: InsertQuery = {
-      type: 'INSERT', table: 'users',
+      type: 'INSERT',
+      table: 'users',
       values: [{ name: 'A' }, { name: 'B' }],
     };
     expect(pg.render(q).sql).toContain('($1), ($2)');
@@ -214,7 +276,10 @@ describe('SqlRenderer — INSERT', () => {
 describe('SqlRenderer — UPDATE', () => {
   it('renders UPDATE with SET and WHERE', () => {
     const q: UpdateQuery = {
-      type: 'UPDATE', table: 'users', set: { name: 'Bob' }, where: [equals('id', 1)],
+      type: 'UPDATE',
+      table: 'users',
+      set: { name: 'Bob' },
+      where: [equals('id', 1)],
     };
     const { sql } = pg.render(q);
     expect(sql).toContain('UPDATE "users" SET "name" = $1');

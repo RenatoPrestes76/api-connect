@@ -1,13 +1,16 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
-  startTestServer, stopServer, seedToken, provisionAgent,
+  startTestServer,
+  stopServer,
+  seedToken,
+  provisionAgent,
   type TestAtlasServer,
 } from './helpers.js';
 
 describe('GET /api/v1/me', () => {
-  let ctx:         TestAtlasServer;
+  let ctx: TestAtlasServer;
   let accessToken: string;
-  let agentId:     string;
+  let agentId: string;
 
   beforeAll(async () => {
     ctx = await startTestServer();
@@ -19,14 +22,14 @@ describe('GET /api/v1/me', () => {
 
   async function me(token = accessToken): Promise<Response> {
     return fetch(`${ctx.baseUrl}/api/v1/me`, {
-      headers: { 'Authorization': `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
   }
 
   it('returns 200 with agent identity fields', async () => {
-    const res  = await me();
+    const res = await me();
     expect(res.status).toBe(200);
-    const body = await res.json() as { data: Record<string, unknown> };
+    const body = (await res.json()) as { data: Record<string, unknown> };
     expect(body.data.agentId).toBe(agentId);
     expect(body.data.companyId).toBe('co-test');
     expect(body.data.name).toBe('Integration Test Agent');
@@ -39,8 +42,8 @@ describe('GET /api/v1/me', () => {
   });
 
   it('lastHeartbeat is null before first heartbeat', async () => {
-    const res  = await me();
-    const body = await res.json() as { data: { lastHeartbeat: null } };
+    const res = await me();
+    const body = (await res.json()) as { data: { lastHeartbeat: null } };
     expect(body.data.lastHeartbeat).toBeNull();
   });
 
@@ -56,7 +59,7 @@ describe('GET /api/v1/me', () => {
 
   it('returns 401 for a non-aat_ bearer token', async () => {
     const res = await fetch(`${ctx.baseUrl}/api/v1/me`, {
-      headers: { 'Authorization': 'Bearer supabase-jwt' },
+      headers: { Authorization: 'Bearer supabase-jwt' },
     });
     expect(res.status).toBe(401);
   });

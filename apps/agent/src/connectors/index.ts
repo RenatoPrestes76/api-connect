@@ -90,7 +90,7 @@ export interface DatabaseConnector {
    */
   query<TRow = Record<string, unknown>>(
     sql: string,
-    params?: unknown[],
+    params?: unknown[]
   ): Promise<AgentResult<QueryResult<TRow>>>;
 
   /**

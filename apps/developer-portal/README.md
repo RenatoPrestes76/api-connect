@@ -9,20 +9,20 @@ connectors, ERP integrations, AI providers, and extensions for Seltriva Connect.
 
 ## What You Can Build
 
-| Plugin Type          | Description                                           |
-|----------------------|-------------------------------------------------------|
-| `connector`          | Database / API connectors (read-only schema discovery)|
-| `erp-profile`        | ERP system profiles with entity mappings              |
-| `ai-provider`        | AI/LLM completion and embedding providers             |
-| `notification`       | Notification delivery channels                        |
-| `storage`            | S3-compatible blob storage backends                   |
-| `transformation`     | Field and record transformation pipelines             |
-| `validator`          | Data quality and business rule validators             |
-| `sync-strategy`      | Full / incremental / CDC sync strategies              |
-| `mapping-strategy`   | Intelligent field mapping engines                     |
-| `security-provider`  | OAuth2 / SSO / MFA security providers                 |
-| `license-provider`   | License validation and feature gating                 |
-| `export-provider`    | CSV / Excel / JSON / custom export formats            |
+| Plugin Type         | Description                                            |
+| ------------------- | ------------------------------------------------------ |
+| `connector`         | Database / API connectors (read-only schema discovery) |
+| `erp-profile`       | ERP system profiles with entity mappings               |
+| `ai-provider`       | AI/LLM completion and embedding providers              |
+| `notification`      | Notification delivery channels                         |
+| `storage`           | S3-compatible blob storage backends                    |
+| `transformation`    | Field and record transformation pipelines              |
+| `validator`         | Data quality and business rule validators              |
+| `sync-strategy`     | Full / incremental / CDC sync strategies               |
+| `mapping-strategy`  | Intelligent field mapping engines                      |
+| `security-provider` | OAuth2 / SSO / MFA security providers                  |
+| `license-provider`  | License validation and feature gating                  |
+| `export-provider`   | CSV / Excel / JSON / custom export formats             |
 
 ## Quick Start
 
@@ -50,16 +50,16 @@ atlas publish
 
 ## Platform Packages
 
-| Package                   | Purpose                                  |
-|---------------------------|------------------------------------------|
-| `@seltriva/plugin-sdk`    | Plugin interfaces, manifest spec, types  |
-| `@seltriva/sdk`           | Atlas Cloud client SDK                   |
-| `@seltriva/cli`           | Developer CLI (`atlas` command)          |
-| `@seltriva/generator`     | Project scaffolding engine               |
-| `@seltriva/testing`       | Test harness + mock plugin context       |
-| `@seltriva/templates`     | 17 ready-to-use project templates        |
-| `@seltriva/validator`     | Plugin validator (6 categories)          |
-| `@seltriva/marketplace-api`| Marketplace publish/consume contracts   |
+| Package                     | Purpose                                 |
+| --------------------------- | --------------------------------------- |
+| `@seltriva/plugin-sdk`      | Plugin interfaces, manifest spec, types |
+| `@seltriva/sdk`             | Atlas Cloud client SDK                  |
+| `@seltriva/cli`             | Developer CLI (`atlas` command)         |
+| `@seltriva/generator`       | Project scaffolding engine              |
+| `@seltriva/testing`         | Test harness + mock plugin context      |
+| `@seltriva/templates`       | 17 ready-to-use project templates       |
+| `@seltriva/validator`       | Plugin validator (6 categories)         |
+| `@seltriva/marketplace-api` | Marketplace publish/consume contracts   |
 
 ## Plugin Manifest Spec
 

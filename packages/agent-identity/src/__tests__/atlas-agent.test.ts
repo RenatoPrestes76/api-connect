@@ -1,17 +1,17 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { AtlasAgent, AgentDomainError }  from '../entity/atlas-agent.js';
-import { AgentVersion }                  from '../value-objects/agent-version.js';
-import { AgentStatusKind }               from '../value-objects/agent-status.js';
-import { Hostname }                      from '../value-objects/hostname.js';
-import type { RegisterAgentParams }      from '../entity/atlas-agent.js';
+import { AtlasAgent, AgentDomainError } from '../entity/atlas-agent.js';
+import { AgentVersion } from '../value-objects/agent-version.js';
+import { AgentStatusKind } from '../value-objects/agent-status.js';
+import { Hostname } from '../value-objects/hostname.js';
+import type { RegisterAgentParams } from '../entity/atlas-agent.js';
 
 const BASE_PARAMS: RegisterAgentParams = {
-  companyId:     'company-abc',
-  name:          'Atlas Agent 1',
-  hostname:      'server01.acme.com',
-  machineId:     'BIOS-1234-ABCD',
+  companyId: 'company-abc',
+  name: 'Atlas Agent 1',
+  hostname: 'server01.acme.com',
+  machineId: 'BIOS-1234-ABCD',
   connectorType: 'MSSQL',
-  version:       '1.0.0',
+  version: '1.0.0',
 };
 
 describe('AtlasAgent.register()', () => {
@@ -33,7 +33,7 @@ describe('AtlasAgent.register()', () => {
   it('assigns a UUID v4 id', () => {
     const agent = AtlasAgent.register(BASE_PARAMS);
     expect(agent.id.toString()).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
     );
   });
 
@@ -51,33 +51,33 @@ describe('AtlasAgent.register()', () => {
   });
 
   it('throws when companyId is empty', () => {
-    expect(() => AtlasAgent.register({ ...BASE_PARAMS, companyId: '' }))
-      .toThrowError(AgentDomainError);
+    expect(() => AtlasAgent.register({ ...BASE_PARAMS, companyId: '' })).toThrowError(
+      AgentDomainError
+    );
   });
 
   it('throws when name is blank whitespace', () => {
-    expect(() => AtlasAgent.register({ ...BASE_PARAMS, name: '   ' }))
-      .toThrowError(AgentDomainError);
+    expect(() => AtlasAgent.register({ ...BASE_PARAMS, name: '   ' })).toThrowError(
+      AgentDomainError
+    );
   });
 
   it('throws when connectorType is empty', () => {
-    expect(() => AtlasAgent.register({ ...BASE_PARAMS, connectorType: '' }))
-      .toThrowError(AgentDomainError);
+    expect(() => AtlasAgent.register({ ...BASE_PARAMS, connectorType: '' })).toThrowError(
+      AgentDomainError
+    );
   });
 
   it('throws for an invalid hostname', () => {
-    expect(() => AtlasAgent.register({ ...BASE_PARAMS, hostname: 'bad host name' }))
-      .toThrow();
+    expect(() => AtlasAgent.register({ ...BASE_PARAMS, hostname: 'bad host name' })).toThrow();
   });
 
   it('throws for an invalid machineId (too short)', () => {
-    expect(() => AtlasAgent.register({ ...BASE_PARAMS, machineId: 'short' }))
-      .toThrow();
+    expect(() => AtlasAgent.register({ ...BASE_PARAMS, machineId: 'short' })).toThrow();
   });
 
   it('throws for an invalid version', () => {
-    expect(() => AtlasAgent.register({ ...BASE_PARAMS, version: 'v1.0' }))
-      .toThrow();
+    expect(() => AtlasAgent.register({ ...BASE_PARAMS, version: 'v1.0' })).toThrow();
   });
 });
 
@@ -253,8 +253,9 @@ describe('AtlasAgent — domain methods', () => {
       agent.markHeartbeat();
       agent.disable();
       agent.pullEvents();
-      expect(() => agent.updateHostname(Hostname.fromString('other.acme.com')))
-        .toThrowError(AgentDomainError);
+      expect(() => agent.updateHostname(Hostname.fromString('other.acme.com'))).toThrowError(
+        AgentDomainError
+      );
     });
 
     it('snapshot captures updated hostname', () => {
@@ -275,7 +276,7 @@ describe('AtlasAgent — domain methods', () => {
     it('emits an AgentVersionUpdated event with old and new version', () => {
       agent.updateVersion(AgentVersion.fromString('1.1.0'));
       const evts = agent.pullEvents();
-      const evt = evts.find(e => e.type === 'AtlasAgent.VersionUpdated');
+      const evt = evts.find((e) => e.type === 'AtlasAgent.VersionUpdated');
       expect(evt).toBeDefined();
       if (evt?.type === 'AtlasAgent.VersionUpdated') {
         expect(evt.oldVersion).toBe('1.0.0');
@@ -284,21 +285,24 @@ describe('AtlasAgent — domain methods', () => {
     });
 
     it('rejects same version', () => {
-      expect(() => agent.updateVersion(AgentVersion.fromString('1.0.0')))
-        .toThrowError(AgentDomainError);
+      expect(() => agent.updateVersion(AgentVersion.fromString('1.0.0'))).toThrowError(
+        AgentDomainError
+      );
     });
 
     it('rejects a downgrade', () => {
-      expect(() => agent.updateVersion(AgentVersion.fromString('0.9.9')))
-        .toThrowError(AgentDomainError);
+      expect(() => agent.updateVersion(AgentVersion.fromString('0.9.9'))).toThrowError(
+        AgentDomainError
+      );
     });
 
     it('throws when DISABLED', () => {
       agent.markHeartbeat();
       agent.disable();
       agent.pullEvents();
-      expect(() => agent.updateVersion(AgentVersion.fromString('9.9.9')))
-        .toThrowError(AgentDomainError);
+      expect(() => agent.updateVersion(AgentVersion.fromString('9.9.9'))).toThrowError(
+        AgentDomainError
+      );
     });
   });
 

@@ -14,8 +14,13 @@
  */
 
 import type {
-  AIResult, AIProvider, AIConfidenceValue, AIConfidenceTier,
-  AgentId, AITaskType, confidenceTier,
+  AIResult,
+  AIProvider,
+  AIConfidenceValue,
+  AIConfidenceTier,
+  AgentId,
+  AITaskType,
+  confidenceTier,
 } from '../providers/index';
 
 // ─── Reasoning Engine ─────────────────────────────────────────────────────
@@ -105,15 +110,15 @@ export interface ReasoningStep {
 }
 
 export type ReasoningStepType =
-  | 'observation'     // observe a fact from evidence
-  | 'inference'       // infer from observations
-  | 'hypothesis'      // form a hypothesis
-  | 'evaluation'      // evaluate a hypothesis against evidence
-  | 'elimination'     // eliminate a hypothesis
-  | 'analogy'         // draw analogy from known case
-  | 'decomposition'   // break problem into sub-problems
-  | 'synthesis'       // combine sub-results
-  | 'conclusion';     // final conclusion
+  | 'observation' // observe a fact from evidence
+  | 'inference' // infer from observations
+  | 'hypothesis' // form a hypothesis
+  | 'evaluation' // evaluate a hypothesis against evidence
+  | 'elimination' // eliminate a hypothesis
+  | 'analogy' // draw analogy from known case
+  | 'decomposition' // break problem into sub-problems
+  | 'synthesis' // combine sub-results
+  | 'conclusion'; // final conclusion
 
 // ─── Evidence ─────────────────────────────────────────────────────────────
 
@@ -128,16 +133,16 @@ export interface Evidence {
 }
 
 export type EvidenceType =
-  | 'schema-fact'          // fact about the schema structure
-  | 'naming-pattern'       // observed naming convention
-  | 'type-constraint'      // field type constraint
-  | 'relationship-fact'    // FK or join relationship
-  | 'erp-convention'       // known ERP convention
-  | 'memory-recall'        // recalled from AI memory
-  | 'dictionary-match'     // matched against business dictionary
-  | 'similarity-score'     // similarity to known concept
+  | 'schema-fact' // fact about the schema structure
+  | 'naming-pattern' // observed naming convention
+  | 'type-constraint' // field type constraint
+  | 'relationship-fact' // FK or join relationship
+  | 'erp-convention' // known ERP convention
+  | 'memory-recall' // recalled from AI memory
+  | 'dictionary-match' // matched against business dictionary
+  | 'similarity-score' // similarity to known concept
   | 'structural-signature' // structural match
-  | 'negative-evidence';   // evidence against a hypothesis
+  | 'negative-evidence'; // evidence against a hypothesis
 
 // ─── Hypotheses ───────────────────────────────────────────────────────────
 

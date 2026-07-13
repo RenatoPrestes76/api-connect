@@ -16,7 +16,13 @@
  * The final score is a weighted aggregate of all active signals.
  */
 
-import type { CBLTerm, CBLEntityTerm, CBLFieldTerm, CBLEntityKind, CBLFieldKind } from '../business-language/index';
+import type {
+  CBLTerm,
+  CBLEntityTerm,
+  CBLFieldTerm,
+  CBLEntityKind,
+  CBLFieldKind,
+} from '../business-language/index';
 
 // ─── Confidence Score ─────────────────────────────────────────────────────
 
@@ -25,12 +31,12 @@ export type ConfidenceValue = number;
 
 /** Human-readable confidence tier */
 export type ConfidenceTier =
-  | 'certain'       // 0.97 – 1.00
-  | 'very-high'     // 0.90 – 0.96
-  | 'high'          // 0.80 – 0.89
-  | 'medium'        // 0.65 – 0.79
-  | 'low'           // 0.45 – 0.64
-  | 'very-low'      // 0.20 – 0.44
+  | 'certain' // 0.97 – 1.00
+  | 'very-high' // 0.90 – 0.96
+  | 'high' // 0.80 – 0.89
+  | 'medium' // 0.65 – 0.79
+  | 'low' // 0.45 – 0.64
+  | 'very-low' // 0.20 – 0.44
   | 'insufficient'; // < 0.20
 
 // ─── Confidence Engine ────────────────────────────────────────────────────
@@ -153,17 +159,17 @@ export interface ConfidenceSignal {
 // ─── Built-in Signal IDs ─────────────────────────────────────────────────
 
 export const SIGNAL_IDS = {
-  NAME_SIMILARITY:        'signal-name-similarity',
-  ALIAS_MATCH:            'signal-alias-match',
-  TYPE_MATCH:             'signal-type-match',
-  ROLE_MATCH:             'signal-role-match',
-  STRUCTURAL_MATCH:       'signal-structural-match',
-  ERP_PROFILE:            'signal-erp-profile',
-  LEARNING_HISTORY:       'signal-learning-history',
-  GRAPH_COHERENCE:        'signal-graph-coherence',
-  POSITION_CONTEXT:       'signal-position-context',
-  SYNONYM_MATCH:          'signal-synonym-match',
-  PATTERN_FREQUENCY:      'signal-pattern-frequency',
+  NAME_SIMILARITY: 'signal-name-similarity',
+  ALIAS_MATCH: 'signal-alias-match',
+  TYPE_MATCH: 'signal-type-match',
+  ROLE_MATCH: 'signal-role-match',
+  STRUCTURAL_MATCH: 'signal-structural-match',
+  ERP_PROFILE: 'signal-erp-profile',
+  LEARNING_HISTORY: 'signal-learning-history',
+  GRAPH_COHERENCE: 'signal-graph-coherence',
+  POSITION_CONTEXT: 'signal-position-context',
+  SYNONYM_MATCH: 'signal-synonym-match',
+  PATTERN_FREQUENCY: 'signal-pattern-frequency',
 } as const;
 
 export type SignalId = (typeof SIGNAL_IDS)[keyof typeof SIGNAL_IDS];
@@ -184,16 +190,16 @@ export interface ConfidenceWeights {
 }
 
 export const DEFAULT_CONFIDENCE_WEIGHTS: ConfidenceWeights = {
-  nameSimilarity:    0.30,
-  aliasMatch:        0.20,
-  typeMatch:         0.10,
-  roleMatch:         0.10,
-  structuralMatch:   0.10,
-  erpProfile:        0.08,
-  learningHistory:   0.05,
-  graphCoherence:    0.04,
-  positionContext:   0.02,
-  synonymMatch:      0.01,
+  nameSimilarity: 0.3,
+  aliasMatch: 0.2,
+  typeMatch: 0.1,
+  roleMatch: 0.1,
+  structuralMatch: 0.1,
+  erpProfile: 0.08,
+  learningHistory: 0.05,
+  graphCoherence: 0.04,
+  positionContext: 0.02,
+  synonymMatch: 0.01,
 };
 
 // ─── Confidence Thresholds ────────────────────────────────────────────────
@@ -216,10 +222,10 @@ export interface ConfidenceThresholds {
 }
 
 export const DEFAULT_CONFIDENCE_THRESHOLDS: ConfidenceThresholds = {
-  autoApprove:    0.97,
-  highConfidence: 0.80,
-  suggest:        0.45,
-  suppress:       0.20,
+  autoApprove: 0.97,
+  highConfidence: 0.8,
+  suggest: 0.45,
+  suppress: 0.2,
 };
 
 // ─── Confidence Aggregator ────────────────────────────────────────────────

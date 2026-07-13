@@ -4,11 +4,11 @@ Message Queue Connector interfaces — reliable async messaging via RabbitMQ, Ka
 
 ## Supported Brokers
 
-| Connector | Subtype | Broker | Protocol |
-|-----------|---------|--------|----------|
-| `RabbitMQConnector` | `rabbitmq` | RabbitMQ | AMQP 0-9-1 |
-| `KafkaConnector` | `kafka` | Apache Kafka | Kafka Wire Protocol |
-| `RedisStreamsConnector` | `redis-streams` | Redis Streams | RESP3 |
+| Connector               | Subtype         | Broker        | Protocol            |
+| ----------------------- | --------------- | ------------- | ------------------- |
+| `RabbitMQConnector`     | `rabbitmq`      | RabbitMQ      | AMQP 0-9-1          |
+| `KafkaConnector`        | `kafka`         | Apache Kafka  | Kafka Wire Protocol |
+| `RedisStreamsConnector` | `redis-streams` | Redis Streams | RESP3               |
 
 ## Interface Hierarchy
 

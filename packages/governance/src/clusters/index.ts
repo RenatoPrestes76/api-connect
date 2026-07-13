@@ -27,7 +27,7 @@ export interface Cluster {
   readonly updatedAt: Date;
 }
 
-export type ClusterType   = 'single' | 'ha' | 'geo-distributed' | 'edge';
+export type ClusterType = 'single' | 'ha' | 'geo-distributed' | 'edge';
 export type ClusterStatus = 'pending' | 'active' | 'degraded' | 'maintenance' | 'retired';
 
 export interface SchedulingPolicy {
@@ -45,7 +45,7 @@ export interface AffinityRule {
 }
 
 export interface ClusterNetworkPolicy {
-  readonly ingressAllowed: string[];    // CIDR blocks
+  readonly ingressAllowed: string[]; // CIDR blocks
   readonly egressAllowed: string[];
   readonly encryptInTransit: boolean;
   readonly encryptAtRest: boolean;

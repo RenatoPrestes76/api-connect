@@ -8,10 +8,10 @@ import { Input } from '@/components/ui/input';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email,    setEmail]    = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error,    setError]    = useState<string | null>(null);
-  const [loading,  setLoading]  = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -42,7 +42,10 @@ export default function LoginPage() {
         {/* Form */}
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
           {error && (
-            <p role="alert" className="rounded-md bg-rose-50 border border-rose-200 px-3 py-2 text-sm text-rose-700">
+            <p
+              role="alert"
+              className="rounded-md bg-rose-50 border border-rose-200 px-3 py-2 text-sm text-rose-700"
+            >
               {error}
             </p>
           )}
@@ -79,9 +82,7 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="text-center text-xs text-slate-400">
-          Seltriva Connect — ATLAS HUB
-        </p>
+        <p className="text-center text-xs text-slate-400">Seltriva Connect — ATLAS HUB</p>
       </div>
     </div>
   );

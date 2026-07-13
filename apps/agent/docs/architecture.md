@@ -196,18 +196,18 @@ Plugins receive a `PluginContext` — not raw service references. This means the
 
 ## Scheduler Job Map
 
-| Job ID | Trigger | Description |
-|---|---|---|
-| `job-heartbeat` | interval 60s | Cloud ping |
-| `job-health-check` | interval 30s | System health collection |
-| `job-schema-sync` | cron 0 */1 * * * | Full schema sync |
-| `job-incremental-sync` | interval 5min | Incremental diff sync |
-| `job-queue-flush` | interval 30s | Flush offline queue |
-| `job-token-rotation` | cron 0 2 * * * | Rotate cloud token |
-| `job-update-check` | interval 24h | Check for updates |
-| `job-log-rotation` | cron 0 0 * * * | Rotate log files |
-| `job-credential-rotation` | configurable | Rotate credentials |
-| `job-diagnostics-snapshot` | interval 6h | Save diagnostics snapshot |
+| Job ID                     | Trigger            | Description               |
+| -------------------------- | ------------------ | ------------------------- |
+| `job-heartbeat`            | interval 60s       | Cloud ping                |
+| `job-health-check`         | interval 30s       | System health collection  |
+| `job-schema-sync`          | cron 0 _/1 _ \* \* | Full schema sync          |
+| `job-incremental-sync`     | interval 5min      | Incremental diff sync     |
+| `job-queue-flush`          | interval 30s       | Flush offline queue       |
+| `job-token-rotation`       | cron 0 2 \* \* \*  | Rotate cloud token        |
+| `job-update-check`         | interval 24h       | Check for updates         |
+| `job-log-rotation`         | cron 0 0 \* \* \*  | Rotate log files          |
+| `job-credential-rotation`  | configurable       | Rotate credentials        |
+| `job-diagnostics-snapshot` | interval 6h        | Save diagnostics snapshot |
 
 ---
 
@@ -236,19 +236,19 @@ destroy()      ← release all resources
 
 ## Technology Stack
 
-| Technology | Usage |
-|---|---|
-| Node.js 18+ | Runtime |
-| TypeScript strict | Language |
-| pnpm + Turborepo | Package management |
-| Zod | Config schema validation |
-| YAML | Configuration format |
-| SQLite (better-sqlite3) | Local cache + offline queue |
-| Supabase JS SDK | Cloud communication |
-| Commander.js | CLI framework |
-| Winston | Structured logging |
-| node-cron | Cron scheduling |
-| node-forge | TLS + crypto |
-| keytar | OS keychain integration |
-| systeminformation | System metrics |
-| Prisma | Optional: Postgres introspection |
+| Technology              | Usage                            |
+| ----------------------- | -------------------------------- |
+| Node.js 18+             | Runtime                          |
+| TypeScript strict       | Language                         |
+| pnpm + Turborepo        | Package management               |
+| Zod                     | Config schema validation         |
+| YAML                    | Configuration format             |
+| SQLite (better-sqlite3) | Local cache + offline queue      |
+| Supabase JS SDK         | Cloud communication              |
+| Commander.js            | CLI framework                    |
+| Winston                 | Structured logging               |
+| node-cron               | Cron scheduling                  |
+| node-forge              | TLS + crypto                     |
+| keytar                  | OS keychain integration          |
+| systeminformation       | System metrics                   |
+| Prisma                  | Optional: Postgres introspection |

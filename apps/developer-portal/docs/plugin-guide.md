@@ -9,6 +9,7 @@ pnpm install
 ```
 
 This generates:
+
 ```
 my-connector/
 ├── atlas-plugin.json     # Plugin manifest
@@ -26,34 +27,34 @@ Every field is documented and validated by `@seltriva/validator`.
 
 ### Required Fields
 
-| Field            | Type     | Description                                          |
-|------------------|----------|------------------------------------------------------|
-| `id`             | string   | Reverse-domain ID: `com.vendor.plugin-name`          |
-| `name`           | string   | Kebab-case machine name                              |
-| `displayName`    | string   | Human-readable title                                 |
-| `version`        | semver   | Semantic version `x.y.z`                             |
-| `type`           | enum     | One of 12 plugin types                               |
-| `description`    | string   | One-sentence description                             |
-| `author`         | object   | `{ name, email?, organization? }`                    |
-| `license`        | string   | SPDX identifier (e.g. `MIT`, `Apache-2.0`)           |
-| `runtime`        | object   | `{ nodeVersion: ">=20.0.0" }`                        |
-| `capabilities`   | string[] | What the plugin can access (coarse-grained)          |
-| `permissions`    | string[] | Fine-grained API permissions                         |
-| `entryPoint`     | string   | Relative path to compiled JS (`dist/index.js`)       |
-| `platformVersion`| semver   | Required platform version range                      |
-| `sdkVersion`     | semver   | Required SDK version range                           |
+| Field             | Type     | Description                                    |
+| ----------------- | -------- | ---------------------------------------------- |
+| `id`              | string   | Reverse-domain ID: `com.vendor.plugin-name`    |
+| `name`            | string   | Kebab-case machine name                        |
+| `displayName`     | string   | Human-readable title                           |
+| `version`         | semver   | Semantic version `x.y.z`                       |
+| `type`            | enum     | One of 12 plugin types                         |
+| `description`     | string   | One-sentence description                       |
+| `author`          | object   | `{ name, email?, organization? }`              |
+| `license`         | string   | SPDX identifier (e.g. `MIT`, `Apache-2.0`)     |
+| `runtime`         | object   | `{ nodeVersion: ">=20.0.0" }`                  |
+| `capabilities`    | string[] | What the plugin can access (coarse-grained)    |
+| `permissions`     | string[] | Fine-grained API permissions                   |
+| `entryPoint`      | string   | Relative path to compiled JS (`dist/index.js`) |
+| `platformVersion` | semver   | Required platform version range                |
+| `sdkVersion`      | semver   | Required SDK version range                     |
 
 ### Optional Fields
 
-| Field             | Type     | Description                    |
-|-------------------|----------|--------------------------------|
-| `longDescription` | markdown | Rich marketplace description   |
-| `homepage`        | URL      | Plugin website                 |
-| `repository`      | URL      | Source code repository         |
-| `keywords`        | string[] | For marketplace search         |
-| `icon`            | URL/base64| Plugin icon (PNG, 256×256)   |
-| `screenshots`     | URL[]    | Marketplace screenshots        |
-| `configSchema`    | object   | JSON Schema for plugin config  |
+| Field             | Type       | Description                   |
+| ----------------- | ---------- | ----------------------------- |
+| `longDescription` | markdown   | Rich marketplace description  |
+| `homepage`        | URL        | Plugin website                |
+| `repository`      | URL        | Source code repository        |
+| `keywords`        | string[]   | For marketplace search        |
+| `icon`            | URL/base64 | Plugin icon (PNG, 256×256)    |
+| `screenshots`     | URL[]      | Marketplace screenshots       |
+| `configSchema`    | object     | JSON Schema for plugin config |
 
 ## 3. Plugin Lifecycle
 
@@ -118,13 +119,13 @@ export default new MyConnector();
 The `PluginContext` is the only API surface available to your plugin.
 
 ```typescript
-context.logger.info('message', { key: 'value' });   // Structured logging
-context.config.getRequired('apiKey');                 // Validated config
-context.credentials.get('db-password');               // Secure credential access
+context.logger.info('message', { key: 'value' }); // Structured logging
+context.config.getRequired('apiKey'); // Validated config
+context.credentials.get('db-password'); // Secure credential access
 context.http.post('https://api.example.com/data', body); // Sandboxed HTTP
-context.storage.set('cache-key', buffer);             // Isolated key-value storage
+context.storage.set('cache-key', buffer); // Isolated key-value storage
 context.events.emit('entity.synced', { id: '123' }); // Platform event bus
-context.metrics.increment('records.processed');       // Metrics export
+context.metrics.increment('records.processed'); // Metrics export
 ```
 
 ## 5. Capabilities and Permissions

@@ -8,39 +8,119 @@ const MINIMAL_SCHEMA: DatabaseSchema = {
     {
       name: 'produtos',
       columns: [
-        { name: 'id',        type: 'serial',  nullable: false, isPrimaryKey: true,  isForeignKey: false, isUnique: true  },
-        { name: 'descricao', type: 'varchar', nullable: false, isPrimaryKey: false, isForeignKey: false, isUnique: false },
-        { name: 'preco',     type: 'numeric', nullable: true,  isPrimaryKey: false, isForeignKey: false, isUnique: false, precision: 10, scale: 2 },
-        { name: 'ativo',     type: 'boolean', nullable: false, isPrimaryKey: false, isForeignKey: false, isUnique: false },
+        {
+          name: 'id',
+          type: 'serial',
+          nullable: false,
+          isPrimaryKey: true,
+          isForeignKey: false,
+          isUnique: true,
+        },
+        {
+          name: 'descricao',
+          type: 'varchar',
+          nullable: false,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isUnique: false,
+        },
+        {
+          name: 'preco',
+          type: 'numeric',
+          nullable: true,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isUnique: false,
+          precision: 10,
+          scale: 2,
+        },
+        {
+          name: 'ativo',
+          type: 'boolean',
+          nullable: false,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isUnique: false,
+        },
       ],
-      primaryKey:  { columns: ['id'] },
+      primaryKey: { columns: ['id'] },
       foreignKeys: [],
-      indexes:     [{ name: 'idx_produtos_descricao', columns: ['descricao'], isUnique: false, isPrimary: false }],
+      indexes: [
+        {
+          name: 'idx_produtos_descricao',
+          columns: ['descricao'],
+          isUnique: false,
+          isPrimary: false,
+        },
+      ],
     },
     {
       name: 'clientes',
       columns: [
-        { name: 'id',           type: 'serial',  nullable: false, isPrimaryKey: true,  isForeignKey: false, isUnique: true  },
-        { name: 'razao_social', type: 'varchar', nullable: false, isPrimaryKey: false, isForeignKey: false, isUnique: false },
-        { name: 'cnpj_cpf',    type: 'varchar', nullable: true,  isPrimaryKey: false, isForeignKey: false, isUnique: false, maxLength: 18 },
+        {
+          name: 'id',
+          type: 'serial',
+          nullable: false,
+          isPrimaryKey: true,
+          isForeignKey: false,
+          isUnique: true,
+        },
+        {
+          name: 'razao_social',
+          type: 'varchar',
+          nullable: false,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isUnique: false,
+        },
+        {
+          name: 'cnpj_cpf',
+          type: 'varchar',
+          nullable: true,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isUnique: false,
+          maxLength: 18,
+        },
       ],
-      primaryKey:  undefined,
+      primaryKey: undefined,
       foreignKeys: [],
-      indexes:     [],
+      indexes: [],
     },
     {
       name: 'estoque',
       columns: [
-        { name: 'cod_produto',  type: 'integer', nullable: false, isPrimaryKey: false, isForeignKey: true,  isUnique: false },
-        { name: 'cod_deposito', type: 'varchar', nullable: false, isPrimaryKey: false, isForeignKey: false, isUnique: false },
-        { name: 'qtd_atual',   type: 'numeric', nullable: false, isPrimaryKey: false, isForeignKey: false, isUnique: false },
+        {
+          name: 'cod_produto',
+          type: 'integer',
+          nullable: false,
+          isPrimaryKey: false,
+          isForeignKey: true,
+          isUnique: false,
+        },
+        {
+          name: 'cod_deposito',
+          type: 'varchar',
+          nullable: false,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isUnique: false,
+        },
+        {
+          name: 'qtd_atual',
+          type: 'numeric',
+          nullable: false,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isUnique: false,
+        },
       ],
-      primaryKey:  undefined,
+      primaryKey: undefined,
       foreignKeys: [{ column: 'cod_produto', referencedTable: 'produtos', referencedColumn: 'id' }],
-      indexes:     [],
+      indexes: [],
     },
   ],
-  relations:    [],
+  relations: [],
   discoveredAt: new Date(),
 };
 
@@ -53,7 +133,9 @@ describe('adaptDatabaseSchema', () => {
 
   it('uses provided opts for host, port, database', () => {
     const result = adaptDatabaseSchema(MINIMAL_SCHEMA, {
-      host: 'erp.local', port: 5435, database: 'erp_seltriva',
+      host: 'erp.local',
+      port: 5435,
+      database: 'erp_seltriva',
     });
     expect(result.host).toBe('erp.local');
     expect(result.port).toBe(5435);
@@ -131,12 +213,26 @@ describe('adaptDatabaseSchema', () => {
   it('marks non-serial pk columns as NOT isIdentity', () => {
     const schema: DatabaseSchema = {
       name: 'db',
-      tables: [{
-        name: 't',
-        columns: [{ name: 'code', type: 'varchar', nullable: false, isPrimaryKey: true, isForeignKey: false, isUnique: true }],
-        primaryKey: undefined, foreignKeys: [], indexes: [],
-      }],
-      relations: [], discoveredAt: new Date(),
+      tables: [
+        {
+          name: 't',
+          columns: [
+            {
+              name: 'code',
+              type: 'varchar',
+              nullable: false,
+              isPrimaryKey: true,
+              isForeignKey: false,
+              isUnique: true,
+            },
+          ],
+          primaryKey: undefined,
+          foreignKeys: [],
+          indexes: [],
+        },
+      ],
+      relations: [],
+      discoveredAt: new Date(),
     };
     const table = adaptDatabaseSchema(schema).schemas[0]!.tables[0]!;
     expect(table.columns[0]!.isIdentity).toBe(false);

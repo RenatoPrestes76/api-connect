@@ -61,18 +61,19 @@ Role is checked at the application layer before any mutation is performed.
 ### Row Level Security
 
 All Prisma models are RLS-compatible. Supabase policies enforce:
+
 - Users can only see their own data
 - Organization data is isolated per `organizationId`
 - Soft-deleted records are hidden automatically
 
 ## Data Classification
 
-| Category       | Examples                        | Storage Policy              |
-|----------------|----------------------------------|------------------------------|
-| Public         | Plugin names, org names          | Unencrypted                  |
-| Internal       | Config keys, job payloads        | Encrypted in transit         |
-| Confidential   | API keys, tokens                 | Hashed or encrypted at rest  |
-| Restricted     | Encryption keys, service roles   | Environment variables only   |
+| Category     | Examples                       | Storage Policy              |
+| ------------ | ------------------------------ | --------------------------- |
+| Public       | Plugin names, org names        | Unencrypted                 |
+| Internal     | Config keys, job payloads      | Encrypted in transit        |
+| Confidential | API keys, tokens               | Hashed or encrypted at rest |
+| Restricted   | Encryption keys, service roles | Environment variables only  |
 
 ## Secrets Management
 
@@ -84,19 +85,20 @@ All Prisma models are RLS-compatible. Supabase policies enforce:
 
 ## Rate Limiting
 
-| Policy           | Limit          | Window    | Burst |
-|------------------|----------------|-----------|-------|
-| auth             | 10 requests    | 60s       | 5     |
-| api-default      | 1000 requests  | 60s       | —     |
-| api-agent        | 5000 requests  | 60s       | —     |
-| api-write        | 100 requests   | 60s       | —     |
-| api-admin        | 50 requests    | 60s       | —     |
+| Policy      | Limit         | Window | Burst |
+| ----------- | ------------- | ------ | ----- |
+| auth        | 10 requests   | 60s    | 5     |
+| api-default | 1000 requests | 60s    | —     |
+| api-agent   | 5000 requests | 60s    | —     |
+| api-write   | 100 requests  | 60s    | —     |
+| api-admin   | 50 requests   | 60s    | —     |
 
 Exceeding any limit returns HTTP 429 with `Retry-After` header.
 
 ## Audit Trail
 
 All state mutations generate an audit entry:
+
 - Actor (user or API key)
 - Action (create / update / delete / login / ...)
 - Resource type + ID

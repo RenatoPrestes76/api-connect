@@ -8,17 +8,31 @@ import type { DatabaseSchema } from '../schema/schema-reader.js';
 function makeMockAdapter(): DatabaseAdapter {
   let connected = false;
   return {
-    connect:    async () => { connected = true; },
-    disconnect: async () => { connected = false; },
-    reconnect:  async () => { connected = false; connected = true; },
-    execute:    async (_q: Query) => [],
+    connect: async () => {
+      connected = true;
+    },
+    disconnect: async () => {
+      connected = false;
+    },
+    reconnect: async () => {
+      connected = false;
+      connected = true;
+    },
+    execute: async (_q: Query) => [],
     transaction: <T>(cb: () => Promise<T>): Promise<T> => cb(),
     health: async (): Promise<DatabaseHealth> => ({
-      connected, latency: 0, databaseVersion: 'test',
-      activeConnections: 1, poolUsage: 0, status: connected ? 'healthy' : 'unhealthy',
+      connected,
+      latency: 0,
+      databaseVersion: 'test',
+      activeConnections: 1,
+      poolUsage: 0,
+      status: connected ? 'healthy' : 'unhealthy',
     }),
     schema: async (): Promise<DatabaseSchema> => ({
-      name: 'test', tables: [], relations: [], discoveredAt: new Date(),
+      name: 'test',
+      tables: [],
+      relations: [],
+      discoveredAt: new Date(),
     }),
   };
 }

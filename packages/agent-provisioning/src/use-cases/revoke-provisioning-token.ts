@@ -1,10 +1,9 @@
 import type { ProvisioningTokenRepository } from '../repository/provisioning-token-repository.js';
 
-export type RevokeProvisioningTokenError =
-  | { code: 'TOKEN_NOT_FOUND'; tokenId: string };
+export type RevokeProvisioningTokenError = { code: 'TOKEN_NOT_FOUND'; tokenId: string };
 
 export type RevokeProvisioningTokenOutput =
-  | { ok: true;  value: { tokenId: string; revokedAt: Date } }
+  | { ok: true; value: { tokenId: string; revokedAt: Date } }
   | { ok: false; error: RevokeProvisioningTokenError };
 
 export class RevokeProvisioningToken {

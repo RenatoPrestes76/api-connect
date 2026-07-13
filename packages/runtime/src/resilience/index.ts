@@ -98,7 +98,11 @@ export interface CircuitBreakerMetrics {
   readonly lastFailureAt?: Date;
 }
 
-export type CircuitStateChangeHandler = (from: CircuitState, to: CircuitState, reason?: string) => void;
+export type CircuitStateChangeHandler = (
+  from: CircuitState,
+  to: CircuitState,
+  reason?: string
+) => void;
 
 // ─── Retry Policy ─────────────────────────────────────────────────────────
 
@@ -226,7 +230,11 @@ export interface ResilienceRegistry {
 }
 
 export interface ResilienceMetricsSnapshot {
-  readonly circuitBreakers: Array<{ id: string; state: CircuitState; metrics: CircuitBreakerMetrics }>;
+  readonly circuitBreakers: Array<{
+    id: string;
+    state: CircuitState;
+    metrics: CircuitBreakerMetrics;
+  }>;
   readonly retries: Array<{ id: string; metrics: RetryMetrics }>;
   readonly rateLimiters: Array<{ id: string; metrics: RateLimiterMetrics }>;
   readonly snapshotAt: Date;

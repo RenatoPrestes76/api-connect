@@ -2,14 +2,14 @@ import { api } from './api-client';
 import type { HubUser, UserRole } from '@/types/index';
 
 export interface CreateUserRequest {
-  name:  string;
+  name: string;
   email: string;
-  role:  UserRole;
+  role: UserRole;
 }
 
 export interface UpdateUserRequest {
-  name?:   string;
-  role?:   UserRole;
+  name?: string;
+  role?: UserRole;
   active?: boolean;
 }
 

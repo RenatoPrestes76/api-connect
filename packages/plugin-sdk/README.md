@@ -74,15 +74,15 @@ Every plugin must have an `atlas-plugin.json`:
 
 ## PluginContext API
 
-| API                        | Purpose                    |
-|----------------------------|----------------------------|
-| `context.logger`           | Structured logging         |
-| `context.config`           | Runtime configuration      |
-| `context.credentials`      | Secure credential storage  |
-| `context.http`             | Sandboxed HTTP client      |
-| `context.storage`          | Isolated KV storage        |
-| `context.events`           | Platform event bus         |
-| `context.metrics`          | Metrics export             |
+| API                   | Purpose                   |
+| --------------------- | ------------------------- |
+| `context.logger`      | Structured logging        |
+| `context.config`      | Runtime configuration     |
+| `context.credentials` | Secure credential storage |
+| `context.http`        | Sandboxed HTTP client     |
+| `context.storage`     | Isolated KV storage       |
+| `context.events`      | Platform event bus        |
+| `context.metrics`     | Metrics export            |
 
 ## Constants
 

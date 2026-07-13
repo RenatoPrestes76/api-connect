@@ -13,54 +13,54 @@ import type { DomainEvent } from './domain-event.js';
 // ─── AgentRegistered ─────────────────────────────────────────────────────────
 
 export interface AgentRegistered extends DomainEvent {
-  readonly type:          'AtlasAgent.Registered';
-  readonly agentId:       string;
-  readonly companyId:     string;
-  readonly name:          string;
-  readonly machineId:     string;
-  readonly hostname:      string;
+  readonly type: 'AtlasAgent.Registered';
+  readonly agentId: string;
+  readonly companyId: string;
+  readonly name: string;
+  readonly machineId: string;
+  readonly hostname: string;
   readonly connectorType: string;
-  readonly agentVersion:  string;
+  readonly agentVersion: string;
 }
 
 // ─── HeartbeatReceived ───────────────────────────────────────────────────────
 
 export interface HeartbeatReceived extends DomainEvent {
-  readonly type:        'AtlasAgent.HeartbeatReceived';
-  readonly agentId:     string;
+  readonly type: 'AtlasAgent.HeartbeatReceived';
+  readonly agentId: string;
   readonly heartbeatAt: Date;
 }
 
 // ─── SynchronizationCompleted ────────────────────────────────────────────────
 
 export interface SynchronizationCompleted extends DomainEvent {
-  readonly type:           'AtlasAgent.SynchronizationCompleted';
-  readonly agentId:        string;
+  readonly type: 'AtlasAgent.SynchronizationCompleted';
+  readonly agentId: string;
   readonly synchronizedAt: Date;
 }
 
 // ─── AgentDisabled ───────────────────────────────────────────────────────────
 
 export interface AgentDisabled extends DomainEvent {
-  readonly type:       'AtlasAgent.Disabled';
-  readonly agentId:    string;
+  readonly type: 'AtlasAgent.Disabled';
+  readonly agentId: string;
   readonly disabledAt: Date;
 }
 
 // ─── AgentVersionUpdated ─────────────────────────────────────────────────────
 
 export interface AgentVersionUpdated extends DomainEvent {
-  readonly type:        'AtlasAgent.VersionUpdated';
-  readonly agentId:     string;
-  readonly oldVersion:  string;
-  readonly newVersion:  string;
+  readonly type: 'AtlasAgent.VersionUpdated';
+  readonly agentId: string;
+  readonly oldVersion: string;
+  readonly newVersion: string;
 }
 
 // ─── AgentHostnameUpdated ─────────────────────────────────────────────────────
 
 export interface AgentHostnameUpdated extends DomainEvent {
-  readonly type:        'AtlasAgent.HostnameUpdated';
-  readonly agentId:     string;
+  readonly type: 'AtlasAgent.HostnameUpdated';
+  readonly agentId: string;
   readonly oldHostname: string;
   readonly newHostname: string;
 }
@@ -68,8 +68,8 @@ export interface AgentHostnameUpdated extends DomainEvent {
 // ─── AgentEnabled ─────────────────────────────────────────────────────────────
 
 export interface AgentEnabled extends DomainEvent {
-  readonly type:      'AtlasAgent.Enabled';
-  readonly agentId:   string;
+  readonly type: 'AtlasAgent.Enabled';
+  readonly agentId: string;
   readonly enabledAt: Date;
 }
 

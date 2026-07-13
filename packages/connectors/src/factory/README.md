@@ -75,20 +75,20 @@ const result = await factory.create(typeId, config);
 
 ## Interfaces
 
-| Interface | Role |
-|-----------|------|
-| `ConnectorFactory` | Primary creation interface |
-| `ConnectorBuilder` | Fluent step-by-step config assembler |
-| `PoolConfig` | Connection pool settings |
-| `RetryConfig` | Retry strategy (backoff, max attempts) |
-| `SslConfig` | TLS/SSL certificate config |
-| `SerializedConnectorConfig` | Portable config for DB storage |
-| `DatabaseConnectorFactory` | DB-specific factory |
-| `ApiConnectorFactory` | API-specific factory |
-| `FileConnectorFactory` | File-specific factory |
-| `CloudConnectorFactory` | Cloud-specific factory |
-| `QueueConnectorFactory` | Queue-specific factory |
-| `ConnectorFactoryRegistry` | Routes creation to the right category factory |
+| Interface                   | Role                                          |
+| --------------------------- | --------------------------------------------- |
+| `ConnectorFactory`          | Primary creation interface                    |
+| `ConnectorBuilder`          | Fluent step-by-step config assembler          |
+| `PoolConfig`                | Connection pool settings                      |
+| `RetryConfig`               | Retry strategy (backoff, max attempts)        |
+| `SslConfig`                 | TLS/SSL certificate config                    |
+| `SerializedConnectorConfig` | Portable config for DB storage                |
+| `DatabaseConnectorFactory`  | DB-specific factory                           |
+| `ApiConnectorFactory`       | API-specific factory                          |
+| `FileConnectorFactory`      | File-specific factory                         |
+| `CloudConnectorFactory`     | Cloud-specific factory                        |
+| `QueueConnectorFactory`     | Queue-specific factory                        |
+| `ConnectorFactoryRegistry`  | Routes creation to the right category factory |
 
 ## Constraints
 

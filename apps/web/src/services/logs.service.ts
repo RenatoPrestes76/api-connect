@@ -3,7 +3,7 @@ import { buildQuery } from '@/lib/utils';
 import type { LogEntry, LogQuery } from '@/types/index';
 
 export interface LogsResponse {
-  data:  LogEntry[];
+  data: LogEntry[];
   total: number;
 }
 
@@ -13,7 +13,10 @@ export async function getLogs(query: LogQuery = {}, signal?: AbortSignal): Promi
 }
 
 export async function exportLogs(query: LogQuery = {}): Promise<Blob> {
-  const qs = buildQuery({ ...query, export: 'true' } as Record<string, string | number | boolean | undefined>);
+  const qs = buildQuery({ ...query, export: 'true' } as Record<
+    string,
+    string | number | boolean | undefined
+  >);
   const res = await fetch(`${'/api/v1/hub/logs'}${qs}`, {
     headers: { Accept: 'text/plain' },
     credentials: 'include',

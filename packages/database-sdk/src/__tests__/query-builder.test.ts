@@ -35,11 +35,7 @@ describe('QueryBuilder — SELECT', () => {
   });
 
   it('chains multiple WHERE conditions', () => {
-    const q = new QueryBuilder()
-      .from('t')
-      .where(equals('a', 1))
-      .where(greaterThan('b', 2))
-      .build();
+    const q = new QueryBuilder().from('t').where(equals('a', 1)).where(greaterThan('b', 2)).build();
     expect(q.where).toHaveLength(2);
   });
 
@@ -80,7 +76,10 @@ describe('QueryBuilder — SELECT', () => {
   });
 
   it('toSQL renders for dialect', () => {
-    const { sql } = new QueryBuilder().from('products').where(isNull('deleted_at')).toSQL('postgres');
+    const { sql } = new QueryBuilder()
+      .from('products')
+      .where(isNull('deleted_at'))
+      .toSQL('postgres');
     expect(sql).toContain('IS NULL');
     expect(sql).toContain('"products"');
   });

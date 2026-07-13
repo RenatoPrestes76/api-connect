@@ -41,17 +41,17 @@ export interface PluginTestHarnessOptions {
 
 export function createTestHarness<T extends Plugin>(
   plugin: T,
-  options?: PluginTestHarnessOptions,
+  options?: PluginTestHarnessOptions
 ): IPluginTestHarness<T> {
   const ctx = createMockContext(plugin.manifest, options);
   return {
     plugin,
     context: ctx,
-    init:    () => plugin.init(ctx),
-    start:   () => plugin.start(),
-    stop:    () => plugin.stop(),
+    init: () => plugin.init(ctx),
+    start: () => plugin.start(),
+    stop: () => plugin.stop(),
     destroy: () => plugin.destroy(),
-    reset:   () => ctx.reset(),
+    reset: () => ctx.reset(),
   };
 }
 
@@ -59,7 +59,7 @@ export function createTestHarness<T extends Plugin>(
 
 export interface MockPluginContext extends PluginContext {
   readonly logs: LogRecord[];
-  readonly events: EventRecord[];
+  readonly emittedEvents: EventRecord[];
   readonly metrics: MockMetricsStore;
   readonly httpCalls: HttpCallRecord[];
   reset(): void;
@@ -100,41 +100,49 @@ export interface HttpCallRecord {
 export type MockHttpHandler = (
   method: string,
   url: string,
-  body?: unknown,
+  body?: unknown
 ) => PluginResult<unknown>;
 
 export function createMockContext(
   manifest: PluginManifest,
-  options?: PluginTestHarnessOptions,
+  options?: PluginTestHarnessOptions
 ): MockPluginContext {
-  const logs:      LogRecord[]    = [];
-  const events:    EventRecord[]  = [];
+  const logs: LogRecord[] = [];
+  const events: EventRecord[] = [];
   const httpCalls: HttpCallRecord[] = [];
-  const storage    = new Map<string, Buffer>();
-  const credentials = new Map<string, string>(
-    Object.entries(options?.credentials ?? {}),
-  );
-  const config     = options?.config ?? {};
+  const storage = new Map<string, Buffer>();
+  const credentials = new Map<string, string>(Object.entries(options?.credentials ?? {}));
+  const config = options?.config ?? {};
 
   const metricsStore: MockMetricsStore = {
     counters: {},
-    gauges:   {},
-    timings:  {},
-    increment(name, value = 1) { this.counters[name] = (this.counters[name] ?? 0) + value; },
-    gauge(name, value)          { this.gauges[name] = value; },
-    timing(name, ms)            { (this.timings[name] ??= []).push(ms); },
+    gauges: {},
+    timings: {},
+    increment(name, value = 1) {
+      this.counters[name] = (this.counters[name] ?? 0) + value;
+    },
+    gauge(name, value) {
+      this.gauges[name] = value;
+    },
+    timing(name, ms) {
+      (this.timings[name] ??= []).push(ms);
+    },
     reset() {
-      Object.keys(this.counters).forEach(k => delete this.counters[k]);
-      Object.keys(this.gauges).forEach(k => delete this.gauges[k]);
-      Object.keys(this.timings).forEach(k => delete this.timings[k]);
+      Object.keys(this.counters).forEach((k) => delete this.counters[k]);
+      Object.keys(this.gauges).forEach((k) => delete this.gauges[k]);
+      Object.keys(this.timings).forEach((k) => delete this.timings[k]);
     },
   };
 
   const logger: PluginLogger = {
-    error: (msg, ctx) => logs.push({ level: 'error', message: msg, context: ctx, timestamp: new Date() }),
-    warn:  (msg, ctx) => logs.push({ level: 'warn',  message: msg, context: ctx, timestamp: new Date() }),
-    info:  (msg, ctx) => logs.push({ level: 'info',  message: msg, context: ctx, timestamp: new Date() }),
-    debug: (msg, ctx) => logs.push({ level: 'debug', message: msg, context: ctx, timestamp: new Date() }),
+    error: (msg, ctx) =>
+      logs.push({ level: 'error', message: msg, context: ctx, timestamp: new Date() }),
+    warn: (msg, ctx) =>
+      logs.push({ level: 'warn', message: msg, context: ctx, timestamp: new Date() }),
+    info: (msg, ctx) =>
+      logs.push({ level: 'info', message: msg, context: ctx, timestamp: new Date() }),
+    debug: (msg, ctx) =>
+      logs.push({ level: 'debug', message: msg, context: ctx, timestamp: new Date() }),
     child: (_b) => logger,
   };
 
@@ -149,76 +157,118 @@ export function createMockContext(
   };
 
   const pluginStorage: IPluginStorage = {
-    get:    async (key) => storage.get(key) ?? null,
-    set:    async (key, val) => { storage.set(key, val); },
-    delete: async (key) => { storage.delete(key); },
-    list:   async (prefix) => [...storage.keys()].filter(k => !prefix || k.startsWith(prefix)),
+    get: async (key) => storage.get(key) ?? null,
+    set: async (key, val) => {
+      storage.set(key, val);
+    },
+    delete: async (key) => {
+      storage.delete(key);
+    },
+    list: async (prefix) => [...storage.keys()].filter((k) => !prefix || k.startsWith(prefix)),
   };
 
   const credStore: IPluginCredentialStore = {
-    get:    async (id) => credentials.get(id) ?? null,
-    set:    async (id, val) => { credentials.set(id, val); },
-    delete: async (id) => { credentials.delete(id); },
+    get: async (id) => credentials.get(id) ?? null,
+    set: async (id, val) => {
+      credentials.set(id, val);
+    },
+    delete: async (id) => {
+      credentials.delete(id);
+    },
   };
 
   const handlers = new Map<string, Array<(p: unknown) => void>>();
   const eventEmitter: IPluginEventEmitter = {
-    emit:  (ev, payload) => {
+    emit: (ev, payload) => {
       events.push({ event: ev, payload, timestamp: new Date() });
-      handlers.get(ev)?.forEach(h => h(payload));
+      handlers.get(ev)?.forEach((h) => h(payload));
     },
-    on:    (ev, h) => {
+    on: (ev, h) => {
       (handlers.get(ev) ?? handlers.set(ev, []).get(ev)!).push(h);
-      return () => { const a = handlers.get(ev); if (a) { const i = a.indexOf(h); if (i >= 0) a.splice(i, 1); } };
+      return () => {
+        const a = handlers.get(ev);
+        if (a) {
+          const i = a.indexOf(h);
+          if (i >= 0) a.splice(i, 1);
+        }
+      };
     },
-    once:  (ev, h) => {
-      const unsub = eventEmitter.on(ev, (p) => { h(p); unsub(); });
+    once: (ev, h) => {
+      const unsub = eventEmitter.on(ev, (p) => {
+        h(p);
+        unsub();
+      });
       return unsub;
     },
   };
 
   const mockHttp = options?.mockHttp;
   const httpClient: IPluginHttpClient = {
-    get:    async <T>(url: string, opts?: HttpRequestOptions) => {
+    get: async <T>(url: string, opts?: HttpRequestOptions) => {
       const result = mockHttp ? mockHttp('GET', url) : { ok: true, value: null };
-      httpCalls.push({ method: 'GET', url, options: opts, respondedWith: result, timestamp: new Date() });
+      httpCalls.push({
+        method: 'GET',
+        url,
+        options: opts,
+        respondedWith: result,
+        timestamp: new Date(),
+      });
       return result as PluginResult<T>;
     },
-    post:   async <T>(url: string, body?: unknown, opts?: HttpRequestOptions) => {
+    post: async <T>(url: string, body?: unknown, opts?: HttpRequestOptions) => {
       const result = mockHttp ? mockHttp('POST', url, body) : { ok: true, value: null };
-      httpCalls.push({ method: 'POST', url, body, options: opts, respondedWith: result, timestamp: new Date() });
+      httpCalls.push({
+        method: 'POST',
+        url,
+        body,
+        options: opts,
+        respondedWith: result,
+        timestamp: new Date(),
+      });
       return result as PluginResult<T>;
     },
-    put:    async <T>(url: string, body?: unknown, opts?: HttpRequestOptions) => {
+    put: async <T>(url: string, body?: unknown, opts?: HttpRequestOptions) => {
       const result = mockHttp ? mockHttp('PUT', url, body) : { ok: true, value: null };
-      httpCalls.push({ method: 'PUT', url, body, options: opts, respondedWith: result, timestamp: new Date() });
+      httpCalls.push({
+        method: 'PUT',
+        url,
+        body,
+        options: opts,
+        respondedWith: result,
+        timestamp: new Date(),
+      });
       return result as PluginResult<T>;
     },
     delete: async <T>(url: string, opts?: HttpRequestOptions) => {
       const result = mockHttp ? mockHttp('DELETE', url) : { ok: true, value: null };
-      httpCalls.push({ method: 'DELETE', url, options: opts, respondedWith: result, timestamp: new Date() });
+      httpCalls.push({
+        method: 'DELETE',
+        url,
+        options: opts,
+        respondedWith: result,
+        timestamp: new Date(),
+      });
       return result as PluginResult<T>;
     },
   };
 
   const ctx: MockPluginContext = {
-    pluginId:    manifest.id as import('@seltriva/plugin-sdk').PluginId,
-    version:     manifest.version,
+    pluginId: manifest.id as import('@seltriva/plugin-sdk').PluginId,
+    version: manifest.version,
     environment: options?.environment ?? 'development',
     logger,
-    config:      pluginConfig,
-    storage:     pluginStorage,
+    config: pluginConfig,
+    storage: pluginStorage,
     credentials: credStore,
-    events:      eventEmitter as unknown as import('@seltriva/plugin-sdk').IPluginEventEmitter,
-    metrics:     metricsStore,
-    http:        httpClient,
+    events: eventEmitter,
+    metrics: metricsStore,
+    http: httpClient,
     logs,
-    events:      events as unknown as typeof eventEmitter,
-    metrics:     metricsStore,
+    emittedEvents: events,
     httpCalls,
     reset() {
-      logs.length      = 0;
-      events.length    = 0;
+      logs.length = 0;
+      events.length = 0;
       httpCalls.length = 0;
       storage.clear();
       metricsStore.reset();
@@ -232,7 +282,9 @@ export function createMockContext(
 
 export function assertOk<T>(result: PluginResult<T>): T {
   if (!result.ok) {
-    throw new Error(`Expected ok result but got error: [${result.error.code}] ${result.error.message}`);
+    throw new Error(
+      `Expected ok result but got error: [${result.error.code}] ${result.error.message}`
+    );
   }
   return result.value;
 }
@@ -247,13 +299,13 @@ export function assertFail<T>(result: PluginResult<T>): import('@seltriva/plugin
 export function assertLogContains(
   logs: LogRecord[],
   level: LogRecord['level'],
-  text: string,
+  text: string
 ): void {
-  const found = logs.some(l => l.level === level && l.message.includes(text));
+  const found = logs.some((l) => l.level === level && l.message.includes(text));
   if (!found) {
     throw new Error(
       `Expected ${level} log containing "${text}" but got:\n` +
-      logs.map(l => `  [${l.level}] ${l.message}`).join('\n'),
+        logs.map((l) => `  [${l.level}] ${l.message}`).join('\n')
     );
   }
 }
@@ -261,7 +313,7 @@ export function assertLogContains(
 export function assertMetricRecorded(
   store: MockMetricsStore,
   name: string,
-  expectedValue?: number,
+  expectedValue?: number
 ): void {
   const val = store.counters[name] ?? store.gauges[name];
   if (val === undefined) {
@@ -290,6 +342,10 @@ export function describePlugin(name: string, tests: PluginTest[]): PluginTestSui
   return { name, tests };
 }
 
-export function pluginTest(name: string, fn: () => Promise<void>, options?: { timeout?: number; skip?: boolean }): PluginTest {
+export function pluginTest(
+  name: string,
+  fn: () => Promise<void>,
+  options?: { timeout?: number; skip?: boolean }
+): PluginTest {
   return { name, fn, ...options };
 }

@@ -78,40 +78,40 @@ The Canonical Business Language (CBL) — the universal business vocabulary.
 
 **Entity Kinds** (62 total, grouped by domain):
 
-| Domain | Examples |
-|---|---|
-| catalog | `PRODUCT`, `PRODUCT_VARIANT`, `CATEGORY`, `BRAND`, `UNIT_OF_MEASURE` |
-| commerce | `ORDER`, `ORDER_LINE`, `QUOTE`, `PRICE_LIST`, `DISCOUNT` |
-| procurement | `SUPPLIER`, `PURCHASE_ORDER`, `RECEIPT` |
-| crm | `CUSTOMER`, `CUSTOMER_ADDRESS`, `CONTACT` |
-| inventory | `INVENTORY`, `INVENTORY_MOVEMENT`, `WAREHOUSE`, `STOCK_TRANSFER` |
-| finance | `INVOICE`, `PAYMENT`, `ACCOUNT`, `COST_CENTER`, `CURRENCY` |
-| fiscal | `TAX_CODE`, `INVOICE_TAX`, `FISCAL_CLASSIFICATION` |
-| hr | `EMPLOYEE`, `DEPARTMENT`, `EMPLOYEE_ROLE` |
-| logistics | `ADDRESS`, `CARRIER`, `DELIVERY`, `SHIPMENT` |
-| audit | `AUDIT_LOG` |
+| Domain      | Examples                                                             |
+| ----------- | -------------------------------------------------------------------- |
+| catalog     | `PRODUCT`, `PRODUCT_VARIANT`, `CATEGORY`, `BRAND`, `UNIT_OF_MEASURE` |
+| commerce    | `ORDER`, `ORDER_LINE`, `QUOTE`, `PRICE_LIST`, `DISCOUNT`             |
+| procurement | `SUPPLIER`, `PURCHASE_ORDER`, `RECEIPT`                              |
+| crm         | `CUSTOMER`, `CUSTOMER_ADDRESS`, `CONTACT`                            |
+| inventory   | `INVENTORY`, `INVENTORY_MOVEMENT`, `WAREHOUSE`, `STOCK_TRANSFER`     |
+| finance     | `INVOICE`, `PAYMENT`, `ACCOUNT`, `COST_CENTER`, `CURRENCY`           |
+| fiscal      | `TAX_CODE`, `INVOICE_TAX`, `FISCAL_CLASSIFICATION`                   |
+| hr          | `EMPLOYEE`, `DEPARTMENT`, `EMPLOYEE_ROLE`                            |
+| logistics   | `ADDRESS`, `CARRIER`, `DELIVERY`, `SHIPMENT`                         |
+| audit       | `AUDIT_LOG`                                                          |
 
 **Field Kinds** (110+ total):
 
-| Category | Examples |
-|---|---|
-| Identity | `CODE`, `EXTERNAL_CODE`, `PRODUCT_CODE`, `BARCODE`, `SKU`, `NCM` |
-| Pricing | `COST_PRICE`, `SALE_PRICE`, `MINIMUM_PRICE`, `MARGIN`, `MARKUP` |
-| Quantity | `QUANTITY`, `STOCK_BALANCE`, `REORDER_POINT`, `AVAILABLE_QUANTITY` |
-| Dates | `EXPIRATION_DATE`, `ISSUE_DATE`, `DUE_DATE`, `DELIVERY_DATE` |
-| Audit | `CREATED_AT`, `UPDATED_AT`, `DELETED_AT`, `CREATED_BY` |
-| Status | `STATUS`, `IS_ACTIVE`, `IS_DELETED`, `IS_SERVICE` |
-| Address | `ADDRESS_STREET`, `ADDRESS_CITY`, `ADDRESS_POSTAL_CODE` |
-| Tax | `TAX_ID`, `COMPANY_REGISTRATION`, `TAX_RATE`, `CFOP` |
-| References | `SUPPLIER`, `CUSTOMER`, `CATEGORY`, `BRANCH`, `WAREHOUSE` |
+| Category   | Examples                                                           |
+| ---------- | ------------------------------------------------------------------ |
+| Identity   | `CODE`, `EXTERNAL_CODE`, `PRODUCT_CODE`, `BARCODE`, `SKU`, `NCM`   |
+| Pricing    | `COST_PRICE`, `SALE_PRICE`, `MINIMUM_PRICE`, `MARGIN`, `MARKUP`    |
+| Quantity   | `QUANTITY`, `STOCK_BALANCE`, `REORDER_POINT`, `AVAILABLE_QUANTITY` |
+| Dates      | `EXPIRATION_DATE`, `ISSUE_DATE`, `DUE_DATE`, `DELIVERY_DATE`       |
+| Audit      | `CREATED_AT`, `UPDATED_AT`, `DELETED_AT`, `CREATED_BY`             |
+| Status     | `STATUS`, `IS_ACTIVE`, `IS_DELETED`, `IS_SERVICE`                  |
+| Address    | `ADDRESS_STREET`, `ADDRESS_CITY`, `ADDRESS_POSTAL_CODE`            |
+| Tax        | `TAX_ID`, `COMPANY_REGISTRATION`, `TAX_RATE`, `CFOP`               |
+| References | `SUPPLIER`, `CUSTOMER`, `CATEGORY`, `BRANCH`, `WAREHOUSE`          |
 
 **Term construction:**
 
 ```typescript
 import { cblEntityTerm, cblFieldTerm } from '@seltriva/semantic-engine/business-language';
 
-cblEntityTerm('PRODUCT')    // → 'ENTITY_PRODUCT'
-cblFieldTerm('COST_PRICE')  // → 'FIELD_COST_PRICE'
+cblEntityTerm('PRODUCT'); // → 'ENTITY_PRODUCT'
+cblFieldTerm('COST_PRICE'); // → 'FIELD_COST_PRICE'
 ```
 
 ---
@@ -122,13 +122,14 @@ The output of the USME — a `CanonicalBusinessModel` (CBM). Every entity and fi
 
 ```typescript
 interface CanonicalBusinessModel {
-  entities: CBMEntity[];     // each entity has cblTerm + confidence + status
+  entities: CBMEntity[]; // each entity has cblTerm + confidence + status
   relationships: CBMRelationship[];
   statistics: CBMStatistics; // % mapped, average confidence
 }
 ```
 
 `MappingStatus` values:
+
 - `confirmed` — human-validated
 - `auto-approved` — confidence ≥ threshold
 - `pending-validation` — queued for review
@@ -143,30 +144,30 @@ Scores every semantic suggestion from 0 to 1.
 
 **Confidence tiers:**
 
-| Tier | Range | Behavior |
-|---|---|---|
-| `certain` | 0.97–1.00 | Auto-approved |
-| `very-high` | 0.90–0.96 | Suggested with high priority |
-| `high` | 0.80–0.89 | Suggested |
-| `medium` | 0.65–0.79 | Suggested |
-| `low` | 0.45–0.64 | Shown with warning |
-| `very-low` | 0.20–0.44 | Shown only if no better candidate |
-| `insufficient` | < 0.20 | Suppressed |
+| Tier           | Range     | Behavior                          |
+| -------------- | --------- | --------------------------------- |
+| `certain`      | 0.97–1.00 | Auto-approved                     |
+| `very-high`    | 0.90–0.96 | Suggested with high priority      |
+| `high`         | 0.80–0.89 | Suggested                         |
+| `medium`       | 0.65–0.79 | Suggested                         |
+| `low`          | 0.45–0.64 | Shown with warning                |
+| `very-low`     | 0.20–0.44 | Shown only if no better candidate |
+| `insufficient` | < 0.20    | Suppressed                        |
 
 **Default signal weights:**
 
-| Signal | Weight |
-|---|---|
-| Name similarity to CBL aliases | 30% |
-| Alias exact match | 20% |
-| Field type compatibility | 10% |
-| Semantic role match | 10% |
-| Structural pattern match | 10% |
-| ERP profile match | 8% |
-| Learning history | 5% |
-| Knowledge graph coherence | 4% |
-| Position context | 2% |
-| Synonym match | 1% |
+| Signal                         | Weight |
+| ------------------------------ | ------ |
+| Name similarity to CBL aliases | 30%    |
+| Alias exact match              | 20%    |
+| Field type compatibility       | 10%    |
+| Semantic role match            | 10%    |
+| Structural pattern match       | 10%    |
+| ERP profile match              | 8%     |
+| Learning history               | 5%     |
+| Knowledge graph coherence      | 4%     |
+| Position context               | 2%     |
+| Synonym match                  | 1%     |
 
 ---
 
@@ -175,18 +176,22 @@ Scores every semantic suggestion from 0 to 1.
 Four analysis strategies compose to produce candidates:
 
 **NameAnalyzer** — analyzes the raw name:
+
 - Strips ERP-specific prefixes/suffixes (`B1_`, `ZE_`, `T_`, etc.)
 - Expands abbreviations: `COD` → `code`, `DESCR` → `description`
 - Handles multilingual names: Portuguese `FORNECEDOR` → `SUPPLIER`, Spanish `PROVEEDOR` → `SUPPLIER`
 - Detects naming conventions: `snake_case`, `PascalCase`, `SCREAMING_SNAKE`
 
 **StructureAnalyzer** — analyzes the entity's field set:
+
 - "Has fields CODPROD + DESCRPROD + VLR_CUSTO + VLR_VENDA" → ENTITY_PRODUCT structural signature
 
 **RelationshipAnalyzer** — analyzes FK targets:
+
 - "Has FK to ENTITY_PRODUCT + FK to ENTITY_WAREHOUSE" → suggests ENTITY_INVENTORY
 
 **ContextAnalyzer** — analyzes neighboring entities:
+
 - "Other entities in this schema are commerce/inventory" → boosts commerce/inventory candidates
 
 ---
@@ -220,16 +225,16 @@ Authoritative human-readable definitions for every CBL concept. Shown to adminis
 
 Each `FieldDefinition` contains:
 
-| Field | Description |
-|---|---|
-| `name` | Human name: "Cost Price" |
-| `description` | Plain-language definition |
-| `aliases` | Column names this is known by: `VLR_CUSTO`, `PRECOCUSTO`, `COSTO`, `COST` |
-| `examples` | ERP-specific examples with sample values |
-| `typicalTypes` | `decimal`, `numeric(15,4)` |
-| `businessRules` | e.g., "Must be > 0 for active products" |
-| `relatedFields` | `SALE_PRICE`, `MARGIN`, `MARKUP` |
-| `commonInEntities` | `PRODUCT`, `PRODUCT_VARIANT`, `PRICE_LIST_ITEM` |
+| Field              | Description                                                               |
+| ------------------ | ------------------------------------------------------------------------- |
+| `name`             | Human name: "Cost Price"                                                  |
+| `description`      | Plain-language definition                                                 |
+| `aliases`          | Column names this is known by: `VLR_CUSTO`, `PRECOCUSTO`, `COSTO`, `COST` |
+| `examples`         | ERP-specific examples with sample values                                  |
+| `typicalTypes`     | `decimal`, `numeric(15,4)`                                                |
+| `businessRules`    | e.g., "Must be > 0 for active products"                                   |
+| `relatedFields`    | `SALE_PRICE`, `MARGIN`, `MARKUP`                                          |
+| `commonInEntities` | `PRODUCT`, `PRODUCT_VARIANT`, `PRICE_LIST_ITEM`                           |
 
 ---
 
@@ -240,8 +245,8 @@ The `autoApprove` threshold (default: 0.97) determines when a mapping is confirm
 ```typescript
 engine.beginSession({
   options: {
-    autoApproveThreshold: 0.95,  // lower = more auto-approvals
-  }
+    autoApproveThreshold: 0.95, // lower = more auto-approvals
+  },
 });
 ```
 
@@ -254,6 +259,7 @@ Even auto-approved mappings are tracked in the registry and can be revoked.
 The human review workflow. **Nothing is learned until a human confirms it.**
 
 Lifecycle:
+
 1. `SuggestionEngine.generateEntityBundle()` → `SuggestionBundle`
 2. `ValidationWorkflow.submit(bundle)` → `ValidationRequest` (queued)
 3. Administrator reviews via the application layer
@@ -261,6 +267,7 @@ Lifecycle:
 5. `LearningEngine.learn(mapping)` is triggered automatically
 
 Administrators can also:
+
 - `decide(..., { action: 'modify', correctedTerm: 'FIELD_COST_PRICE' })` — fix the proposed term
 - `decide(..., { action: 'reject', feedback: { reason: 'wrong-concept' } })` — reject with feedback
 - `confirmAllAboveThreshold(bundleId, 0.85, 'admin@company.com')` — bulk approve high-confidence suggestions
@@ -273,15 +280,15 @@ Extracts learnable patterns from every confirmed mapping. **Never processes busi
 
 Pattern types learned:
 
-| Pattern | Example |
-|---|---|
-| `exact-name-match` | `CODPROD` → `FIELD_PRODUCT_CODE` (exact) |
-| `name-prefix-match` | Columns starting with `VLR_` in SAP B1 → pricing fields |
-| `abbreviation-expansion` | `COD` → `code`, `DESCR` → `description` |
-| `multilingual-synonym` | Portuguese `FORNECEDOR` → `SUPPLIER` |
-| `structural-signature` | Entity with `CODPROD + DESCRPROD + VLR_CUSTO` → PRODUCT |
-| `erp-convention` | In SAP B1, `B1_` prefix is stripped before analysis |
-| `field-cooccurrence` | `FIELD_COST_PRICE` and `FIELD_SALE_PRICE` co-occur in ENTITY_PRODUCT |
+| Pattern                  | Example                                                              |
+| ------------------------ | -------------------------------------------------------------------- |
+| `exact-name-match`       | `CODPROD` → `FIELD_PRODUCT_CODE` (exact)                             |
+| `name-prefix-match`      | Columns starting with `VLR_` in SAP B1 → pricing fields              |
+| `abbreviation-expansion` | `COD` → `code`, `DESCR` → `description`                              |
+| `multilingual-synonym`   | Portuguese `FORNECEDOR` → `SUPPLIER`                                 |
+| `structural-signature`   | Entity with `CODPROD + DESCRPROD + VLR_CUSTO` → PRODUCT              |
+| `erp-convention`         | In SAP B1, `B1_` prefix is stripped before analysis                  |
+| `field-cooccurrence`     | `FIELD_COST_PRICE` and `FIELD_SALE_PRICE` co-occur in ENTITY_PRODUCT |
 
 ---
 
@@ -310,13 +317,13 @@ Business rule constraints on semantic mappings.
 
 Built-in rule examples:
 
-| Rule | Description |
-|---|---|
-| `rule-product-requires-code` | `ENTITY_PRODUCT` must have `FIELD_PRODUCT_CODE` |
-| `rule-price-numeric` | `FIELD_COST_PRICE` / `FIELD_SALE_PRICE` must have numeric type |
-| `rule-cost-sale-price-coexist` | If entity has `FIELD_COST_PRICE`, it should also have `FIELD_SALE_PRICE` |
-| `rule-expiration-product-context` | `FIELD_EXPIRATION_DATE` only makes sense in PRODUCT/INVENTORY context |
-| `rule-no-dual-entity-mapping` | An entity cannot simultaneously be two different CBL entity kinds |
+| Rule                              | Description                                                              |
+| --------------------------------- | ------------------------------------------------------------------------ |
+| `rule-product-requires-code`      | `ENTITY_PRODUCT` must have `FIELD_PRODUCT_CODE`                          |
+| `rule-price-numeric`              | `FIELD_COST_PRICE` / `FIELD_SALE_PRICE` must have numeric type           |
+| `rule-cost-sale-price-coexist`    | If entity has `FIELD_COST_PRICE`, it should also have `FIELD_SALE_PRICE` |
+| `rule-expiration-product-context` | `FIELD_EXPIRATION_DATE` only makes sense in PRODUCT/INVENTORY context    |
+| `rule-no-dual-entity-mapping`     | An entity cannot simultaneously be two different CBL entity kinds        |
 
 ---
 
@@ -325,14 +332,15 @@ Built-in rule examples:
 The single source of truth for all confirmed mappings. Append-only with revocation support.
 
 Lookups:
+
 ```typescript
-await registry.resolveEntity('B1_SB1')
+await registry.resolveEntity('B1_SB1');
 // → { term: 'ENTITY_PRODUCT', confidence: 0.99, confirmedAt: ... }
 
-await registry.resolveField('CODPROD', 'B1_SB1')
+await registry.resolveField('CODPROD', 'B1_SB1');
 // → { term: 'FIELD_PRODUCT_CODE', confidence: 1.0, confirmedAt: ... }
 
-await registry.reverseFieldLookup('FIELD_COST_PRICE')
+await registry.reverseFieldLookup('FIELD_COST_PRICE');
 // → ['VLR_CUSTO', 'PRECO_CUSTO', 'COST', 'COSTO', 'PRECOCUSTO']
 ```
 
@@ -354,11 +362,11 @@ import type {
 **Sub-path import (tree-shaking):**
 
 ```typescript
-import type { CBLEntityKind }       from '@seltriva/semantic-engine/business-language';
-import type { ConfidenceEngine }    from '@seltriva/semantic-engine/confidence-engine';
-import type { SemanticAnalyzer }    from '@seltriva/semantic-engine/semantic-analyzer';
-import type { ValidationWorkflow }  from '@seltriva/semantic-engine/validation';
-import type { SemanticLearner }     from '@seltriva/semantic-engine/learning';
+import type { CBLEntityKind } from '@seltriva/semantic-engine/business-language';
+import type { ConfidenceEngine } from '@seltriva/semantic-engine/confidence-engine';
+import type { SemanticAnalyzer } from '@seltriva/semantic-engine/semantic-analyzer';
+import type { ValidationWorkflow } from '@seltriva/semantic-engine/validation';
+import type { SemanticLearner } from '@seltriva/semantic-engine/learning';
 ```
 
 Available sub-paths: `business-language`, `canonical-model`, `semantic-analyzer`, `mapping-engine`, `knowledge-graph`, `confidence-engine`, `learning`, `validation`, `dictionary`, `profiles`, `registry`, `rules`, `suggestions`.
@@ -409,9 +417,15 @@ const myRule: BusinessRule = {
   scope: 'entity',
   appliesTo: { entityKinds: ['PRODUCT'] },
   evaluate(ctx) {
-    const hasBarcode = ctx.entity?.fields.some(f => f.fieldKind === 'BARCODE');
+    const hasBarcode = ctx.entity?.fields.some((f) => f.fieldKind === 'BARCODE');
     if (!hasBarcode) {
-      return [{ ruleId: 'my-rule-001', severity: 'warning', message: 'ENTITY_PRODUCT should have FIELD_BARCODE' }];
+      return [
+        {
+          ruleId: 'my-rule-001',
+          severity: 'warning',
+          message: 'ENTITY_PRODUCT should have FIELD_BARCODE',
+        },
+      ];
     }
     return [];
   },
@@ -423,11 +437,11 @@ ruleEngine.register(myRule);
 
 ## Package Info
 
-| Field | Value |
-|---|---|
-| Package | `@seltriva/semantic-engine` |
-| Version | `0.1.0` |
-| Runtime | Node.js 18+, browser-compatible |
-| TypeScript | `strict: true`, `moduleResolution: "bundler"` |
+| Field        | Value                                                                |
+| ------------ | -------------------------------------------------------------------- |
+| Package      | `@seltriva/semantic-engine`                                          |
+| Version      | `0.1.0`                                                              |
+| Runtime      | Node.js 18+, browser-compatible                                      |
+| TypeScript   | `strict: true`, `moduleResolution: "bundler"`                        |
 | Dependencies | `@seltriva/core`, `@seltriva/types`, `@seltriva/schema-intelligence` |
-| Side effects | None |
+| Side effects | None                                                                 |

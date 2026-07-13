@@ -2,30 +2,36 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const JWT_SECRET  = new TextEncoder().encode(process.env['HUB_JWT_SECRET'] ?? 'atlas-hub-dev-secret-change-in-prod');
-const LOGIN_PATH  = '/login';
+const JWT_SECRET = new TextEncoder().encode(
+  process.env['HUB_JWT_SECRET'] ?? 'atlas-hub-dev-secret-change-in-prod'
+);
+const LOGIN_PATH = '/login';
 
 /** Routes that are accessible without authentication. */
 const PUBLIC_PATHS = new Set([LOGIN_PATH, '/api/hub/login', '/api/hub/logout']);
 
 /** Minimum role required per route prefix. */
 const ROUTE_ROLES: Array<[string, string[]]> = [
-  ['/settings',           ['SUPER_ADMIN', 'ADMIN']],
-  ['/users',              ['SUPER_ADMIN', 'ADMIN']],
-  ['/connectors',         ['SUPER_ADMIN', 'ADMIN', 'OPERATOR']],
-  ['/sync',               ['SUPER_ADMIN', 'ADMIN', 'OPERATOR']],
-  ['/discovery',          ['SUPER_ADMIN', 'ADMIN', 'OPERATOR']],
-  ['/agents',             ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'READ_ONLY']],
-  ['/databases',          ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'READ_ONLY']],
-  ['/health',             ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'READ_ONLY']],
-  ['/logs',               ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'READ_ONLY']],
-  ['/dashboard',          ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'READ_ONLY']],
+  ['/settings', ['SUPER_ADMIN', 'ADMIN']],
+  ['/users', ['SUPER_ADMIN', 'ADMIN']],
+  ['/connectors', ['SUPER_ADMIN', 'ADMIN', 'OPERATOR']],
+  ['/sync', ['SUPER_ADMIN', 'ADMIN', 'OPERATOR']],
+  ['/discovery', ['SUPER_ADMIN', 'ADMIN', 'OPERATOR']],
+  ['/agents', ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'READ_ONLY']],
+  ['/databases', ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'READ_ONLY']],
+  ['/health', ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'READ_ONLY']],
+  ['/logs', ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'READ_ONLY']],
+  ['/dashboard', ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'READ_ONLY']],
 ];
 
 export async function middleware(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl;
 
-  if (PUBLIC_PATHS.has(pathname) || pathname.startsWith('/_next') || pathname.startsWith('/favicon')) {
+  if (
+    PUBLIC_PATHS.has(pathname) ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon')
+  ) {
     return NextResponse.next();
   }
 

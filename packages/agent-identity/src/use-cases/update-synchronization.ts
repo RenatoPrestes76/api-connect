@@ -1,19 +1,19 @@
 import type { AtlasAgentRepository } from '../repository/atlas-agent-repository.js';
-import type { AgentDomainEvent }       from '../events/agent-events.js';
+import type { AgentDomainEvent } from '../events/agent-events.js';
 
 export interface UpdateSynchronizationResult {
-  readonly agentId:          string;
-  readonly synchronizedAt:   Date;
-  readonly events:           readonly AgentDomainEvent[];
+  readonly agentId: string;
+  readonly synchronizedAt: Date;
+  readonly events: readonly AgentDomainEvent[];
 }
 
 export type UpdateSynchronizationError =
-  | { code: 'AGENT_NOT_FOUND';    agentId: string }
-  | { code: 'AGENT_DISABLED';     agentId: string }
-  | { code: 'AGENT_NOT_SYNCING';  agentId: string; currentStatus: string };
+  | { code: 'AGENT_NOT_FOUND'; agentId: string }
+  | { code: 'AGENT_DISABLED'; agentId: string }
+  | { code: 'AGENT_NOT_SYNCING'; agentId: string; currentStatus: string };
 
 export type UpdateSynchronizationOutput =
-  | { ok: true;  value: UpdateSynchronizationResult }
+  | { ok: true; value: UpdateSynchronizationResult }
   | { ok: false; error: UpdateSynchronizationError };
 
 export class UpdateSynchronization {

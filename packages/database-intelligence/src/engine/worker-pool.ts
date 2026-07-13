@@ -7,17 +7,17 @@
  */
 
 export interface WorkerResult<T> {
-  readonly value:  T | null;
-  readonly error:  Error | null;
-  readonly index:  number;
+  readonly value: T | null;
+  readonly error: Error | null;
+  readonly index: number;
 }
 
 export class WorkerPool {
   constructor(private readonly _concurrency: number = 4) {}
 
   async run<TInput, TOutput>(
-    items:      readonly TInput[],
-    processor:  (item: TInput, index: number) => Promise<TOutput>,
+    items: readonly TInput[],
+    processor: (item: TInput, index: number) => Promise<TOutput>
   ): Promise<readonly WorkerResult<TOutput>[]> {
     const results: WorkerResult<TOutput>[] = new Array(items.length);
 
@@ -25,7 +25,7 @@ export class WorkerPool {
 
     async function worker(): Promise<void> {
       while (nextIndex < items.length) {
-        const i    = nextIndex++;
+        const i = nextIndex++;
         const item = items[i]!;
         try {
           const value = await processor(item, i);
@@ -40,9 +40,8 @@ export class WorkerPool {
       }
     }
 
-    const workers = Array.from(
-      { length: Math.min(this._concurrency, items.length) },
-      () => worker(),
+    const workers = Array.from({ length: Math.min(this._concurrency, items.length) }, () =>
+      worker()
     );
 
     await Promise.all(workers);
@@ -52,8 +51,8 @@ export class WorkerPool {
 
   /** Like run(), but filters out failed results and returns values only. */
   async runCollect<TInput, TOutput>(
-    items:     readonly TInput[],
-    processor: (item: TInput, index: number) => Promise<TOutput>,
+    items: readonly TInput[],
+    processor: (item: TInput, index: number) => Promise<TOutput>
   ): Promise<readonly TOutput[]> {
     const results = await this.run(items, processor);
     return results.filter((r) => r.value !== null).map((r) => r.value as TOutput);

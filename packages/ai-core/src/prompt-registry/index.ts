@@ -56,7 +56,11 @@ export interface PromptRegistry {
   /**
    * Render a specific version
    */
-  renderVersion(promptId: PromptId, version: string, variables: PromptVariables): AIResult<RenderedPrompt>;
+  renderVersion(
+    promptId: PromptId,
+    version: string,
+    variables: PromptVariables
+  ): AIResult<RenderedPrompt>;
 
   /**
    * List all registered prompts
@@ -217,41 +221,41 @@ export interface PromptSummary {
 
 export const PROMPT_IDS = {
   // Schema Analysis
-  SCHEMA_ENTITY_CLASSIFICATION:  'prompt-schema-entity-classification'  as PromptId,
-  SCHEMA_FIELD_MAPPING:          'prompt-schema-field-mapping'           as PromptId,
-  SCHEMA_ANOMALY_DETECTION:      'prompt-schema-anomaly-detection'       as PromptId,
-  SCHEMA_CHANGE_IMPACT:          'prompt-schema-change-impact'           as PromptId,
+  SCHEMA_ENTITY_CLASSIFICATION: 'prompt-schema-entity-classification' as PromptId,
+  SCHEMA_FIELD_MAPPING: 'prompt-schema-field-mapping' as PromptId,
+  SCHEMA_ANOMALY_DETECTION: 'prompt-schema-anomaly-detection' as PromptId,
+  SCHEMA_CHANGE_IMPACT: 'prompt-schema-change-impact' as PromptId,
 
   // Mapping Analysis
-  MAPPING_SUGGESTION:            'prompt-mapping-suggestion'             as PromptId,
-  MAPPING_CONFLICT_RESOLUTION:   'prompt-mapping-conflict-resolution'    as PromptId,
-  MAPPING_TRANSFORMATION:        'prompt-mapping-transformation'         as PromptId,
+  MAPPING_SUGGESTION: 'prompt-mapping-suggestion' as PromptId,
+  MAPPING_CONFLICT_RESOLUTION: 'prompt-mapping-conflict-resolution' as PromptId,
+  MAPPING_TRANSFORMATION: 'prompt-mapping-transformation' as PromptId,
 
   // ERP Recognition
-  ERP_IDENTIFY_SYSTEM:           'prompt-erp-identify-system'            as PromptId,
-  ERP_IDENTIFY_MODULE:           'prompt-erp-identify-module'            as PromptId,
-  ERP_PATTERN_ANALYSIS:          'prompt-erp-pattern-analysis'           as PromptId,
+  ERP_IDENTIFY_SYSTEM: 'prompt-erp-identify-system' as PromptId,
+  ERP_IDENTIFY_MODULE: 'prompt-erp-identify-module' as PromptId,
+  ERP_PATTERN_ANALYSIS: 'prompt-erp-pattern-analysis' as PromptId,
 
   // Sync Analysis
-  SYNC_STRATEGY_RECOMMENDATION:  'prompt-sync-strategy'                  as PromptId,
-  SYNC_CONFLICT_RESOLUTION:      'prompt-sync-conflict-resolution'       as PromptId,
-  SYNC_PERFORMANCE_DIAGNOSIS:    'prompt-sync-performance-diagnosis'     as PromptId,
+  SYNC_STRATEGY_RECOMMENDATION: 'prompt-sync-strategy' as PromptId,
+  SYNC_CONFLICT_RESOLUTION: 'prompt-sync-conflict-resolution' as PromptId,
+  SYNC_PERFORMANCE_DIAGNOSIS: 'prompt-sync-performance-diagnosis' as PromptId,
 
   // Security
-  SECURITY_DATA_CLASSIFICATION:  'prompt-security-data-classification'   as PromptId,
-  SECURITY_RISK_ASSESSMENT:      'prompt-security-risk-assessment'       as PromptId,
+  SECURITY_DATA_CLASSIFICATION: 'prompt-security-data-classification' as PromptId,
+  SECURITY_RISK_ASSESSMENT: 'prompt-security-risk-assessment' as PromptId,
 
   // Validation
-  VALIDATION_RULE_GENERATION:    'prompt-validation-rule-generation'     as PromptId,
-  VALIDATION_ANOMALY_DETECTION:  'prompt-validation-anomaly-detection'   as PromptId,
+  VALIDATION_RULE_GENERATION: 'prompt-validation-rule-generation' as PromptId,
+  VALIDATION_ANOMALY_DETECTION: 'prompt-validation-anomaly-detection' as PromptId,
 
   // Performance
-  PERFORMANCE_BOTTLENECK:        'prompt-performance-bottleneck'         as PromptId,
-  PERFORMANCE_OPTIMIZATION:      'prompt-performance-optimization'       as PromptId,
+  PERFORMANCE_BOTTLENECK: 'prompt-performance-bottleneck' as PromptId,
+  PERFORMANCE_OPTIMIZATION: 'prompt-performance-optimization' as PromptId,
 
   // General
-  REASONING_CHAIN:               'prompt-reasoning-chain'                as PromptId,
-  EXPLANATION_GENERATION:        'prompt-explanation-generation'         as PromptId,
+  REASONING_CHAIN: 'prompt-reasoning-chain' as PromptId,
+  EXPLANATION_GENERATION: 'prompt-explanation-generation' as PromptId,
 } as const;
 
 export type BuiltInPromptId = (typeof PROMPT_IDS)[keyof typeof PROMPT_IDS];

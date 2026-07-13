@@ -12,20 +12,20 @@ import { EAN_VALUE_PATTERNS, PRICE_VALUE_PATTERN } from '../knowledge/field-patt
 import type { EntityType, FieldRole, ScoreMap, ScoringReason } from '../types/index.js';
 
 export interface SampledColumn {
-  readonly name:         string;
+  readonly name: string;
   readonly sampleValues: readonly string[];
 }
 
 export interface SamplingScoreResult {
-  readonly scores:      ScoreMap;
-  readonly reasons:     readonly ScoringReason[];
+  readonly scores: ScoreMap;
+  readonly reasons: readonly ScoringReason[];
   readonly detectedRoles: Readonly<Record<string, FieldRole>>;
 }
 
-const CPF_RE   = /^\d{11}$|^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
-const CNPJ_RE  = /^\d{14}$|^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
-const UUID_RE  = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const DATE_RE  = /^\d{4}-\d{2}-\d{2}/;
+const CPF_RE = /^\d{11}$|^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+const CNPJ_RE = /^\d{14}$|^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}/;
 
 export class SamplingScorer {
   score(sampledColumns: readonly SampledColumn[]): SamplingScoreResult {
@@ -54,8 +54,13 @@ export class SamplingScorer {
 
       // ─── Price detection ──────────────────────────────────────────────
       const priceMatches = values.filter((v) => PRICE_VALUE_PATTERN.test(v.replace(',', '.')));
-      if (priceMatches.length >= Math.ceil(values.length * 0.7) &&
-          (colLower.includes('preco') || colLower.includes('price') || colLower.includes('vl_') || colLower.includes('valor'))) {
+      if (
+        priceMatches.length >= Math.ceil(values.length * 0.7) &&
+        (colLower.includes('preco') ||
+          colLower.includes('price') ||
+          colLower.includes('vl_') ||
+          colLower.includes('valor'))
+      ) {
         scores['PRICE'] = Math.min(100, (scores['PRICE'] ?? 0) + 40);
         scores['PRODUCT'] = Math.min(100, (scores['PRODUCT'] ?? 0) + 20);
         detectedRoles[col.name] = 'PRICE';
@@ -83,7 +88,7 @@ export class SamplingScorer {
       // ─── CNPJ detection → BRANCH or SUPPLIER ─────────────────────────
       const cnpjMatches = values.filter((v) => CNPJ_RE.test(v.trim()));
       if (cnpjMatches.length >= Math.ceil(values.length * 0.5)) {
-        scores['BRANCH']   = Math.min(100, (scores['BRANCH']   ?? 0) + 50);
+        scores['BRANCH'] = Math.min(100, (scores['BRANCH'] ?? 0) + 50);
         scores['SUPPLIER'] = Math.min(100, (scores['SUPPLIER'] ?? 0) + 50);
         detectedRoles[col.name] = 'IDENTIFIER';
         reasons.push({

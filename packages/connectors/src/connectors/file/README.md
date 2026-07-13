@@ -4,14 +4,14 @@ File Connector interfaces — structured file format reading and writing.
 
 ## Supported Formats
 
-| Connector | Subtype | Format | Notes |
-|-----------|---------|--------|-------|
-| `CSVConnector` | `csv` | RFC 4180 CSV | Configurable delimiter, quote, escape |
-| `ExcelConnector` | `excel` | XLSX / XLS | Multi-sheet, named ranges |
-| `XMLConnector` | `xml` | XML + XSD + XSLT | XPath, namespace-aware |
-| `JSONConnector` | `json` | JSON / JSON Lines | JSONPath, ndjson |
-| `TXTConnector` | `txt` | Plain text | Fixed-width, tail, watch |
-| `ODSConnector` | `ods` | OpenDocument | LibreOffice / OpenOffice |
+| Connector        | Subtype | Format            | Notes                                 |
+| ---------------- | ------- | ----------------- | ------------------------------------- |
+| `CSVConnector`   | `csv`   | RFC 4180 CSV      | Configurable delimiter, quote, escape |
+| `ExcelConnector` | `excel` | XLSX / XLS        | Multi-sheet, named ranges             |
+| `XMLConnector`   | `xml`   | XML + XSD + XSLT  | XPath, namespace-aware                |
+| `JSONConnector`  | `json`  | JSON / JSON Lines | JSONPath, ndjson                      |
+| `TXTConnector`   | `txt`   | Plain text        | Fixed-width, tail, watch              |
+| `ODSConnector`   | `ods`   | OpenDocument      | LibreOffice / OpenOffice              |
 
 ## Interface Hierarchy
 

@@ -19,7 +19,7 @@ export function verifyHash(buffer: Buffer, expectedHex: string): void {
 export class HashMismatchError extends Error {
   constructor(
     public readonly expected: string,
-    public readonly actual:   string,
+    public readonly actual: string
   ) {
     super(`Hash mismatch: expected ${expected}, got ${actual}`);
     this.name = 'HashMismatchError';

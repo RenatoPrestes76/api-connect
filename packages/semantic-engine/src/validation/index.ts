@@ -101,10 +101,7 @@ export type ValidationStatus =
 
 // ─── Validation Decision ──────────────────────────────────────────────────
 
-export type ValidationDecision =
-  | ConfirmDecision
-  | RejectDecision
-  | ModifyDecision;
+export type ValidationDecision = ConfirmDecision | RejectDecision | ModifyDecision;
 
 export interface ConfirmDecision {
   readonly action: 'confirm';

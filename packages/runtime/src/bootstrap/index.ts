@@ -37,7 +37,10 @@
  */
 
 import type {
-  RuntimeResult, PlatformMetadata, RuntimeEnvironment, Disposable,
+  RuntimeResult,
+  PlatformMetadata,
+  RuntimeEnvironment,
+  Disposable,
 } from '../kernel/index';
 import type { ServiceRegistry, ContainerBuilder } from '../service-registry/index';
 
@@ -201,7 +204,9 @@ export interface BootstrapTask {
   readonly required: boolean;
   readonly timeoutMs?: number;
 
-  execute(context: BootstrapExecutionContext): Promise<RuntimeResult<Record<string, unknown> | void>>;
+  execute(
+    context: BootstrapExecutionContext
+  ): Promise<RuntimeResult<Record<string, unknown> | void>>;
 }
 
 export interface BootstrapExecutionContext {
@@ -237,45 +242,45 @@ export type BootstrapHook = (context: BootstrapExecutionContext) => void | Promi
 
 export const BOOTSTRAP_TASK_IDS = {
   // Configuration phase
-  LOAD_ENV_CONFIG:          'bt-load-env-config',
-  LOAD_FILE_CONFIG:         'bt-load-file-config',
-  LOAD_SUPABASE_CONFIG:     'bt-load-supabase-config',
-  VALIDATE_CONFIG:          'bt-validate-config',
+  LOAD_ENV_CONFIG: 'bt-load-env-config',
+  LOAD_FILE_CONFIG: 'bt-load-file-config',
+  LOAD_SUPABASE_CONFIG: 'bt-load-supabase-config',
+  VALIDATE_CONFIG: 'bt-validate-config',
 
   // DI phase
-  BUILD_CONTAINER:          'bt-build-container',
-  REGISTER_CORE_SERVICES:   'bt-register-core-services',
+  BUILD_CONTAINER: 'bt-build-container',
+  REGISTER_CORE_SERVICES: 'bt-register-core-services',
 
   // Service registration phase
-  INIT_DATABASE:            'bt-init-database',
-  INIT_SUPABASE:            'bt-init-supabase',
-  INIT_CACHE:               'bt-init-cache',
-  INIT_EVENT_BUS:           'bt-init-event-bus',
-  INIT_COMMAND_BUS:         'bt-init-command-bus',
-  INIT_TELEMETRY:           'bt-init-telemetry',
-  INIT_HEALTH_MONITOR:      'bt-init-health-monitor',
-  INIT_RESILIENCE:          'bt-init-resilience',
-  INIT_PERMISSION_MODEL:    'bt-init-permission-model',
+  INIT_DATABASE: 'bt-init-database',
+  INIT_SUPABASE: 'bt-init-supabase',
+  INIT_CACHE: 'bt-init-cache',
+  INIT_EVENT_BUS: 'bt-init-event-bus',
+  INIT_COMMAND_BUS: 'bt-init-command-bus',
+  INIT_TELEMETRY: 'bt-init-telemetry',
+  INIT_HEALTH_MONITOR: 'bt-init-health-monitor',
+  INIT_RESILIENCE: 'bt-init-resilience',
+  INIT_PERMISSION_MODEL: 'bt-init-permission-model',
 
   // Plugin loading phase
-  DISCOVER_PLUGINS:         'bt-discover-plugins',
-  VALIDATE_PLUGINS:         'bt-validate-plugins',
-  CREATE_SANDBOXES:         'bt-create-sandboxes',
-  INIT_PLUGINS:             'bt-init-plugins',
-  START_PLUGINS:            'bt-start-plugins',
+  DISCOVER_PLUGINS: 'bt-discover-plugins',
+  VALIDATE_PLUGINS: 'bt-validate-plugins',
+  CREATE_SANDBOXES: 'bt-create-sandboxes',
+  INIT_PLUGINS: 'bt-init-plugins',
+  START_PLUGINS: 'bt-start-plugins',
 
   // Scheduler init phase
-  REGISTER_BUILT_IN_JOBS:   'bt-register-built-in-jobs',
-  START_SCHEDULER:          'bt-start-scheduler',
+  REGISTER_BUILT_IN_JOBS: 'bt-register-built-in-jobs',
+  START_SCHEDULER: 'bt-start-scheduler',
 
   // Worker init phase
-  SPAWN_WORKER_POOLS:       'bt-spawn-worker-pools',
-  WAIT_FOR_WORKERS:         'bt-wait-for-workers',
+  SPAWN_WORKER_POOLS: 'bt-spawn-worker-pools',
+  WAIT_FOR_WORKERS: 'bt-wait-for-workers',
 
   // Ready phase
-  EMIT_READY_EVENT:         'bt-emit-ready-event',
-  START_HEALTH_POLLING:     'bt-start-health-polling',
-  LOG_STARTUP_SUMMARY:      'bt-log-startup-summary',
+  EMIT_READY_EVENT: 'bt-emit-ready-event',
+  START_HEALTH_POLLING: 'bt-start-health-polling',
+  LOG_STARTUP_SUMMARY: 'bt-log-startup-summary',
 } as const;
 
 export type BuiltInBootstrapTaskId = (typeof BOOTSTRAP_TASK_IDS)[keyof typeof BOOTSTRAP_TASK_IDS];

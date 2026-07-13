@@ -11,9 +11,7 @@
  * The ValidationAnalystAgent uses this module to power its analysis.
  */
 
-import type {
-  AIResult, AgentId, AITaskType,
-} from '../providers/index';
+import type { AIResult, AgentId, AITaskType } from '../providers/index';
 import type { AIRecommendation } from '../recommendations/index';
 import type { Explanation } from '../explainability/index';
 
@@ -123,15 +121,15 @@ export interface DetectedAnomaly {
 }
 
 export type AnomalyKind =
-  | 'unexpected-field-type'      // field type inconsistent with CBL kind
-  | 'missing-expected-field'     // entity kind expects a field that's absent
-  | 'duplicate-semantic-role'    // two fields appear to serve the same role
-  | 'naming-inconsistency'       // naming convention breaks mid-entity
-  | 'suspicious-nullable'        // required field marked nullable
-  | 'orphaned-foreign-key'       // FK has no matching entity in context
-  | 'unusual-field-count'        // entity has unusual number of fields
-  | 'conflicting-field-roles'    // fields with conflicting inferred roles
-  | 'missing-audit-fields';      // entity lacks standard audit fields
+  | 'unexpected-field-type' // field type inconsistent with CBL kind
+  | 'missing-expected-field' // entity kind expects a field that's absent
+  | 'duplicate-semantic-role' // two fields appear to serve the same role
+  | 'naming-inconsistency' // naming convention breaks mid-entity
+  | 'suspicious-nullable' // required field marked nullable
+  | 'orphaned-foreign-key' // FK has no matching entity in context
+  | 'unusual-field-count' // entity has unusual number of fields
+  | 'conflicting-field-roles' // fields with conflicting inferred roles
+  | 'missing-audit-fields'; // entity lacks standard audit fields
 
 // ─── Rule Suggestion ──────────────────────────────────────────────────────
 
@@ -171,12 +169,16 @@ export interface IntegrationValidationEngine {
   /**
    * Validate a complete integration configuration for structural issues
    */
-  validateIntegration(input: IntegrationValidationInput): Promise<AIResult<IntegrationValidationResult>>;
+  validateIntegration(
+    input: IntegrationValidationInput
+  ): Promise<AIResult<IntegrationValidationResult>>;
 
   /**
    * Check if a mapping transformation is safe and semantically correct
    */
-  validateTransformation(transformation: TransformationValidationInput): Promise<AIResult<TransformationValidationResult>>;
+  validateTransformation(
+    transformation: TransformationValidationInput
+  ): Promise<AIResult<TransformationValidationResult>>;
 }
 
 export interface IntegrationValidationInput {

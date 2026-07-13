@@ -174,7 +174,7 @@ export interface UpdateDownloader {
    */
   download(
     ref: UpdatePackageRef,
-    onProgress?: DownloadProgressHandler,
+    onProgress?: DownloadProgressHandler
   ): Promise<AgentResult<DownloadedUpdate>>;
 
   /**
@@ -183,11 +183,7 @@ export interface UpdateDownloader {
   verifyChecksum(filePath: string, expectedSha256: string): Promise<boolean>;
 }
 
-export type DownloadProgressHandler = (
-  downloaded: number,
-  total: number,
-  percent: number,
-) => void;
+export type DownloadProgressHandler = (downloaded: number, total: number, percent: number) => void;
 
 // ─── Update Applier ───────────────────────────────────────────────────────
 

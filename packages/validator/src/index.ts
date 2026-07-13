@@ -22,7 +22,7 @@ export interface ValidationReport {
   readonly version: string;
   readonly type: PluginType;
   readonly valid: boolean;
-  readonly score: number;                    // 0–100
+  readonly score: number; // 0–100
   readonly categories: CategoryReport[];
   readonly summary: ValidationSummary;
   readonly generatedAt: Date;
@@ -57,7 +57,7 @@ export interface ValidationSummary {
   readonly categoriesFailed: number;
 }
 
-export type IssueSeverity      = 'error' | 'warning' | 'info';
+export type IssueSeverity = 'error' | 'warning' | 'info';
 export type ValidationCategory =
   | 'manifest'
   | 'interfaces'
@@ -72,7 +72,10 @@ export interface IPluginValidator {
   validate(target: ValidationTarget): Promise<ValidationReport>;
   validateManifest(manifest: PluginManifest): Promise<CategoryReport>;
   validateInterfaces(target: ValidationTarget): Promise<CategoryReport>;
-  validateCompatibility(manifest: PluginManifest, env: PlatformEnvironment): Promise<CategoryReport>;
+  validateCompatibility(
+    manifest: PluginManifest,
+    env: PlatformEnvironment
+  ): Promise<CategoryReport>;
   validateDependencies(target: ValidationTarget): Promise<CategoryReport>;
   validateSecurity(manifest: PluginManifest): Promise<CategoryReport>;
   validatePerformance(target: ValidationTarget): Promise<CategoryReport>;
@@ -96,67 +99,67 @@ export interface PlatformEnvironment {
 
 export const MANIFEST_RULES: ValidationRuleDefinition[] = [
   {
-    code:     'MANIFEST_001',
+    code: 'MANIFEST_001',
     severity: 'error',
-    message:  'Plugin ID must use reverse-domain format (e.g. com.vendor.plugin-name)',
-    field:    'id',
-    pattern:  /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/,
+    message: 'Plugin ID must use reverse-domain format (e.g. com.vendor.plugin-name)',
+    field: 'id',
+    pattern: /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/,
   },
   {
-    code:     'MANIFEST_002',
+    code: 'MANIFEST_002',
     severity: 'error',
-    message:  'Version must follow semantic versioning (x.y.z)',
-    field:    'version',
-    pattern:  /^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?(\+[a-zA-Z0-9.]+)?$/,
+    message: 'Version must follow semantic versioning (x.y.z)',
+    field: 'version',
+    pattern: /^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?(\+[a-zA-Z0-9.]+)?$/,
   },
   {
-    code:     'MANIFEST_003',
+    code: 'MANIFEST_003',
     severity: 'error',
-    message:  'License must be a valid SPDX identifier',
-    field:    'license',
-    pattern:  /^[A-Z][A-Za-z0-9\-+.]+$/,
+    message: 'License must be a valid SPDX identifier',
+    field: 'license',
+    pattern: /^[A-Z][A-Za-z0-9\-+.]+$/,
   },
   {
-    code:     'MANIFEST_004',
+    code: 'MANIFEST_004',
     severity: 'error',
-    message:  'Plugin type must be one of the 12 supported types',
-    field:    'type',
+    message: 'Plugin type must be one of the 12 supported types',
+    field: 'type',
   },
   {
-    code:     'MANIFEST_005',
+    code: 'MANIFEST_005',
     severity: 'error',
-    message:  'platformVersion must be a valid semver range',
-    field:    'platformVersion',
+    message: 'platformVersion must be a valid semver range',
+    field: 'platformVersion',
   },
   {
-    code:     'MANIFEST_006',
+    code: 'MANIFEST_006',
     severity: 'error',
-    message:  'sdkVersion must be a valid semver range',
-    field:    'sdkVersion',
+    message: 'sdkVersion must be a valid semver range',
+    field: 'sdkVersion',
   },
   {
-    code:     'MANIFEST_007',
+    code: 'MANIFEST_007',
     severity: 'error',
-    message:  'entryPoint must be a relative path to the compiled JS entry file',
-    field:    'entryPoint',
+    message: 'entryPoint must be a relative path to the compiled JS entry file',
+    field: 'entryPoint',
   },
   {
-    code:     'MANIFEST_008',
+    code: 'MANIFEST_008',
     severity: 'error',
-    message:  'runtime.nodeVersion must be a valid semver range (e.g. ">=20.0.0")',
-    field:    'runtime.nodeVersion',
+    message: 'runtime.nodeVersion must be a valid semver range (e.g. ">=20.0.0")',
+    field: 'runtime.nodeVersion',
   },
   {
-    code:     'MANIFEST_009',
+    code: 'MANIFEST_009',
     severity: 'warning',
-    message:  'Plugin description should be at least 20 characters',
-    field:    'description',
+    message: 'Plugin description should be at least 20 characters',
+    field: 'description',
   },
   {
-    code:     'MANIFEST_010',
+    code: 'MANIFEST_010',
     severity: 'warning',
-    message:  'Plugin icon URL is recommended for marketplace visibility',
-    field:    'icon',
+    message: 'Plugin icon URL is recommended for marketplace visibility',
+    field: 'icon',
   },
 ];
 
@@ -172,37 +175,38 @@ export interface ValidationRuleDefinition {
 
 export const SECURITY_RULES: SecurityRule[] = [
   {
-    code:     'SEC_001',
+    code: 'SEC_001',
     severity: 'error',
-    message:  'Permission "spawn:process" requires capability "process-spawn" to be declared',
+    message: 'Permission "spawn:process" requires capability "process-spawn" to be declared',
     permission: 'spawn:process',
     requiredCapability: 'process-spawn',
   },
   {
-    code:     'SEC_002',
+    code: 'SEC_002',
     severity: 'error',
-    message:  'Permission "write:credentials" requires capability "credential-access"',
+    message: 'Permission "write:credentials" requires capability "credential-access"',
     permission: 'write:credentials',
     requiredCapability: 'credential-access',
   },
   {
-    code:     'SEC_003',
+    code: 'SEC_003',
     severity: 'error',
-    message:  'Permission "access:ai" requires capability "ai-inference"',
+    message: 'Permission "access:ai" requires capability "ai-inference"',
     permission: 'access:ai',
     requiredCapability: 'ai-inference',
   },
   {
-    code:     'SEC_004',
+    code: 'SEC_004',
     severity: 'warning',
-    message:  'Permission "spawn:process" is high-risk and requires justification in longDescription',
+    message:
+      'Permission "spawn:process" is high-risk and requires justification in longDescription',
     permission: 'spawn:process',
     requiresJustification: true,
   },
   {
-    code:     'SEC_005',
+    code: 'SEC_005',
     severity: 'warning',
-    message:  'Permission "write:credentials" should only be used by security-provider plugins',
+    message: 'Permission "write:credentials" should only be used by security-provider plugins',
     permission: 'write:credentials',
     restrictedToTypes: ['security-provider'],
   },
@@ -248,23 +252,23 @@ export const ALLOWED_NODE_BUILTINS = [
 // ─── Performance Thresholds ──────────────────────────────────────────────────
 
 export const PERFORMANCE_THRESHOLDS = {
-  MAX_BUNDLE_SIZE_BYTES:  5  * 1024 * 1024,   // 5 MB
-  WARN_BUNDLE_SIZE_BYTES: 1  * 1024 * 1024,   // 1 MB
-  MAX_INIT_TIME_MS:       5_000,
-  WARN_INIT_TIME_MS:      1_000,
-  MAX_MEMORY_MB:          256,
-  WARN_MEMORY_MB:         64,
-  MAX_DEPENDENCIES:       50,
-  WARN_DEPENDENCIES:      20,
+  MAX_BUNDLE_SIZE_BYTES: 5 * 1024 * 1024, // 5 MB
+  WARN_BUNDLE_SIZE_BYTES: 1 * 1024 * 1024, // 1 MB
+  MAX_INIT_TIME_MS: 5_000,
+  WARN_INIT_TIME_MS: 1_000,
+  MAX_MEMORY_MB: 256,
+  WARN_MEMORY_MB: 64,
+  MAX_DEPENDENCIES: 50,
+  WARN_DEPENDENCIES: 20,
 } as const;
 
 // ─── Validation Score Weights ────────────────────────────────────────────────
 
 export const CATEGORY_WEIGHTS: Record<ValidationCategory, number> = {
-  manifest:       30,
-  interfaces:     25,
-  compatibility:  15,
-  dependencies:   10,
-  security:       15,
-  performance:    5,
+  manifest: 30,
+  interfaces: 25,
+  compatibility: 15,
+  dependencies: 10,
+  security: 15,
+  performance: 5,
 } as const;

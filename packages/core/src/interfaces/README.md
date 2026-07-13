@@ -8,25 +8,25 @@ Defines the foundational building blocks for every bounded context in the platfo
 
 ## DDD Interfaces
 
-| Interface | DDD Concept |
-|-----------|-------------|
-| `ValueObject<T>` | Immutable — equality by attribute values |
-| `Entity<TId>` | Has a unique, persistent identity |
-| `AggregateRoot<TId>` | Consistency boundary; owns domain events |
-| `DomainEvent` | Something that happened within the domain |
-| `Repository<E, Id>` | Collection-like persistence abstraction |
-| `RepositoryCriteria` | Filter / sort / paginate options |
-| `UnitOfWork` | Atomic transaction boundary |
-| `Specification<T>` | Composable business rule predicate |
-| `DomainService` | Stateless operation spanning multiple entities |
+| Interface            | DDD Concept                                    |
+| -------------------- | ---------------------------------------------- |
+| `ValueObject<T>`     | Immutable — equality by attribute values       |
+| `Entity<TId>`        | Has a unique, persistent identity              |
+| `AggregateRoot<TId>` | Consistency boundary; owns domain events       |
+| `DomainEvent`        | Something that happened within the domain      |
+| `Repository<E, Id>`  | Collection-like persistence abstraction        |
+| `RepositoryCriteria` | Filter / sort / paginate options               |
+| `UnitOfWork`         | Atomic transaction boundary                    |
+| `Specification<T>`   | Composable business rule predicate             |
+| `DomainService`      | Stateless operation spanning multiple entities |
 
 ## DI Interfaces
 
-| Interface | Role |
-|-----------|------|
-| `DIContainer` | IoC container — register, resolve, scope |
+| Interface               | Role                                       |
+| ----------------------- | ------------------------------------------ |
+| `DIContainer`           | IoC container — register, resolve, scope   |
 | `DIRegistrationOptions` | Scope (singleton/transient/request) + tags |
-| `ServiceLocator` | Last-resort lookup at composition root |
+| `ServiceLocator`        | Last-resort lookup at composition root     |
 
 ## Architecture
 

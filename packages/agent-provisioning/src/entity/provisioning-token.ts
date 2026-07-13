@@ -13,8 +13,8 @@ import { createHash, randomBytes } from 'crypto';
 
 // ─── Token generation helpers ─────────────────────────────────────────────────
 
-const TOKEN_PREFIX_TAG = 'slp_';   // Seltriva Agent Provisioning
-const TOKEN_RANDOM_BYTES = 32;      // 256 bits of entropy
+const TOKEN_PREFIX_TAG = 'slp_'; // Seltriva Agent Provisioning
+const TOKEN_RANDOM_BYTES = 32; // 256 bits of entropy
 
 /** Generates a cryptographically random raw provisioning token. */
 function generateRawToken(): string {
@@ -34,48 +34,48 @@ export function extractTokenPrefix(rawToken: string): string {
 // ─── Construction params ──────────────────────────────────────────────────────
 
 export interface CreateProvisioningTokenParams {
-  readonly companyId:   string;
+  readonly companyId: string;
   readonly description: string;
-  readonly expiresAt:   Date;
+  readonly expiresAt: Date;
 }
 
 // ─── Snapshot (persistence DTO) ───────────────────────────────────────────────
 
 export interface ProvisioningTokenSnapshot {
-  readonly id:          string;
-  readonly companyId:   string;
-  readonly tokenHash:   string;
+  readonly id: string;
+  readonly companyId: string;
+  readonly tokenHash: string;
   readonly tokenPrefix: string;
   readonly description: string;
-  readonly expiresAt:   Date;
-  readonly revokedAt:   Date | null;
-  readonly lastUsedAt:  Date | null;
-  readonly createdAt:   Date;
-  readonly updatedAt:   Date;
+  readonly expiresAt: Date;
+  readonly revokedAt: Date | null;
+  readonly lastUsedAt: Date | null;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
 }
 
 // ─── Entity ───────────────────────────────────────────────────────────────────
 
 export class ProvisioningToken {
-  private _revokedAt:  Date | null;
+  private _revokedAt: Date | null;
   private _lastUsedAt: Date | null;
-  private _updatedAt:  Date;
+  private _updatedAt: Date;
 
   private constructor(
-    private readonly _id:          string,
-    private readonly _companyId:   string,
-    private readonly _tokenHash:   string,
+    private readonly _id: string,
+    private readonly _companyId: string,
+    private readonly _tokenHash: string,
     private readonly _tokenPrefix: string,
     private readonly _description: string,
-    private readonly _expiresAt:   Date,
-    revokedAt:                     Date | null,
-    lastUsedAt:                    Date | null,
-    private readonly _createdAt:   Date,
-    updatedAt:                     Date,
+    private readonly _expiresAt: Date,
+    revokedAt: Date | null,
+    lastUsedAt: Date | null,
+    private readonly _createdAt: Date,
+    updatedAt: Date
   ) {
-    this._revokedAt  = revokedAt;
+    this._revokedAt = revokedAt;
     this._lastUsedAt = lastUsedAt;
-    this._updatedAt  = updatedAt;
+    this._updatedAt = updatedAt;
   }
 
   // ─── Factory: new token ─────────────────────────────────────────────────────
@@ -87,7 +87,7 @@ export class ProvisioningToken {
    */
   static create(
     params: CreateProvisioningTokenParams,
-    idGenerator: () => string = defaultId,
+    idGenerator: () => string = defaultId
   ): { token: ProvisioningToken; rawToken: string } {
     if (!params.companyId?.trim()) {
       throw new ProvisioningTokenDomainError('companyId is required');
@@ -100,8 +100,8 @@ export class ProvisioningToken {
     }
 
     const rawToken = generateRawToken();
-    const now      = new Date();
-    const token    = new ProvisioningToken(
+    const now = new Date();
+    const token = new ProvisioningToken(
       idGenerator(),
       params.companyId.trim(),
       hashProvisioningToken(rawToken),
@@ -111,7 +111,7 @@ export class ProvisioningToken {
       null,
       null,
       now,
-      now,
+      now
     );
 
     return { token, rawToken };
@@ -130,25 +130,31 @@ export class ProvisioningToken {
       snap.revokedAt,
       snap.lastUsedAt,
       snap.createdAt,
-      snap.updatedAt,
+      snap.updatedAt
     );
   }
 
   // ─── Domain methods ─────────────────────────────────────────────────────────
 
   /** True when the token has passed its expiry date. */
-  isExpired(): boolean { return new Date() >= this._expiresAt; }
+  isExpired(): boolean {
+    return new Date() >= this._expiresAt;
+  }
 
   /** True when the token has been explicitly revoked. */
-  isRevoked(): boolean { return this._revokedAt !== null; }
+  isRevoked(): boolean {
+    return this._revokedAt !== null;
+  }
 
   /** True when the token is neither expired nor revoked. */
-  isValid(): boolean { return !this.isExpired() && !this.isRevoked(); }
+  isValid(): boolean {
+    return !this.isExpired() && !this.isRevoked();
+  }
 
   /** Revokes the token permanently. Idempotent. */
   revoke(): void {
     if (this._revokedAt !== null) return;
-    const now       = new Date();
+    const now = new Date();
     this._revokedAt = now;
     this._updatedAt = now;
   }
@@ -158,39 +164,59 @@ export class ProvisioningToken {
     if (!this.isValid()) {
       throw new ProvisioningTokenDomainError('Cannot mark an invalid token as used');
     }
-    const now        = new Date();
+    const now = new Date();
     this._lastUsedAt = now;
-    this._updatedAt  = now;
+    this._updatedAt = now;
   }
 
   /** Snapshot for persistence. */
   toSnapshot(): ProvisioningTokenSnapshot {
     return {
-      id:          this._id,
-      companyId:   this._companyId,
-      tokenHash:   this._tokenHash,
+      id: this._id,
+      companyId: this._companyId,
+      tokenHash: this._tokenHash,
       tokenPrefix: this._tokenPrefix,
       description: this._description,
-      expiresAt:   this._expiresAt,
-      revokedAt:   this._revokedAt,
-      lastUsedAt:  this._lastUsedAt,
-      createdAt:   this._createdAt,
-      updatedAt:   this._updatedAt,
+      expiresAt: this._expiresAt,
+      revokedAt: this._revokedAt,
+      lastUsedAt: this._lastUsedAt,
+      createdAt: this._createdAt,
+      updatedAt: this._updatedAt,
     };
   }
 
   // ─── Accessors ──────────────────────────────────────────────────────────────
 
-  get id():          string    { return this._id; }
-  get companyId():   string    { return this._companyId; }
-  get tokenHash():   string    { return this._tokenHash; }
-  get tokenPrefix(): string    { return this._tokenPrefix; }
-  get description(): string    { return this._description; }
-  get expiresAt():   Date      { return this._expiresAt; }
-  get revokedAt():   Date|null { return this._revokedAt; }
-  get lastUsedAt():  Date|null { return this._lastUsedAt; }
-  get createdAt():   Date      { return this._createdAt; }
-  get updatedAt():   Date      { return this._updatedAt; }
+  get id(): string {
+    return this._id;
+  }
+  get companyId(): string {
+    return this._companyId;
+  }
+  get tokenHash(): string {
+    return this._tokenHash;
+  }
+  get tokenPrefix(): string {
+    return this._tokenPrefix;
+  }
+  get description(): string {
+    return this._description;
+  }
+  get expiresAt(): Date {
+    return this._expiresAt;
+  }
+  get revokedAt(): Date | null {
+    return this._revokedAt;
+  }
+  get lastUsedAt(): Date | null {
+    return this._lastUsedAt;
+  }
+  get createdAt(): Date {
+    return this._createdAt;
+  }
+  get updatedAt(): Date {
+    return this._updatedAt;
+  }
 }
 
 // ─── Domain Error ─────────────────────────────────────────────────────────────

@@ -13,7 +13,14 @@
  * - A field mapped to FIELD_TAX_ID should have a string or varchar type
  */
 
-import type { CBLEntityTerm, CBLFieldTerm, CBLEntityKind, CBLFieldKind, CBLDomainKind, SemanticResult } from '../business-language/index';
+import type {
+  CBLEntityTerm,
+  CBLFieldTerm,
+  CBLEntityKind,
+  CBLFieldKind,
+  CBLDomainKind,
+  SemanticResult,
+} from '../business-language/index';
 import type { ConfidenceValue } from '../confidence-engine/index';
 import type { CBMEntity, CBMField } from '../canonical-model/index';
 import type { CanonicalBusinessModel } from '../canonical-model/index';
@@ -133,7 +140,11 @@ export interface ModelRuleReport {
   readonly modelId: string;
   readonly overallPassed: boolean;
   readonly entityResults: Array<{ entityName: string; result: RuleEvaluationResult }>;
-  readonly fieldResults: Array<{ entityName: string; fieldName: string; result: RuleEvaluationResult }>;
+  readonly fieldResults: Array<{
+    entityName: string;
+    fieldName: string;
+    result: RuleEvaluationResult;
+  }>;
   readonly modelLevelViolations: RuleViolation[];
   readonly totalViolations: number;
   readonly blockingViolations: number;
@@ -144,28 +155,28 @@ export interface ModelRuleReport {
 
 export const MAPPING_RULE_IDS = {
   // Entity rules
-  NO_DUAL_ENTITY_MAPPING:       'rule-no-dual-entity-mapping',
-  ENTITY_REQUIRES_PRIMARY_KEY:  'rule-entity-requires-pk',
-  PRODUCT_REQUIRES_CODE:        'rule-product-requires-code',
-  PRODUCT_REQUIRES_NAME:        'rule-product-requires-name',
-  INVOICE_REQUIRES_NUMBER:      'rule-invoice-requires-number',
-  ORDER_REQUIRES_CUSTOMER:      'rule-order-requires-customer',
-  INVENTORY_REQUIRES_PRODUCT:   'rule-inventory-requires-product',
+  NO_DUAL_ENTITY_MAPPING: 'rule-no-dual-entity-mapping',
+  ENTITY_REQUIRES_PRIMARY_KEY: 'rule-entity-requires-pk',
+  PRODUCT_REQUIRES_CODE: 'rule-product-requires-code',
+  PRODUCT_REQUIRES_NAME: 'rule-product-requires-name',
+  INVOICE_REQUIRES_NUMBER: 'rule-invoice-requires-number',
+  ORDER_REQUIRES_CUSTOMER: 'rule-order-requires-customer',
+  INVENTORY_REQUIRES_PRODUCT: 'rule-inventory-requires-product',
 
   // Field rules
-  PRICE_FIELD_TYPE_NUMERIC:     'rule-price-numeric',
-  DATE_FIELD_TYPE_TEMPORAL:     'rule-date-temporal',
-  BOOLEAN_FLAG_TYPE_BOOL:       'rule-boolean-type',
-  TAX_ID_TYPE_STRING:           'rule-tax-id-string',
-  QUANTITY_TYPE_NUMERIC:        'rule-quantity-numeric',
-  EMAIL_FORMAT:                 'rule-email-format',
-  CODE_FIELD_UNIQUENESS:        'rule-code-uniqueness',
+  PRICE_FIELD_TYPE_NUMERIC: 'rule-price-numeric',
+  DATE_FIELD_TYPE_TEMPORAL: 'rule-date-temporal',
+  BOOLEAN_FLAG_TYPE_BOOL: 'rule-boolean-type',
+  TAX_ID_TYPE_STRING: 'rule-tax-id-string',
+  QUANTITY_TYPE_NUMERIC: 'rule-quantity-numeric',
+  EMAIL_FORMAT: 'rule-email-format',
+  CODE_FIELD_UNIQUENESS: 'rule-code-uniqueness',
 
   // Cross-entity rules
-  COST_PRICE_WITH_SALE_PRICE:   'rule-cost-sale-price-coexist',
-  EXPIRATION_IN_PRODUCT_CONTEXT:'rule-expiration-product-context',
-  FK_TARGET_TYPE_MATCH:         'rule-fk-target-type',
-  AUDIT_FIELDS_CONSISTENCY:     'rule-audit-fields',
+  COST_PRICE_WITH_SALE_PRICE: 'rule-cost-sale-price-coexist',
+  EXPIRATION_IN_PRODUCT_CONTEXT: 'rule-expiration-product-context',
+  FK_TARGET_TYPE_MATCH: 'rule-fk-target-type',
+  AUDIT_FIELDS_CONSISTENCY: 'rule-audit-fields',
 } as const;
 
 export type MappingRuleId = (typeof MAPPING_RULE_IDS)[keyof typeof MAPPING_RULE_IDS];

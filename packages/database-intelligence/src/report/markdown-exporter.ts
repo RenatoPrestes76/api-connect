@@ -2,30 +2,34 @@
  * MarkdownExporter — renders a DatabaseIntelligenceReport as Markdown.
  * The Markdown is structured to be convertible to PDF via any standard renderer.
  */
-import type { DatabaseIntelligenceReport, EntityClassification, EntityType } from '../types/index.js';
+import type {
+  DatabaseIntelligenceReport,
+  EntityClassification,
+  EntityType,
+} from '../types/index.js';
 
 const ENTITY_LABELS: Readonly<Record<EntityType, string>> = {
-  PRODUCT:       'Produtos',
-  SUPPLIER:      'Fornecedores',
-  CATEGORY:      'Categorias',
-  PRICE:         'Preços',
-  INVENTORY:     'Estoque',
-  MOVEMENT:      'Movimentações',
-  SALE:          'Vendas',
-  PURCHASE:      'Compras',
-  CUSTOMER:      'Clientes',
-  USER:          'Usuários',
-  BRANCH:        'Filiais',
-  EXPIRY:        'Validades',
-  LOT:           'Lotes',
-  PROMOTION:     'Promoções',
-  FISCAL:        'Fiscal',
-  LOG:           'Logs',
-  AUDIT:         'Auditoria',
-  PERMISSION:    'Permissões',
+  PRODUCT: 'Produtos',
+  SUPPLIER: 'Fornecedores',
+  CATEGORY: 'Categorias',
+  PRICE: 'Preços',
+  INVENTORY: 'Estoque',
+  MOVEMENT: 'Movimentações',
+  SALE: 'Vendas',
+  PURCHASE: 'Compras',
+  CUSTOMER: 'Clientes',
+  USER: 'Usuários',
+  BRANCH: 'Filiais',
+  EXPIRY: 'Validades',
+  LOT: 'Lotes',
+  PROMOTION: 'Promoções',
+  FISCAL: 'Fiscal',
+  LOG: 'Logs',
+  AUDIT: 'Auditoria',
+  PERMISSION: 'Permissões',
   CONFIGURATION: 'Configurações',
-  LOOKUP:        'Auxiliares',
-  UNKNOWN:       'Não Identificadas',
+  LOOKUP: 'Auxiliares',
+  UNKNOWN: 'Não Identificadas',
 };
 
 function bar(confidence: number): string {
@@ -68,10 +72,27 @@ export class MarkdownExporter {
     lines.push('');
 
     const entityOrder: EntityType[] = [
-      'PRODUCT', 'INVENTORY', 'PRICE', 'SUPPLIER', 'CATEGORY', 'CUSTOMER',
-      'SALE', 'PURCHASE', 'MOVEMENT', 'BRANCH', 'EXPIRY', 'LOT',
-      'USER', 'PROMOTION', 'FISCAL', 'LOG', 'AUDIT', 'PERMISSION',
-      'CONFIGURATION', 'LOOKUP', 'UNKNOWN',
+      'PRODUCT',
+      'INVENTORY',
+      'PRICE',
+      'SUPPLIER',
+      'CATEGORY',
+      'CUSTOMER',
+      'SALE',
+      'PURCHASE',
+      'MOVEMENT',
+      'BRANCH',
+      'EXPIRY',
+      'LOT',
+      'USER',
+      'PROMOTION',
+      'FISCAL',
+      'LOG',
+      'AUDIT',
+      'PERMISSION',
+      'CONFIGURATION',
+      'LOOKUP',
+      'UNKNOWN',
     ];
 
     for (const entityType of entityOrder) {
@@ -86,7 +107,7 @@ export class MarkdownExporter {
       for (const cls of group) {
         const rows = cls.estimatedRows != null ? cls.estimatedRows.toLocaleString() : '—';
         lines.push(
-          `| \`${cls.tableName}\` | ${cls.tableSchema} | ${bar(cls.confidence)} **${cls.confidence}%** | ${rows} | ${cls.isAuxiliary ? 'Sim' : 'Não'} |`,
+          `| \`${cls.tableName}\` | ${cls.tableSchema} | ${bar(cls.confidence)} **${cls.confidence}%** | ${rows} | ${cls.isAuxiliary ? 'Sim' : 'Não'} |`
         );
       }
 
@@ -116,7 +137,7 @@ export class MarkdownExporter {
 
     for (const rel of report.relationships) {
       lines.push(
-        `| \`${rel.fromTable}\` | \`${rel.toTable}\` | ${rel.kind} | ${rel.cardinality} | ${rel.confidence}% |`,
+        `| \`${rel.fromTable}\` | \`${rel.toTable}\` | ${rel.kind} | ${rel.cardinality} | ${rel.confidence}% |`
       );
     }
     lines.push('');
@@ -152,12 +173,16 @@ export class MarkdownExporter {
 
       for (const sug of report.suggestions) {
         const mapped = sug.fieldMapping.size;
-        const pLabel = sug.priority === 1 ? '🔴 Alta' : sug.priority === 2 ? '🟡 Média' : '🟢 Baixa';
-        const entityCls = Object.values(report.entities).flat()
-          .find((c): c is EntityClassification => !!c && `${c.tableSchema}.${c.tableName}` === sug.table);
+        const pLabel =
+          sug.priority === 1 ? '🔴 Alta' : sug.priority === 2 ? '🟡 Média' : '🟢 Baixa';
+        const entityCls = Object.values(report.entities)
+          .flat()
+          .find(
+            (c): c is EntityClassification => !!c && `${c.tableSchema}.${c.tableName}` === sug.table
+          );
         const conf = entityCls?.confidence ?? 0;
         lines.push(
-          `| ${pLabel} | ${ENTITY_LABELS[sug.entity]} | \`${sug.table}\` | ${conf}% | ${mapped} campos |`,
+          `| ${pLabel} | ${ENTITY_LABELS[sug.entity]} | \`${sug.table}\` | ${conf}% | ${mapped} campos |`
         );
       }
       lines.push('');

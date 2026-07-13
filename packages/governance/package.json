@@ -3,8 +3,14 @@
   "version": "0.1.0",
   "description": "Seltriva Connect Enterprise Governance Platform — policy-driven governance architecture",
   "keywords": [
-    "seltriva", "governance", "rbac", "policy", "compliance",
-    "audit", "change-management", "enterprise"
+    "seltriva",
+    "governance",
+    "rbac",
+    "policy",
+    "compliance",
+    "audit",
+    "change-management",
+    "enterprise"
   ],
   "license": "MIT",
   "private": false,
@@ -12,28 +18,94 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".":                    { "types": "./dist/index.d.ts",                        "default": "./dist/index.js" },
-    "./policies":           { "types": "./dist/policies/index.d.ts",               "default": "./dist/policies/index.js" },
-    "./rbac":               { "types": "./dist/rbac/index.d.ts",                   "default": "./dist/rbac/index.js" },
-    "./permissions":        { "types": "./dist/permissions/index.d.ts",            "default": "./dist/permissions/index.js" },
-    "./organizations":      { "types": "./dist/organizations/index.d.ts",          "default": "./dist/organizations/index.js" },
-    "./workspaces":         { "types": "./dist/workspaces/index.d.ts",             "default": "./dist/workspaces/index.js" },
-    "./environments":       { "types": "./dist/environments/index.d.ts",           "default": "./dist/environments/index.js" },
-    "./clusters":           { "types": "./dist/clusters/index.d.ts",               "default": "./dist/clusters/index.js" },
-    "./nodes":              { "types": "./dist/nodes/index.d.ts",                  "default": "./dist/nodes/index.js" },
-    "./approval":           { "types": "./dist/approval/index.d.ts",               "default": "./dist/approval/index.js" },
-    "./change-management":  { "types": "./dist/change-management/index.d.ts",      "default": "./dist/change-management/index.js" },
-    "./audit":              { "types": "./dist/audit/index.d.ts",                  "default": "./dist/audit/index.js" },
-    "./compliance":         { "types": "./dist/compliance/index.d.ts",             "default": "./dist/compliance/index.js" },
-    "./configuration":      { "types": "./dist/configuration/index.d.ts",          "default": "./dist/configuration/index.js" },
-    "./feature-management": { "types": "./dist/feature-management/index.d.ts",     "default": "./dist/feature-management/index.js" },
-    "./package-registry":   { "types": "./dist/package-registry/index.d.ts",       "default": "./dist/package-registry/index.js" },
-    "./release-management": { "types": "./dist/release-management/index.d.ts",     "default": "./dist/release-management/index.js" },
-    "./backup":             { "types": "./dist/backup/index.d.ts",                 "default": "./dist/backup/index.js" },
-    "./recovery":           { "types": "./dist/recovery/index.d.ts",               "default": "./dist/recovery/index.js" },
-    "./version-catalog":    { "types": "./dist/version-catalog/index.d.ts",        "default": "./dist/version-catalog/index.js" },
-    "./secret-management":  { "types": "./dist/secret-management/index.d.ts",      "default": "./dist/secret-management/index.js" },
-    "./tenant-isolation":   { "types": "./dist/tenant-isolation/index.d.ts",       "default": "./dist/tenant-isolation/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./policies": {
+      "types": "./dist/policies/index.d.ts",
+      "default": "./dist/policies/index.js"
+    },
+    "./rbac": {
+      "types": "./dist/rbac/index.d.ts",
+      "default": "./dist/rbac/index.js"
+    },
+    "./permissions": {
+      "types": "./dist/permissions/index.d.ts",
+      "default": "./dist/permissions/index.js"
+    },
+    "./organizations": {
+      "types": "./dist/organizations/index.d.ts",
+      "default": "./dist/organizations/index.js"
+    },
+    "./workspaces": {
+      "types": "./dist/workspaces/index.d.ts",
+      "default": "./dist/workspaces/index.js"
+    },
+    "./environments": {
+      "types": "./dist/environments/index.d.ts",
+      "default": "./dist/environments/index.js"
+    },
+    "./clusters": {
+      "types": "./dist/clusters/index.d.ts",
+      "default": "./dist/clusters/index.js"
+    },
+    "./nodes": {
+      "types": "./dist/nodes/index.d.ts",
+      "default": "./dist/nodes/index.js"
+    },
+    "./approval": {
+      "types": "./dist/approval/index.d.ts",
+      "default": "./dist/approval/index.js"
+    },
+    "./change-management": {
+      "types": "./dist/change-management/index.d.ts",
+      "default": "./dist/change-management/index.js"
+    },
+    "./audit": {
+      "types": "./dist/audit/index.d.ts",
+      "default": "./dist/audit/index.js"
+    },
+    "./compliance": {
+      "types": "./dist/compliance/index.d.ts",
+      "default": "./dist/compliance/index.js"
+    },
+    "./configuration": {
+      "types": "./dist/configuration/index.d.ts",
+      "default": "./dist/configuration/index.js"
+    },
+    "./feature-management": {
+      "types": "./dist/feature-management/index.d.ts",
+      "default": "./dist/feature-management/index.js"
+    },
+    "./package-registry": {
+      "types": "./dist/package-registry/index.d.ts",
+      "default": "./dist/package-registry/index.js"
+    },
+    "./release-management": {
+      "types": "./dist/release-management/index.d.ts",
+      "default": "./dist/release-management/index.js"
+    },
+    "./backup": {
+      "types": "./dist/backup/index.d.ts",
+      "default": "./dist/backup/index.js"
+    },
+    "./recovery": {
+      "types": "./dist/recovery/index.d.ts",
+      "default": "./dist/recovery/index.js"
+    },
+    "./version-catalog": {
+      "types": "./dist/version-catalog/index.d.ts",
+      "default": "./dist/version-catalog/index.js"
+    },
+    "./secret-management": {
+      "types": "./dist/secret-management/index.d.ts",
+      "default": "./dist/secret-management/index.js"
+    },
+    "./tenant-isolation": {
+      "types": "./dist/tenant-isolation/index.d.ts",
+      "default": "./dist/tenant-isolation/index.js"
+    }
   },
   "scripts": {
     "build": "tsc",

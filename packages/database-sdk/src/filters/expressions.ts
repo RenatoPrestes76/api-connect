@@ -1,27 +1,27 @@
 import type { SimpleFilterOperator } from './operators.js';
 
 export interface SimpleFilter {
-  readonly field:    string;
+  readonly field: string;
   readonly operator: SimpleFilterOperator;
-  readonly value?:   unknown;
+  readonly value?: unknown;
 }
 
 export interface CompoundFilter {
   readonly operator: 'and' | 'or';
-  readonly filters:  Filter[];
+  readonly filters: Filter[];
 }
 
 export type Filter = SimpleFilter | CompoundFilter;
 
 export interface OrderBy {
-  readonly column:    string;
+  readonly column: string;
   readonly direction: 'ASC' | 'DESC';
 }
 
 export interface Join {
-  readonly type:  'INNER' | 'LEFT' | 'RIGHT' | 'FULL';
+  readonly type: 'INNER' | 'LEFT' | 'RIGHT' | 'FULL';
   readonly table: string;
-  readonly on:    string;
+  readonly on: string;
 }
 
 // ─── Simple filter constructors ───────────────────────────────────────────────

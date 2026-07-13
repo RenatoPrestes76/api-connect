@@ -78,16 +78,16 @@ typeRegistry.onChange((event) => {
 
 ## Interfaces
 
-| Interface | Role |
-|-----------|------|
-| `ConnectorRegistry` | Type registry — maps id → factory |
-| `ConnectorRegistryEntry` | Entry: descriptor + factory + schema |
-| `ConnectorFactory` | Factory function signature |
-| `ConnectorConfigSchema` | JSON Schema-like config descriptor |
+| Interface                   | Role                                            |
+| --------------------------- | ----------------------------------------------- |
+| `ConnectorRegistry`         | Type registry — maps id → factory               |
+| `ConnectorRegistryEntry`    | Entry: descriptor + factory + schema            |
+| `ConnectorFactory`          | Factory function signature                      |
+| `ConnectorConfigSchema`     | JSON Schema-like config descriptor              |
 | `ConnectorInstanceRegistry` | Instance registry — maps instanceId → Connector |
-| `ConnectorRegistryManager` | Combined manager |
-| `ConnectorSearchCriteria` | Filter for `registry.find()` |
-| `RegistryChangeEvent` | Emitted on register/unregister/enable/disable |
+| `ConnectorRegistryManager`  | Combined manager                                |
+| `ConnectorSearchCriteria`   | Filter for `registry.find()`                    |
+| `RegistryChangeEvent`       | Emitted on register/unregister/enable/disable   |
 
 ## Constraints
 

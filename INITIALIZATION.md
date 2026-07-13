@@ -41,6 +41,7 @@ seltriva-connect/
 ### 🛠️ Configuration Files
 
 **Build & Development**
+
 - `package.json` - Root workspace configuration
 - `pnpm-workspace.yaml` - Workspace definition
 - `turbo.json` - Turborepo configuration
@@ -50,6 +51,7 @@ seltriva-connect/
 - `.prettierignore` / `.eslintignore` - Ignore files
 
 **Git & Commits**
+
 - `.gitignore` - Git ignore patterns
 - `.gitattributes` - Line endings
 - `commitlint.config.cjs` - Commit validation
@@ -57,6 +59,7 @@ seltriva-connect/
 - `.husky/` - Git hooks
 
 **Development**
+
 - `.env.example` - Environment template
 - `.vscode/settings.json` - VS Code settings
 - `.vscode/extensions.json` - Recommended extensions
@@ -66,6 +69,7 @@ seltriva-connect/
 ### 📚 Documentation
 
 **Main Documentation**
+
 - `README.md` - Project overview and quickstart
 - `CONTRIBUTING.md` - Contribution guidelines
 - `docs/ARCHITECTURE.md` - System design
@@ -78,6 +82,7 @@ seltriva-connect/
 ### 🚀 Ready-to-Use Features
 
 **Styling & UI**
+
 - ✅ Tailwind CSS configuration
 - ✅ Professional color scheme (slate + blue)
 - ✅ Inter font family
@@ -86,6 +91,7 @@ seltriva-connect/
 - ✅ Custom hooks for UI state
 
 **Backend Foundation**
+
 - ✅ Logger utility with JSON formatting
 - ✅ Config management with validation
 - ✅ Shared utility functions
@@ -94,6 +100,7 @@ seltriva-connect/
 - ✅ SDK client for API integration
 
 **Quality Assurance**
+
 - ✅ ESLint with strict TypeScript rules
 - ✅ Prettier auto-formatting
 - ✅ Pre-commit hooks (Husky)
@@ -101,6 +108,7 @@ seltriva-connect/
 - ✅ Lint-staged for staged files
 
 **DevOps & CI/CD**
+
 - ✅ GitHub Actions CI workflow
 - ✅ Auto-format workflow
 - ✅ Docker Compose for local dev
@@ -112,12 +120,14 @@ seltriva-connect/
 ## Next Steps
 
 ### 1. Install Dependencies
+
 ```bash
 cd c:\Users\user\Desktop\API_Connect
 pnpm install
 ```
 
 ### 2. Setup Environment
+
 ```bash
 # Copy environment template
 cp .env.example .env.local
@@ -130,6 +140,7 @@ cp .env.example .env.local
 ```
 
 ### 3. Setup Database
+
 ```bash
 # Generate Prisma client
 pnpm db:generate
@@ -142,6 +153,7 @@ pnpm db:push
 ```
 
 ### 4. Start Development
+
 ```bash
 # Start all development servers
 pnpm dev
@@ -153,6 +165,7 @@ pnpm dev:studio     # http://localhost:3002
 ```
 
 ### 5. Validate Setup
+
 ```bash
 # Run full validation
 pnpm validate
@@ -168,6 +181,7 @@ pnpm format:check   # Prettier
 ## Development Workflow
 
 ### Making Changes
+
 ```bash
 # Create a feature branch
 git checkout -b feature/your-feature
@@ -185,6 +199,7 @@ git commit -m "feat(scope): description"
 ```
 
 ### Building for Production
+
 ```bash
 # Build all apps and packages
 pnpm build
@@ -195,16 +210,16 @@ pnpm build
 
 ### Commands Reference
 
-| Command | Purpose |
-|---------|---------|
-| `pnpm dev` | Start all dev servers |
-| `pnpm build` | Build all apps |
-| `pnpm lint` | Run ESLint |
-| `pnpm format` | Format code |
-| `pnpm type-check` | TypeScript check |
-| `pnpm validate` | Full validation |
-| `pnpm test` | Run tests |
-| `pnpm clean` | Clean all caches |
+| Command           | Purpose               |
+| ----------------- | --------------------- |
+| `pnpm dev`        | Start all dev servers |
+| `pnpm build`      | Build all apps        |
+| `pnpm lint`       | Run ESLint            |
+| `pnpm format`     | Format code           |
+| `pnpm type-check` | TypeScript check      |
+| `pnpm validate`   | Full validation       |
+| `pnpm test`       | Run tests             |
+| `pnpm clean`      | Clean all caches      |
 
 ---
 
@@ -237,18 +252,21 @@ pnpm build
 ## Important Files
 
 ### Must Know
+
 - [README.md](../README.md) - Start here
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - Before contributing
 - [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) - System design
 - [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md) - Development setup
 
 ### Configuration
+
 - [package.json](../package.json) - Workspace config
 - [tsconfig.json](../tsconfig.json) - TypeScript config
 - [turbo.json](../turbo.json) - Build pipeline
 - [.eslintrc.cjs](../.eslintrc.cjs) - Code style rules
 
 ### Apps & Packages
+
 - [packages/README.md](../packages/README.md) - Package guide
 - [packages/ui/](../packages/ui/) - Component library
 - [apps/cloud/](../apps/cloud/) - Main dashboard
@@ -279,6 +297,7 @@ pnpm build
 ## Notes
 
 ✅ **What's Done**
+
 - Professional enterprise foundation
 - All infrastructure configured
 - Production-ready patterns
@@ -287,6 +306,7 @@ pnpm build
 - CI/CD pipelines
 
 📋 **What's Next**
+
 - Supabase configuration
 - Database schema design
 - Feature development

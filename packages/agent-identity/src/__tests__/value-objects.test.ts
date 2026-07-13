@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { AgentId, InvalidAgentIdError }            from '../value-objects/agent-id.js';
-import { MachineId, InvalidMachineIdError }         from '../value-objects/machine-id.js';
-import { Hostname, InvalidHostnameError }           from '../value-objects/hostname.js';
-import { AgentVersion, InvalidAgentVersionError }  from '../value-objects/agent-version.js';
+import { AgentId, InvalidAgentIdError } from '../value-objects/agent-id.js';
+import { MachineId, InvalidMachineIdError } from '../value-objects/machine-id.js';
+import { Hostname, InvalidHostnameError } from '../value-objects/hostname.js';
+import { AgentVersion, InvalidAgentVersionError } from '../value-objects/agent-version.js';
 import {
   AgentStatus,
   AgentStatusKind,
@@ -17,7 +17,7 @@ describe('AgentId', () => {
   it('generate() produces a valid UUID', () => {
     const id = AgentId.generate();
     expect(id.toString()).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
     );
   });
 
@@ -186,23 +186,33 @@ describe('AgentVersion', () => {
 
   describe('isNewerThan()', () => {
     it('higher major → newer', () => {
-      expect(AgentVersion.fromString('2.0.0').isNewerThan(AgentVersion.fromString('1.9.9'))).toBe(true);
+      expect(AgentVersion.fromString('2.0.0').isNewerThan(AgentVersion.fromString('1.9.9'))).toBe(
+        true
+      );
     });
 
     it('same major, higher minor → newer', () => {
-      expect(AgentVersion.fromString('1.2.0').isNewerThan(AgentVersion.fromString('1.1.9'))).toBe(true);
+      expect(AgentVersion.fromString('1.2.0').isNewerThan(AgentVersion.fromString('1.1.9'))).toBe(
+        true
+      );
     });
 
     it('same major+minor, higher patch → newer', () => {
-      expect(AgentVersion.fromString('1.1.2').isNewerThan(AgentVersion.fromString('1.1.1'))).toBe(true);
+      expect(AgentVersion.fromString('1.1.2').isNewerThan(AgentVersion.fromString('1.1.1'))).toBe(
+        true
+      );
     });
 
     it('identical version → not newer', () => {
-      expect(AgentVersion.fromString('1.2.3').isNewerThan(AgentVersion.fromString('1.2.3'))).toBe(false);
+      expect(AgentVersion.fromString('1.2.3').isNewerThan(AgentVersion.fromString('1.2.3'))).toBe(
+        false
+      );
     });
 
     it('lower version → not newer', () => {
-      expect(AgentVersion.fromString('1.0.0').isNewerThan(AgentVersion.fromString('2.0.0'))).toBe(false);
+      expect(AgentVersion.fromString('1.0.0').isNewerThan(AgentVersion.fromString('2.0.0'))).toBe(
+        false
+      );
     });
   });
 
@@ -256,13 +266,17 @@ describe('AgentStatus', () => {
 
   it('transitionTo() throws InvalidStatusTransitionError for illegal jump', () => {
     const s = AgentStatus.initial();
-    expect(() => s.transitionTo(AgentStatusKind.DISABLED)).toThrowError(InvalidStatusTransitionError);
+    expect(() => s.transitionTo(AgentStatusKind.DISABLED)).toThrowError(
+      InvalidStatusTransitionError
+    );
   });
 
   it('DISABLED allows only re-enable to REGISTERING', () => {
     const disabled = AgentStatus.fromKind(AgentStatusKind.DISABLED);
     expect(disabled.canTransitionTo(AgentStatusKind.REGISTERING)).toBe(true);
-    for (const kind of Object.values(AgentStatusKind).filter(k => k !== AgentStatusKind.REGISTERING)) {
+    for (const kind of Object.values(AgentStatusKind).filter(
+      (k) => k !== AgentStatusKind.REGISTERING
+    )) {
       expect(disabled.canTransitionTo(kind)).toBe(false);
     }
   });
@@ -286,8 +300,7 @@ describe('AgentStatus', () => {
   });
 
   it('SYNCING → ERROR path works', () => {
-    const s = AgentStatus.fromKind(AgentStatusKind.SYNCING)
-      .transitionTo(AgentStatusKind.ERROR);
+    const s = AgentStatus.fromKind(AgentStatusKind.SYNCING).transitionTo(AgentStatusKind.ERROR);
     expect(s.isError()).toBe(true);
   });
 

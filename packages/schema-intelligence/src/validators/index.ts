@@ -13,7 +13,12 @@
  */
 
 import type { SIEResult } from '../core/index';
-import type { CanonicalSchema, CanonicalEntity, CanonicalField, CanonicalRelationship } from '../canonical/index';
+import type {
+  CanonicalSchema,
+  CanonicalEntity,
+  CanonicalField,
+  CanonicalRelationship,
+} from '../canonical/index';
 
 // ─── Schema Validator ─────────────────────────────────────────────────────
 
@@ -29,12 +34,19 @@ export interface SchemaValidator {
   /**
    * Validate a single entity in isolation
    */
-  validateEntity(entity: CanonicalEntity, options?: ValidationOptions): SIEResult<EntityValidationResult>;
+  validateEntity(
+    entity: CanonicalEntity,
+    options?: ValidationOptions
+  ): SIEResult<EntityValidationResult>;
 
   /**
    * Validate a single field
    */
-  validateField(field: CanonicalField, entity: CanonicalEntity, options?: ValidationOptions): SIEResult<FieldValidationResult>;
+  validateField(
+    field: CanonicalField,
+    entity: CanonicalEntity,
+    options?: ValidationOptions
+  ): SIEResult<FieldValidationResult>;
 
   /**
    * Validate relationships across all entities

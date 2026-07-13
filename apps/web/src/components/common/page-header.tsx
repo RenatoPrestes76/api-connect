@@ -9,26 +9,34 @@ export interface Breadcrumb {
 }
 
 interface PageHeaderProps {
-  title:        string;
+  title: string;
   description?: string;
-  breadcrumb?:  Breadcrumb[];
-  actions?:     ReactNode;
-  className?:   string;
+  breadcrumb?: Breadcrumb[];
+  actions?: ReactNode;
+  className?: string;
 }
 
 export function PageHeader({
-  title, description, breadcrumb, actions, className,
+  title,
+  description,
+  breadcrumb,
+  actions,
+  className,
 }: PageHeaderProps) {
   return (
     <div className={cn('flex flex-col gap-1', className)}>
       {breadcrumb && breadcrumb.length > 0 && (
         <nav className="flex items-center gap-1 text-xs text-slate-400" aria-label="breadcrumb">
-          <Link href="/dashboard" className="hover:text-slate-600">Atlas Hub</Link>
+          <Link href="/dashboard" className="hover:text-slate-600">
+            Atlas Hub
+          </Link>
           {breadcrumb.map((item, i) => (
             <span key={i} className="flex items-center gap-1">
               <ChevronRight className="h-3 w-3" aria-hidden />
               {item.href ? (
-                <Link href={item.href} className="hover:text-slate-600">{item.label}</Link>
+                <Link href={item.href} className="hover:text-slate-600">
+                  {item.label}
+                </Link>
               ) : (
                 <span className="text-slate-600">{item.label}</span>
               )}

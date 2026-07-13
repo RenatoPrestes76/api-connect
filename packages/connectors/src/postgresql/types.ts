@@ -11,21 +11,21 @@ import type { ConnectorConfig } from '../core/index.js';
 declare const __brand: unique symbol;
 type Brand<T, B> = T & { readonly [__brand]: B };
 
-export type SchemaName      = Brand<string, 'SchemaName'>;
-export type TableName       = Brand<string, 'TableName'>;
-export type ColumnName      = Brand<string, 'ColumnName'>;
-export type IndexName       = Brand<string, 'IndexName'>;
-export type ConstraintName  = Brand<string, 'ConstraintName'>;
-export type SequenceName    = Brand<string, 'SequenceName'>;
-export type ViewName        = Brand<string, 'ViewName'>;
+export type SchemaName = Brand<string, 'SchemaName'>;
+export type TableName = Brand<string, 'TableName'>;
+export type ColumnName = Brand<string, 'ColumnName'>;
+export type IndexName = Brand<string, 'IndexName'>;
+export type ConstraintName = Brand<string, 'ConstraintName'>;
+export type SequenceName = Brand<string, 'SequenceName'>;
+export type ViewName = Brand<string, 'ViewName'>;
 
-export const asSchemaName     = (s: string): SchemaName     => s as SchemaName;
-export const asTableName      = (s: string): TableName      => s as TableName;
-export const asColumnName     = (s: string): ColumnName     => s as ColumnName;
-export const asIndexName      = (s: string): IndexName      => s as IndexName;
+export const asSchemaName = (s: string): SchemaName => s as SchemaName;
+export const asTableName = (s: string): TableName => s as TableName;
+export const asColumnName = (s: string): ColumnName => s as ColumnName;
+export const asIndexName = (s: string): IndexName => s as IndexName;
 export const asConstraintName = (s: string): ConstraintName => s as ConstraintName;
-export const asSequenceName   = (s: string): SequenceName   => s as SequenceName;
-export const asViewName       = (s: string): ViewName       => s as ViewName;
+export const asSequenceName = (s: string): SequenceName => s as SequenceName;
+export const asViewName = (s: string): ViewName => s as ViewName;
 
 // ─── SSL Configuration ────────────────────────────────────────────────────────
 
@@ -291,21 +291,27 @@ export class ReadOnlyViolationError extends Error {
   constructor(statement: string) {
     super(
       `Read-only violation: statement attempts to modify data — "${statement.trim().slice(0, 80)}…" ` +
-      'The PostgreSQL connector operates exclusively in READ ONLY mode.',
+        'The PostgreSQL connector operates exclusively in READ ONLY mode.'
     );
     this.name = 'ReadOnlyViolationError';
   }
 }
 
 export class ConnectionError extends Error {
-  constructor(message: string, public readonly cause?: unknown) {
+  constructor(
+    message: string,
+    public readonly cause?: unknown
+  ) {
     super(message);
     this.name = 'ConnectionError';
   }
 }
 
 export class QueryTimeoutError extends Error {
-  constructor(public readonly sql: string, public readonly timeoutMs: number) {
+  constructor(
+    public readonly sql: string,
+    public readonly timeoutMs: number
+  ) {
     super(`Query timed out after ${timeoutMs}ms`);
     this.name = 'QueryTimeoutError';
   }
@@ -319,7 +325,10 @@ export class CircuitOpenError extends Error {
 }
 
 export class DiscoveryError extends Error {
-  constructor(message: string, public readonly cause?: unknown) {
+  constructor(
+    message: string,
+    public readonly cause?: unknown
+  ) {
     super(message);
     this.name = 'DiscoveryError';
   }

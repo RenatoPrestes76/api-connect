@@ -17,16 +17,16 @@ import type { HubUser, UserRole } from '@/types/index';
 
 const ROLE_BADGE: Record<UserRole, 'primary' | 'warning' | 'danger' | 'muted'> = {
   SUPER_ADMIN: 'danger',
-  ADMIN:       'primary',
-  OPERATOR:    'warning',
-  READ_ONLY:   'muted',
+  ADMIN: 'primary',
+  OPERATOR: 'warning',
+  READ_ONLY: 'muted',
 };
 
 const columns: Column<HubUser>[] = [
   {
-    key:    'name',
+    key: 'name',
     header: 'User',
-    cell:   (u) => (
+    cell: (u) => (
       <div>
         <p className="font-medium text-slate-900">{u.name}</p>
         <p className="text-xs text-slate-400">{u.email}</p>
@@ -34,29 +34,32 @@ const columns: Column<HubUser>[] = [
     ),
   },
   {
-    key:    'role',
+    key: 'role',
     header: 'Role',
-    cell:   (u) => (
-      <Badge variant={ROLE_BADGE[u.role] ?? 'muted'}>
-        {ROLE_LABELS[u.role] ?? u.role}
-      </Badge>
+    cell: (u) => (
+      <Badge variant={ROLE_BADGE[u.role] ?? 'muted'}>{ROLE_LABELS[u.role] ?? u.role}</Badge>
     ),
   },
   {
-    key:    'active',
+    key: 'active',
     header: 'Active',
-    cell:   (u) => (
-      <span className={u.active ? 'text-emerald-600 text-xs font-medium' : 'text-slate-400 text-xs'}>
+    cell: (u) => (
+      <span
+        className={u.active ? 'text-emerald-600 text-xs font-medium' : 'text-slate-400 text-xs'}
+      >
         {u.active ? 'Active' : 'Inactive'}
       </span>
     ),
   },
   {
-    key:    'lastLogin',
+    key: 'lastLogin',
     header: 'Last Login',
-    cell:   (u) => u.lastLogin
-      ? <span className="text-xs text-slate-600">{formatRelative(u.lastLogin)}</span>
-      : <span className="text-slate-400 text-xs">Never</span>,
+    cell: (u) =>
+      u.lastLogin ? (
+        <span className="text-xs text-slate-600">{formatRelative(u.lastLogin)}</span>
+      ) : (
+        <span className="text-slate-400 text-xs">Never</span>
+      ),
   },
 ];
 
@@ -66,17 +69,20 @@ export default function UsersPage() {
   const deleteMutation = useDeleteUser();
 
   const [showAdd, setShowAdd] = useState(false);
-  const [name,    setName]    = useState('');
-  const [email,   setEmail]   = useState('');
-  const [role,    setRole]    = useState<UserRole>('READ_ONLY');
-  const [addErr,  setAddErr]  = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<UserRole>('READ_ONLY');
+  const [addErr, setAddErr] = useState<string | null>(null);
 
   const handleAdd = async () => {
     setAddErr(null);
     if (!name.trim() || !email.trim()) return;
     try {
       await createMutation.mutateAsync({ name, email, role });
-      setName(''); setEmail(''); setRole('READ_ONLY'); setShowAdd(false);
+      setName('');
+      setEmail('');
+      setRole('READ_ONLY');
+      setShowAdd(false);
     } catch (err) {
       setAddErr(err instanceof Error ? err.message : 'Failed to create user.');
     }
@@ -90,13 +96,16 @@ export default function UsersPage() {
   const columnsWithActions: Column<HubUser>[] = [
     ...columns,
     {
-      key:    'actions',
+      key: 'actions',
       header: '',
-      cell:   (u) => (
+      cell: (u) => (
         <Button
           size="sm"
           variant="ghost"
-          onClick={(e) => { e.stopPropagation(); void handleDelete(u.id); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            void handleDelete(u.id);
+          }}
           className="text-rose-500 hover:text-rose-700"
         >
           <Trash2 className="h-3.5 w-3.5" />
@@ -106,7 +115,7 @@ export default function UsersPage() {
   ];
 
   if (isLoading) return <PageLoading />;
-  if (error)     return <ErrorState message="Could not load users." onRetry={() => void refetch()} />;
+  if (error) return <ErrorState message="Could not load users." onRetry={() => void refetch()} />;
 
   const users = data ?? [];
 
@@ -125,21 +134,30 @@ export default function UsersPage() {
 
       {showAdd && (
         <Card>
-          <CardHeader><CardTitle>New User</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>New User</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-3">
             {addErr && (
               <p className="text-sm text-rose-600 bg-rose-50 rounded px-3 py-2">{addErr}</p>
             )}
             <div className="grid gap-3 sm:grid-cols-3">
               <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-              <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as UserRole)}
                 className="rounded-md border border-slate-200 px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
               >
                 {Object.entries(ROLE_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -159,11 +177,7 @@ export default function UsersPage() {
         <EmptyState icon={Users} title="No users" description="Add your first user above." />
       ) : (
         <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
-          <DataTable
-            data={users}
-            columns={columnsWithActions}
-            keyFn={(u) => u.id}
-          />
+          <DataTable data={users} columns={columnsWithActions} keyFn={(u) => u.id} />
         </div>
       )}
     </div>

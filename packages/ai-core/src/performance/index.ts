@@ -154,10 +154,10 @@ export interface SLOObjectiveStatus {
 }
 
 export const DEFAULT_SLOS = {
-  AGENT_P95_LATENCY_MS:     15000,
-  AGENT_SUCCESS_RATE:       0.98,
-  AUTO_APPROVAL_RATE:       0.70,
-  AVG_CONFIDENCE:           0.80,
+  AGENT_P95_LATENCY_MS: 15000,
+  AGENT_SUCCESS_RATE: 0.98,
+  AUTO_APPROVAL_RATE: 0.7,
+  AVG_CONFIDENCE: 0.8,
 } as const;
 
 // ─── Performance Degradation ──────────────────────────────────────────────
@@ -217,7 +217,13 @@ export interface SyncPerformanceAnalysis {
 }
 
 export interface Bottleneck {
-  readonly area: 'batch-size' | 'network' | 'serialization' | 'rate-limiting' | 'memory' | 'retries';
+  readonly area:
+    | 'batch-size'
+    | 'network'
+    | 'serialization'
+    | 'rate-limiting'
+    | 'memory'
+    | 'retries';
   readonly severity: 'critical' | 'high' | 'medium' | 'low';
   readonly description: string;
   readonly evidence: string[];

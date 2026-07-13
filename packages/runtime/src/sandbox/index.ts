@@ -101,41 +101,36 @@ export interface SandboxPolicy {
 }
 
 export type SandboxViolationAction =
-  | 'log'            // log and continue
-  | 'warn'           // log, alert, continue
-  | 'terminate';     // log, alert, destroy sandbox
+  | 'log' // log and continue
+  | 'warn' // log, alert, continue
+  | 'terminate'; // log, alert, destroy sandbox
 
 // ─── Capabilities ─────────────────────────────────────────────────────────
 
 export type SandboxCapability =
-  | 'read-config'           // read configuration values
-  | 'write-config'          // write configuration values
-  | 'read-secret'           // access secret provider
-  | 'publish-events'        // publish to event bus
-  | 'subscribe-events'      // subscribe to event bus
-  | 'dispatch-commands'     // dispatch to command bus
-  | 'handle-commands'       // register command handlers
-  | 'access-service'        // call registered services
-  | 'read-filesystem'       // read allowed file paths
-  | 'write-filesystem'      // write allowed file paths
-  | 'network-outbound'      // make outbound HTTP calls
-  | 'spawn-workers'         // create worker pool tasks
-  | 'schedule-jobs'         // schedule recurring jobs
-  | 'read-telemetry'        // read telemetry data
-  | 'write-telemetry'       // emit custom telemetry
-  | 'access-database'       // direct database access
-  | 'load-modules'          // dynamically load other modules
-  | 'manage-platform';      // platform-level operations (native only)
+  | 'read-config' // read configuration values
+  | 'write-config' // write configuration values
+  | 'read-secret' // access secret provider
+  | 'publish-events' // publish to event bus
+  | 'subscribe-events' // subscribe to event bus
+  | 'dispatch-commands' // dispatch to command bus
+  | 'handle-commands' // register command handlers
+  | 'access-service' // call registered services
+  | 'read-filesystem' // read allowed file paths
+  | 'write-filesystem' // write allowed file paths
+  | 'network-outbound' // make outbound HTTP calls
+  | 'spawn-workers' // create worker pool tasks
+  | 'schedule-jobs' // schedule recurring jobs
+  | 'read-telemetry' // read telemetry data
+  | 'write-telemetry' // emit custom telemetry
+  | 'access-database' // direct database access
+  | 'load-modules' // dynamically load other modules
+  | 'manage-platform'; // platform-level operations (native only)
 
 // ─── Built-in Capability Sets ─────────────────────────────────────────────
 
 export const CAPABILITY_SETS: Readonly<Record<SandboxLevel, SandboxCapability[]>> = {
-  strict: [
-    'read-config',
-    'publish-events',
-    'subscribe-events',
-    'write-telemetry',
-  ],
+  strict: ['read-config', 'publish-events', 'subscribe-events', 'write-telemetry'],
   standard: [
     'read-config',
     'publish-events',
@@ -168,16 +163,24 @@ export const CAPABILITY_SETS: Readonly<Record<SandboxLevel, SandboxCapability[]>
     'access-database',
   ],
   native: [
-    'read-config', 'write-config', 'read-secret',
-    'publish-events', 'subscribe-events',
-    'dispatch-commands', 'handle-commands',
+    'read-config',
+    'write-config',
+    'read-secret',
+    'publish-events',
+    'subscribe-events',
+    'dispatch-commands',
+    'handle-commands',
     'access-service',
-    'read-filesystem', 'write-filesystem',
+    'read-filesystem',
+    'write-filesystem',
     'network-outbound',
-    'spawn-workers', 'schedule-jobs',
-    'read-telemetry', 'write-telemetry',
+    'spawn-workers',
+    'schedule-jobs',
+    'read-telemetry',
+    'write-telemetry',
     'access-database',
-    'load-modules', 'manage-platform',
+    'load-modules',
+    'manage-platform',
   ],
 };
 

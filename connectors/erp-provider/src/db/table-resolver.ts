@@ -1,10 +1,10 @@
 const ENTITY_PATTERNS: Record<string, string[]> = {
-  products:  ['produtos', 'products', 'itens', 'items', 'product', 'item', 'mercadorias'],
+  products: ['produtos', 'products', 'itens', 'items', 'product', 'item', 'mercadorias'],
   customers: ['clientes', 'customers', 'client', 'cliente', 'parceiros'],
   inventory: ['estoque', 'inventory', 'stock', 'estoques'],
-  sales:     ['pedidos', 'orders', 'sales', 'vendas', 'order'],
+  sales: ['pedidos', 'orders', 'sales', 'vendas', 'order'],
   suppliers: ['fornecedores', 'suppliers', 'vendor', 'fornecedor', 'vendors'],
-  users:     ['usuarios', 'users', 'user', 'usuario', 'operadores'],
+  users: ['usuarios', 'users', 'user', 'usuario', 'operadores'],
 };
 
 export function resolveTable(entity: string, tables: string[]): string | null {
@@ -17,7 +17,5 @@ export function resolveTable(entity: string, tables: string[]): string | null {
 }
 
 export function detectEntities(tables: string[]): string[] {
-  return Object.keys(ENTITY_PATTERNS).filter(
-    (entity) => resolveTable(entity, tables) !== null,
-  );
+  return Object.keys(ENTITY_PATTERNS).filter((entity) => resolveTable(entity, tables) !== null);
 }

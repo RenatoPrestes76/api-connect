@@ -1,6 +1,6 @@
 import { SyncRecord, type SyncRecordSnapshot } from '../entity/sync-record.js';
-import type { SyncRecordRepository }             from '../repository/sync-record-repository.js';
-import type { SyncHistoryDbDelegate }             from './prisma-types.js';
+import type { SyncRecordRepository } from '../repository/sync-record-repository.js';
+import type { SyncHistoryDbDelegate } from './prisma-types.js';
 
 export class PrismaSyncRecordRepository implements SyncRecordRepository {
   constructor(private readonly _db: SyncHistoryDbDelegate) {}
@@ -9,9 +9,15 @@ export class PrismaSyncRecordRepository implements SyncRecordRepository {
     const s = record.toSnapshot();
     await this._db.create({
       data: {
-        id: s.id, agentId: s.agentId, startedAt: s.startedAt, finishedAt: s.finishedAt,
-        durationMs: s.durationMs, recordsSent: s.recordsSent, recordsFailed: s.recordsFailed,
-        bytesTransferred: s.bytesTransferred, compressionRatio: s.compressionRatio,
+        id: s.id,
+        agentId: s.agentId,
+        startedAt: s.startedAt,
+        finishedAt: s.finishedAt,
+        durationMs: s.durationMs,
+        recordsSent: s.recordsSent,
+        recordsFailed: s.recordsFailed,
+        bytesTransferred: s.bytesTransferred,
+        compressionRatio: s.compressionRatio,
         result: s.result,
       },
     });
@@ -23,7 +29,7 @@ export class PrismaSyncRecordRepository implements SyncRecordRepository {
       orderBy: { finishedAt: 'desc' },
       take: limit,
     });
-    return rows.map(r => SyncRecord.fromSnapshot(this._toDomain(r)));
+    return rows.map((r) => SyncRecord.fromSnapshot(this._toDomain(r)));
   }
 
   async findRecent(since: Date, limit?: number): Promise<SyncRecord[]> {
@@ -32,7 +38,7 @@ export class PrismaSyncRecordRepository implements SyncRecordRepository {
       orderBy: { finishedAt: 'desc' },
       take: limit,
     });
-    return rows.map(r => SyncRecord.fromSnapshot(this._toDomain(r)));
+    return rows.map((r) => SyncRecord.fromSnapshot(this._toDomain(r)));
   }
 
   async countByAgentId(agentId: string): Promise<number> {
@@ -41,15 +47,27 @@ export class PrismaSyncRecordRepository implements SyncRecordRepository {
 
   async deleteOldest(agentId: string, keepCount: number): Promise<void> {
     const all = await this._db.findMany({
-      where: { agentId }, orderBy: { finishedAt: 'desc' },
+      where: { agentId },
+      orderBy: { finishedAt: 'desc' },
     });
-    const toDelete = all.slice(keepCount).map(r => r.id);
+    const toDelete = all.slice(keepCount).map((r) => r.id);
     if (toDelete.length > 0) {
       await this._db.deleteMany({ where: { id: { in: toDelete } } });
     }
   }
 
-  private _toDomain(r: { id: string; agentId: string; startedAt: Date; finishedAt: Date; durationMs: number; recordsSent: number; recordsFailed: number; bytesTransferred: number; compressionRatio: number | null; result: string }): SyncRecordSnapshot {
+  private _toDomain(r: {
+    id: string;
+    agentId: string;
+    startedAt: Date;
+    finishedAt: Date;
+    durationMs: number;
+    recordsSent: number;
+    recordsFailed: number;
+    bytesTransferred: number;
+    compressionRatio: number | null;
+    result: string;
+  }): SyncRecordSnapshot {
     return { ...r, result: r.result as SyncRecord['result'] };
   }
 }

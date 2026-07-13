@@ -1,19 +1,19 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { AtlasAgent }                        from '../entity/atlas-agent.js';
-import { AgentStatusKind }                   from '../value-objects/agent-status.js';
+import { AtlasAgent } from '../entity/atlas-agent.js';
+import { AgentStatusKind } from '../value-objects/agent-status.js';
 import {
   InMemoryAtlasAgentRepository,
   RepositoryError,
 } from '../repository/in-memory-atlas-agent-repository.js';
-import type { RegisterAgentParams }          from '../entity/atlas-agent.js';
+import type { RegisterAgentParams } from '../entity/atlas-agent.js';
 
 const mkParams = (overrides: Partial<RegisterAgentParams> = {}): RegisterAgentParams => ({
-  companyId:     'company-1',
-  name:          'Test Agent',
-  hostname:      'host01',
-  machineId:     'MACHINE-00001',
+  companyId: 'company-1',
+  name: 'Test Agent',
+  hostname: 'host01',
+  machineId: 'MACHINE-00001',
   connectorType: 'POSTGRES',
-  version:       '1.0.0',
+  version: '1.0.0',
   ...overrides,
 });
 
@@ -96,13 +96,19 @@ describe('InMemoryAtlasAgentRepository', () => {
 
   describe('findByCompany()', () => {
     it('returns only agents belonging to the specified company', async () => {
-      await repo.save(AtlasAgent.register(mkParams({ companyId: 'co-A', machineId: 'MACHINE-A001-ABC' })));
-      await repo.save(AtlasAgent.register(mkParams({ companyId: 'co-A', machineId: 'MACHINE-A002-ABC' })));
-      await repo.save(AtlasAgent.register(mkParams({ companyId: 'co-B', machineId: 'MACHINE-B001-ABC' })));
+      await repo.save(
+        AtlasAgent.register(mkParams({ companyId: 'co-A', machineId: 'MACHINE-A001-ABC' }))
+      );
+      await repo.save(
+        AtlasAgent.register(mkParams({ companyId: 'co-A', machineId: 'MACHINE-A002-ABC' }))
+      );
+      await repo.save(
+        AtlasAgent.register(mkParams({ companyId: 'co-B', machineId: 'MACHINE-B001-ABC' }))
+      );
 
       const results = await repo.findByCompany('co-A');
       expect(results).toHaveLength(2);
-      expect(results.every(a => a.companyId === 'co-A')).toBe(true);
+      expect(results.every((a) => a.companyId === 'co-A')).toBe(true);
     });
 
     it('returns an empty array when no agents belong to the company', async () => {

@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { SyncRecord, SyncRecordError } from '../entity/sync-record.js';
 
-const START  = new Date('2025-01-01T10:00:00Z');
+const START = new Date('2025-01-01T10:00:00Z');
 const FINISH = new Date('2025-01-01T10:01:30Z');
 
 const base = () => ({
-  agentId:         'agent-1',
-  startedAt:       START,
-  finishedAt:      FINISH,
-  recordsSent:     500,
-  recordsFailed:   2,
+  agentId: 'agent-1',
+  startedAt: START,
+  finishedAt: FINISH,
+  recordsSent: 500,
+  recordsFailed: 2,
   bytesTransferred: 204_800,
-  result:          'SUCCESS' as const,
+  result: 'SUCCESS' as const,
 });
 
 describe('SyncRecord.create', () => {
@@ -24,7 +24,7 @@ describe('SyncRecord.create', () => {
 
   it('accepts PARTIAL and FAILED results', () => {
     expect(SyncRecord.create({ ...base(), result: 'PARTIAL' }).result).toBe('PARTIAL');
-    expect(SyncRecord.create({ ...base(), result: 'FAILED'  }).result).toBe('FAILED');
+    expect(SyncRecord.create({ ...base(), result: 'FAILED' }).result).toBe('FAILED');
   });
 
   it('accepts optional compressionRatio', () => {
@@ -46,8 +46,9 @@ describe('SyncRecord.create', () => {
   });
 
   it('throws when finishedAt is before startedAt', () => {
-    expect(() => SyncRecord.create({ ...base(), finishedAt: START, startedAt: FINISH }))
-      .toThrow(SyncRecordError);
+    expect(() => SyncRecord.create({ ...base(), finishedAt: START, startedAt: FINISH })).toThrow(
+      SyncRecordError
+    );
   });
 
   it('throws on negative recordsSent', () => {
@@ -63,7 +64,7 @@ describe('SyncRecord.fromSnapshot / toSnapshot', () => {
   it('round-trips all fields', () => {
     const r = SyncRecord.create(base());
     const snap = r.toSnapshot();
-    const r2   = SyncRecord.fromSnapshot(snap);
+    const r2 = SyncRecord.fromSnapshot(snap);
     expect(r2.toSnapshot()).toEqual(snap);
   });
 });

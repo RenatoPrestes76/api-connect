@@ -130,9 +130,9 @@ export interface CacheStats {
 // ─── Cache Namespace Keys ─────────────────────────────────────────────────
 
 export const CACHE_PREFIXES = {
-  SCHEMA:      'schema:',
-  SYNC_STATE:  'sync:',
-  HEALTH:      'health:',
-  TOKEN:       'token:',
-  CONFIG:      'config:',
+  SCHEMA: 'schema:',
+  SYNC_STATE: 'sync:',
+  HEALTH: 'health:',
+  TOKEN: 'token:',
+  CONFIG: 'config:',
 } as const;

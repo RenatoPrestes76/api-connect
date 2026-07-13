@@ -3,19 +3,19 @@ import path from 'node:path';
 import type { RuntimeCredentials } from '../activation/registration.js';
 
 export interface RuntimeConfig {
-  runtimeId:    string;
-  companyId:    string;
-  environment:  string;
+  runtimeId: string;
+  companyId: string;
+  environment: string;
   runtimeToken: string;
   heartbeatUrl: string;
-  syncUrl:      string;
-  apiBaseUrl:   string;
-  name:         string;
-  hostname:     string;
-  machineId:    string;
-  version:      string;
+  syncUrl: string;
+  apiBaseUrl: string;
+  name: string;
+  hostname: string;
+  machineId: string;
+  version: string;
   connectorType: string;
-  installedAt:  string;
+  installedAt: string;
 }
 
 const CONFIG_FILE = 'runtime.json';
@@ -24,13 +24,13 @@ export function writeRuntimeConfig(
   runtimeRoot: string,
   credentials: RuntimeCredentials,
   meta: {
-    apiBaseUrl:    string;
-    name:          string;
-    hostname:      string;
-    machineId:     string;
-    version:       string;
+    apiBaseUrl: string;
+    name: string;
+    hostname: string;
+    machineId: string;
+    version: string;
     connectorType: string;
-  },
+  }
 ): void {
   const config: RuntimeConfig = {
     ...credentials,

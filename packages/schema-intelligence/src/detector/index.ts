@@ -42,10 +42,7 @@ export interface ChangeDetectionEngine {
   /**
    * Subscribe to change events for a schema
    */
-  onDetected(
-    schemaId: SchemaId,
-    handler: (report: ChangeDetectionReport) => void
-  ): string;
+  onDetected(schemaId: SchemaId, handler: (report: ChangeDetectionReport) => void): string;
 
   offDetected(subscriptionId: string): void;
 }

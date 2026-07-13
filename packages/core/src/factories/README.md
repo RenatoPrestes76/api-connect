@@ -8,15 +8,15 @@ Centralises creation logic so callers never `new` internal classes directly. Fac
 
 ## Interfaces
 
-| Interface | Role |
-|-----------|------|
-| `Factory<T>` | Generic factory: `create(config)` → T |
-| `Builder<T>` | Fluent builder: `.configure().build()` |
-| `DriverFactory` | Creates any driver by type string |
-| `PluginFactory` | Instantiates plugins by id or path |
-| `CommandHandlerFactory` | Resolves handler for a command type |
-| `EventHandlerFactory` | Resolves all handlers for an event type |
-| `RepositoryFactory` | Creates typed repository for an entity |
+| Interface                 | Role                                            |
+| ------------------------- | ----------------------------------------------- |
+| `Factory<T>`              | Generic factory: `create(config)` → T           |
+| `Builder<T>`              | Fluent builder: `.configure().build()`          |
+| `DriverFactory`           | Creates any driver by type string               |
+| `PluginFactory`           | Instantiates plugins by id or path              |
+| `CommandHandlerFactory`   | Resolves handler for a command type             |
+| `EventHandlerFactory`     | Resolves all handlers for an event type         |
+| `RepositoryFactory`       | Creates typed repository for an entity          |
 | `AbstractFactory<Family>` | Creates a coordinated family of related objects |
 
 ## Usage Patterns

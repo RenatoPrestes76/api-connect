@@ -6,9 +6,9 @@ vi.stubGlobal('fetch', mockFetch);
 
 function makeResponse(body: unknown, status = 200): Response {
   return {
-    ok:     status >= 200 && status < 300,
+    ok: status >= 200 && status < 300,
     status,
-    json:   () => Promise.resolve(body),
+    json: () => Promise.resolve(body),
   } as unknown as Response;
 }
 
@@ -38,22 +38,22 @@ describe('api.get', () => {
     expect(result).toEqual({ items: [1, 2] });
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('/path'),
-      expect.objectContaining({ method: 'GET' }),
+      expect.objectContaining({ method: 'GET' })
     );
   });
 
   it('throws ApiClientError on non-OK response', async () => {
-    mockFetch.mockResolvedValue(makeResponse(
-      { error: { code: 'NOT_FOUND', message: 'Resource not found' } },
-      404,
-    ));
+    mockFetch.mockResolvedValue(
+      makeResponse({ error: { code: 'NOT_FOUND', message: 'Resource not found' } }, 404)
+    );
     await expect(api.get('/path')).rejects.toThrow(ApiClientError);
     await expect(api.get('/path')).rejects.toMatchObject({ status: 404, code: 'NOT_FOUND' });
   });
 
   it('falls back to generic message on malformed error body', async () => {
     mockFetch.mockResolvedValue({
-      ok: false, status: 500,
+      ok: false,
+      status: 500,
       json: () => Promise.reject(new Error('not json')),
     } as unknown as Response);
     await expect(api.get('/path')).rejects.toMatchObject({ code: 'HTTP_ERROR', status: 500 });
@@ -118,7 +118,10 @@ describe('credentials and headers', () => {
   it('includes X-Hub-Client header', async () => {
     mockFetch.mockResolvedValue(makeResponse({}));
     await api.get('/path');
-    const headers = (mockFetch.mock.calls[0] as [string, RequestInit])[1].headers as Record<string, string>;
+    const headers = (mockFetch.mock.calls[0] as [string, RequestInit])[1].headers as Record<
+      string,
+      string
+    >;
     expect(headers['X-Hub-Client']).toBe('atlas-hub/1.0');
   });
 });

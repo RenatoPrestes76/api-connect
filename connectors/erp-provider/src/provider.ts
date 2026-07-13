@@ -1,7 +1,14 @@
 import type {
-  Connector, ConnectorResult, ValidationResult,
-  DiscoveryResult, SyncContext, SyncResult, SyncError,
-  ConnectorHealthStatus, ConnectorContext, ConnectorMetadata,
+  Connector,
+  ConnectorResult,
+  ValidationResult,
+  DiscoveryResult,
+  SyncContext,
+  SyncResult,
+  SyncError,
+  ConnectorHealthStatus,
+  ConnectorContext,
+  ConnectorMetadata,
 } from '@seltriva/connector-sdk';
 import { ok, fail } from '@seltriva/connector-sdk';
 import type { DatabaseAdapter, DriverConfig } from '@seltriva/database-sdk';
@@ -20,36 +27,36 @@ export type DatabaseAdapterFactory = (config: DriverConfig) => DatabaseAdapter;
 
 function buildDriverConfig(ctx: ConnectorContext): DriverConfig {
   return {
-    host:     ctx.config.getString('host',     'localhost') ?? 'localhost',
-    port:     ctx.config.getNumber('port',     5432)        ?? 5432,
-    database: ctx.config.getString('database', '')          ?? '',
-    username: ctx.config.getString('username', '')          ?? '',
-    password: ctx.config.getString('password', '')          ?? '',
+    host: ctx.config.getString('host', 'localhost') ?? 'localhost',
+    port: ctx.config.getNumber('port', 5432) ?? 5432,
+    database: ctx.config.getString('database', '') ?? '',
+    username: ctx.config.getString('username', '') ?? '',
+    password: ctx.config.getString('password', '') ?? '',
   };
 }
 
 export class ErpConnector implements Connector {
   private _state: ConnectionState = 'disconnected';
 
-  private readonly _db:        DatabaseAdapter;
+  private readonly _db: DatabaseAdapter;
   private readonly _validator: ErpValidator;
   private readonly _discovery: DiscoveryEngine;
-  private readonly _health:    HealthChecker;
-  private readonly _products:  ProductsSync;
+  private readonly _health: HealthChecker;
+  private readonly _products: ProductsSync;
   private readonly _customers: CustomersSync;
   private readonly _inventory: InventorySync;
 
   constructor(
     private readonly _ctx: ConnectorContext,
-    dbFactory?: DatabaseAdapterFactory,
+    dbFactory?: DatabaseAdapterFactory
   ) {
-    const config  = buildDriverConfig(_ctx);
-    this._db       = dbFactory ? dbFactory(config) : new PostgresDriver(config);
-    const id       = ERP_METADATA.id;
+    const config = buildDriverConfig(_ctx);
+    this._db = dbFactory ? dbFactory(config) : new PostgresDriver(config);
+    const id = ERP_METADATA.id;
     this._validator = new ErpValidator(_ctx);
     this._discovery = new DiscoveryEngine(id, _ctx, this._db);
-    this._health    = new HealthChecker(id, _ctx);
-    this._products  = new ProductsSync(_ctx, this._db);
+    this._health = new HealthChecker(id, _ctx);
+    this._products = new ProductsSync(_ctx, this._db);
     this._customers = new CustomersSync(_ctx, this._db);
     this._inventory = new InventorySync(_ctx, this._db);
   }
@@ -77,7 +84,7 @@ export class ErpConnector implements Connector {
       this._ctx.logger.info('Connected to ERP database', {
         host: this._ctx.config.getString('host', ''),
         port: this._ctx.config.getNumber('port', 5432),
-        db:   this._ctx.config.getString('database', ''),
+        db: this._ctx.config.getString('database', ''),
       });
       return ok(undefined, Date.now() - start);
     } catch (err) {
@@ -121,51 +128,51 @@ export class ErpConnector implements Connector {
       return fail('NOT_CONNECTED', 'Cannot synchronize: not connected to ERP', true);
     }
 
-    const start    = Date.now();
+    const start = Date.now();
     const entities = context.entities ?? ['products', 'customers', 'inventory'];
 
     this._ctx.logger.info('Starting synchronization', { jobId: context.jobId, entities });
     this._ctx.eventBus.emit('sync.started', {
       connectorId: ERP_METADATA.id,
-      jobId:       context.jobId,
-      startedAt:   new Date(),
+      jobId: context.jobId,
+      startedAt: new Date(),
     });
 
-    let totalSynced  = 0;
+    let totalSynced = 0;
     let totalSkipped = 0;
-    let totalFailed  = 0;
+    let totalFailed = 0;
     const allErrors: SyncError[] = [];
 
     if (entities.includes('products')) {
       const { result } = await this._products.sync(context);
-      totalSynced  += result.synced;
+      totalSynced += result.synced;
       totalSkipped += result.skipped;
-      totalFailed  += result.failed;
+      totalFailed += result.failed;
       for (const e of result.errors) allErrors.push(e);
     }
 
     if (entities.includes('customers')) {
       const { result } = await this._customers.sync(context);
-      totalSynced  += result.synced;
+      totalSynced += result.synced;
       totalSkipped += result.skipped;
-      totalFailed  += result.failed;
+      totalFailed += result.failed;
       for (const e of result.errors) allErrors.push(e);
     }
 
     if (entities.includes('inventory')) {
       const { result } = await this._inventory.sync(context);
-      totalSynced  += result.synced;
+      totalSynced += result.synced;
       totalSkipped += result.skipped;
-      totalFailed  += result.failed;
+      totalFailed += result.failed;
       for (const e of result.errors) allErrors.push(e);
     }
 
     const durationMs = Date.now() - start;
     const syncResult: SyncResult = {
-      synced:     totalSynced,
-      skipped:    totalSkipped,
-      failed:     totalFailed,
-      errors:     allErrors,
+      synced: totalSynced,
+      skipped: totalSkipped,
+      failed: totalFailed,
+      errors: allErrors,
       finishedAt: new Date(),
     };
 
@@ -173,11 +180,11 @@ export class ErpConnector implements Connector {
 
     this._ctx.eventBus.emit('sync.finished', {
       connectorId: ERP_METADATA.id,
-      jobId:       context.jobId,
-      synced:      totalSynced,
-      failed:      totalFailed,
+      jobId: context.jobId,
+      synced: totalSynced,
+      failed: totalFailed,
       durationMs,
-      finishedAt:  new Date(),
+      finishedAt: new Date(),
     });
 
     this._ctx.logger.info('Synchronization complete', { synced: totalSynced, durationMs });
@@ -190,10 +197,7 @@ export class ErpConnector implements Connector {
 
     try {
       const dbh = await this._db.health();
-      return ok(
-        { ...base.data, responseTimeMs: dbh.latency },
-        dbh.latency,
-      );
+      return ok({ ...base.data, responseTimeMs: dbh.latency }, dbh.latency);
     } catch {
       return base;
     }

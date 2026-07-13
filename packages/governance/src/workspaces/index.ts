@@ -51,8 +51,14 @@ export interface WorkspaceAccessControl {
 
 export interface IWorkspaceGovernanceService {
   getPolicy(workspaceId: string): Promise<WorkspaceGovernancePolicy | null>;
-  setPolicy(input: SetWorkspaceGovernancePolicyInput): Promise<GovernanceResult<WorkspaceGovernancePolicy>>;
-  evaluatePromotionGate(workspaceId: string, from: string, to: string): Promise<PromotionGateResult>;
+  setPolicy(
+    input: SetWorkspaceGovernancePolicyInput
+  ): Promise<GovernanceResult<WorkspaceGovernancePolicy>>;
+  evaluatePromotionGate(
+    workspaceId: string,
+    from: string,
+    to: string
+  ): Promise<PromotionGateResult>;
   listPromotionGates(workspaceId: string): Promise<PromotionGate[]>;
 }
 

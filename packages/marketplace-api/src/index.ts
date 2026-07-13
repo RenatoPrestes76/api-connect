@@ -12,10 +12,10 @@ import type { PluginType, PluginManifest } from '@seltriva/plugin-sdk';
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
 
-export type MarketplacePluginId  = Branded<string, 'MarketplacePluginId'>;
+export type MarketplacePluginId = Branded<string, 'MarketplacePluginId'>;
 export type MarketplaceVersionId = Branded<string, 'MarketplaceVersionId'>;
-export type PublisherId          = Branded<string, 'PublisherId'>;
-export type ReviewId             = Branded<string, 'ReviewId'>;
+export type PublisherId = Branded<string, 'PublisherId'>;
+export type ReviewId = Branded<string, 'ReviewId'>;
 
 // ─── Marketplace Plugin ──────────────────────────────────────────────────────
 
@@ -90,7 +90,7 @@ export interface PublisherRegistration {
   readonly displayName: string;
   readonly description?: string;
   readonly website?: string;
-  readonly signingPublicKey?: string;     // Ed25519 public key PEM
+  readonly signingPublicKey?: string; // Ed25519 public key PEM
 }
 
 // ─── Plugin Version ──────────────────────────────────────────────────────────
@@ -122,7 +122,7 @@ export interface PluginVersionSummary {
 }
 
 export type ReleaseChannel = 'stable' | 'beta' | 'edge';
-export type VersionStatus  = 'pending' | 'approved' | 'rejected' | 'deprecated';
+export type VersionStatus = 'pending' | 'approved' | 'rejected' | 'deprecated';
 
 // ─── Publish Flow ────────────────────────────────────────────────────────────
 
@@ -248,14 +248,14 @@ export interface UpdateAvailable {
 // ─── Marketplace API Routes ──────────────────────────────────────────────────
 
 export const MARKETPLACE_API_ROUTES = {
-  SEARCH:          '/api/marketplace/search',
-  GET_PLUGIN:      '/api/marketplace/plugins/:id',
-  GET_VERSION:     '/api/marketplace/plugins/:id/versions/:version',
-  LIST_VERSIONS:   '/api/marketplace/plugins/:id/versions',
-  GET_REVIEWS:     '/api/marketplace/plugins/:id/reviews',
-  PUBLISH:         '/api/marketplace/publish',
-  INSTALL:         '/api/marketplace/install',
-  UNINSTALL:       '/api/marketplace/uninstall/:id',
-  MY_PLUGINS:      '/api/marketplace/me/plugins',
+  SEARCH: '/api/marketplace/search',
+  GET_PLUGIN: '/api/marketplace/plugins/:id',
+  GET_VERSION: '/api/marketplace/plugins/:id/versions/:version',
+  LIST_VERSIONS: '/api/marketplace/plugins/:id/versions',
+  GET_REVIEWS: '/api/marketplace/plugins/:id/reviews',
+  PUBLISH: '/api/marketplace/publish',
+  INSTALL: '/api/marketplace/install',
+  UNINSTALL: '/api/marketplace/uninstall/:id',
+  MY_PLUGINS: '/api/marketplace/me/plugins',
   REGISTER_PUBLISHER: '/api/marketplace/publishers',
 } as const;

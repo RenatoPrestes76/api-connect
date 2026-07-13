@@ -5,8 +5,8 @@ import {
   hashAgentToken,
   extractAgentTokenPrefix,
 } from '../entity/agent-access-token.js';
-import { InMemoryAgentAccessTokenRepository }   from '../repository/in-memory-agent-access-token-repository.js';
-import { PrismaAgentAccessTokenRepository }      from '../infrastructure/prisma-agent-access-token-repository.js';
+import { InMemoryAgentAccessTokenRepository } from '../repository/in-memory-agent-access-token-repository.js';
+import { PrismaAgentAccessTokenRepository } from '../infrastructure/prisma-agent-access-token-repository.js';
 import type {
   AgentProvisioningDbClient,
   PrismaAgentAccessToken,
@@ -19,15 +19,15 @@ const AGENT_ID = 'agent-001';
 
 function makeTokenRow(overrides: Partial<PrismaAgentAccessToken> = {}): PrismaAgentAccessToken {
   return {
-    id:          'aat-row-01',
-    agentId:     AGENT_ID,
-    tokenHash:   'b'.repeat(64),
+    id: 'aat-row-01',
+    agentId: AGENT_ID,
+    tokenHash: 'b'.repeat(64),
     tokenPrefix: 'aat_aabbccdd',
-    expiresAt:   FUTURE,
-    revokedAt:   null,
-    lastUsedAt:  null,
-    createdAt:   new Date('2024-01-01'),
-    updatedAt:   new Date('2024-01-01'),
+    expiresAt: FUTURE,
+    revokedAt: null,
+    lastUsedAt: null,
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
     ...overrides,
   };
 }
@@ -35,7 +35,6 @@ function makeTokenRow(overrides: Partial<PrismaAgentAccessToken> = {}): PrismaAg
 // ─── AgentAccessToken entity ──────────────────────────────────────────────────
 
 describe('AgentAccessToken entity', () => {
-
   describe('generate()', () => {
     it('returns a token with aat_ prefix in rawToken', () => {
       const { rawToken } = AgentAccessToken.generate(AGENT_ID, FUTURE);
@@ -75,18 +74,17 @@ describe('AgentAccessToken entity', () => {
     });
 
     it('throws when agentId is empty', () => {
-      expect(() => AgentAccessToken.generate('', FUTURE))
-        .toThrow(AgentAccessTokenError);
+      expect(() => AgentAccessToken.generate('', FUTURE)).toThrow(AgentAccessTokenError);
     });
 
     it('throws when agentId is whitespace only', () => {
-      expect(() => AgentAccessToken.generate('   ', FUTURE))
-        .toThrow(AgentAccessTokenError);
+      expect(() => AgentAccessToken.generate('   ', FUTURE)).toThrow(AgentAccessTokenError);
     });
 
     it('throws when expiresAt is in the past', () => {
-      expect(() => AgentAccessToken.generate(AGENT_ID, new Date(Date.now() - 1)))
-        .toThrow(AgentAccessTokenError);
+      expect(() => AgentAccessToken.generate(AGENT_ID, new Date(Date.now() - 1))).toThrow(
+        AgentAccessTokenError
+      );
     });
   });
 
@@ -183,7 +181,7 @@ describe('AgentAccessToken entity', () => {
   describe('fromSnapshot / toSnapshot', () => {
     it('round-trips without loss', () => {
       const { token } = AgentAccessToken.generate(AGENT_ID, FUTURE, () => 'snap-id');
-      const snap  = token.toSnapshot();
+      const snap = token.toSnapshot();
       const clone = AgentAccessToken.fromSnapshot(snap);
       expect(clone.id).toBe('snap-id');
       expect(clone.agentId).toBe(AGENT_ID);
@@ -329,14 +327,23 @@ describe('PrismaAgentAccessTokenRepository', () => {
   beforeEach(() => {
     mockDb = {
       atlasAgent: {
-        create: vi.fn(), update: vi.fn(), findUnique: vi.fn(),
-        findMany: vi.fn(), updateMany: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+        findUnique: vi.fn(),
+        findMany: vi.fn(),
+        updateMany: vi.fn(),
       },
       provisioningToken: {
-        create: vi.fn(), update: vi.fn(), findUnique: vi.fn(), findMany: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+        findUnique: vi.fn(),
+        findMany: vi.fn(),
       },
       agentAccessToken: {
-        create: vi.fn(), update: vi.fn(), findUnique: vi.fn(), findMany: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+        findUnique: vi.fn(),
+        findMany: vi.fn(),
       },
     };
     repo = new PrismaAgentAccessTokenRepository(mockDb);

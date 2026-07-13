@@ -68,9 +68,15 @@ export class CircuitBreaker {
 
   constructor(private readonly _opts: CircuitBreakerOptions) {}
 
-  get state(): CircuitState { return this._state; }
-  get failureCount(): number { return this._failureCount; }
-  get openedAt(): Date | null { return this._openedAt; }
+  get state(): CircuitState {
+    return this._state;
+  }
+  get failureCount(): number {
+    return this._failureCount;
+  }
+  get openedAt(): Date | null {
+    return this._openedAt;
+  }
 
   async execute<T>(fn: () => Promise<T>): Promise<T> {
     this._transitionIfNeeded();
@@ -121,10 +127,7 @@ export class CircuitBreaker {
 
   private _onFailure(): void {
     this._failureCount++;
-    if (
-      this._state === 'HALF_OPEN' ||
-      this._failureCount >= this._opts.failureThreshold
-    ) {
+    if (this._state === 'HALF_OPEN' || this._failureCount >= this._opts.failureThreshold) {
       this._state = 'OPEN';
       this._openedAt = new Date();
     }
@@ -150,7 +153,7 @@ export class QueryRunner {
   constructor(
     private readonly _conn: PostgreSQLConnectionManager,
     private readonly _circuitBreaker: CircuitBreaker,
-    private readonly _opts: QueryRunnerOptions,
+    private readonly _opts: QueryRunnerOptions
   ) {}
 
   get recentMetrics(): QueryMetrics[] {
@@ -162,7 +165,7 @@ export class QueryRunner {
    */
   async query<T extends Record<string, unknown> = Record<string, unknown>>(
     sql: string,
-    params?: unknown[],
+    params?: unknown[]
   ): Promise<{ rows: T[]; rowCount: number }> {
     assertReadOnly(sql);
 
@@ -178,7 +181,14 @@ export class QueryRunner {
         });
 
         const durationMs = Date.now() - start;
-        this._recordMetrics({ sql, params, durationMs, rowCount: result.rowCount, retries, executedAt });
+        this._recordMetrics({
+          sql,
+          params,
+          durationMs,
+          rowCount: result.rowCount,
+          retries,
+          executedAt,
+        });
         return result;
       } catch (err) {
         lastErr = err;
@@ -211,7 +221,7 @@ export class QueryRunner {
    */
   private async _executeWithTimeout<T extends Record<string, unknown>>(
     sql: string,
-    params?: unknown[],
+    params?: unknown[]
   ): Promise<{ rows: T[]; rowCount: number }> {
     const { statementTimeoutMs } = this._opts;
     let client: PoolClient | null = null;
@@ -222,9 +232,7 @@ export class QueryRunner {
       timedOut = true;
       // Cancel the running backend query
       if (pid && this._conn.isConnected) {
-        this._conn
-          .query('SELECT pg_cancel_backend($1)', [pid])
-          .catch(() => undefined);
+        this._conn.query('SELECT pg_cancel_backend($1)', [pid]).catch(() => undefined);
       }
     }, statementTimeoutMs);
 

@@ -7,7 +7,9 @@ const JOB = asSyncJobId('job-metrics-001');
 describe('MetricsCollector', () => {
   let m: MetricsCollector;
 
-  beforeEach(() => { m = new MetricsCollector(JOB, 'FULL'); });
+  beforeEach(() => {
+    m = new MetricsCollector(JOB, 'FULL');
+  });
 
   it('starts with zero metrics', () => {
     const metrics = m.metrics();
@@ -39,9 +41,7 @@ describe('MetricsCollector', () => {
     m.completeTable('public', 'produto');
 
     const metrics = m.metrics();
-    const tableMetrics = metrics.tables.find(
-      (t) => t.schema === 'public' && t.table === 'produto',
-    );
+    const tableMetrics = metrics.tables.find((t) => t.schema === 'public' && t.table === 'produto');
     expect(tableMetrics?.recordsSynced).toBe(100);
     expect(tableMetrics?.durationMs).toBeGreaterThanOrEqual(0);
   });

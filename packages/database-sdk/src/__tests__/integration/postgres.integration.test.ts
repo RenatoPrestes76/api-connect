@@ -5,15 +5,15 @@
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { PostgresDriver } from '../../drivers/postgres.driver.js';
-import { QueryBuilder }   from '../../query/query-builder.js';
-import { equals }         from '../../query/filters.js';
+import { QueryBuilder } from '../../query/query-builder.js';
+import { equals } from '../../query/filters.js';
 import type { DriverConfig } from '../../connection/connection-options.js';
 
 const cfg: DriverConfig = {
-  host:     process.env['PG_HOST']     ?? 'localhost',
-  port:     Number(process.env['PG_PORT'] ?? 5433),
+  host: process.env['PG_HOST'] ?? 'localhost',
+  port: Number(process.env['PG_PORT'] ?? 5433),
   database: process.env['PG_DATABASE'] ?? 'testdb',
-  username: process.env['PG_USER']     ?? 'testuser',
+  username: process.env['PG_USER'] ?? 'testuser',
   password: process.env['PG_PASSWORD'] ?? 'testpass',
 };
 
@@ -42,13 +42,13 @@ describe('PostgreSQL integration', () => {
   // ─── Query execution ─────────────────────────────────────────────────────────
 
   it('executes raw SELECT 1', async () => {
-    const q      = QueryBuilder.raw('SELECT 1 AS value', []);
-    const rows   = await driver.execute<{ value: number }>(q);
+    const q = QueryBuilder.raw('SELECT 1 AS value', []);
+    const rows = await driver.execute<{ value: number }>(q);
     expect(rows[0]?.value).toBe(1);
   });
 
   it('executes SELECT from users table', async () => {
-    const q    = new QueryBuilder().from('users').limit(10).build();
+    const q = new QueryBuilder().from('users').limit(10).build();
     const rows = await driver.execute<{ id: number; email: string }>(q);
     expect(Array.isArray(rows)).toBe(true);
     expect(rows.length).toBeGreaterThan(0);
@@ -56,10 +56,7 @@ describe('PostgreSQL integration', () => {
   });
 
   it('executes SELECT with WHERE filter', async () => {
-    const q = new QueryBuilder()
-      .from('users')
-      .where(equals('email', 'alice@example.com'))
-      .build();
+    const q = new QueryBuilder().from('users').where(equals('email', 'alice@example.com')).build();
     const rows = await driver.execute<{ name: string }>(q);
     expect(rows[0]?.name).toBe('Alice');
   });
@@ -74,14 +71,14 @@ describe('PostgreSQL integration', () => {
 
   it('discovers schema with users and orders tables', async () => {
     const schema = await driver.schema();
-    const names  = schema.tables.map((t) => t.name);
+    const names = schema.tables.map((t) => t.name);
     expect(names).toContain('users');
     expect(names).toContain('orders');
   });
 
   it('discovers users table columns', async () => {
     const schema = await driver.schema();
-    const users  = schema.tables.find((t) => t.name === 'users');
+    const users = schema.tables.find((t) => t.name === 'users');
     expect(users).toBeDefined();
     const colNames = users!.columns.map((c) => c.name);
     expect(colNames).toContain('id');
@@ -91,9 +88,7 @@ describe('PostgreSQL integration', () => {
   it('discovers foreign key relation', async () => {
     const schema = await driver.schema();
     expect(schema.relations.length).toBeGreaterThan(0);
-    const rel = schema.relations.find(
-      (r) => r.fromTable === 'orders' && r.toTable === 'users',
-    );
+    const rel = schema.relations.find((r) => r.fromTable === 'orders' && r.toTable === 'users');
     expect(rel).toBeDefined();
   });
 
@@ -128,7 +123,7 @@ describe('PostgreSQL integration', () => {
     await expect(
       driver.transaction(async () => {
         throw new Error('intentional rollback');
-      }),
+      })
     ).rejects.toThrow('Transaction rolled back');
   });
 

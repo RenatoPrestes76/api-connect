@@ -9,19 +9,29 @@ import { DiscoveryCard } from '@/components/discovery/confidence-bar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { useDiscoveryRuns, useDiscoveryEntities, useDiscoverySuggestions } from '@/hooks/use-discovery';
+import {
+  useDiscoveryRuns,
+  useDiscoveryEntities,
+  useDiscoverySuggestions,
+} from '@/hooks/use-discovery';
 import { formatDateTime } from '@/lib/utils';
 import type { DiscoveryAnalysis } from '@/types/index';
 
 export default function DiscoveryPage() {
   const [selected, setSelected] = useState<DiscoveryAnalysis | null>(null);
 
-  const runsQuery     = useDiscoveryRuns();
+  const runsQuery = useDiscoveryRuns();
   const entitiesQuery = useDiscoveryEntities(selected?.analysisId ?? '');
   const suggestionsQuery = useDiscoverySuggestions(selected?.analysisId ?? '');
 
   if (runsQuery.isLoading) return <PageLoading />;
-  if (runsQuery.error)     return <ErrorState message="Could not load discovery runs." onRetry={() => void runsQuery.refetch()} />;
+  if (runsQuery.error)
+    return (
+      <ErrorState
+        message="Could not load discovery runs."
+        onRetry={() => void runsQuery.refetch()}
+      />
+    );
 
   const runs = runsQuery.data ?? [];
 
@@ -33,7 +43,11 @@ export default function DiscoveryPage() {
       />
 
       {runs.length === 0 ? (
-        <EmptyState icon={Search} title="No discovery runs" description="Run schema analysis from a connector to see results here." />
+        <EmptyState
+          icon={Search}
+          title="No discovery runs"
+          description="Run schema analysis from a connector to see results here."
+        />
       ) : (
         <div className="grid gap-4 lg:grid-cols-3">
           {/* Run list */}
@@ -52,7 +66,9 @@ export default function DiscoveryPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-medium text-slate-900 truncate">{run.database}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">{formatDateTime(run.generatedAt)}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {formatDateTime(run.generatedAt)}
+                    </p>
                   </div>
                   <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
                 </div>
@@ -69,12 +85,18 @@ export default function DiscoveryPage() {
           {/* Detail panel */}
           <div className="lg:col-span-2 space-y-4">
             {!selected ? (
-              <EmptyState icon={Search} title="Select a run" description="Click a discovery run to see details." />
+              <EmptyState
+                icon={Search}
+                title="Select a run"
+                description="Click a discovery run to see details."
+              />
             ) : (
               <>
                 {/* Summary */}
                 <Card>
-                  <CardHeader><CardTitle>Summary — {selected.database}</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Summary — {selected.database}</CardTitle>
+                  </CardHeader>
                   <CardContent>
                     <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
                       {[
@@ -86,7 +108,9 @@ export default function DiscoveryPage() {
                         ['Duration', `${selected.durationMs}ms`],
                       ].map(([label, value]) => (
                         <div key={label as string}>
-                          <dt className="text-slate-500 text-xs uppercase tracking-wide">{label}</dt>
+                          <dt className="text-slate-500 text-xs uppercase tracking-wide">
+                            {label}
+                          </dt>
                           <dd className="font-semibold text-slate-900 tabular-nums">{value}</dd>
                         </div>
                       ))}
@@ -97,7 +121,9 @@ export default function DiscoveryPage() {
                 {/* Entities */}
                 {entitiesQuery.data && entitiesQuery.data.entities.length > 0 && (
                   <Card>
-                    <CardHeader><CardTitle>Entities ({entitiesQuery.data.total})</CardTitle></CardHeader>
+                    <CardHeader>
+                      <CardTitle>Entities ({entitiesQuery.data.total})</CardTitle>
+                    </CardHeader>
                     <CardContent>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {entitiesQuery.data.entities.map((e) => (
@@ -124,7 +150,15 @@ export default function DiscoveryPage() {
                       {suggestionsQuery.data.suggestions.map((s, i) => (
                         <div key={i} className="rounded-md border border-slate-100 bg-slate-50 p-3">
                           <div className="flex items-center gap-2 mb-1">
-                            <Badge variant={s.priority === 1 ? 'primary' : s.priority === 2 ? 'warning' : 'muted'}>
+                            <Badge
+                              variant={
+                                s.priority === 1
+                                  ? 'primary'
+                                  : s.priority === 2
+                                    ? 'warning'
+                                    : 'muted'
+                              }
+                            >
                               P{s.priority}
                             </Badge>
                             <span className="font-medium text-sm">{s.entity}</span>
@@ -140,11 +174,21 @@ export default function DiscoveryPage() {
                 {/* Risks */}
                 {selected.risks.length > 0 && (
                   <Card>
-                    <CardHeader><CardTitle>Risks ({selected.risks.length})</CardTitle></CardHeader>
+                    <CardHeader>
+                      <CardTitle>Risks ({selected.risks.length})</CardTitle>
+                    </CardHeader>
                     <CardContent className="space-y-2">
                       {selected.risks.map((r, i) => (
                         <div key={i} className="flex items-start gap-3 text-sm">
-                          <Badge variant={r.level === 'critical' ? 'danger' : r.level === 'high' ? 'warning' : 'muted'}>
+                          <Badge
+                            variant={
+                              r.level === 'critical'
+                                ? 'danger'
+                                : r.level === 'high'
+                                  ? 'warning'
+                                  : 'muted'
+                            }
+                          >
                             {r.level}
                           </Badge>
                           <div>

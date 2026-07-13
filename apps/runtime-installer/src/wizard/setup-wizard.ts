@@ -1,6 +1,10 @@
 import { getDefaultHostname } from '../utils/platform.js';
 import {
-  prompt, promptRequired, promptWithDefault, promptYesNo, promptChoice,
+  prompt,
+  promptRequired,
+  promptWithDefault,
+  promptYesNo,
+  promptChoice,
 } from '../utils/readline-utils.js';
 import { isValidTokenFormat, normalizeToken } from '../activation/token-validator.js';
 
@@ -8,19 +12,19 @@ export type Environment = 'production' | 'staging' | 'development';
 
 export interface WizardResult {
   activationToken: string;
-  name:            string;
-  environment:     Environment;
-  hostname:        string;
-  connectorType:   string;
-  installService:  boolean;
-  autoStart:       boolean;
-  apiBaseUrl:      string;
+  name: string;
+  environment: Environment;
+  hostname: string;
+  connectorType: string;
+  installService: boolean;
+  autoStart: boolean;
+  apiBaseUrl: string;
 }
 
 const DEFAULT_API_URL = 'https://api.seltriva.com';
 
 export async function runSetupWizard(opts: {
-  token?:      string;
+  token?: string;
   apiBaseUrl?: string;
 }): Promise<WizardResult> {
   banner();
@@ -42,31 +46,28 @@ export async function runSetupWizard(opts: {
 
   const name = await promptRequired(
     '  Runtime name (e.g. "Production SQL 01"): ',
-    '  Name is required.',
+    '  Name is required.'
   );
 
-  const hostname = await promptWithDefault(
-    '  Hostname',
-    getDefaultHostname(),
-  );
+  const hostname = await promptWithDefault('  Hostname', getDefaultHostname());
 
   const environment = await promptChoice<Environment>(
     '  Environment',
     ['production', 'staging', 'development'],
-    'production',
+    'production'
   );
 
   const connectorType = await promptWithDefault('  Connector type', 'generic');
 
   step(3, 5, 'API connection');
 
-  const apiBaseUrl = opts.apiBaseUrl
-    ?? await promptWithDefault('  API base URL', DEFAULT_API_URL);
+  const apiBaseUrl =
+    opts.apiBaseUrl ?? (await promptWithDefault('  API base URL', DEFAULT_API_URL));
 
   step(4, 5, 'Service installation');
 
   const installService = await promptYesNo('  Install as a system service?', true);
-  const autoStart      = installService
+  const autoStart = installService
     ? await promptYesNo('  Start service automatically on boot?', true)
     : false;
 
@@ -93,7 +94,16 @@ export async function runSetupWizard(opts: {
     process.exit(0);
   }
 
-  return { activationToken, name, environment, hostname, connectorType, installService, autoStart, apiBaseUrl };
+  return {
+    activationToken,
+    name,
+    environment,
+    hostname,
+    connectorType,
+    installService,
+    autoStart,
+    apiBaseUrl,
+  };
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

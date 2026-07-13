@@ -48,7 +48,7 @@ The agent supports automatic credential rotation (for organizations with rotatio
 ```yaml
 security:
   credentials:
-    rotation_interval_hours: 168  # weekly
+    rotation_interval_hours: 168 # weekly
 ```
 
 ---
@@ -79,10 +79,10 @@ For environments requiring mutual TLS, configure client certificates:
 ```yaml
 security:
   tls:
-    min_version: "1.3"
-    cert_path: "/etc/seltriva/agent.crt"
-    key_path: "/etc/seltriva/agent.key"
-    ca_path: "/etc/seltriva/ca.crt"
+    min_version: '1.3'
+    cert_path: '/etc/seltriva/agent.crt'
+    key_path: '/etc/seltriva/agent.key'
+    ca_path: '/etc/seltriva/ca.crt'
     verify_hostname: true
     reject_unauthorized: true
 ```
@@ -114,6 +114,7 @@ seltriva-agent doctor --category connector
 The agent authenticates to the Seltriva platform using a **bearer token** stored in the credential store.
 
 **Token lifecycle:**
+
 1. Token is issued during `seltriva-agent install`
 2. Token is stored encrypted in the credential store
 3. Automatic rotation runs daily (background job `job-token-rotation`)
@@ -136,6 +137,7 @@ security:
 Update packages are signed using **Ed25519** with the Seltriva release key.
 
 Before any update is applied:
+
 1. Download the signed manifest from the update server
 2. Verify the manifest signature against the embedded trusted public key
 3. Download the package
@@ -148,7 +150,7 @@ Disable auto-updates in air-gapped environments:
 ```yaml
 updates:
   auto_update: false
-  verify_signature: true  # still verify when applying manually
+  verify_signature: true # still verify when applying manually
 ```
 
 ---
@@ -170,14 +172,14 @@ Audit logs are append-only and separate from the main log file. Rotate with the 
 
 ## Data Classification
 
-| Data Type | Stays in Environment? | Note |
-|---|---|---|
-| Business data (rows, values) | ✅ Yes | Never synced |
-| Schema structure (table/column names, types) | ❌ Leaves | This is the metadata |
-| Database credentials | ✅ Yes | Encrypted at rest, never sent |
-| Agent token | ✅ Yes | Encrypted, used for cloud auth |
-| Health metrics (CPU, memory) | ❌ Leaves | Aggregated, no PII |
-| Logs | ✅ Yes | Stored locally, not sent by default |
+| Data Type                                    | Stays in Environment? | Note                                |
+| -------------------------------------------- | --------------------- | ----------------------------------- |
+| Business data (rows, values)                 | ✅ Yes                | Never synced                        |
+| Schema structure (table/column names, types) | ❌ Leaves             | This is the metadata                |
+| Database credentials                         | ✅ Yes                | Encrypted at rest, never sent       |
+| Agent token                                  | ✅ Yes                | Encrypted, used for cloud auth      |
+| Health metrics (CPU, memory)                 | ❌ Leaves             | Aggregated, no PII                  |
+| Logs                                         | ✅ Yes                | Stored locally, not sent by default |
 
 ---
 

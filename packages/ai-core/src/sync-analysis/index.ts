@@ -12,9 +12,7 @@
  * ATHENA recommends. It never triggers, schedules, or executes syncs.
  */
 
-import type {
-  AIResult, AIConfidenceValue,
-} from '../providers/index';
+import type { AIResult, AIConfidenceValue } from '../providers/index';
 import type { AIRecommendation } from '../recommendations/index';
 
 // ─── Sync Analysis Engine ──────────────────────────────────────────────────
@@ -78,22 +76,22 @@ export interface SyncStrategyRecommendation {
 }
 
 export type SyncStrategyKind =
-  | 'full-sync'         // copy everything, every time
-  | 'incremental'       // only changed records since last sync
-  | 'delta'             // based on a delta/change log
-  | 'event-driven'      // triggered by source events
-  | 'scheduled-batch'   // timed batch operations
+  | 'full-sync' // copy everything, every time
+  | 'incremental' // only changed records since last sync
+  | 'delta' // based on a delta/change log
+  | 'event-driven' // triggered by source events
+  | 'scheduled-batch' // timed batch operations
   | 'real-time-stream'; // continuous streaming
 
 // ─── Conflict Resolution Strategy ────────────────────────────────────────
 
 export type ConflictResolutionStrategy =
-  | 'source-wins'        // always take the source value
-  | 'target-wins'        // always keep the target value
-  | 'latest-timestamp'   // most recently updated wins
-  | 'field-level-merge'  // merge field by field
-  | 'manual-review'      // flag for human decision
-  | 'custom';            // custom logic (expressed in rules)
+  | 'source-wins' // always take the source value
+  | 'target-wins' // always keep the target value
+  | 'latest-timestamp' // most recently updated wins
+  | 'field-level-merge' // merge field by field
+  | 'manual-review' // flag for human decision
+  | 'custom'; // custom logic (expressed in rules)
 
 export interface RetryPolicy {
   readonly maxRetries: number;
@@ -137,18 +135,24 @@ export interface PriorResolutionHint {
 }
 
 export type SyncConflictType =
-  | 'concurrent-update'    // both sides updated the same record
-  | 'delete-update'        // one side deleted, other updated
-  | 'orphaned-reference'   // FK target no longer exists
-  | 'duplicate-insert'     // same logical record inserted twice
+  | 'concurrent-update' // both sides updated the same record
+  | 'delete-update' // one side deleted, other updated
+  | 'orphaned-reference' // FK target no longer exists
+  | 'duplicate-insert' // same logical record inserted twice
   | 'type-conversion-fail' // transformation failed on actual data
-  | 'validation-fail'      // target rejected the record
+  | 'validation-fail' // target rejected the record
   | 'constraint-violation'; // target DB constraint failed
 
 export interface SyncConflictResolution {
   readonly conflictType: SyncConflictType;
   readonly strategy: ConflictResolutionStrategy;
-  readonly resolution: 'use-source' | 'use-target' | 'merge' | 'skip' | 'flag-for-review' | 'custom';
+  readonly resolution:
+    | 'use-source'
+    | 'use-target'
+    | 'merge'
+    | 'skip'
+    | 'flag-for-review'
+    | 'custom';
   readonly fieldResolutions?: Array<{
     fieldName: string;
     resolution: 'use-source' | 'use-target' | 'calculate';
@@ -284,7 +288,12 @@ export interface SyncPatternAnalysisResult {
 
 export interface SyncPattern {
   readonly id: string;
-  readonly kind: 'performance-cycle' | 'conflict-cluster' | 'error-spike' | 'throughput-degradation' | 'success-pattern';
+  readonly kind:
+    | 'performance-cycle'
+    | 'conflict-cluster'
+    | 'error-spike'
+    | 'throughput-degradation'
+    | 'success-pattern';
   readonly description: string;
   readonly frequency: 'recurring' | 'occasional' | 'one-time';
   readonly confidence: AIConfidenceValue;

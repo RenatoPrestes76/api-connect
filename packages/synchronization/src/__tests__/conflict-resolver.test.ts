@@ -7,8 +7,8 @@ const INCOMING: Record<string, unknown> = { id: 1, nome: 'Produto B', versao: 2 
 
 function ctx(strategy: ConflictContext['strategy']): ConflictContext {
   return {
-    schema:   'public',
-    table:    'produto',
+    schema: 'public',
+    table: 'produto',
     incoming: INCOMING as never,
     existing: EXISTING as never,
     strategy,
@@ -50,9 +50,11 @@ describe('ConflictResolver — MERGE', () => {
   it('null incoming fields do not overwrite existing', () => {
     const resolver = new ConflictResolver();
     const result = resolver.resolve({
-      schema: 'public', table: 'produto', strategy: 'MERGE',
+      schema: 'public',
+      table: 'produto',
+      strategy: 'MERGE',
       existing: { id: 1, nome: 'Produto A' } as never,
-      incoming: { id: 1, nome: null }        as never,
+      incoming: { id: 1, nome: null } as never,
     });
     expect((result.record as Record<string, unknown>)['nome']).toBe('Produto A');
   });
@@ -69,7 +71,9 @@ describe('ConflictResolver — VERSION', () => {
   it('skips incoming when existing version is equal or higher', () => {
     const resolver = new ConflictResolver();
     const result = resolver.resolve({
-      schema: 'public', table: 'produto', strategy: 'VERSION',
+      schema: 'public',
+      table: 'produto',
+      strategy: 'VERSION',
       existing: { id: 1, versao: 5 } as never,
       incoming: { id: 1, versao: 2 } as never,
     });
@@ -80,7 +84,9 @@ describe('ConflictResolver — VERSION', () => {
     const resolver = new ConflictResolver();
     // No version column → both version=0, incoming is not higher → SKIP
     const result = resolver.resolve({
-      schema: 'public', table: 'produto', strategy: 'VERSION',
+      schema: 'public',
+      table: 'produto',
+      strategy: 'VERSION',
       existing: { id: 1, nome: 'A' } as never,
       incoming: { id: 1, nome: 'B' } as never,
     });
@@ -91,7 +97,9 @@ describe('ConflictResolver — VERSION', () => {
 describe('ConflictResolver — CUSTOM', () => {
   it('uses registered custom resolver for table', () => {
     const resolver = new ConflictResolver();
-    const customFn = vi.fn().mockReturnValue({ action: 'WRITE', record: INCOMING, strategy: 'CUSTOM', reason: 'custom' });
+    const customFn = vi
+      .fn()
+      .mockReturnValue({ action: 'WRITE', record: INCOMING, strategy: 'CUSTOM', reason: 'custom' });
     resolver.registerCustom('public.produto', customFn);
 
     const result = resolver.resolve(ctx('CUSTOM'));
@@ -101,7 +109,12 @@ describe('ConflictResolver — CUSTOM', () => {
 
   it('uses wildcard resolver when no table-specific resolver registered', () => {
     const resolver = new ConflictResolver();
-    const customFn = vi.fn().mockReturnValue({ action: 'SKIP', record: EXISTING, strategy: 'CUSTOM', reason: 'wildcard' });
+    const customFn = vi.fn().mockReturnValue({
+      action: 'SKIP',
+      record: EXISTING,
+      strategy: 'CUSTOM',
+      reason: 'wildcard',
+    });
     resolver.registerCustom('*', customFn);
 
     const result = resolver.resolve(ctx('CUSTOM'));

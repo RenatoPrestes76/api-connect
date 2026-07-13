@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Encryptor } from '../encryption/encryptor.js';
 import { randomBytes } from 'crypto';
 
-const KEY     = randomBytes(32);
+const KEY = randomBytes(32);
 const PAYLOAD = Buffer.from('{"id":1,"nome":"Produto Secreto"}');
 
 describe('Encryptor — AES-256-GCM', () => {

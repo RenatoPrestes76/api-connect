@@ -40,23 +40,29 @@ export default function AgentDetailPage({ params }: Props) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>System</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>System</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <Row label="Hostname"  value={agent.hostname} mono />
-            <Row label="IP"        value={agent.ip} mono />
-            <Row label="OS"        value={agent.os} />
-            <Row label="Version"   value={`v${agent.version}`} />
+            <Row label="Hostname" value={agent.hostname} mono />
+            <Row label="IP" value={agent.ip} mono />
+            <Row label="OS" value={agent.os} />
+            <Row label="Version" value={`v${agent.version}`} />
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Activity</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Activity</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <Row label="Status"     ><StatusBadge status={agent.status} /></Row>
-            <Row label="Last Seen"  value={formatRelative(agent.lastSeen)} />
+            <Row label="Status">
+              <StatusBadge status={agent.status} />
+            </Row>
+            <Row label="Last Seen" value={formatRelative(agent.lastSeen)} />
             <Row label="Connectors" value={agent.connectors.toString()} />
-            <Row label="Syncs"      value={formatNumber(agent.syncCount)} />
-            <Row label="Errors"     value={agent.errorCount.toString()} />
+            <Row label="Syncs" value={formatNumber(agent.syncCount)} />
+            <Row label="Errors" value={agent.errorCount.toString()} />
           </CardContent>
         </Card>
       </div>
@@ -65,11 +71,14 @@ export default function AgentDetailPage({ params }: Props) {
 }
 
 function Row({
-  label, value, mono, children,
+  label,
+  value,
+  mono,
+  children,
 }: {
-  label:     string;
-  value?:    string;
-  mono?:     boolean;
+  label: string;
+  value?: string;
+  mono?: boolean;
   children?: React.ReactNode;
 }) {
   return (

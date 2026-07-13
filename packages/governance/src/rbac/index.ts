@@ -17,23 +17,23 @@ import type { PolicyId, GovernanceResult, GovernanceError } from '../policies/in
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
 
-export type RoleId       = Branded<string, 'RoleId'>;
+export type RoleId = Branded<string, 'RoleId'>;
 export type PermissionId = Branded<string, 'PermissionId'>;
-export type ScopeId      = Branded<string, 'ScopeId'>;
-export type ClaimId      = Branded<string, 'ClaimId'>;
-export type ContextId    = Branded<string, 'ContextId'>;
+export type ScopeId = Branded<string, 'ScopeId'>;
+export type ClaimId = Branded<string, 'ClaimId'>;
+export type ContextId = Branded<string, 'ContextId'>;
 
 // ─── Permission ──────────────────────────────────────────────────────────────
 
 export interface Permission {
   readonly id: PermissionId;
-  readonly key: string;                    // format: "resource:action[:qualifier]"
-  readonly resource: string;               // e.g. "agents", "configurations", "secrets"
-  readonly action: PermissionAction;       // e.g. "read", "write", "delete", "admin"
-  readonly qualifier?: string;             // e.g. "production", "sensitive"
+  readonly key: string; // format: "resource:action[:qualifier]"
+  readonly resource: string; // e.g. "agents", "configurations", "secrets"
+  readonly action: PermissionAction; // e.g. "read", "write", "delete", "admin"
+  readonly qualifier?: string; // e.g. "production", "sensitive"
   readonly description: string;
   readonly category: PermissionCategory;
-  readonly sensitive: boolean;             // requires extra scrutiny in audit
+  readonly sensitive: boolean; // requires extra scrutiny in audit
 }
 
 export type PermissionAction =
@@ -65,88 +65,89 @@ export type PermissionCategory =
 
 export const PLATFORM_PERMISSIONS = {
   // Organizations
-  ORGS_READ:              'organizations:read',
-  ORGS_WRITE:             'organizations:write',
-  ORGS_DELETE:            'organizations:delete',
-  ORGS_ADMIN:             'organizations:admin',
+  ORGS_READ: 'organizations:read',
+  ORGS_WRITE: 'organizations:write',
+  ORGS_DELETE: 'organizations:delete',
+  ORGS_ADMIN: 'organizations:admin',
 
   // Workspaces
-  WORKSPACES_READ:        'workspaces:read',
-  WORKSPACES_WRITE:       'workspaces:write',
-  WORKSPACES_DELETE:      'workspaces:delete',
+  WORKSPACES_READ: 'workspaces:read',
+  WORKSPACES_WRITE: 'workspaces:write',
+  WORKSPACES_DELETE: 'workspaces:delete',
 
   // Environments
-  ENVS_READ:              'environments:read',
-  ENVS_WRITE:             'environments:write',
-  ENVS_ADMIN:             'environments:admin',
-  ENVS_PROD_WRITE:        'environments:write:production',
+  ENVS_READ: 'environments:read',
+  ENVS_WRITE: 'environments:write',
+  ENVS_ADMIN: 'environments:admin',
+  ENVS_PROD_WRITE: 'environments:write:production',
 
   // Agents
-  AGENTS_READ:            'agents:read',
-  AGENTS_WRITE:           'agents:write',
-  AGENTS_COMMAND:         'agents:execute',
-  AGENTS_RETIRE:          'agents:delete',
+  AGENTS_READ: 'agents:read',
+  AGENTS_WRITE: 'agents:write',
+  AGENTS_COMMAND: 'agents:execute',
+  AGENTS_RETIRE: 'agents:delete',
 
   // Plugins
-  PLUGINS_READ:           'plugins:read',
-  PLUGINS_INSTALL:        'plugins:install',
-  PLUGINS_PUBLISH:        'plugins:publish',
-  PLUGINS_ADMIN:          'plugins:admin',
+  PLUGINS_READ: 'plugins:read',
+  PLUGINS_INSTALL: 'plugins:install',
+  PLUGINS_PUBLISH: 'plugins:publish',
+  PLUGINS_ADMIN: 'plugins:admin',
 
   // Configurations
-  CONFIG_READ:            'configurations:read',
-  CONFIG_WRITE:           'configurations:write',
-  CONFIG_SECRETS_READ:    'configurations:read:sensitive',
+  CONFIG_READ: 'configurations:read',
+  CONFIG_WRITE: 'configurations:write',
+  CONFIG_SECRETS_READ: 'configurations:read:sensitive',
 
   // Secrets
-  SECRETS_READ:           'secrets:read',
-  SECRETS_WRITE:          'secrets:write',
-  SECRETS_ADMIN:          'secrets:admin',
+  SECRETS_READ: 'secrets:read',
+  SECRETS_WRITE: 'secrets:write',
+  SECRETS_ADMIN: 'secrets:admin',
 
   // Policies
-  POLICIES_READ:          'policies:read',
-  POLICIES_WRITE:         'policies:write',
-  POLICIES_ADMIN:         'policies:admin',
+  POLICIES_READ: 'policies:read',
+  POLICIES_WRITE: 'policies:write',
+  POLICIES_ADMIN: 'policies:admin',
 
   // Roles
-  ROLES_READ:             'roles:read',
-  ROLES_WRITE:            'roles:write',
-  ROLES_ASSIGN:           'roles:admin',
+  ROLES_READ: 'roles:read',
+  ROLES_WRITE: 'roles:write',
+  ROLES_ASSIGN: 'roles:admin',
 
   // Audit
-  AUDIT_READ:             'audit:read',
-  AUDIT_EXPORT:           'audit:execute',
+  AUDIT_READ: 'audit:read',
+  AUDIT_EXPORT: 'audit:execute',
 
   // Compliance
-  COMPLIANCE_READ:        'compliance:read',
-  COMPLIANCE_ADMIN:       'compliance:admin',
+  COMPLIANCE_READ: 'compliance:read',
+  COMPLIANCE_ADMIN: 'compliance:admin',
 
   // Change Management
-  CHANGES_READ:           'change-requests:read',
-  CHANGES_CREATE:         'change-requests:create',
-  CHANGES_APPROVE:        'change-requests:approve',
-  CHANGES_DEPLOY:         'change-requests:execute',
+  CHANGES_READ: 'change-requests:read',
+  CHANGES_CREATE: 'change-requests:create',
+  CHANGES_APPROVE: 'change-requests:approve',
+  CHANGES_DEPLOY: 'change-requests:execute',
 
   // Feature Flags
-  FLAGS_READ:             'feature-flags:read',
-  FLAGS_WRITE:            'feature-flags:write',
+  FLAGS_READ: 'feature-flags:read',
+  FLAGS_WRITE: 'feature-flags:write',
 
   // Releases
-  RELEASES_READ:          'releases:read',
-  RELEASES_CREATE:        'releases:create',
-  RELEASES_PUBLISH:       'releases:publish',
-  RELEASES_ROLLBACK:      'releases:execute',
+  RELEASES_READ: 'releases:read',
+  RELEASES_CREATE: 'releases:create',
+  RELEASES_PUBLISH: 'releases:publish',
+  RELEASES_ROLLBACK: 'releases:execute',
 
   // Backup
-  BACKUP_READ:            'backups:read',
-  BACKUP_EXECUTE:         'backups:execute',
-  BACKUP_RESTORE:         'backups:admin',
+  BACKUP_READ: 'backups:read',
+  BACKUP_EXECUTE: 'backups:execute',
+  BACKUP_RESTORE: 'backups:admin',
 
   // Platform admin
-  PLATFORM_ADMIN:         '*:admin',
+  PLATFORM_ADMIN: '*:admin',
 } as const;
 
-export type PlatformPermissionKey = typeof PLATFORM_PERMISSIONS[keyof typeof PLATFORM_PERMISSIONS];
+export type PlatformPermissionKey =
+  (typeof PLATFORM_PERMISSIONS)[keyof typeof PLATFORM_PERMISSIONS];
 
 // ─── Role ────────────────────────────────────────────────────────────────────
 
@@ -158,10 +159,10 @@ export interface Role {
   readonly type: RoleType;
   readonly level: RoleLevel;
   readonly permissions: PermissionId[];
-  readonly inherits?: RoleId[];            // role inheritance chain
-  readonly policies?: PolicyId[];          // attached policies
-  readonly maxScope?: RoleScope;           // maximum scope this role can be assigned at
-  readonly system: boolean;               // system roles cannot be modified
+  readonly inherits?: RoleId[]; // role inheritance chain
+  readonly policies?: PolicyId[]; // attached policies
+  readonly maxScope?: RoleScope; // maximum scope this role can be assigned at
+  readonly system: boolean; // system roles cannot be modified
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -180,31 +181,31 @@ export interface RoleScope {
 export const PLATFORM_ROLES = {
   // Platform-level (applies across all organizations)
   PLATFORM_SUPER_ADMIN: 'role-platform-super-admin',
-  PLATFORM_ADMIN:       'role-platform-admin',
-  PLATFORM_AUDITOR:     'role-platform-auditor',
-  PLATFORM_VIEWER:      'role-platform-viewer',
+  PLATFORM_ADMIN: 'role-platform-admin',
+  PLATFORM_AUDITOR: 'role-platform-auditor',
+  PLATFORM_VIEWER: 'role-platform-viewer',
 
   // Organization-level
-  ORG_OWNER:            'role-org-owner',
-  ORG_ADMIN:            'role-org-admin',
-  ORG_SECURITY_ADMIN:   'role-org-security-admin',
-  ORG_COMPLIANCE:       'role-org-compliance',
-  ORG_DEVELOPER:        'role-org-developer',
-  ORG_VIEWER:           'role-org-viewer',
-  ORG_BILLING:          'role-org-billing',
+  ORG_OWNER: 'role-org-owner',
+  ORG_ADMIN: 'role-org-admin',
+  ORG_SECURITY_ADMIN: 'role-org-security-admin',
+  ORG_COMPLIANCE: 'role-org-compliance',
+  ORG_DEVELOPER: 'role-org-developer',
+  ORG_VIEWER: 'role-org-viewer',
+  ORG_BILLING: 'role-org-billing',
 
   // Environment-level
-  ENV_MANAGER:          'role-env-manager',
-  ENV_OPERATOR:         'role-env-operator',
-  ENV_DEPLOYER:         'role-env-deployer',
-  ENV_VIEWER:           'role-env-viewer',
+  ENV_MANAGER: 'role-env-manager',
+  ENV_OPERATOR: 'role-env-operator',
+  ENV_DEPLOYER: 'role-env-deployer',
+  ENV_VIEWER: 'role-env-viewer',
 
   // Functional roles
-  PLUGIN_PUBLISHER:     'role-plugin-publisher',
-  AGENT_OPERATOR:       'role-agent-operator',
-  CHANGE_MANAGER:       'role-change-manager',
-  RELEASE_MANAGER:      'role-release-manager',
-  BACKUP_OPERATOR:      'role-backup-operator',
+  PLUGIN_PUBLISHER: 'role-plugin-publisher',
+  AGENT_OPERATOR: 'role-agent-operator',
+  CHANGE_MANAGER: 'role-change-manager',
+  RELEASE_MANAGER: 'role-release-manager',
+  BACKUP_OPERATOR: 'role-backup-operator',
 } as const;
 
 // ─── Scope ───────────────────────────────────────────────────────────────────
@@ -213,8 +214,8 @@ export interface Scope {
   readonly id: ScopeId;
   readonly name: string;
   readonly description: string;
-  readonly permissions: string[];          // permission keys included in this scope
-  readonly audience?: string;             // intended API consumer
+  readonly permissions: string[]; // permission keys included in this scope
+  readonly audience?: string; // intended API consumer
   readonly system: boolean;
 }
 
@@ -222,29 +223,29 @@ export interface Scope {
 
 export const API_SCOPES = {
   // Read scopes
-  'agents:read':           'Read agent status and metrics',
-  'organizations:read':    'Read organization data',
-  'workspaces:read':       'Read workspace data',
-  'configurations:read':   'Read configuration values',
-  'plugins:read':          'Read plugin data',
-  'audit:read':            'Read audit logs',
-  'compliance:read':       'Read compliance reports',
-  'releases:read':         'Read release data',
-  'metrics:read':          'Read platform metrics',
+  'agents:read': 'Read agent status and metrics',
+  'organizations:read': 'Read organization data',
+  'workspaces:read': 'Read workspace data',
+  'configurations:read': 'Read configuration values',
+  'plugins:read': 'Read plugin data',
+  'audit:read': 'Read audit logs',
+  'compliance:read': 'Read compliance reports',
+  'releases:read': 'Read release data',
+  'metrics:read': 'Read platform metrics',
 
   // Write scopes
-  'agents:write':          'Send commands to agents',
-  'configurations:write':  'Write configuration values',
-  'plugins:install':       'Install plugins',
-  'feature-flags:write':   'Manage feature flags',
-  'change-requests:create':'Create change requests',
+  'agents:write': 'Send commands to agents',
+  'configurations:write': 'Write configuration values',
+  'plugins:install': 'Install plugins',
+  'feature-flags:write': 'Manage feature flags',
+  'change-requests:create': 'Create change requests',
 
   // Admin scopes
-  'organizations:admin':   'Full organization administration',
-  'policies:admin':        'Manage governance policies',
-  'roles:admin':           'Manage roles and assignments',
-  'secrets:admin':         'Manage secrets (restricted)',
-  'platform:admin':        'Full platform administration',
+  'organizations:admin': 'Full organization administration',
+  'policies:admin': 'Manage governance policies',
+  'roles:admin': 'Manage roles and assignments',
+  'secrets:admin': 'Manage secrets (restricted)',
+  'platform:admin': 'Full platform administration',
 } as const;
 
 // ─── RBAC Context ────────────────────────────────────────────────────────────
@@ -257,8 +258,8 @@ export interface RBACContext {
   readonly workspaceId?: string;
   readonly environmentId?: string;
   readonly roles: RoleId[];
-  readonly permissions: string[];          // flattened effective permissions
-  readonly scopes: string[];              // API key scopes (if applicable)
+  readonly permissions: string[]; // flattened effective permissions
+  readonly scopes: string[]; // API key scopes (if applicable)
   readonly claims: ContextClaim[];
   readonly attributes: Record<string, unknown>;
   readonly resolvedAt: Date;
@@ -296,7 +297,7 @@ export interface IRBACService {
   resolveContext(
     subjectId: string,
     subjectType: RBACContext['subjectType'],
-    scope: RoleScope,
+    scope: RoleScope
   ): Promise<RBACContext>;
 
   /**

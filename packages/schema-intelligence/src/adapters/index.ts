@@ -61,7 +61,10 @@ export interface DatabaseSchemaAdapter extends ConnectorSchemaAdapter<DatabaseMe
   readonly category: 'relational';
 
   /** Adapt a single table to a RawEntity */
-  adaptTable(table: TableMetadataInput, dialect: SqlDialect): SIEResult<import('../core/index').RawEntity>;
+  adaptTable(
+    table: TableMetadataInput,
+    dialect: SqlDialect
+  ): SIEResult<import('../core/index').RawEntity>;
 
   /** Adapt a column to a RawField */
   adaptColumn(column: ColumnMetadataInput): SIEResult<import('../core/index').RawField>;

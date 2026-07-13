@@ -15,9 +15,7 @@
  * service consumers from concrete implementations.
  */
 
-import type {
-  RuntimeResult, ServiceId, ModuleId, Token, Disposable,
-} from '../kernel/index';
+import type { RuntimeResult, ServiceId, ModuleId, Token, Disposable } from '../kernel/index';
 
 // ─── Service Registry ─────────────────────────────────────────────────────
 
@@ -25,17 +23,29 @@ export interface ServiceRegistry {
   /**
    * Register a singleton service
    */
-  registerSingleton<T>(token: Token<T>, factory: ServiceFactory<T>, descriptor?: Partial<ServiceDescriptor>): void;
+  registerSingleton<T>(
+    token: Token<T>,
+    factory: ServiceFactory<T>,
+    descriptor?: Partial<ServiceDescriptor>
+  ): void;
 
   /**
    * Register a transient service (new instance each resolution)
    */
-  registerTransient<T>(token: Token<T>, factory: ServiceFactory<T>, descriptor?: Partial<ServiceDescriptor>): void;
+  registerTransient<T>(
+    token: Token<T>,
+    factory: ServiceFactory<T>,
+    descriptor?: Partial<ServiceDescriptor>
+  ): void;
 
   /**
    * Register a scoped service (one instance per module scope)
    */
-  registerScoped<T>(token: Token<T>, factory: ServiceFactory<T>, descriptor?: Partial<ServiceDescriptor>): void;
+  registerScoped<T>(
+    token: Token<T>,
+    factory: ServiceFactory<T>,
+    descriptor?: Partial<ServiceDescriptor>
+  ): void;
 
   /**
    * Register an already-constructed instance as a singleton
@@ -114,48 +124,48 @@ export type ServiceFactory<T> = (container: ServiceRegistry) => T;
 
 export const SERVICE_TOKENS = {
   // Core
-  PLATFORM_KERNEL:         Symbol('PlatformKernel')         as Token,
-  LIFECYCLE_MANAGER:       Symbol('LifecycleManager')       as Token,
-  CONFIGURATION_PROVIDER:  Symbol('ConfigurationProvider')  as Token,
-  SECRET_PROVIDER:         Symbol('SecretProvider')         as Token,
-  FEATURE_FLAGS:           Symbol('FeatureFlagProvider')    as Token,
+  PLATFORM_KERNEL: Symbol('PlatformKernel') as Token,
+  LIFECYCLE_MANAGER: Symbol('LifecycleManager') as Token,
+  CONFIGURATION_PROVIDER: Symbol('ConfigurationProvider') as Token,
+  SECRET_PROVIDER: Symbol('SecretProvider') as Token,
+  FEATURE_FLAGS: Symbol('FeatureFlagProvider') as Token,
 
   // Communication
-  EVENT_BUS:               Symbol('EventBus')               as Token,
-  COMMAND_BUS:             Symbol('CommandBus')             as Token,
+  EVENT_BUS: Symbol('EventBus') as Token,
+  COMMAND_BUS: Symbol('CommandBus') as Token,
 
   // Execution
-  SCHEDULER:               Symbol('Scheduler')              as Token,
-  WORKER_POOL_MANAGER:     Symbol('WorkerPoolManager')      as Token,
+  SCHEDULER: Symbol('Scheduler') as Token,
+  WORKER_POOL_MANAGER: Symbol('WorkerPoolManager') as Token,
 
   // Observability
-  TELEMETRY_PROVIDER:      Symbol('TelemetryProvider')      as Token,
-  LOGGER:                  Symbol('RuntimeLogger')          as Token,
-  TRACER:                  Symbol('RuntimeTracer')          as Token,
-  METER:                   Symbol('RuntimeMeter')           as Token,
+  TELEMETRY_PROVIDER: Symbol('TelemetryProvider') as Token,
+  LOGGER: Symbol('RuntimeLogger') as Token,
+  TRACER: Symbol('RuntimeTracer') as Token,
+  METER: Symbol('RuntimeMeter') as Token,
 
   // Health & Diagnostics
-  HEALTH_MONITOR:          Symbol('HealthMonitor')          as Token,
-  DIAGNOSTICS_PROVIDER:    Symbol('DiagnosticsProvider')   as Token,
+  HEALTH_MONITOR: Symbol('HealthMonitor') as Token,
+  DIAGNOSTICS_PROVIDER: Symbol('DiagnosticsProvider') as Token,
 
   // Security
-  PERMISSION_MODEL:        Symbol('PermissionModel')        as Token,
-  SANDBOX_MANAGER:         Symbol('SandboxManager')         as Token,
+  PERMISSION_MODEL: Symbol('PermissionModel') as Token,
+  SANDBOX_MANAGER: Symbol('SandboxManager') as Token,
 
   // Resilience
-  RESILIENCE_FACTORY:      Symbol('ResilienceFactory')      as Token,
+  RESILIENCE_FACTORY: Symbol('ResilienceFactory') as Token,
 
   // Plugins
-  PLUGIN_MANAGER:          Symbol('PluginManager')          as Token,
-  MODULE_LOADER:           Symbol('ModuleLoader')           as Token,
+  PLUGIN_MANAGER: Symbol('PluginManager') as Token,
+  MODULE_LOADER: Symbol('ModuleLoader') as Token,
 
   // Orchestration
-  ORCHESTRATOR:            Symbol('Orchestrator')           as Token,
+  ORCHESTRATOR: Symbol('Orchestrator') as Token,
 
   // Data
-  DATABASE_CLIENT:         Symbol('DatabaseClient')         as Token,
-  SUPABASE_CLIENT:         Symbol('SupabaseClient')         as Token,
-  CACHE_PROVIDER:          Symbol('CacheProvider')          as Token,
+  DATABASE_CLIENT: Symbol('DatabaseClient') as Token,
+  SUPABASE_CLIENT: Symbol('SupabaseClient') as Token,
+  CACHE_PROVIDER: Symbol('CacheProvider') as Token,
 } as const;
 
 // ─── DI Container Builder ────────────────────────────────────────────────

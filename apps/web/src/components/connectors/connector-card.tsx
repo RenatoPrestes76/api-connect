@@ -6,8 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import type { ConnectorInstance } from '@/types/index';
 
 interface ConnectorCardProps {
-  connector:  ConnectorInstance;
-  onClick?:   () => void;
+  connector: ConnectorInstance;
+  onClick?: () => void;
 }
 
 export function ConnectorCard({ connector, onClick }: ConnectorCardProps) {
@@ -24,7 +24,9 @@ export function ConnectorCard({ connector, onClick }: ConnectorCardProps) {
             </div>
             <div className="min-w-0">
               <p className="font-semibold text-slate-900 truncate">{connector.name}</p>
-              <p className="text-xs text-slate-500 truncate">{connector.driver} · {connector.database}</p>
+              <p className="text-xs text-slate-500 truncate">
+                {connector.driver} · {connector.database}
+              </p>
             </div>
           </div>
           <StatusBadge status={connector.status} />

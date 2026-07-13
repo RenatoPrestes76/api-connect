@@ -20,7 +20,10 @@ export default function ConnectorDetailPage({ params }: Props) {
   const { data: connector, isLoading, error, refetch } = useConnector(id);
   const invalidate = useInvalidateConnectors();
 
-  const refresh = () => { void refetch(); invalidate(); };
+  const refresh = () => {
+    void refetch();
+    invalidate();
+  };
 
   if (isLoading) return <PageLoading />;
   if (error || !connector) {
@@ -45,12 +48,14 @@ export default function ConnectorDetailPage({ params }: Props) {
       <div className="grid gap-4 sm:grid-cols-2">
         {/* Connection */}
         <Card>
-          <CardHeader><CardTitle>Connection</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Connection</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <Row label="Host"     value={connector.host} mono />
+            <Row label="Host" value={connector.host} mono />
             <Row label="Database" value={connector.database} mono />
-            <Row label="Driver"   value={connector.driver} />
-            <Row label="Version"  value={`v${connector.version}`} />
+            <Row label="Driver" value={connector.driver} />
+            <Row label="Version" value={`v${connector.version}`} />
             <Row label="Status">
               <StatusBadge status={connector.status} />
             </Row>
@@ -59,14 +64,17 @@ export default function ConnectorDetailPage({ params }: Props) {
 
         {/* Stats */}
         <Card>
-          <CardHeader><CardTitle>Activity</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Activity</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <Row label="Total Syncs"  value={formatNumber(connector.syncCount)} />
-            <Row label="Error Count"  value={connector.errorCount.toString()} />
-            <Row label="Last Sync"    value={connector.lastSync ? formatRelative(connector.lastSync) : 'Never'} />
-            {connector.agentId && (
-              <Row label="Agent ID" value={connector.agentId} mono />
-            )}
+            <Row label="Total Syncs" value={formatNumber(connector.syncCount)} />
+            <Row label="Error Count" value={connector.errorCount.toString()} />
+            <Row
+              label="Last Sync"
+              value={connector.lastSync ? formatRelative(connector.lastSync) : 'Never'}
+            />
+            {connector.agentId && <Row label="Agent ID" value={connector.agentId} mono />}
           </CardContent>
         </Card>
       </div>
@@ -75,11 +83,14 @@ export default function ConnectorDetailPage({ params }: Props) {
 }
 
 function Row({
-  label, value, mono, children,
+  label,
+  value,
+  mono,
+  children,
 }: {
-  label:     string;
-  value?:    string;
-  mono?:     boolean;
+  label: string;
+  value?: string;
+  mono?: boolean;
   children?: React.ReactNode;
 }) {
   return (

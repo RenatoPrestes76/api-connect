@@ -19,23 +19,28 @@ import type { AuditPeriod } from '../audit/index';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
-export type ComplianceControlId    = Branded<string, 'ComplianceControlId'>;
+export type ComplianceControlId = Branded<string, 'ComplianceControlId'>;
 export type ComplianceAssessmentId = Branded<string, 'ComplianceAssessmentId'>;
-export type ComplianceProgramId    = Branded<string, 'ComplianceProgramId'>;
+export type ComplianceProgramId = Branded<string, 'ComplianceProgramId'>;
 
 // ─── Compliance Framework ────────────────────────────────────────────────────
 
 export type ComplianceFramework = 'LGPD' | 'ISO27001' | 'SOC2' | 'NIST-CSF';
-export type ControlStatus       = 'compliant' | 'non-compliant' | 'partial' | 'not-applicable' | 'not-assessed';
-export type RiskLevel           = 'low' | 'medium' | 'high' | 'critical';
+export type ControlStatus =
+  | 'compliant'
+  | 'non-compliant'
+  | 'partial'
+  | 'not-applicable'
+  | 'not-assessed';
+export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
 
 // ─── Compliance Control ──────────────────────────────────────────────────────
 
 export interface ComplianceControl {
   readonly id: ComplianceControlId;
   readonly framework: ComplianceFramework;
-  readonly controlId: string;               // e.g. "ISO27001:A.9.1.1", "SOC2:CC6.1"
-  readonly category: string;               // e.g. "Access Control", "Incident Management"
+  readonly controlId: string; // e.g. "ISO27001:A.9.1.1", "SOC2:CC6.1"
+  readonly category: string; // e.g. "Access Control", "Incident Management"
   readonly subcategory?: string;
   readonly title: string;
   readonly description: string;
@@ -49,8 +54,15 @@ export interface ComplianceControl {
   readonly applicability: ControlApplicability;
 }
 
-export type ControlType        = 'preventive' | 'detective' | 'corrective' | 'compensating';
-export type EvidenceType       = 'audit-log' | 'policy-document' | 'screenshot' | 'test-result' | 'certificate' | 'interview' | 'system-config';
+export type ControlType = 'preventive' | 'detective' | 'corrective' | 'compensating';
+export type EvidenceType =
+  | 'audit-log'
+  | 'policy-document'
+  | 'screenshot'
+  | 'test-result'
+  | 'certificate'
+  | 'interview'
+  | 'system-config';
 export type ControlApplicability = 'all' | 'enterprise' | 'cloud-hosted' | 'on-premises';
 
 export interface TechnicalRequirement {
@@ -81,22 +93,22 @@ export interface LGPDProcessingRecord {
 }
 
 export type LGPDLegalBasis =
-  | 'consent'                              // Art. 7, I
-  | 'legal-obligation'                     // Art. 7, II
-  | 'public-policy'                        // Art. 7, III
-  | 'research'                             // Art. 7, IV
-  | 'contract-performance'                 // Art. 7, V
-  | 'legitimate-interest'                  // Art. 7, IX
-  | 'credit-protection'                    // Art. 7, X
-  | 'health-data'                          // Art. 11, II, f
-  | 'public-authority';                    // Art. 7, VI
+  | 'consent' // Art. 7, I
+  | 'legal-obligation' // Art. 7, II
+  | 'public-policy' // Art. 7, III
+  | 'research' // Art. 7, IV
+  | 'contract-performance' // Art. 7, V
+  | 'legitimate-interest' // Art. 7, IX
+  | 'credit-protection' // Art. 7, X
+  | 'health-data' // Art. 11, II, f
+  | 'public-authority'; // Art. 7, VI
 
 export type LGPDDataCategory =
-  | 'personal'                             // Art. 5, I
-  | 'sensitive-personal'                   // Art. 2, II / Art. 11
+  | 'personal' // Art. 5, I
+  | 'sensitive-personal' // Art. 2, II / Art. 11
   | 'anonymous'
   | 'pseudonymous'
-  | 'children-adolescent';                 // Art. 14
+  | 'children-adolescent'; // Art. 14
 
 export interface LGPDDataSubjectRequest {
   readonly id: string;
@@ -106,44 +118,49 @@ export interface LGPDDataSubjectRequest {
   readonly status: 'received' | 'in-progress' | 'completed' | 'rejected';
   readonly description: string;
   readonly receivedAt: Date;
-  readonly responseDeadline: Date;          // LGPD Art. 15: 15 days
+  readonly responseDeadline: Date; // LGPD Art. 15: 15 days
   readonly respondedAt?: Date;
   readonly response?: string;
   readonly rejectionReason?: string;
 }
 
 export type LGPDSubjectRight =
-  | 'access'                               // Art. 18, I
-  | 'correction'                           // Art. 18, III
-  | 'deletion'                             // Art. 18, VI
-  | 'anonymization'                        // Art. 18, IV
-  | 'portability'                          // Art. 18, V
-  | 'information'                          // Art. 18, VII/VIII
-  | 'revocation'                           // Art. 18, IX
-  | 'objection';                           // Art. 18, §2
+  | 'access' // Art. 18, I
+  | 'correction' // Art. 18, III
+  | 'deletion' // Art. 18, VI
+  | 'anonymization' // Art. 18, IV
+  | 'portability' // Art. 18, V
+  | 'information' // Art. 18, VII/VIII
+  | 'revocation' // Art. 18, IX
+  | 'objection'; // Art. 18, §2
 
 // ─── ISO 27001 Controls ───────────────────────────────────────────────────────
 
 export const ISO27001_CONTROL_CATEGORIES = {
-  'A.5':   'Information Security Policies',
-  'A.6':   'Organization of Information Security',
-  'A.7':   'Human Resource Security',
-  'A.8':   'Asset Management',
-  'A.9':   'Access Control',
-  'A.10':  'Cryptography',
-  'A.11':  'Physical and Environmental Security',
-  'A.12':  'Operations Security',
-  'A.13':  'Communications Security',
-  'A.14':  'System Acquisition, Development and Maintenance',
-  'A.15':  'Supplier Relationships',
-  'A.16':  'Information Security Incident Management',
-  'A.17':  'Business Continuity Management',
-  'A.18':  'Compliance',
+  'A.5': 'Information Security Policies',
+  'A.6': 'Organization of Information Security',
+  'A.7': 'Human Resource Security',
+  'A.8': 'Asset Management',
+  'A.9': 'Access Control',
+  'A.10': 'Cryptography',
+  'A.11': 'Physical and Environmental Security',
+  'A.12': 'Operations Security',
+  'A.13': 'Communications Security',
+  'A.14': 'System Acquisition, Development and Maintenance',
+  'A.15': 'Supplier Relationships',
+  'A.16': 'Information Security Incident Management',
+  'A.17': 'Business Continuity Management',
+  'A.18': 'Compliance',
 } as const;
 
 // ─── SOC 2 Trust Service Criteria ────────────────────────────────────────────
 
-export type SOC2TrustCategory = 'Security' | 'Availability' | 'Confidentiality' | 'ProcessingIntegrity' | 'Privacy';
+export type SOC2TrustCategory =
+  | 'Security'
+  | 'Availability'
+  | 'Confidentiality'
+  | 'ProcessingIntegrity'
+  | 'Privacy';
 
 export const SOC2_COMMON_CRITERIA = {
   CC1: 'Control Environment',
@@ -162,11 +179,25 @@ export const SOC2_COMMON_CRITERIA = {
 export type NISTFunction = 'Identify' | 'Protect' | 'Detect' | 'Respond' | 'Recover';
 
 export const NIST_CATEGORIES: Record<NISTFunction, string[]> = {
-  Identify: ['Asset Management', 'Business Environment', 'Governance', 'Risk Assessment', 'Risk Management Strategy', 'Supply Chain Risk Management'],
-  Protect:  ['Identity Management and Access Control', 'Awareness and Training', 'Data Security', 'Information Protection Processes', 'Maintenance', 'Protective Technology'],
-  Detect:   ['Anomalies and Events', 'Security Continuous Monitoring', 'Detection Processes'],
-  Respond:  ['Response Planning', 'Communications', 'Analysis', 'Mitigation', 'Improvements'],
-  Recover:  ['Recovery Planning', 'Improvements', 'Communications'],
+  Identify: [
+    'Asset Management',
+    'Business Environment',
+    'Governance',
+    'Risk Assessment',
+    'Risk Management Strategy',
+    'Supply Chain Risk Management',
+  ],
+  Protect: [
+    'Identity Management and Access Control',
+    'Awareness and Training',
+    'Data Security',
+    'Information Protection Processes',
+    'Maintenance',
+    'Protective Technology',
+  ],
+  Detect: ['Anomalies and Events', 'Security Continuous Monitoring', 'Detection Processes'],
+  Respond: ['Response Planning', 'Communications', 'Analysis', 'Mitigation', 'Improvements'],
+  Recover: ['Recovery Planning', 'Improvements', 'Communications'],
 };
 
 // ─── Compliance Assessment ───────────────────────────────────────────────────
@@ -179,7 +210,7 @@ export interface ComplianceAssessment {
   readonly status: 'planned' | 'in-progress' | 'completed' | 'expired';
   readonly findings: ComplianceFinding[];
   readonly overallStatus: ControlStatus;
-  readonly complianceScore: number;          // 0–100
+  readonly complianceScore: number; // 0–100
   readonly criticalGaps: number;
   readonly highRiskGaps: number;
   readonly remediationPlan?: RemediationPlan;
@@ -254,14 +285,32 @@ export interface ComplianceCertification {
 // ─── Compliance Service Interface ────────────────────────────────────────────
 
 export interface IComplianceService {
-  startAssessment(orgId: string, framework: ComplianceFramework, by: string): Promise<GovernanceResult<ComplianceAssessment>>;
-  recordFinding(assessmentId: ComplianceAssessmentId, finding: ComplianceFinding): Promise<GovernanceResult<void>>;
-  completeAssessment(assessmentId: ComplianceAssessmentId, by: string): Promise<GovernanceResult<ComplianceAssessment>>;
-  getLatestAssessment(orgId: string, framework: ComplianceFramework): Promise<ComplianceAssessment | null>;
+  startAssessment(
+    orgId: string,
+    framework: ComplianceFramework,
+    by: string
+  ): Promise<GovernanceResult<ComplianceAssessment>>;
+  recordFinding(
+    assessmentId: ComplianceAssessmentId,
+    finding: ComplianceFinding
+  ): Promise<GovernanceResult<void>>;
+  completeAssessment(
+    assessmentId: ComplianceAssessmentId,
+    by: string
+  ): Promise<GovernanceResult<ComplianceAssessment>>;
+  getLatestAssessment(
+    orgId: string,
+    framework: ComplianceFramework
+  ): Promise<ComplianceAssessment | null>;
   getControlStatus(orgId: string, controlId: ComplianceControlId): Promise<ControlStatus>;
-  generateReport(assessmentId: ComplianceAssessmentId, format: 'pdf' | 'json' | 'csv'): Promise<GovernanceResult<string>>;
+  generateReport(
+    assessmentId: ComplianceAssessmentId,
+    format: 'pdf' | 'json' | 'csv'
+  ): Promise<GovernanceResult<string>>;
   listControls(framework: ComplianceFramework): Promise<ComplianceControl[]>;
-  createLGPDRequest(input: CreateLGPDRequestInput): Promise<GovernanceResult<LGPDDataSubjectRequest>>;
+  createLGPDRequest(
+    input: CreateLGPDRequestInput
+  ): Promise<GovernanceResult<LGPDDataSubjectRequest>>;
   processingRecords(orgId: string): Promise<LGPDProcessingRecord[]>;
   getProgram(orgId: string): Promise<ComplianceProgram | null>;
   setProgram(input: SetComplianceProgramInput): Promise<GovernanceResult<ComplianceProgram>>;

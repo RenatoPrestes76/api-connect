@@ -17,40 +17,51 @@ const PAGE_SIZE = 20;
 
 const columns: Column<SyncRecord>[] = [
   {
-    key:    'connector',
+    key: 'connector',
     header: 'Connector',
-    cell:   (s) => <span className="font-medium text-slate-900">{s.connector}</span>,
+    cell: (s) => <span className="font-medium text-slate-900">{s.connector}</span>,
   },
   {
-    key:    'result',
+    key: 'result',
     header: 'Result',
-    cell:   (s) => <StatusBadge status={s.result} />,
+    cell: (s) => <StatusBadge status={s.result} />,
   },
   {
-    key:    'startedAt',
+    key: 'startedAt',
     header: 'Started',
-    cell:   (s) => <span className="text-xs">{formatDateTime(s.startedAt)}</span>,
+    cell: (s) => <span className="text-xs">{formatDateTime(s.startedAt)}</span>,
   },
   {
-    key:    'duration',
+    key: 'duration',
     header: 'Duration',
-    align:  'right',
-    cell:   (s) => s.durationMs
-      ? <span className="tabular-nums text-xs">{formatDuration(s.durationMs)}</span>
-      : <span className="text-slate-400">—</span>,
+    align: 'right',
+    cell: (s) =>
+      s.durationMs ? (
+        <span className="tabular-nums text-xs">{formatDuration(s.durationMs)}</span>
+      ) : (
+        <span className="text-slate-400">—</span>
+      ),
   },
   {
-    key:    'synced',
+    key: 'synced',
     header: 'Synced',
-    align:  'right',
-    cell:   (s) => <span className="tabular-nums text-xs text-emerald-600">{formatNumber(s.synced)}</span>,
+    align: 'right',
+    cell: (s) => (
+      <span className="tabular-nums text-xs text-emerald-600">{formatNumber(s.synced)}</span>
+    ),
   },
   {
-    key:    'failed',
+    key: 'failed',
     header: 'Failed',
-    align:  'right',
-    cell:   (s) => (
-      <span className={s.failed > 0 ? 'tabular-nums text-xs text-rose-600' : 'tabular-nums text-xs text-slate-400'}>
+    align: 'right',
+    cell: (s) => (
+      <span
+        className={
+          s.failed > 0
+            ? 'tabular-nums text-xs text-rose-600'
+            : 'tabular-nums text-xs text-slate-400'
+        }
+      >
         {s.failed}
       </span>
     ),
@@ -61,7 +72,7 @@ export default function SyncPage() {
   const [page, setPage] = useState(1);
   const [running, setRunning] = useState(false);
   const { data, isLoading, error, refetch } = useSyncHistory({
-    limit:  PAGE_SIZE,
+    limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE,
   });
 
@@ -76,10 +87,11 @@ export default function SyncPage() {
   };
 
   if (isLoading) return <PageLoading />;
-  if (error)     return <ErrorState message="Could not load sync history." onRetry={() => void refetch()} />;
+  if (error)
+    return <ErrorState message="Could not load sync history." onRetry={() => void refetch()} />;
 
   const records = data?.data ?? [];
-  const total   = data?.total ?? 0;
+  const total = data?.total ?? 0;
 
   return (
     <div className="space-y-4 max-w-screen-xl">
@@ -97,20 +109,15 @@ export default function SyncPage() {
       />
 
       {records.length === 0 ? (
-        <EmptyState icon={RefreshCw} title="No sync records" description="Sync runs will appear here." />
+        <EmptyState
+          icon={RefreshCw}
+          title="No sync records"
+          description="Sync runs will appear here."
+        />
       ) : (
         <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
-          <DataTable
-            data={records}
-            columns={columns}
-            keyFn={(s) => s.id}
-          />
-          <Pagination
-            page={page}
-            pageSize={PAGE_SIZE}
-            total={total}
-            onPage={setPage}
-          />
+          <DataTable data={records} columns={columns} keyFn={(s) => s.id} />
+          <Pagination page={page} pageSize={PAGE_SIZE} total={total} onPage={setPage} />
         </div>
       )}
     </div>

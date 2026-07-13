@@ -3,7 +3,7 @@ import { HealthChecker } from '../health.js';
 import { makeContext } from './helpers.js';
 
 function makeChecker(id = 'test-erp') {
-  const ctx     = makeContext(id);
+  const ctx = makeContext(id);
   const checker = new HealthChecker(id, ctx);
   return { checker, ctx };
 }
@@ -42,9 +42,9 @@ describe('HealthChecker', () => {
     const changed = vi.fn();
     ctx.eventBus.on('health.changed', changed);
 
-    await checker.check();        // first check: unhealthy — no prior status, no event
+    await checker.check(); // first check: unhealthy — no prior status, no event
     checker.onConnected();
-    await checker.check();        // transitions to healthy → event
+    await checker.check(); // transitions to healthy → event
 
     expect(changed).toHaveBeenCalledOnce();
     expect(changed.mock.calls[0][0].previousStatus).toBe('unhealthy');
@@ -55,10 +55,10 @@ describe('HealthChecker', () => {
     const { checker, ctx } = makeChecker();
     const changed = vi.fn();
     checker.onConnected();
-    await checker.check();              // healthy (sets lastStatus)
+    await checker.check(); // healthy (sets lastStatus)
     ctx.eventBus.on('health.changed', changed);
     checker.onDisconnected();
-    await checker.check();              // transitions to unhealthy → event
+    await checker.check(); // transitions to unhealthy → event
     expect(changed).toHaveBeenCalledOnce();
   });
 

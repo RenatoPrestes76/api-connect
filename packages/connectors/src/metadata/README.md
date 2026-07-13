@@ -37,14 +37,14 @@ SourceMetadata
 
 ## MetadataEngine Methods
 
-| Method | Description |
-|--------|-------------|
-| `getMetadata(options?)` | Full source snapshot |
-| `getEntityMetadata(path)` | Single entity details |
-| `getRelationships(path)` | Relationships of an entity |
-| `exists(path)` | Path existence check |
-| `refresh(options?)` | Re-fetch from live source |
-| `diff(prev, curr)` | Schema change detection |
+| Method                    | Description                |
+| ------------------------- | -------------------------- |
+| `getMetadata(options?)`   | Full source snapshot       |
+| `getEntityMetadata(path)` | Single entity details      |
+| `getRelationships(path)`  | Relationships of an entity |
+| `exists(path)`            | Path existence check       |
+| `refresh(options?)`       | Re-fetch from live source  |
+| `diff(prev, curr)`        | Schema change detection    |
 
 ## Usage Pattern
 
@@ -56,7 +56,7 @@ for (const db of source.databases ?? []) {
   for (const schema of db.schemas) {
     for (const table of schema.tables) {
       console.log(`${db.name}.${schema.name}.${table.name}`);
-      console.log(`  columns: ${table.columns.map(c => c.name).join(', ')}`);
+      console.log(`  columns: ${table.columns.map((c) => c.name).join(', ')}`);
     }
   }
 }
@@ -78,28 +78,28 @@ if (diff.hasChanges) {
 
 ## Interfaces
 
-| Interface | Describes |
-|-----------|-----------|
-| `MetadataEngine` | The primary metadata retrieval API |
-| `SourceMetadata` | Full top-level snapshot |
-| `DatabaseMetadata` | A database / catalog |
-| `SchemaMetadata` | A schema within a database |
-| `TableMetadata` | A table (or view, temp table, external table) |
-| `ColumnMetadata` | A table column with full type info |
-| `IndexMetadata` | An index with column ordering |
-| `ConstraintMetadata` | PK, unique, check, not-null constraints |
-| `ForeignKeyMetadata` | FK with cascade rules |
-| `RelationshipMetadata` | Logical 1:1, 1:N, N:M relationships |
-| `EntityMetadata` | Generic entity for NoSQL / queues |
-| `FieldMetadata` | Generic field for any entity type |
-| `ViewMetadata` | View definition and columns |
-| `ProcedureMetadata` | Stored procedure signature |
-| `FunctionMetadata` | Function (aggregate, window, strict) |
-| `TriggerMetadata` | Trigger event, timing, target |
-| `SequenceMetadata` | Auto-increment sequence definition |
-| `ApiEndpointMetadata` | REST/GraphQL endpoint descriptor |
-| `FileStructureMetadata` | CSV/Excel/JSON file shape |
-| `MetadataDiff` | Added/removed/changed entities |
+| Interface               | Describes                                     |
+| ----------------------- | --------------------------------------------- |
+| `MetadataEngine`        | The primary metadata retrieval API            |
+| `SourceMetadata`        | Full top-level snapshot                       |
+| `DatabaseMetadata`      | A database / catalog                          |
+| `SchemaMetadata`        | A schema within a database                    |
+| `TableMetadata`         | A table (or view, temp table, external table) |
+| `ColumnMetadata`        | A table column with full type info            |
+| `IndexMetadata`         | An index with column ordering                 |
+| `ConstraintMetadata`    | PK, unique, check, not-null constraints       |
+| `ForeignKeyMetadata`    | FK with cascade rules                         |
+| `RelationshipMetadata`  | Logical 1:1, 1:N, N:M relationships           |
+| `EntityMetadata`        | Generic entity for NoSQL / queues             |
+| `FieldMetadata`         | Generic field for any entity type             |
+| `ViewMetadata`          | View definition and columns                   |
+| `ProcedureMetadata`     | Stored procedure signature                    |
+| `FunctionMetadata`      | Function (aggregate, window, strict)          |
+| `TriggerMetadata`       | Trigger event, timing, target                 |
+| `SequenceMetadata`      | Auto-increment sequence definition            |
+| `ApiEndpointMetadata`   | REST/GraphQL endpoint descriptor              |
+| `FileStructureMetadata` | CSV/Excel/JSON file shape                     |
+| `MetadataDiff`          | Added/removed/changed entities                |
 
 ## Constraints
 

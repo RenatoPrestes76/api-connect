@@ -1,20 +1,20 @@
 export interface ScheduleEntry {
   /** Human-readable label for logging / debugging. */
-  readonly label?:      string;
+  readonly label?: string;
   /** Interval in milliseconds. Mutually exclusive with cronExpr. */
   readonly intervalMs?: number;
   /** Cron expression (e.g. "0 * * * *"). Mutually exclusive with intervalMs. */
-  readonly cronExpr?:   string;
+  readonly cronExpr?: string;
   /** The task to execute. Errors are caught and forwarded to onError. */
-  readonly task:        () => Promise<void>;
+  readonly task: () => Promise<void>;
 }
 
 interface ScheduledJob {
-  readonly jobId:       string;
+  readonly jobId: string;
   readonly connectorId: string;
-  readonly entry:       ScheduleEntry;
-  timer:                ReturnType<typeof setInterval> | null;
-  running:              boolean;
+  readonly entry: ScheduleEntry;
+  timer: ReturnType<typeof setInterval> | null;
+  running: boolean;
 }
 
 /**
@@ -24,9 +24,9 @@ interface ScheduledJob {
  */
 export class ConnectorScheduler {
   private readonly _jobs = new Map<string, ScheduledJob>();
-  private _jobCounter  = 0;
-  private _running     = false;
-  private _onError?:    (connectorId: string, jobId: string, err: unknown) => void;
+  private _jobCounter = 0;
+  private _running = false;
+  private _onError?: (connectorId: string, jobId: string, err: unknown) => void;
 
   onError(handler: (connectorId: string, jobId: string, err: unknown) => void): void {
     this._onError = handler;
@@ -92,10 +92,14 @@ export class ConnectorScheduler {
   }
 
   /** Number of currently registered jobs. */
-  get size(): number { return this._jobs.size; }
+  get size(): number {
+    return this._jobs.size;
+  }
 
   /** Whether the scheduler is currently running. */
-  get isRunning(): boolean { return this._running; }
+  get isRunning(): boolean {
+    return this._running;
+  }
 
   private _startJob(job: ScheduledJob): void {
     if (job.timer !== null) return;

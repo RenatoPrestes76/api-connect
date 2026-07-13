@@ -13,7 +13,11 @@ export async function listAgents(ctx: RouteContext, res: ServerResponse): Promis
   const status = ctx.query.get('status') as AgentStatus | null;
 
   const { items, total } = await AgentService.list({
-    page, pageSize, organizationId, environmentId, status: status ?? undefined,
+    page,
+    pageSize,
+    organizationId,
+    environmentId,
+    status: status ?? undefined,
   });
   paginated(res, items, total, page, pageSize);
 }
@@ -21,10 +25,16 @@ export async function listAgents(ctx: RouteContext, res: ServerResponse): Promis
 // GET /api/v1/agents/:id
 export async function getAgent(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const { id } = ctx.params;
-  if (!id) { apiError(res, 'Missing id', 400, 'BAD_REQUEST'); return; }
+  if (!id) {
+    apiError(res, 'Missing id', 400, 'BAD_REQUEST');
+    return;
+  }
 
   const agent = await AgentService.findById(id);
-  if (!agent) { apiError(res, 'Agent not found', 404, 'NOT_FOUND'); return; }
+  if (!agent) {
+    apiError(res, 'Agent not found', 404, 'NOT_FOUND');
+    return;
+  }
 
   json(res, { data: agent });
 }
@@ -34,7 +44,12 @@ export async function registerAgent(ctx: RouteContext, res: ServerResponse): Pro
   const body = ctx.body as Record<string, unknown> | undefined;
 
   if (!body?.organizationId || !body?.environmentId || !body?.name || !body?.version) {
-    apiError(res, 'organizationId, environmentId, name and version are required', 400, 'VALIDATION_ERROR');
+    apiError(
+      res,
+      'organizationId, environmentId, name and version are required',
+      400,
+      'VALIDATION_ERROR'
+    );
     return;
   }
 
@@ -58,7 +73,10 @@ export async function registerAgent(ctx: RouteContext, res: ServerResponse): Pro
 // POST /api/v1/agents/:id/heartbeat
 export async function agentHeartbeat(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const { id } = ctx.params;
-  if (!id) { apiError(res, 'Missing id', 400, 'BAD_REQUEST'); return; }
+  if (!id) {
+    apiError(res, 'Missing id', 400, 'BAD_REQUEST');
+    return;
+  }
 
   const body = ctx.body as Record<string, unknown> | undefined;
   const status = (body?.['status'] as AgentStatus) ?? 'ONLINE';
@@ -80,7 +98,10 @@ export async function agentHeartbeat(ctx: RouteContext, res: ServerResponse): Pr
 // GET /api/v1/agents/:id/heartbeats
 export async function getAgentHeartbeats(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const { id } = ctx.params;
-  if (!id) { apiError(res, 'Missing id', 400, 'BAD_REQUEST'); return; }
+  if (!id) {
+    apiError(res, 'Missing id', 400, 'BAD_REQUEST');
+    return;
+  }
 
   const limit = Math.min(Number(ctx.query.get('limit') ?? '10'), 100);
   const heartbeats = await AgentService.getRecentHeartbeats(id, limit);
@@ -90,10 +111,16 @@ export async function getAgentHeartbeats(ctx: RouteContext, res: ServerResponse)
 // DELETE /api/v1/agents/:id
 export async function retireAgent(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const { id } = ctx.params;
-  if (!id) { apiError(res, 'Missing id', 400, 'BAD_REQUEST'); return; }
+  if (!id) {
+    apiError(res, 'Missing id', 400, 'BAD_REQUEST');
+    return;
+  }
 
   const agent = await AgentService.findById(id);
-  if (!agent) { apiError(res, 'Agent not found', 404, 'NOT_FOUND'); return; }
+  if (!agent) {
+    apiError(res, 'Agent not found', 404, 'NOT_FOUND');
+    return;
+  }
 
   await AgentService.retire(id);
   json(res, { success: true });

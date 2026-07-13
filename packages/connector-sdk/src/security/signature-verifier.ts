@@ -23,7 +23,9 @@ export class TrustedKeyRegistry {
     return this._keys.has(id);
   }
 
-  get size(): number { return this._keys.size; }
+  get size(): number {
+    return this._keys.size;
+  }
 }
 
 /**
@@ -46,7 +48,7 @@ export class SignatureVerifier {
     const pem = this._keys.getKey(publicKeyId);
     if (!pem) {
       throw new SignatureVerificationError(
-        `Unknown public key ID: "${publicKeyId}". Register the vendor's key first.`,
+        `Unknown public key ID: "${publicKeyId}". Register the vendor's key first.`
       );
     }
 
@@ -55,7 +57,7 @@ export class SignatureVerifier {
       verify.update(data);
       return verify.verify(
         { key: pem, padding: 3 /* RSA_PKCS1_PSS_PADDING */ },
-        Buffer.from(signatureBase64, 'base64'),
+        Buffer.from(signatureBase64, 'base64')
       );
     } catch {
       return false;

@@ -114,14 +114,14 @@ The universal schema model. This is the contract every downstream module is writ
 
 Key types:
 
-| Type | Description |
-|------|-------------|
-| `CanonicalSchema` | Top-level schema with entities, relationships, enumerations, statistics |
-| `CanonicalEntity` | A table, collection, API resource, or file structure |
-| `CanonicalField` | A column, document field, or CSV column with inferred role and type |
-| `CanonicalType` | Universal type with `kind: CanonicalDataKind` — maps every native type |
-| `CanonicalRelationship` | FK, $ref, or inferred relationship with cardinality and confidence |
-| `SchemaPatch` | Ordered list of `PatchOperation` — used for delta versioning |
+| Type                    | Description                                                             |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `CanonicalSchema`       | Top-level schema with entities, relationships, enumerations, statistics |
+| `CanonicalEntity`       | A table, collection, API resource, or file structure                    |
+| `CanonicalField`        | A column, document field, or CSV column with inferred role and type     |
+| `CanonicalType`         | Universal type with `kind: CanonicalDataKind` — maps every native type  |
+| `CanonicalRelationship` | FK, $ref, or inferred relationship with cardinality and confidence      |
+| `SchemaPatch`           | Ordered list of `PatchOperation` — used for delta versioning            |
 
 ---
 
@@ -129,14 +129,14 @@ Key types:
 
 Format-specific parsers. Each implements `SchemaParser<TOptions>`.
 
-| Parser | Source type | Key feature |
-|--------|-------------|-------------|
-| `SqlDdlParser` | `sql-ddl` | Detects dialect, parses single statements |
-| `OpenApiParser` | `openapi` | Supports v2/v3, resolves $ref |
-| `GraphQLSchemaParser` | `graphql-sdl` | Parses types, infers relationships from directives |
-| `CsvSchemaParser` | `csv-header` | Parses header-only; type inference from sample rows |
-| `JsonSchemaParser` | `json-schema` | Supports all drafts, flattens $defs |
-| `XmlSchemaParser` | `xml-xsd` | Parses XSD, resolves xs:import |
+| Parser                | Source type   | Key feature                                         |
+| --------------------- | ------------- | --------------------------------------------------- |
+| `SqlDdlParser`        | `sql-ddl`     | Detects dialect, parses single statements           |
+| `OpenApiParser`       | `openapi`     | Supports v2/v3, resolves $ref                       |
+| `GraphQLSchemaParser` | `graphql-sdl` | Parses types, infers relationships from directives  |
+| `CsvSchemaParser`     | `csv-header`  | Parses header-only; type inference from sample rows |
+| `JsonSchemaParser`    | `json-schema` | Supports all drafts, flattens $defs                 |
+| `XmlSchemaParser`     | `xml-xsd`     | Parses XSD, resolves xs:import                      |
 
 Auto-detection via `SchemaParserRegistry.detect(raw)` — returns the highest-confidence parser without manual configuration.
 
@@ -220,6 +220,7 @@ Two concerns:
 Generates deterministic structural hashes from schema structure — never from data values. Identical schemas (regardless of source format) produce identical fingerprints.
 
 `SchemaFingerprint` contains:
+
 - `hash` — full structural hash
 - `structureHash` — type/constraint structure, ignoring names
 - `nameHash` — names only
@@ -253,14 +254,14 @@ Discovers structural patterns from schema metadata. **Never inspects data values
 
 What it learns:
 
-| Pattern Kind | Example |
-|---|---|
-| `field-naming-convention` | `customer_id`, `created_at` follow snake_case |
-| `field-role-indicator` | Fields named `*_at` with TIMESTAMP type → `created-at` role |
-| `entity-structure` | "address" entities typically have 5–8 fields: street, city, postal_code… |
-| `relationship-topology` | Star schema: one hub entity with many FK references |
-| `type-evolution` | INT → BIGINT is the most common widening pattern |
-| `audit-fields` | Most entities have `created_at` + `updated_at` + `deleted_at` |
+| Pattern Kind              | Example                                                                  |
+| ------------------------- | ------------------------------------------------------------------------ |
+| `field-naming-convention` | `customer_id`, `created_at` follow snake_case                            |
+| `field-role-indicator`    | Fields named `*_at` with TIMESTAMP type → `created-at` role              |
+| `entity-structure`        | "address" entities typically have 5–8 fields: street, city, postal_code… |
+| `relationship-topology`   | Star schema: one hub entity with many FK references                      |
+| `type-evolution`          | INT → BIGINT is the most common widening pattern                         |
+| `audit-fields`            | Most entities have `created_at` + `updated_at` + `deleted_at`            |
 
 `PatternApplicator.enrich(schema, patterns)` — applies learned patterns to fill in missing roles, detect missing audit fields, and surface naming inconsistencies.
 
@@ -272,12 +273,12 @@ Bridges the connector world to the SIE world. Each adapter converts connector-pr
 
 No connector package is imported — adapters receive plain data shapes to avoid circular dependencies.
 
-| Adapter | Connector category |
-|---|---|
-| `DatabaseSchemaAdapter` | relational databases (tables, columns, FK constraints) |
-| `ApiSchemaAdapter` | REST / GraphQL / gRPC (endpoints, parameters, response schemas) |
-| `FileSchemaAdapter` | CSV, Excel, XML, JSON files |
-| `CloudSchemaAdapter` | S3, Azure Blob, GCS, Supabase storage |
+| Adapter                 | Connector category                                              |
+| ----------------------- | --------------------------------------------------------------- |
+| `DatabaseSchemaAdapter` | relational databases (tables, columns, FK constraints)          |
+| `ApiSchemaAdapter`      | REST / GraphQL / gRPC (endpoints, parameters, response schemas) |
+| `FileSchemaAdapter`     | CSV, Excel, XML, JSON files                                     |
+| `CloudSchemaAdapter`    | S3, Azure Blob, GCS, Supabase storage                           |
 
 ---
 
@@ -299,13 +300,13 @@ Structural integrity checks on `CanonicalSchema`. All validators are rule-based 
 
 Built-in rule categories:
 
-| Scope | Example |
-|---|---|
-| Schema | No two entities share the same name in the same namespace |
-| Entity | Every entity has at least one field and a primary key |
-| Field | Enum fields reference declared enumerations |
-| Relationship | FK targets exist and their types match the referenced PK |
-| Cross-entity | No circular required FK references |
+| Scope        | Example                                                   |
+| ------------ | --------------------------------------------------------- |
+| Schema       | No two entities share the same name in the same namespace |
+| Entity       | Every entity has at least one field and a primary key     |
+| Field        | Enum fields reference declared enumerations               |
+| Relationship | FK targets exist and their types match the referenced PK  |
+| Cross-entity | No circular required FK references                        |
 
 `ValidationRuleRegistry` — dynamic rule map. Add custom rules with `register(rule)`.
 
@@ -339,8 +340,14 @@ const myRule: ValidationRule = {
     for (const entity of schema.entities) {
       for (const field of entity.fields) {
         if (field.type.kind === 'string' && !field.type.length) {
-          issues.push({ code: 'MY-001', severity: 'warning', ruleId: 'my-org-no-varchar-max',
-            message: `Field ${entity.name}.${field.name} has no length limit`, entityName: entity.name, fieldName: field.name });
+          issues.push({
+            code: 'MY-001',
+            severity: 'warning',
+            ruleId: 'my-org-no-varchar-max',
+            message: `Field ${entity.name}.${field.name} has no length limit`,
+            entityName: entity.name,
+            fieldName: field.name,
+          });
         }
       }
     }
@@ -385,9 +392,9 @@ import type {
 
 ```typescript
 import type { CanonicalSchema } from '@seltriva/schema-intelligence/canonical';
-import type { SchemaParser }    from '@seltriva/schema-intelligence/parser';
-import type { SchemaDiff }      from '@seltriva/schema-intelligence/comparator';
-import type { LearnedPattern }  from '@seltriva/schema-intelligence/learning';
+import type { SchemaParser } from '@seltriva/schema-intelligence/parser';
+import type { SchemaDiff } from '@seltriva/schema-intelligence/comparator';
+import type { LearnedPattern } from '@seltriva/schema-intelligence/learning';
 ```
 
 Available sub-paths: `models`, `core`, `canonical`, `parser`, `normalizer`, `comparator`, `detector`, `versioning`, `registry`, `fingerprint`, `similarity`, `learning`, `adapters`, `transformers`, `validators`.
@@ -396,11 +403,11 @@ Available sub-paths: `models`, `core`, `canonical`, `parser`, `normalizer`, `com
 
 ## Package Info
 
-| Field | Value |
-|---|---|
-| Package | `@seltriva/schema-intelligence` |
-| Version | `0.1.0` |
-| Runtime | Node.js 18+, browser-compatible (no Node.js built-ins) |
-| TypeScript | `strict: true`, `moduleResolution: "bundler"`, `isolatedModules: true` |
-| Dependencies | `@seltriva/core`, `@seltriva/types` |
-| Side effects | None |
+| Field        | Value                                                                  |
+| ------------ | ---------------------------------------------------------------------- |
+| Package      | `@seltriva/schema-intelligence`                                        |
+| Version      | `0.1.0`                                                                |
+| Runtime      | Node.js 18+, browser-compatible (no Node.js built-ins)                 |
+| TypeScript   | `strict: true`, `moduleResolution: "bundler"`, `isolatedModules: true` |
+| Dependencies | `@seltriva/core`, `@seltriva/types`                                    |
+| Side effects | None                                                                   |

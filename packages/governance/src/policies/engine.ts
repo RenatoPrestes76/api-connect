@@ -48,10 +48,7 @@ function resolveRequestAttribute(request: PolicyEvaluationRequest, attribute: st
 
 // ─── Condition Evaluator ─────────────────────────────────────────────────────
 
-function evaluateCondition(
-  condition: PolicyCondition,
-  request: PolicyEvaluationRequest,
-): boolean {
+function evaluateCondition(condition: PolicyCondition, request: PolicyEvaluationRequest): boolean {
   const raw = resolveRequestAttribute(request, condition.attribute);
   const { operator, value, negate = false } = condition;
 
@@ -75,12 +72,18 @@ function evaluateCondition(
       break;
 
     case 'in':
-      if (!Array.isArray(value)) { result = false; break; }
+      if (!Array.isArray(value)) {
+        result = false;
+        break;
+      }
       result = value.includes(raw);
       break;
 
     case 'not-in':
-      if (!Array.isArray(value)) { result = true; break; }
+      if (!Array.isArray(value)) {
+        result = true;
+        break;
+      }
       result = !value.includes(raw);
       break;
 
@@ -135,7 +138,7 @@ function evaluateCondition(
 
 function evaluateConditions(
   conditions: PolicyCondition[] | undefined,
-  request: PolicyEvaluationRequest,
+  request: PolicyEvaluationRequest
 ): { matched: boolean; matchedPaths: string[] } {
   if (!conditions || conditions.length === 0) {
     return { matched: true, matchedPaths: [] };
@@ -159,10 +162,7 @@ interface RuleEvaluation {
   matchedConditions: string[];
 }
 
-function evaluateRule(
-  rule: PolicyRule,
-  request: PolicyEvaluationRequest,
-): RuleEvaluation {
+function evaluateRule(rule: PolicyRule, request: PolicyEvaluationRequest): RuleEvaluation {
   // Check action match
   const actions = rule.actions ?? ['*'];
   const actionMatched = actions.includes('*') || actions.includes(request.action);
@@ -205,7 +205,7 @@ function evaluateRule(
 
 function applyConflictResolution(
   evaluations: RuleEvaluation[],
-  strategy: ConflictResolution,
+  strategy: ConflictResolution
 ): PolicyDecision {
   const applicable = evaluations.filter((e) => e.decision !== 'not-applicable');
   if (applicable.length === 0) return 'not-applicable';
@@ -298,16 +298,11 @@ export class PolicyEngineImpl implements IPolicyEngine {
 
     for (const policy of applicablePolicies) {
       // Sort rules by priority descending
-      const sortedRules = [...policy.rules].sort(
-        (a, b) => (b.priority ?? 0) - (a.priority ?? 0),
-      );
+      const sortedRules = [...policy.rules].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
 
       const ruleEvaluations = sortedRules.map((rule) => evaluateRule(rule, request));
 
-      const policyDecision = applyConflictResolution(
-        ruleEvaluations,
-        policy.conflictResolution,
-      );
+      const policyDecision = applyConflictResolution(ruleEvaluations, policy.conflictResolution);
 
       policyDecisions.push(policyDecision);
 
@@ -359,14 +354,11 @@ export class PolicyEngineImpl implements IPolicyEngine {
     if (result.decision === 'deny') {
       throw new GovernancePolicyError(
         `Access denied: ${result.reason ?? 'policy evaluation returned deny'}`,
-        result,
+        result
       );
     }
     if (result.decision === 'indeterminate') {
-      throw new GovernancePolicyError(
-        `Access indeterminate: ambiguous policy result`,
-        result,
-      );
+      throw new GovernancePolicyError(`Access indeterminate: ambiguous policy result`, result);
     }
     // 'not-applicable' and 'allow' pass through
   }
@@ -380,23 +372,30 @@ export class PolicyEngineImpl implements IPolicyEngine {
 
 function policyMatchesScope(policyScope: PolicyScope, requestScope: PolicyScope): boolean {
   // Platform-wide policies have no organizationId — they always apply
-  if (policyScope.organizationId !== undefined &&
-      policyScope.organizationId !== requestScope.organizationId) {
+  if (
+    policyScope.organizationId !== undefined &&
+    policyScope.organizationId !== requestScope.organizationId
+  ) {
     return false;
   }
 
-  if (policyScope.workspaceId !== undefined &&
-      policyScope.workspaceId !== requestScope.workspaceId) {
+  if (
+    policyScope.workspaceId !== undefined &&
+    policyScope.workspaceId !== requestScope.workspaceId
+  ) {
     return false;
   }
 
-  if (policyScope.environmentId !== undefined &&
-      policyScope.environmentId !== requestScope.environmentId) {
+  if (
+    policyScope.environmentId !== undefined &&
+    policyScope.environmentId !== requestScope.environmentId
+  ) {
     return false;
   }
 
   if (policyScope.resourceTypes && policyScope.resourceTypes.length > 0) {
-    const covers = policyScope.resourceTypes.includes('*') ||
+    const covers =
+      policyScope.resourceTypes.includes('*') ||
       requestScope.resourceTypes?.some((rt) => policyScope.resourceTypes!.includes(rt));
     if (!covers) return false;
   }
@@ -411,18 +410,16 @@ function policyCoversAction(policy: Policy, action: string): boolean {
   });
 }
 
-function buildReason(
-  decision: PolicyDecision,
-  results: ApplicablePolicyResult[],
-): string {
+function buildReason(decision: PolicyDecision, results: ApplicablePolicyResult[]): string {
   if (decision === 'not-applicable') return 'No policy matched';
 
   const decisive = results.find((r) => r.decision === decision);
   if (!decisive) return decision;
 
-  const conditions = decisive.matchedConditions.length > 0
-    ? ` (${decisive.matchedConditions.slice(0, 2).join(', ')})`
-    : '';
+  const conditions =
+    decisive.matchedConditions.length > 0
+      ? ` (${decisive.matchedConditions.slice(0, 2).join(', ')})`
+      : '';
 
   return `${decision} by policy "${decisive.policyName}"${conditions}`;
 }

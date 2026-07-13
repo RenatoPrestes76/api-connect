@@ -1,10 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import {
-  equals, notEquals,
-  greaterThan, greaterThanOrEqual,
-  lessThan, lessThanOrEqual,
-  between, like, inList, isNull, isNotNull,
-  and, or,
+  equals,
+  notEquals,
+  greaterThan,
+  greaterThanOrEqual,
+  lessThan,
+  lessThanOrEqual,
+  between,
+  like,
+  inList,
+  isNull,
+  isNotNull,
+  and,
+  or,
 } from '../query/filters.js';
 
 describe('Filter constructors — simple', () => {
@@ -88,10 +96,7 @@ describe('Filter constructors — compound', () => {
   });
 
   it('and/or can be nested', () => {
-    const f = and(
-      or(equals('role', 'admin'), equals('role', 'moderator')),
-      equals('active', true),
-    );
+    const f = and(or(equals('role', 'admin'), equals('role', 'moderator')), equals('active', true));
     expect(f.operator).toBe('and');
     expect(f.filters[0]!.operator).toBe('or');
   });

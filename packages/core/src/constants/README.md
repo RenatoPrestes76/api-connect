@@ -8,16 +8,16 @@ Provides a single source of truth for string/number literals used across modules
 
 ## Exported Constants
 
-| Constant | Values |
-|----------|--------|
-| `CORE_MODULES` | `configuration`, `container`, `registry`, `event-bus`, `command-bus`, `plugin-manager`, `discovery` |
-| `DRIVER_TYPES` | `database`, `erp`, `cache`, `storage`, `notification`, `auth`, `messaging` |
-| `PROVIDER_TYPES` | `ai`, `authentication`, `storage`, `notification`, `payment` |
-| `PLUGIN_LIFECYCLE` | `plugin:before-initialize` … `plugin:after-unload` |
-| `EVENT_PRIORITIES` | `CRITICAL=100`, `HIGH=75`, `NORMAL=50`, `LOW=25`, `DEFERRED=0` |
-| `SYNC_MODES` | `full`, `incremental`, `delta`, `batch`, `stream` |
-| `MAPPING_TYPES` | `field`, `object`, `array`, `custom` |
-| `REGISTRY_SCOPES` | `global`, `module`, `request` |
+| Constant           | Values                                                                                              |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| `CORE_MODULES`     | `configuration`, `container`, `registry`, `event-bus`, `command-bus`, `plugin-manager`, `discovery` |
+| `DRIVER_TYPES`     | `database`, `erp`, `cache`, `storage`, `notification`, `auth`, `messaging`                          |
+| `PROVIDER_TYPES`   | `ai`, `authentication`, `storage`, `notification`, `payment`                                        |
+| `PLUGIN_LIFECYCLE` | `plugin:before-initialize` … `plugin:after-unload`                                                  |
+| `EVENT_PRIORITIES` | `CRITICAL=100`, `HIGH=75`, `NORMAL=50`, `LOW=25`, `DEFERRED=0`                                      |
+| `SYNC_MODES`       | `full`, `incremental`, `delta`, `batch`, `stream`                                                   |
+| `MAPPING_TYPES`    | `field`, `object`, `array`, `custom`                                                                |
+| `REGISTRY_SCOPES`  | `global`, `module`, `request`                                                                       |
 
 ## Usage
 

@@ -27,14 +27,14 @@ describe('DiscoveryEngine', () => {
 
   it('includes products, inventory, customers, sales, suppliers, users', async () => {
     const result = await makeEngine().discover();
-    const names  = result.data!.entities.map((e) => e.name);
+    const names = result.data!.entities.map((e) => e.name);
     for (const expected of ['products', 'inventory', 'customers', 'sales', 'suppliers', 'users']) {
       expect(names).toContain(expected);
     }
   });
 
   it('emits discovery.finished event with correct payload', async () => {
-    const ctx     = makeContext('test-erp');
+    const ctx = makeContext('test-erp');
     const handler = vi.fn();
     ctx.eventBus.on('discovery.finished', handler);
 
@@ -62,7 +62,11 @@ describe('DiscoveryEngine', () => {
   });
 
   it('entity ids are prefixed with the connectorId', async () => {
-    const result = await new DiscoveryEngine('my-connector', makeContext('my-connector'), makeMockDb()).discover();
+    const result = await new DiscoveryEngine(
+      'my-connector',
+      makeContext('my-connector'),
+      makeMockDb()
+    ).discover();
     for (const entity of result.data!.entities) {
       expect(entity.id.startsWith('my-connector/')).toBe(true);
     }

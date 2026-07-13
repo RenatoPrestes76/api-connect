@@ -3,6 +3,7 @@
 ## Essential Commands
 
 ### Development
+
 ```bash
 pnpm dev              # Start all apps
 pnpm dev:cloud        # Dashboard only
@@ -11,12 +12,14 @@ pnpm dev:studio       # Studio only
 ```
 
 ### Building
+
 ```bash
 pnpm build            # Build all apps
 pnpm build:all        # Include docs
 ```
 
 ### Quality
+
 ```bash
 pnpm lint             # Check linting
 pnpm lint:fix         # Auto-fix issues
@@ -26,6 +29,7 @@ pnpm validate         # Full validation (lint + type-check + format-check)
 ```
 
 ### Database
+
 ```bash
 pnpm db:generate      # Generate Prisma client
 pnpm db:push          # Push schema
@@ -33,6 +37,7 @@ pnpm db:studio        # Open Prisma Studio
 ```
 
 ### Cleanup
+
 ```bash
 pnpm clean            # Remove all caches
 ```
@@ -41,20 +46,20 @@ pnpm clean            # Remove all caches
 
 ## File Structure Quick Guide
 
-| Path | Purpose |
-|------|---------|
-| `apps/cloud/` | Main dashboard application |
-| `apps/api/` | Backend API server |
-| `apps/studio/` | Developer testing interface |
-| `apps/agent/` | Automation engine |
-| `apps/docs/` | Documentation site |
-| `packages/ui/` | React component library |
-| `packages/database/` | Prisma ORM layer |
-| `packages/types/` | Shared type definitions |
-| `packages/config/` | Configuration management |
-| `packages/logger/` | Logging utility |
-| `docs/` | Project documentation |
-| `.github/workflows/` | CI/CD pipelines |
+| Path                 | Purpose                     |
+| -------------------- | --------------------------- |
+| `apps/cloud/`        | Main dashboard application  |
+| `apps/api/`          | Backend API server          |
+| `apps/studio/`       | Developer testing interface |
+| `apps/agent/`        | Automation engine           |
+| `apps/docs/`         | Documentation site          |
+| `packages/ui/`       | React component library     |
+| `packages/database/` | Prisma ORM layer            |
+| `packages/types/`    | Shared type definitions     |
+| `packages/config/`   | Configuration management    |
+| `packages/logger/`   | Logging utility             |
+| `docs/`              | Project documentation       |
+| `.github/workflows/` | CI/CD pipelines             |
 
 ---
 
@@ -79,10 +84,12 @@ pnpm clean            # Remove all caches
 ## Environment Variables
 
 **Required**
+
 - `DATABASE_URL` - PostgreSQL connection
 - `API_SECRET_KEY` - API secret key
 
 **Optional**
+
 - `NODE_ENV` - development/production
 - `API_PORT` - API server port (default: 3001)
 - `CLOUD_PORT` - Dashboard port (default: 3000)
@@ -112,13 +119,13 @@ git push origin feature/description
 
 ## Port Assignments
 
-| Service | Port | URL |
-|---------|------|-----|
-| Cloud | 3000 | http://localhost:3000 |
-| API | 3001 | http://localhost:3001 |
-| Studio | 3002 | http://localhost:3002 |
-| Agent | 3003 | - |
-| Docs | 3004 | http://localhost:3004 |
+| Service | Port | URL                   |
+| ------- | ---- | --------------------- |
+| Cloud   | 3000 | http://localhost:3000 |
+| API     | 3001 | http://localhost:3001 |
+| Studio  | 3002 | http://localhost:3002 |
+| Agent   | 3003 | -                     |
+| Docs    | 3004 | http://localhost:3004 |
 
 ---
 
@@ -136,12 +143,14 @@ Install recommended: Press `Ctrl+Shift+P` → "Extensions: Show Recommended"
 ## Common Issues & Solutions
 
 ### Dependencies not installing
+
 ```bash
 rm -rf node_modules pnpm-lock.yaml
 pnpm install
 ```
 
 ### Port already in use
+
 ```bash
 # Find process on port
 lsof -i :3000
@@ -150,6 +159,7 @@ kill -9 <PID>
 ```
 
 ### TypeScript errors persist
+
 ```bash
 pnpm type-check
 pnpm clean
@@ -157,6 +167,7 @@ pnpm build
 ```
 
 ### Database connection failed
+
 ```bash
 # Check .env.local
 # Verify DATABASE_URL is correct

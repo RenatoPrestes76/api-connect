@@ -182,7 +182,10 @@ export interface EntityTransformContext {
  * An ordered, composable chain of FieldTransformer or EntityTransformer steps.
  */
 export interface TransformationPipeline<TInput, TContext> {
-  addTransformer(transformer: { transform(input: TInput, ctx: TContext): SIEResult<TInput>; appliesTo(input: TInput): boolean }): TransformationPipeline<TInput, TContext>;
+  addTransformer(transformer: {
+    transform(input: TInput, ctx: TContext): SIEResult<TInput>;
+    appliesTo(input: TInput): boolean;
+  }): TransformationPipeline<TInput, TContext>;
   removeTransformer(id: string): TransformationPipeline<TInput, TContext>;
   getTransformers(): Array<{ readonly id: string }>;
 

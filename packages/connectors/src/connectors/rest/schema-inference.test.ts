@@ -75,7 +75,7 @@ describe('inferSchema', () => {
     it('infers from an array of objects', () => {
       const data = [
         { id: '1', role: 'admin', score: 99 },
-        { id: '2', role: 'user',  score: 42 },
+        { id: '2', role: 'user', score: 42 },
       ];
       const schema = inferSchema(data);
       expect(schema.type).toBe('array');

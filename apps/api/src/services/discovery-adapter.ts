@@ -19,29 +19,26 @@ import type {
 
 export interface AdaptOptions {
   /** Originating host — stored in the report but not used for classification. */
-  host?:     string;
+  host?: string;
   /** Originating port — stored in the report but not used for classification. */
-  port?:     number;
+  port?: number;
   /** Database name — defaults to DatabaseSchema.name. */
   database?: string;
   /** Schema name — defaults to 'public'. */
-  schema?:   string;
+  schema?: string;
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-export function adaptDatabaseSchema(
-  ds: DatabaseSchema,
-  opts: AdaptOptions = {},
-): DatabaseInput {
+export function adaptDatabaseSchema(ds: DatabaseSchema, opts: AdaptOptions = {}): DatabaseInput {
   const schemaName = opts.schema ?? 'public';
   const tables: TableInput[] = ds.tables.map((t) => adaptTable(t, schemaName));
 
   return {
-    host:       opts.host     ?? 'localhost',
-    port:       opts.port     ?? 5432,
-    database:   opts.database ?? ds.name,
-    schemas:    [{ name: schemaName, tables }],
+    host: opts.host ?? 'localhost',
+    port: opts.port ?? 5432,
+    database: opts.database ?? ds.name,
+    schemas: [{ name: schemaName, tables }],
     extensions: [],
   };
 }
@@ -51,13 +48,13 @@ export function adaptDatabaseSchema(
 function adaptTable(t: Table, schema: string): TableInput {
   return {
     schema,
-    name:          t.name,
-    comment:       null,
+    name: t.name,
+    comment: null,
     isPartitioned: false,
-    columns:       t.columns.map(adaptColumn),
-    primaryKey:    buildPrimaryKey(t),
-    foreignKeys:   t.foreignKeys.map((fk, i) => adaptForeignKey(fk, t.name, schema, i)),
-    indexes:       t.indexes.map(adaptIndex),
+    columns: t.columns.map(adaptColumn),
+    primaryKey: buildPrimaryKey(t),
+    foreignKeys: t.foreignKeys.map((fk, i) => adaptForeignKey(fk, t.name, schema, i)),
+    indexes: t.indexes.map(adaptIndex),
   };
 }
 
@@ -78,24 +75,24 @@ function adaptForeignKey(
   fk: Table['foreignKeys'][number],
   tableName: string,
   schema: string,
-  index: number,
+  index: number
 ): ForeignKeyInput {
   return {
-    constraintName:    `fk_${tableName}_${index}`,
-    columns:           [fk.column],
-    referencedSchema:  schema,
-    referencedTable:   fk.referencedTable,
+    constraintName: `fk_${tableName}_${index}`,
+    columns: [fk.column],
+    referencedSchema: schema,
+    referencedTable: fk.referencedTable,
     referencedColumns: [fk.referencedColumn],
-    deleteRule:        'NO ACTION',
-    updateRule:        'NO ACTION',
+    deleteRule: 'NO ACTION',
+    updateRule: 'NO ACTION',
   };
 }
 
 function adaptIndex(idx: Table['indexes'][number]): IndexInput {
   return {
-    name:      idx.name,
-    columns:   idx.columns,
-    isUnique:  idx.isUnique,
+    name: idx.name,
+    columns: idx.columns,
+    isUnique: idx.isUnique,
     isPrimary: idx.isPrimary,
     indexType: 'btree',
   };
@@ -107,15 +104,15 @@ const IDENTITY_TYPES = new Set(['serial', 'bigserial', 'smallserial']);
 
 function adaptColumn(c: Column): ColumnInput {
   return {
-    name:             c.name,
-    dataType:         c.type,
-    isNullable:       c.nullable,
-    columnDefault:    c.defaultValue != null ? String(c.defaultValue) : null,
-    numericPrecision: c.precision    ?? null,
-    numericScale:     c.scale        ?? null,
-    maxLength:        c.maxLength    ?? null,
-    userDefinedType:  null,
-    comment:          null,
-    isIdentity:       c.isPrimaryKey && IDENTITY_TYPES.has(c.type.toLowerCase()),
+    name: c.name,
+    dataType: c.type,
+    isNullable: c.nullable,
+    columnDefault: c.defaultValue != null ? String(c.defaultValue) : null,
+    numericPrecision: c.precision ?? null,
+    numericScale: c.scale ?? null,
+    maxLength: c.maxLength ?? null,
+    userDefinedType: null,
+    comment: null,
+    isIdentity: c.isPrimaryKey && IDENTITY_TYPES.has(c.type.toLowerCase()),
   };
 }

@@ -5,6 +5,7 @@
 **Purpose:** Core business types. No framework dependencies.
 
 **Exports:**
+
 - Branded IDs (14): `OrganizationId`, `WorkspaceId`, `EnvironmentId`, `AgentId`, `UserId`, `PluginId`, `LicenseId`, `ConfigurationId`, `FeatureFlagId`, `ApiKeyId`, `JobId`, `NotificationId`, `AuditEntryId`, `MetricSnapshotId`
 - Value objects: `Slug`, `Email`, `SemVer`, `KeyHash`, `KeyPrefix`
 - Entity interfaces: `Organization`, `Workspace`, `Environment`, `Agent`, `AgentHeartbeat`, `User`, `OrganizationMember`, `Plugin`, `License`, `FeatureFlag`, `Configuration`, `ApiKey`
@@ -19,6 +20,7 @@
 **Purpose:** CQRS — all commands (write), all queries (read).
 
 **Exports:**
+
 - `ICommandBus`, `IQueryBus`
 - `Command<TResult>`, `Query<TResult>` phantom types
 - 22 command types (Organization×5, Workspace×3, Environment×2, Agent×4, User/Member×4, Plugin×3, License×2, ApiKey×2, Configuration×2)
@@ -32,6 +34,7 @@
 **Purpose:** DI contracts for all external adapters.
 
 **Exports:**
+
 - `INFRASTRUCTURE_TOKENS` — 9 DI symbols
 - `IRealtimePublisher` — Supabase Realtime
 - `ICacheProvider` + `CACHE_KEYS`
@@ -51,6 +54,7 @@
 **Purpose:** HTTP contract types. Used by both server handlers and client SDKs.
 
 **Exports:**
+
 - `ApiResponse<T>`, `ApiError`, `ApiMeta`, `PaginationMeta`
 - `ApiRequestContext` — per-request security context
 - Request/response types for all 30 endpoints
@@ -65,6 +69,7 @@
 **Purpose:** Cloud lifecycle and bootstrap sequence.
 
 **Exports:**
+
 - `ICloudRuntime`, `CloudRuntimeStatus`, `ProcessMetrics`
 - `CloudBootstrapPhase`, `CLOUD_BOOTSTRAP_PHASE_ORDER`
 - `CLOUD_BOOTSTRAP_TASK_IDS` (17 tasks)
@@ -77,6 +82,7 @@
 **Purpose:** Root composition and cross-cutting wiring.
 
 **Exports:**
+
 - `CloudServiceContainer` — full service map
 - `CloudRuntimeContext` — immutable runtime metadata
 - `ICloudEventBus` — async event publish/subscribe

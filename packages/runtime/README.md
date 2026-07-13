@@ -93,8 +93,15 @@ Foundation — all modules depend on this.
 **Branded IDs:** `ModuleId`, `ServiceId`, `PluginId`, `WorkerId`, `WorkerPoolId`, `JobId`, `CommandId`, `EventId`, `CorrelationId`, `TraceId`, `SandboxId`
 
 **`RuntimeResult<T>`** — every CRP operation returns this, never throws:
+
 ```typescript
-interface RuntimeResult<T> { success, data?, error?, durationMs?, timestamp }
+interface RuntimeResult<T> {
+  success;
+  data?;
+  error?;
+  durationMs?;
+  timestamp;
+}
 ```
 
 **`PLATFORM_EVENTS`** — 23 named platform lifecycle event constants.
@@ -155,11 +162,11 @@ Modules start with **no permissions** and are granted specific capabilities at r
 
 Three pillars of observability:
 
-| Pillar | Interface | Key Methods |
-|---|---|---|
-| Logging | `RuntimeLogger` | `fatal/error/warn/info/debug/trace`, `child()`, `bind()` |
+| Pillar  | Interface       | Key Methods                                                         |
+| ------- | --------------- | ------------------------------------------------------------------- |
+| Logging | `RuntimeLogger` | `fatal/error/warn/info/debug/trace`, `child()`, `bind()`            |
 | Tracing | `RuntimeTracer` | `startSpan()`, `startChildSpan()`, `withSpan()`, W3C inject/extract |
-| Metrics | `RuntimeMeter` | `createCounter()`, `createGauge()`, `createHistogram()` |
+| Metrics | `RuntimeMeter`  | `createCounter()`, `createGauge()`, `createHistogram()`             |
 
 **`TelemetryExporter`** — plugin interface for forwarding to OpenTelemetry/Datadog/Prometheus/etc.
 
@@ -196,6 +203,7 @@ Dependency injection container.
 **Lifetimes:** `singleton`, `transient`, `scoped`
 
 **`SERVICE_TOKENS`** — 23 named tokens for all platform services:
+
 - `PLATFORM_KERNEL`, `EVENT_BUS`, `COMMAND_BUS`, `SCHEDULER`, `WORKER_POOL_MANAGER`
 - `TELEMETRY_PROVIDER`, `LOGGER`, `TRACER`, `METER`
 - `HEALTH_MONITOR`, `PERMISSION_MODEL`, `SANDBOX_MANAGER`, `RESILIENCE_FACTORY`
@@ -220,14 +228,14 @@ Kubernetes-style health probes.
 
 Fault tolerance patterns (composable policies).
 
-| Policy | Interface | Key Options |
-|---|---|---|
-| Circuit Breaker | `CircuitBreaker` | `failureThreshold`, `timeoutMs`, `halfOpenMaxCalls` |
-| Retry | `RetryPolicy` | `maxAttempts`, `delayMs`, `backoffMultiplier`, `jitter` |
-| Bulkhead | `BulkheadPolicy` | `maxConcurrent`, `maxQueueDepth`, `queueTimeoutMs` |
-| Timeout | `TimeoutPolicy` | `timeoutMs` |
-| Rate Limiter | `RateLimiter` | `token-bucket`, `sliding-window`, `fixed-window` |
-| Fallback | `FallbackPolicy<T>` | static value or factory |
+| Policy          | Interface           | Key Options                                             |
+| --------------- | ------------------- | ------------------------------------------------------- |
+| Circuit Breaker | `CircuitBreaker`    | `failureThreshold`, `timeoutMs`, `halfOpenMaxCalls`     |
+| Retry           | `RetryPolicy`       | `maxAttempts`, `delayMs`, `backoffMultiplier`, `jitter` |
+| Bulkhead        | `BulkheadPolicy`    | `maxConcurrent`, `maxQueueDepth`, `queueTimeoutMs`      |
+| Timeout         | `TimeoutPolicy`     | `timeoutMs`                                             |
+| Rate Limiter    | `RateLimiter`       | `token-bucket`, `sliding-window`, `fixed-window`        |
+| Fallback        | `FallbackPolicy<T>` | static value or factory                                 |
 
 **`ResiliencePipeline`** — compose: `timeout → circuit-breaker → retry → bulkhead`
 
@@ -239,12 +247,12 @@ Plugin isolation and resource containment.
 
 **Levels:**
 
-| Level | Access |
-|---|---|
-| `strict` | config read, events, telemetry only |
+| Level      | Access                                                     |
+| ---------- | ---------------------------------------------------------- |
+| `strict`   | config read, events, telemetry only                        |
 | `standard` | + commands, services, FS read, network, workers, scheduler |
-| `trusted` | + config write, secrets, FS write, database |
-| `native` | unrestricted (core runtime modules only) |
+| `trusted`  | + config write, secrets, FS write, database                |
+| `native`   | unrestricted (core runtime modules only)                   |
 
 **`SandboxViolationAction`** — `log`, `warn`, or `terminate` sandbox on policy breach.
 
@@ -286,12 +294,12 @@ Reliable job scheduling.
 
 **Triggers:**
 
-| Kind | Description |
-|---|---|
-| `cron` | Standard cron expression with timezone |
-| `interval` | Fixed interval with initial delay |
-| `once` | Single execution at a specific time |
-| `event` | Triggered by an event bus topic match |
+| Kind       | Description                            |
+| ---------- | -------------------------------------- |
+| `cron`     | Standard cron expression with timezone |
+| `interval` | Fixed interval with initial delay      |
+| `once`     | Single execution at a specific time    |
+| `event`    | Triggered by an event bus topic match  |
 
 **8 built-in `BUILT_IN_JOB_IDS`** — health check, telemetry flush, memory consolidation, dead-letter retry, diagnostics snapshot, plugin health check, resilience metrics, circuit breaker sweep.
 
@@ -346,7 +354,9 @@ const platform = await new PlatformBuilder()
   .addConfigSource(supabaseConfigSource)
   .addContainerModule(coreServicesModule)
   .addPluginDirectory('./plugins')
-  .beforePhase('ready', async () => { /* pre-ready hook */ })
+  .beforePhase('ready', async () => {
+    /* pre-ready hook */
+  })
   .bootstrap();
 
 if (platform.success) {
@@ -369,7 +379,9 @@ class MyModule implements LifecycleModule {
     kind: 'integration',
     version: '1.0.0',
     description: 'My custom integration module',
-    dependencies: [/* other module IDs */],
+    dependencies: [
+      /* other module IDs */
+    ],
     provides: ['my-service' as ServiceId],
     consumes: [SERVICE_TOKENS.EVENT_BUS as unknown as ServiceId],
   };
@@ -386,9 +398,15 @@ class MyModule implements LifecycleModule {
     return { success: true, timestamp: new Date() };
   }
 
-  async stop()    { return { success: true, timestamp: new Date() }; }
-  async destroy() { return { success: true, timestamp: new Date() }; }
-  async healthCheck() { return { healthy: true, state: 'running' }; }
+  async stop() {
+    return { success: true, timestamp: new Date() };
+  }
+  async destroy() {
+    return { success: true, timestamp: new Date() };
+  }
+  async healthCheck() {
+    return { healthy: true, state: 'running' };
+  }
 }
 ```
 
@@ -415,9 +433,15 @@ export default class MyPlugin implements Plugin {
     return { success: true, timestamp: new Date() };
   }
 
-  async start()   { return { success: true, timestamp: new Date() }; }
-  async stop()    { return { success: true, timestamp: new Date() }; }
-  async destroy() { return { success: true, timestamp: new Date() }; }
+  async start() {
+    return { success: true, timestamp: new Date() };
+  }
+  async stop() {
+    return { success: true, timestamp: new Date() };
+  }
+  async destroy() {
+    return { success: true, timestamp: new Date() };
+  }
 }
 ```
 
@@ -439,7 +463,7 @@ const policy = factory.pipeline(
     maxAttempts: 3,
     delayMs: 200,
     backoffMultiplier: 2,
-  }),
+  })
 );
 
 const result = await policy.execute(() => callExternalService());
@@ -509,13 +533,13 @@ PlatformKernel            Module B               Module A
 
 ## Package Info
 
-| Field | Value |
-|---|---|
-| Package | `@seltriva/runtime` |
-| Version | `0.1.0` |
-| Runtime | Node.js 18+ |
-| TypeScript | `strict: true`, `moduleResolution: "bundler"` |
-| Dependencies | `@seltriva/core`, `@seltriva/types` |
-| Side effects | None |
-| Architecture | Hexagonal, DDD, SOLID, Dependency Injection |
-| Stack | Next.js (app), TypeScript, pnpm/Turborepo, Supabase, Prisma, Vercel |
+| Field        | Value                                                               |
+| ------------ | ------------------------------------------------------------------- |
+| Package      | `@seltriva/runtime`                                                 |
+| Version      | `0.1.0`                                                             |
+| Runtime      | Node.js 18+                                                         |
+| TypeScript   | `strict: true`, `moduleResolution: "bundler"`                       |
+| Dependencies | `@seltriva/core`, `@seltriva/types`                                 |
+| Side effects | None                                                                |
+| Architecture | Hexagonal, DDD, SOLID, Dependency Injection                         |
+| Stack        | Next.js (app), TypeScript, pnpm/Turborepo, Supabase, Prisma, Vercel |

@@ -12,8 +12,13 @@
  */
 
 import type {
-  RuntimeResult, JobId, ScheduleId, ModuleId, Priority,
-  TimeRange, Disposable,
+  RuntimeResult,
+  JobId,
+  ScheduleId,
+  ModuleId,
+  Priority,
+  TimeRange,
+  Disposable,
 } from '../kernel/index';
 
 // ─── Scheduler ────────────────────────────────────────────────────────────
@@ -141,11 +146,7 @@ export interface JobResult {
 
 // ─── Triggers ─────────────────────────────────────────────────────────────
 
-export type JobTrigger =
-  | CronTrigger
-  | IntervalTrigger
-  | OnceTrigger
-  | EventTrigger;
+export type JobTrigger = CronTrigger | IntervalTrigger | OnceTrigger | EventTrigger;
 
 export interface CronTrigger {
   readonly kind: 'cron';
@@ -216,14 +217,14 @@ export interface TriggerOptions {
 // ─── Built-in Job IDs ─────────────────────────────────────────────────────
 
 export const BUILT_IN_JOB_IDS = {
-  HEALTH_CHECK:             'job-health-check'               as JobId,
-  TELEMETRY_FLUSH:          'job-telemetry-flush'            as JobId,
-  MEMORY_CONSOLIDATION:     'job-memory-consolidation'       as JobId,
-  DEAD_LETTER_RETRY:        'job-dead-letter-retry'          as JobId,
-  DIAGNOSTICS_SNAPSHOT:     'job-diagnostics-snapshot'       as JobId,
-  PLUGIN_HEALTH_CHECK:      'job-plugin-health-check'        as JobId,
-  RESILIENCE_METRICS:       'job-resilience-metrics'         as JobId,
-  CIRCUIT_BREAKER_SWEEP:    'job-circuit-breaker-sweep'      as JobId,
+  HEALTH_CHECK: 'job-health-check' as JobId,
+  TELEMETRY_FLUSH: 'job-telemetry-flush' as JobId,
+  MEMORY_CONSOLIDATION: 'job-memory-consolidation' as JobId,
+  DEAD_LETTER_RETRY: 'job-dead-letter-retry' as JobId,
+  DIAGNOSTICS_SNAPSHOT: 'job-diagnostics-snapshot' as JobId,
+  PLUGIN_HEALTH_CHECK: 'job-plugin-health-check' as JobId,
+  RESILIENCE_METRICS: 'job-resilience-metrics' as JobId,
+  CIRCUIT_BREAKER_SWEEP: 'job-circuit-breaker-sweep' as JobId,
 } as const;
 
 // ─── Stats ────────────────────────────────────────────────────────────────
@@ -241,7 +242,13 @@ export interface SchedulerStats {
 
 // ─── Job Execution Events ─────────────────────────────────────────────────
 
-export type JobExecutionEventKind = 'queued' | 'started' | 'completed' | 'failed' | 'cancelled' | 'skipped';
+export type JobExecutionEventKind =
+  | 'queued'
+  | 'started'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'skipped';
 
 export interface JobExecutionEvent {
   readonly kind: JobExecutionEventKind;

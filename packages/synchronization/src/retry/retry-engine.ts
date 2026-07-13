@@ -18,9 +18,9 @@ import {
 } from '../types/index.js';
 
 export interface RetryAttempt {
-  readonly attempt:   number;
-  readonly delayMs:   number;
-  readonly error:     Error;
+  readonly attempt: number;
+  readonly delayMs: number;
+  readonly error: Error;
   readonly retryable: boolean;
 }
 
@@ -46,10 +46,7 @@ export class RetryEngine {
    * Execute fn with automatic retry on failure.
    * Returns SyncResult<T>; never throws.
    */
-  async execute<T>(
-    fn:  () => Promise<T>,
-    context?: string,
-  ): Promise<SyncResult<T>> {
+  async execute<T>(fn: () => Promise<T>, context?: string): Promise<SyncResult<T>> {
     let lastError: Error = new Error('Unknown error');
 
     for (let attempt = 1; attempt <= this._config.maxAttempts; attempt++) {
@@ -61,9 +58,7 @@ export class RetryEngine {
         const retryable = this._isRetryable(lastError);
         const isLastAttempt = attempt >= this._config.maxAttempts;
 
-        const delayMs = retryable && !isLastAttempt
-          ? this._calculateDelay(attempt)
-          : 0;
+        const delayMs = retryable && !isLastAttempt ? this._calculateDelay(attempt) : 0;
 
         this._notify({ attempt, delayMs, error: lastError, retryable });
 
@@ -76,12 +71,13 @@ export class RetryEngine {
     return syncFail(
       'RETRY_EXHAUSTED',
       `Operation failed after ${this._config.maxAttempts} attempt(s): ${lastError.message}${context ? ` [${context}]` : ''}`,
-      { retryable: false, cause: lastError },
+      { retryable: false, cause: lastError }
     );
   }
 
   private _calculateDelay(attempt: number): number {
-    const base   = this._config.initialDelayMs * Math.pow(this._config.backoffMultiplier, attempt - 1);
+    const base =
+      this._config.initialDelayMs * Math.pow(this._config.backoffMultiplier, attempt - 1);
     const jitter = Math.random() * this._config.jitterMs;
     return Math.min(base + jitter, this._config.maxDelayMs);
   }
@@ -93,7 +89,11 @@ export class RetryEngine {
 
   private _notify(attempt: RetryAttempt): void {
     for (const observer of this._observers) {
-      try { observer(attempt); } catch { /* observer errors must not affect retry logic */ }
+      try {
+        observer(attempt);
+      } catch {
+        /* observer errors must not affect retry logic */
+      }
     }
   }
 
@@ -101,5 +101,7 @@ export class RetryEngine {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  get config(): RetryConfig { return this._config; }
+  get config(): RetryConfig {
+    return this._config;
+  }
 }

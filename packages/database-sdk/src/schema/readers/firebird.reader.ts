@@ -11,7 +11,7 @@ export class FirebirdSchemaReader implements SchemaReader {
     const { rows } = await this._client.query(
       `SELECT RDB$RELATION_NAME FROM RDB$RELATIONS
        WHERE RDB$SYSTEM_FLAG = 0 AND RDB$VIEW_BLR IS NULL
-       ORDER BY RDB$RELATION_NAME`,
+       ORDER BY RDB$RELATION_NAME`
     );
     return rows.map((r) => String(r['RDB$RELATION_NAME']).trim());
   }
@@ -31,7 +31,7 @@ export class FirebirdSchemaReader implements SchemaReader {
   }
 
   private async _readTableDetails(name: string): Promise<Table> {
-    const columns    = await this._readColumns(name);
+    const columns = await this._readColumns(name);
     const { primaryKey, foreignKeys, indexes } = await this._readConstraints(name);
     return { name, columns, primaryKey, foreignKeys, indexes };
   }
@@ -43,22 +43,22 @@ export class FirebirdSchemaReader implements SchemaReader {
        JOIN RDB$FIELDS f ON r.RDB$FIELD_SOURCE = f.RDB$FIELD_NAME
        WHERE r.RDB$RELATION_NAME = ?
        ORDER BY r.RDB$FIELD_POSITION`,
-      [table.toUpperCase()],
+      [table.toUpperCase()]
     );
     return rows.map((r) => ({
-      name:         String(r['RDB$FIELD_NAME']).trim(),
-      type:         String(r['RDB$FIELD_TYPE']),
-      nullable:     !r['RDB$NULL_FLAG'],
+      name: String(r['RDB$FIELD_NAME']).trim(),
+      type: String(r['RDB$FIELD_TYPE']),
+      nullable: !r['RDB$NULL_FLAG'],
       isPrimaryKey: false,
       isForeignKey: false,
-      isUnique:     false,
+      isUnique: false,
     }));
   }
 
   private async _readConstraints(table: string): Promise<{
     primaryKey?: PrimaryKey;
     foreignKeys: ForeignKey[];
-    indexes:     Index[];
+    indexes: Index[];
   }> {
     const { rows } = await this._client.query(
       `SELECT rc.RDB$CONSTRAINT_TYPE, rc.RDB$CONSTRAINT_NAME,
@@ -68,7 +68,7 @@ export class FirebirdSchemaReader implements SchemaReader {
        JOIN RDB$INDEX_SEGMENTS iseg ON rc.RDB$INDEX_NAME = iseg.RDB$INDEX_NAME
   LEFT JOIN RDB$REF_CONSTRAINTS rcref ON rc.RDB$CONSTRAINT_NAME = rcref.RDB$CONSTRAINT_NAME
        WHERE rc.RDB$RELATION_NAME = ?`,
-      [table.toUpperCase()],
+      [table.toUpperCase()]
     );
 
     const pkCols: string[] = [];
@@ -76,7 +76,7 @@ export class FirebirdSchemaReader implements SchemaReader {
     const indexMap = new Map<string, Index>();
 
     for (const r of rows) {
-      const col   = String(r['RDB$FIELD_NAME']).trim();
+      const col = String(r['RDB$FIELD_NAME']).trim();
       const ctype = String(r['RDB$CONSTRAINT_TYPE']).trim();
       const cname = String(r['RDB$CONSTRAINT_NAME']).trim();
 
@@ -90,17 +90,17 @@ export class FirebirdSchemaReader implements SchemaReader {
 
       if (ctype === 'FOREIGN KEY' && r['FK_TABLE']) {
         foreignKeys.push({
-          column:           col,
-          referencedTable:  String(r['FK_TABLE']).trim(),
+          column: col,
+          referencedTable: String(r['FK_TABLE']).trim(),
           referencedColumn: col,
         });
       }
     }
 
     return {
-      primaryKey:  pkCols.length ? { columns: pkCols } : undefined,
+      primaryKey: pkCols.length ? { columns: pkCols } : undefined,
       foreignKeys,
-      indexes:     [...indexMap.values()],
+      indexes: [...indexMap.values()],
     };
   }
 
@@ -109,11 +109,11 @@ export class FirebirdSchemaReader implements SchemaReader {
     for (const table of tables) {
       for (const fk of table.foreignKeys) {
         relations.push({
-          fromTable:  table.name,
+          fromTable: table.name,
           fromColumn: fk.column,
-          toTable:    fk.referencedTable,
-          toColumn:   fk.referencedColumn,
-          type:       'many-to-one',
+          toTable: fk.referencedTable,
+          toColumn: fk.referencedColumn,
+          type: 'many-to-one',
         });
       }
     }

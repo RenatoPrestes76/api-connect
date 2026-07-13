@@ -5,11 +5,11 @@ import type { DatabaseHealth, HealthStatus } from '../health/database-health.js'
 export type { DatabaseHealth, HealthStatus };
 
 export interface DatabaseAdapter {
-  connect():    Promise<void>;
+  connect(): Promise<void>;
   disconnect(): Promise<void>;
-  reconnect():  Promise<void>;
+  reconnect(): Promise<void>;
   execute<T = unknown>(query: Query): Promise<T[]>;
   transaction<T>(callback: () => Promise<T>): Promise<T>;
-  health():     Promise<DatabaseHealth>;
-  schema():     Promise<DatabaseSchema>;
+  health(): Promise<DatabaseHealth>;
+  schema(): Promise<DatabaseSchema>;
 }

@@ -9,7 +9,7 @@ export class AgentVersion {
   private constructor(
     readonly major: number,
     readonly minor: number,
-    readonly patch: number,
+    readonly patch: number
   ) {}
 
   static fromString(value: string): AgentVersion {
@@ -17,11 +17,7 @@ export class AgentVersion {
     if (!m) {
       throw new InvalidAgentVersionError(value);
     }
-    return new AgentVersion(
-      parseInt(m[1]!, 10),
-      parseInt(m[2]!, 10),
-      parseInt(m[3]!, 10),
-    );
+    return new AgentVersion(parseInt(m[1]!, 10), parseInt(m[2]!, 10), parseInt(m[3]!, 10));
   }
 
   /** Returns true when this version is strictly newer than `other`. */
@@ -33,14 +29,12 @@ export class AgentVersion {
 
   /** Returns true when both versions are identical. */
   equals(other: AgentVersion): boolean {
-    return (
-      this.major === other.major &&
-      this.minor === other.minor &&
-      this.patch === other.patch
-    );
+    return this.major === other.major && this.minor === other.minor && this.patch === other.patch;
   }
 
-  toString(): string { return `${this.major}.${this.minor}.${this.patch}`; }
+  toString(): string {
+    return `${this.major}.${this.minor}.${this.patch}`;
+  }
 }
 
 export class InvalidAgentVersionError extends Error {

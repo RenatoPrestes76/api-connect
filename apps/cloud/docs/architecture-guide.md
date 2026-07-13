@@ -27,13 +27,13 @@ Atlas Cloud follows Hexagonal Architecture (Ports & Adapters) strictly:
 
 ### Aggregates
 
-| Aggregate     | Root Entity   | Invariants                                        |
-|---------------|---------------|---------------------------------------------------|
-| Organization  | Organization  | Unique slug. Cascades to all child resources.     |
-| Workspace     | Workspace     | Unique slug per organization.                     |
-| Agent         | Agent         | Unique per organization+environment.              |
-| License       | License       | One active license per organization at a time.   |
-| Plugin        | Plugin        | Unique slug across the registry.                  |
+| Aggregate    | Root Entity  | Invariants                                     |
+| ------------ | ------------ | ---------------------------------------------- |
+| Organization | Organization | Unique slug. Cascades to all child resources.  |
+| Workspace    | Workspace    | Unique slug per organization.                  |
+| Agent        | Agent        | Unique per organization+environment.           |
+| License      | License      | One active license per organization at a time. |
+| Plugin       | Plugin       | Unique slug across the registry.               |
 
 ### Domain Events
 

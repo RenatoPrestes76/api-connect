@@ -2,7 +2,13 @@
   "name": "@seltriva/cli",
   "version": "0.1.0",
   "description": "Atlas CLI — developer toolchain for building and publishing Seltriva plugins",
-  "keywords": ["seltriva", "atlas", "cli", "plugin", "connector"],
+  "keywords": [
+    "seltriva",
+    "atlas",
+    "cli",
+    "plugin",
+    "connector"
+  ],
   "license": "MIT",
   "private": false,
   "type": "module",

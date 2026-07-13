@@ -8,23 +8,23 @@ Provides reusable, typed abstractions for the classic GoF design patterns. These
 
 ## Interfaces
 
-| Interface | Pattern |
-|-----------|---------|
-| `Strategy<I, O>` | Strategy — encapsulates a swappable algorithm |
-| `StrategySelector<I, O>` | Strategy — runtime selection by applicability |
-| `ChainHandler<T>` | Chain of Responsibility |
-| `Observer<T>` | Observer — reacts to subject changes |
-| `Observable<T>` | Observer — notifies attached observers |
-| `Decorator<T>` | Decorator — wraps a component to extend behavior |
-| `Adapter<S, T>` | Adapter — bridges incompatible interfaces |
-| `TemplateMethod` | Template Method — fixed skeleton, variable steps |
-| `TemplateStep` | Template Method — one step in the skeleton |
-| `Proxy<T>` | Proxy — intercepts access to a subject |
-| `ProxyInterceptor` | Proxy — before/after/error hooks |
-| `ProxyContext` | Proxy — context passed to interceptors |
-| `Specification<T>` | Specification — composable boolean predicate |
-| `UnitOfWork` | Unit of Work — atomic transaction boundary |
-| `RepositoryCriteria` | Repository — query filter/sort/page criteria |
+| Interface                | Pattern                                          |
+| ------------------------ | ------------------------------------------------ |
+| `Strategy<I, O>`         | Strategy — encapsulates a swappable algorithm    |
+| `StrategySelector<I, O>` | Strategy — runtime selection by applicability    |
+| `ChainHandler<T>`        | Chain of Responsibility                          |
+| `Observer<T>`            | Observer — reacts to subject changes             |
+| `Observable<T>`          | Observer — notifies attached observers           |
+| `Decorator<T>`           | Decorator — wraps a component to extend behavior |
+| `Adapter<S, T>`          | Adapter — bridges incompatible interfaces        |
+| `TemplateMethod`         | Template Method — fixed skeleton, variable steps |
+| `TemplateStep`           | Template Method — one step in the skeleton       |
+| `Proxy<T>`               | Proxy — intercepts access to a subject           |
+| `ProxyInterceptor`       | Proxy — before/after/error hooks                 |
+| `ProxyContext`           | Proxy — context passed to interceptors           |
+| `Specification<T>`       | Specification — composable boolean predicate     |
+| `UnitOfWork`             | Unit of Work — atomic transaction boundary       |
+| `RepositoryCriteria`     | Repository — query filter/sort/page criteria     |
 
 ## Composition
 

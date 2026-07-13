@@ -14,9 +14,7 @@
  * Business data values are NEVER inspected.
  */
 
-import type {
-  AIResult, AgentId,
-} from '../providers/index';
+import type { AIResult, AgentId } from '../providers/index';
 import type { AIRecommendation } from '../recommendations/index';
 
 // ─── AI Security Engine ───────────────────────────────────────────────────
@@ -51,11 +49,11 @@ export interface AISecurityEngine {
 // ─── Sensitivity Classification ───────────────────────────────────────────
 
 export type SensitivityLevel =
-  | 'public'        // freely sharable
-  | 'internal'      // internal use only
-  | 'confidential'  // restricted distribution
-  | 'restricted'    // need-to-know only
-  | 'critical';     // highest sensitivity (financial, health, credentials)
+  | 'public' // freely sharable
+  | 'internal' // internal use only
+  | 'confidential' // restricted distribution
+  | 'restricted' // need-to-know only
+  | 'critical'; // highest sensitivity (financial, health, credentials)
 
 export interface SensitivityClassification {
   readonly level: SensitivityLevel;
@@ -71,27 +69,27 @@ export interface SensitivityClassification {
 // ─── Data Categories ──────────────────────────────────────────────────────
 
 export type DataCategory =
-  | 'personal-identity'     // name, document numbers
-  | 'contact-information'   // email, phone, address
-  | 'financial'             // prices, amounts, account numbers
-  | 'health'                // medical information
-  | 'credentials'           // passwords, tokens, keys
-  | 'location'              // geographic coordinates, addresses
-  | 'behavioral'            // usage patterns, preferences
-  | 'tax-fiscal'            // tax IDs, fiscal documents
+  | 'personal-identity' // name, document numbers
+  | 'contact-information' // email, phone, address
+  | 'financial' // prices, amounts, account numbers
+  | 'health' // medical information
+  | 'credentials' // passwords, tokens, keys
+  | 'location' // geographic coordinates, addresses
+  | 'behavioral' // usage patterns, preferences
+  | 'tax-fiscal' // tax IDs, fiscal documents
   | 'corporate-confidential' // internal pricing, margins
-  | 'none';                 // not sensitive
+  | 'none'; // not sensitive
 
 // ─── Regulatory Frameworks ────────────────────────────────────────────────
 
 export type RegulatoryFramework =
-  | 'LGPD'     // Brazil
-  | 'GDPR'     // European Union
-  | 'CCPA'     // California
-  | 'PCI-DSS'  // Payment card
-  | 'HIPAA'    // Healthcare (US)
-  | 'SOX'      // Financial reporting (US)
-  | 'BACEN';   // Brazilian central bank
+  | 'LGPD' // Brazil
+  | 'GDPR' // European Union
+  | 'CCPA' // California
+  | 'PCI-DSS' // Payment card
+  | 'HIPAA' // Healthcare (US)
+  | 'SOX' // Financial reporting (US)
+  | 'BACEN'; // Brazilian central bank
 
 // ─── Data Retention ───────────────────────────────────────────────────────
 
@@ -197,8 +195,8 @@ export interface SecurityPolicy {
   readonly id: string;
   readonly name: string;
   readonly description: string;
-  readonly applies(recommendation: AIRecommendation): boolean;
-  readonly validate(recommendation: AIRecommendation): SecurityPolicyValidation;
+  applies(recommendation: AIRecommendation): boolean;
+  validate(recommendation: AIRecommendation): SecurityPolicyValidation;
 }
 
 export interface SecurityPolicyValidation {
@@ -217,17 +215,17 @@ export interface SecurityPolicyViolation {
 // ─── Known Sensitive CBL Field Kinds ──────────────────────────────────────
 
 export const SENSITIVE_FIELD_KINDS: Readonly<Record<string, SensitivityLevel>> = {
-  TAX_ID:               'restricted',
+  TAX_ID: 'restricted',
   COMPANY_REGISTRATION: 'restricted',
-  BANK_ACCOUNT:         'critical',
-  CREDIT_CARD:          'critical',
-  PASSWORD:             'critical',
-  API_KEY:              'critical',
-  EMAIL:                'confidential',
-  PHONE:                'confidential',
-  ADDRESS_STREET:       'confidential',
-  COST_PRICE:           'confidential',
-  MARGIN:               'confidential',
-  MARKUP:               'confidential',
-  SALARY:               'restricted',
+  BANK_ACCOUNT: 'critical',
+  CREDIT_CARD: 'critical',
+  PASSWORD: 'critical',
+  API_KEY: 'critical',
+  EMAIL: 'confidential',
+  PHONE: 'confidential',
+  ADDRESS_STREET: 'confidential',
+  COST_PRICE: 'confidential',
+  MARGIN: 'confidential',
+  MARKUP: 'confidential',
+  SALARY: 'restricted',
 } as const;

@@ -28,7 +28,10 @@ export interface SchemaLearner {
   /**
    * Submit multiple schemas in a batch learning session
    */
-  learnBatch(schemas: CanonicalSchema[], session?: LearningSession): Promise<SIEResult<BatchLearningResult>>;
+  learnBatch(
+    schemas: CanonicalSchema[],
+    session?: LearningSession
+  ): Promise<SIEResult<BatchLearningResult>>;
 
   /**
    * Query learned patterns matching criteria
@@ -234,10 +237,7 @@ export interface PatternSearchCriteria {
  * - identifies naming inconsistencies
  */
 export interface PatternApplicator {
-  enrich(
-    schema: CanonicalSchema,
-    patterns: LearnedPattern[]
-  ): SIEResult<SchemaEnrichmentResult>;
+  enrich(schema: CanonicalSchema, patterns: LearnedPattern[]): SIEResult<SchemaEnrichmentResult>;
 }
 
 export interface SchemaEnrichmentResult {
@@ -247,7 +247,12 @@ export interface SchemaEnrichmentResult {
 }
 
 export interface SchemaEnrichment {
-  readonly kind: 'role-inferred' | 'audit-detected' | 'relationship-suggested' | 'naming-issue' | 'structure-match';
+  readonly kind:
+    | 'role-inferred'
+    | 'audit-detected'
+    | 'relationship-suggested'
+    | 'naming-issue'
+    | 'structure-match';
   readonly entityName?: string;
   readonly fieldName?: string;
   readonly description: string;

@@ -14,41 +14,43 @@ import type { AgentSummary } from '@/types/index';
 
 const columns: Column<AgentSummary>[] = [
   {
-    key:    'hostname',
+    key: 'hostname',
     header: 'Agent',
-    cell:   (a) => (
+    cell: (a) => (
       <div>
         <p className="font-medium text-slate-900">{a.hostname}</p>
-        <p className="text-xs text-slate-400 font-mono">{a.ip} · {a.os}</p>
+        <p className="text-xs text-slate-400 font-mono">
+          {a.ip} · {a.os}
+        </p>
       </div>
     ),
   },
   {
-    key:    'status',
+    key: 'status',
     header: 'Status',
-    cell:   (a) => <StatusBadge status={a.status} />,
+    cell: (a) => <StatusBadge status={a.status} />,
   },
   {
-    key:    'version',
+    key: 'version',
     header: 'Version',
-    cell:   (a) => <span className="font-mono text-xs">v{a.version}</span>,
+    cell: (a) => <span className="font-mono text-xs">v{a.version}</span>,
   },
   {
-    key:    'connectors',
+    key: 'connectors',
     header: 'Connectors',
-    align:  'right',
-    cell:   (a) => <span className="tabular-nums">{a.connectors}</span>,
+    align: 'right',
+    cell: (a) => <span className="tabular-nums">{a.connectors}</span>,
   },
   {
-    key:    'syncCount',
+    key: 'syncCount',
     header: 'Syncs',
-    align:  'right',
-    cell:   (a) => <span className="tabular-nums">{formatNumber(a.syncCount)}</span>,
+    align: 'right',
+    cell: (a) => <span className="tabular-nums">{formatNumber(a.syncCount)}</span>,
   },
   {
-    key:    'lastSeen',
+    key: 'lastSeen',
     header: 'Last Seen',
-    cell:   (a) => formatRelative(a.lastSeen),
+    cell: (a) => formatRelative(a.lastSeen),
   },
 ];
 
@@ -57,10 +59,10 @@ export default function AgentsPage() {
   const { data, isLoading, error, refetch } = useAgents();
 
   if (isLoading) return <PageLoading />;
-  if (error)     return <ErrorState message="Could not load agents." onRetry={() => void refetch()} />;
+  if (error) return <ErrorState message="Could not load agents." onRetry={() => void refetch()} />;
 
-  const agents  = data ?? [];
-  const online  = agents.filter((a) => a.status === 'ONLINE').length;
+  const agents = data ?? [];
+  const online = agents.filter((a) => a.status === 'ONLINE').length;
 
   return (
     <div className="space-y-4 max-w-screen-xl">

@@ -9,15 +9,15 @@ import type { Connector, ConnectorFactory } from '../interfaces/connector.js';
 import type { ConnectorContext } from '../core/connector-context.js';
 
 export interface LoadedPlugin {
-  readonly manifest:   PluginManifest;
-  readonly connector:  Connector;
+  readonly manifest: PluginManifest;
+  readonly connector: Connector;
 }
 
 export class PluginLoadError extends Error {
   constructor(
     public readonly pluginDir: string,
     message: string,
-    public readonly cause?: Error,
+    public readonly cause?: Error
   ) {
     super(`Failed to load plugin at "${pluginDir}": ${message}`);
     this.name = 'PluginLoadError';
@@ -50,12 +50,14 @@ export class PluginLoader {
 
   constructor(
     private readonly _keyRegistry: TrustedKeyRegistry = new TrustedKeyRegistry(),
-    private readonly _opts: PluginLoaderOptions = {},
+    private readonly _opts: PluginLoaderOptions = {}
   ) {
     this._sigVerifier = new SignatureVerifier(_keyRegistry);
   }
 
-  get keyRegistry(): TrustedKeyRegistry { return this._keyRegistry; }
+  get keyRegistry(): TrustedKeyRegistry {
+    return this._keyRegistry;
+  }
 
   /** Load a single plugin from a directory containing connector.json. */
   async load(pluginDir: string, context: ConnectorContext): Promise<LoadedPlugin> {
@@ -65,10 +67,14 @@ export class PluginLoader {
     let manifest: PluginManifest;
     try {
       const raw = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as unknown;
-      manifest  = validateManifest(raw);
+      manifest = validateManifest(raw);
     } catch (err) {
       if (err instanceof PluginManifestError) throw new PluginLoadError(pluginDir, err.message);
-      throw new PluginLoadError(pluginDir, `cannot read connector.json: ${(err as Error).message}`, err as Error);
+      throw new PluginLoadError(
+        pluginDir,
+        `cannot read connector.json: ${(err as Error).message}`,
+        err as Error
+      );
     }
 
     // 2. Read entry file
@@ -77,14 +83,22 @@ export class PluginLoader {
     try {
       bundle = fs.readFileSync(entryPath);
     } catch (err) {
-      throw new PluginLoadError(pluginDir, `cannot read entry file "${manifest.entry}"`, err as Error);
+      throw new PluginLoadError(
+        pluginDir,
+        `cannot read entry file "${manifest.entry}"`,
+        err as Error
+      );
     }
 
     // 3. Verify hash
     try {
       verifyHash(bundle, manifest.hash);
     } catch (err) {
-      throw new PluginLoadError(pluginDir, `integrity check failed for "${manifest.entry}"`, err as Error);
+      throw new PluginLoadError(
+        pluginDir,
+        `integrity check failed for "${manifest.entry}"`,
+        err as Error
+      );
     }
 
     // 4. Verify signature (skip in dev mode or when signature is empty)
@@ -103,9 +117,13 @@ export class PluginLoader {
     const moduleUrl = pathToFileURL(entryPath).href;
     let mod: { default?: ConnectorFactory };
     try {
-      mod = await import(/* @vite-ignore */ moduleUrl) as { default?: ConnectorFactory };
+      mod = (await import(/* @vite-ignore */ moduleUrl)) as { default?: ConnectorFactory };
     } catch (err) {
-      throw new PluginLoadError(pluginDir, `module import failed: ${(err as Error).message}`, err as Error);
+      throw new PluginLoadError(
+        pluginDir,
+        `module import failed: ${(err as Error).message}`,
+        err as Error
+      );
     }
 
     if (typeof mod.default !== 'function') {
@@ -117,7 +135,11 @@ export class PluginLoader {
     try {
       connector = mod.default(context);
     } catch (err) {
-      throw new PluginLoadError(pluginDir, `factory function threw: ${(err as Error).message}`, err as Error);
+      throw new PluginLoadError(
+        pluginDir,
+        `factory function threw: ${(err as Error).message}`,
+        err as Error
+      );
     }
 
     return { manifest, connector };
@@ -129,12 +151,13 @@ export class PluginLoader {
    * ConnectorContext scoped to that connector.
    */
   async loadAll(
-    pluginsRoot:  string,
-    makeContext:  (connectorId: string) => ConnectorContext,
+    pluginsRoot: string,
+    makeContext: (connectorId: string) => ConnectorContext
   ): Promise<LoadedPlugin[]> {
     if (!fs.existsSync(pluginsRoot)) return [];
 
-    const dirs = fs.readdirSync(pluginsRoot, { withFileTypes: true })
+    const dirs = fs
+      .readdirSync(pluginsRoot, { withFileTypes: true })
       .filter((e: import('node:fs').Dirent) => e.isDirectory())
       .map((e: import('node:fs').Dirent) => path.join(pluginsRoot, e.name));
 
@@ -148,7 +171,9 @@ export class PluginLoader {
       try {
         const raw = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as Record<string, unknown>;
         if (typeof raw['id'] === 'string') connectorId = raw['id'];
-      } catch { /* fall back to dir name */ }
+      } catch {
+        /* fall back to dir name */
+      }
 
       const plugin = await this.load(dir, makeContext(connectorId));
       results.push(plugin);

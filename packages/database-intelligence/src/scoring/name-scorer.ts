@@ -14,7 +14,7 @@ import { ENTITY_PATTERNS, normalizeTableName } from '../knowledge/entity-pattern
 import type { EntityType, ScoreMap, ScoringReason } from '../types/index.js';
 
 export interface NameScoreResult {
-  readonly scores:  ScoreMap;
+  readonly scores: ScoreMap;
   readonly reasons: readonly ScoringReason[];
 }
 
@@ -24,7 +24,10 @@ export class NameScorer {
     const scores: Record<EntityType, number> = {} as Record<EntityType, number>;
     const reasons: ScoringReason[] = [];
 
-    for (const [entity, patterns] of Object.entries(ENTITY_PATTERNS) as [EntityType, typeof ENTITY_PATTERNS[EntityType]][]) {
+    for (const [entity, patterns] of Object.entries(ENTITY_PATTERNS) as [
+      EntityType,
+      (typeof ENTITY_PATTERNS)[EntityType],
+    ][]) {
       let best = 0;
       let bestReason = '';
 
@@ -32,27 +35,39 @@ export class NameScorer {
         // Exact match
         if (tiers.exact.includes(candidate)) {
           const pts = 100;
-          if (pts > best) { best = pts; bestReason = `table name "${candidate}" exactly matches "${entity}" exact list`; }
+          if (pts > best) {
+            best = pts;
+            bestReason = `table name "${candidate}" exactly matches "${entity}" exact list`;
+          }
         }
         // Strong contains
         for (const p of tiers.strong) {
           if (candidate === p || candidate.includes(p)) {
             const pts = 80;
-            if (pts > best) { best = pts; bestReason = `table name "${candidate}" contains strong pattern "${p}" for ${entity}`; }
+            if (pts > best) {
+              best = pts;
+              bestReason = `table name "${candidate}" contains strong pattern "${p}" for ${entity}`;
+            }
           }
         }
         // Medium contains
         for (const p of tiers.medium) {
           if (candidate === p || candidate.includes(p)) {
             const pts = 50;
-            if (pts > best) { best = pts; bestReason = `table name "${candidate}" contains medium pattern "${p}" for ${entity}`; }
+            if (pts > best) {
+              best = pts;
+              bestReason = `table name "${candidate}" contains medium pattern "${p}" for ${entity}`;
+            }
           }
         }
         // Weak contains
         for (const p of tiers.weak) {
           if (candidate === p || candidate.includes(p)) {
             const pts = 20;
-            if (pts > best) { best = pts; bestReason = `table name "${candidate}" contains weak pattern "${p}" for ${entity}`; }
+            if (pts > best) {
+              best = pts;
+              bestReason = `table name "${candidate}" contains weak pattern "${p}" for ${entity}`;
+            }
           }
         }
       };

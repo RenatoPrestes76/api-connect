@@ -1,13 +1,16 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
-  startTestServer, stopServer, seedToken, provisionAgent,
+  startTestServer,
+  stopServer,
+  seedToken,
+  provisionAgent,
   type TestAtlasServer,
 } from './helpers.js';
 
 describe('POST /api/v1/sync-status', () => {
-  let ctx:         TestAtlasServer;
+  let ctx: TestAtlasServer;
   let accessToken: string;
-  let agentId:     string;
+  let agentId: string;
 
   beforeAll(async () => {
     ctx = await startTestServer();
@@ -15,9 +18,9 @@ describe('POST /api/v1/sync-status', () => {
     const rawToken = await seedToken(ctx.tokenRepo);
     ({ agentId, accessToken } = await provisionAgent(ctx.baseUrl, rawToken));
     await fetch(`${ctx.baseUrl}/api/v1/heartbeat`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-      body:    '{}',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: '{}',
     });
   });
 
@@ -25,16 +28,16 @@ describe('POST /api/v1/sync-status', () => {
 
   async function sync(body: unknown = {}, token = accessToken): Promise<Response> {
     return fetch(`${ctx.baseUrl}/api/v1/sync-status`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body:    JSON.stringify(body),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
     });
   }
 
   it('returns 200 with agentId and lastSynchronization', async () => {
-    const res  = await sync();
+    const res = await sync();
     expect(res.status).toBe(200);
-    const body = await res.json() as { data: { agentId: string; lastSynchronization: string } };
+    const body = (await res.json()) as { data: { agentId: string; lastSynchronization: string } };
     expect(body.data.agentId).toBe(agentId);
     expect(body.data.lastSynchronization).toBeDefined();
   });
@@ -53,7 +56,9 @@ describe('POST /api/v1/sync-status', () => {
 
   it('returns 401 without Authorization header', async () => {
     const res = await fetch(`${ctx.baseUrl}/api/v1/sync-status`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
     });
     expect(res.status).toBe(401);
   });

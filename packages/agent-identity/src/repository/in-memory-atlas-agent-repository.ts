@@ -3,8 +3,8 @@
  * local development. Not suitable for production (no persistence, no locking).
  */
 import { AtlasAgent, AtlasAgentSnapshot } from '../entity/atlas-agent.js';
-import { AgentStatusKind }                from '../value-objects/agent-status.js';
-import type { AtlasAgentRepository }       from './atlas-agent-repository.js';
+import { AgentStatusKind } from '../value-objects/agent-status.js';
+import type { AtlasAgentRepository } from './atlas-agent-repository.js';
 
 export class InMemoryAtlasAgentRepository implements AtlasAgentRepository {
   private readonly _store = new Map<string, AtlasAgentSnapshot>();
@@ -68,10 +68,14 @@ export class InMemoryAtlasAgentRepository implements AtlasAgentRepository {
   }
 
   /** Test helper — total number of stored agents. */
-  get size(): number { return this._store.size; }
+  get size(): number {
+    return this._store.size;
+  }
 
   /** Test helper — clear all stored agents. */
-  clear(): void { this._store.clear(); }
+  clear(): void {
+    this._store.clear();
+  }
 }
 
 export class RepositoryError extends Error {

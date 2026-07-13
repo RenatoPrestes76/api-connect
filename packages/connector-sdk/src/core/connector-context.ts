@@ -11,15 +11,15 @@ import type { ConnectorScheduler } from '../scheduler/connector-scheduler.js';
  */
 export interface ConnectorContext {
   /** The connector's unique ID (matches ConnectorMetadata.id). */
-  readonly connectorId:  string;
+  readonly connectorId: string;
   /** Read-only access to the connector's configuration. */
-  readonly config:       ConfigStore;
+  readonly config: ConfigStore;
   /** Secure access to credentials (passwords, tokens, certificates). */
-  readonly credentials:  CredentialStore;
+  readonly credentials: CredentialStore;
   /** Scoped logger — all entries are tagged with connectorId. */
-  readonly logger:       ConnectorLogger;
+  readonly logger: ConnectorLogger;
   /** Platform event bus — emit and subscribe to typed events. */
-  readonly eventBus:     EventBus;
+  readonly eventBus: EventBus;
   /** Register recurring jobs (health checks, syncs, discovery). */
-  readonly scheduler:    ConnectorScheduler;
+  readonly scheduler: ConnectorScheduler;
 }

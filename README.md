@@ -122,24 +122,28 @@ pnpm validate
 ## Architecture Principles
 
 ### 1. **Enterprise Standards**
+
 - Strict TypeScript configuration
 - Comprehensive error handling
 - Security-first approach
 - Scalable patterns
 
 ### 2. **Code Quality**
+
 - Automated linting and formatting
 - Pre-commit hooks via Husky
 - Conventional commits
 - Type safety
 
 ### 3. **Developer Experience**
+
 - Clear folder structure
 - Shared configuration
 - Turborepo caching
 - Hot module reloading
 
 ### 4. **Performance**
+
 - Optimized builds
 - Code splitting
 - Package optimization
@@ -148,24 +152,28 @@ pnpm validate
 ## Configuration Files
 
 ### TypeScript (`tsconfig.json`)
+
 - Strict mode enabled
 - ES2020 target
 - Path aliases for imports
 - Shared configuration inheritance
 
 ### ESLint (`.eslintrc.cjs`)
+
 - Strict TypeScript rules
 - Prettier integration
 - Turbo-aware linting
 - Consistent code style
 
 ### Prettier (`.prettierrc.json`)
+
 - 100 character line width
 - Single quotes
 - Trailing commas
 - Tab width: 2
 
 ### Tailwind CSS
+
 - Slate color scheme
 - Blue accents
 - Inter font family
@@ -174,6 +182,7 @@ pnpm validate
 ## Monorepo Commands
 
 ### Development
+
 ```bash
 pnpm dev              # Start all dev servers
 pnpm dev:cloud        # Start cloud app
@@ -181,12 +190,14 @@ pnpm dev:api          # Start API server
 ```
 
 ### Building
+
 ```bash
 pnpm build            # Build all (except docs)
 pnpm build:all        # Build including docs
 ```
 
 ### Quality
+
 ```bash
 pnpm lint             # Run ESLint
 pnpm lint:fix         # Fix linting issues
@@ -197,6 +208,7 @@ pnpm validate         # Full validation
 ```
 
 ### Cleanup
+
 ```bash
 pnpm clean            # Remove all caches and outputs
 ```
@@ -217,6 +229,7 @@ pnpm db:studio
 ## Git Workflow
 
 ### Conventional Commits
+
 This project enforces [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
@@ -230,7 +243,9 @@ This project enforces [Conventional Commits](https://www.conventionalcommits.org
 **Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`, `infra`
 
 ### Pre-commit Hooks
+
 Husky automatically:
+
 - Runs ESLint on staged files
 - Formats code with Prettier
 - Validates commit messages

@@ -85,12 +85,7 @@ export interface SuggestionBundle {
   readonly expiresAt?: Date;
 }
 
-export type BundleStatus =
-  | 'pending'
-  | 'partial'
-  | 'complete'
-  | 'rejected'
-  | 'expired';
+export type BundleStatus = 'pending' | 'partial' | 'complete' | 'rejected' | 'expired';
 
 // ─── Semantic Suggestion ──────────────────────────────────────────────────
 
@@ -208,7 +203,11 @@ export interface SuggestionStore {
   getById(id: string): Promise<SemanticResult<SemanticSuggestion | null>>;
   getBundle(bundleId: string): Promise<SemanticResult<SuggestionBundle | null>>;
   listPending(options?: SuggestionListOptions): Promise<SemanticResult<SemanticSuggestion[]>>;
-  updateStatus(id: string, status: SuggestionStatus, reviewedBy?: string): Promise<SemanticResult<void>>;
+  updateStatus(
+    id: string,
+    status: SuggestionStatus,
+    reviewedBy?: string
+  ): Promise<SemanticResult<void>>;
   delete(id: string): Promise<SemanticResult<void>>;
 }
 

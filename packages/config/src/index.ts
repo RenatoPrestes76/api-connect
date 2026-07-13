@@ -19,10 +19,7 @@ interface Config {
 }
 
 function validateEnv(): void {
-  const required = [
-    'DATABASE_URL',
-    'API_SECRET_KEY',
-  ];
+  const required = ['DATABASE_URL', 'API_SECRET_KEY'];
 
   const missing = required.filter((key) => !process.env[key]);
 

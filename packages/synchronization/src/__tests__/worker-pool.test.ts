@@ -82,7 +82,7 @@ describe('pMap', () => {
         concurrent--;
         return n * 3;
       },
-      2,
+      2
     );
 
     expect(results).toEqual([3, 6, 9, 12, 15]);

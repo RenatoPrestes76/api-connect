@@ -1,7 +1,7 @@
 import { cn, confidenceBg, confidenceColor } from '@/lib/utils';
 
 interface ConfidenceBarProps {
-  score:     number;
+  score: number;
   showLabel?: boolean;
   className?: string;
 }
@@ -25,15 +25,19 @@ export function ConfidenceBar({ score, showLabel = true, className }: Confidence
 }
 
 interface DiscoveryCardProps {
-  table:       string;
-  entity:      string;
-  confidence:  number;
+  table: string;
+  entity: string;
+  confidence: number;
   fieldCount?: number;
-  className?:  string;
+  className?: string;
 }
 
 export function DiscoveryCard({
-  table, entity, confidence, fieldCount, className,
+  table,
+  entity,
+  confidence,
+  fieldCount,
+  className,
 }: DiscoveryCardProps) {
   return (
     <div className={cn('rounded-lg border border-slate-200 bg-white p-3 space-y-2', className)}>

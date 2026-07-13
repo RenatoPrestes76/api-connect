@@ -1,20 +1,31 @@
 'use client';
 import {
   BarChart as ReBarChart,
-  Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
 } from 'recharts';
 
 interface BarChartProps {
-  data:     Record<string, unknown>[];
-  xKey:     string;
-  yKey:     string;
-  color?:   string;
-  height?:  number;
-  label?:   string;
+  data: Record<string, unknown>[];
+  xKey: string;
+  yKey: string;
+  color?: string;
+  height?: number;
+  label?: string;
 }
 
 export function BarChart({
-  data, xKey, yKey, color = '#4f46e5', height = 180, label,
+  data,
+  xKey,
+  yKey,
+  color = '#4f46e5',
+  height = 180,
+  label,
 }: BarChartProps) {
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -26,11 +37,7 @@ export function BarChart({
           tickLine={false}
           axisLine={false}
         />
-        <YAxis
-          tick={{ fontSize: 11, fill: '#94a3b8' }}
-          tickLine={false}
-          axisLine={false}
-        />
+        <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
         <Tooltip
           contentStyle={{
             background: '#fff',

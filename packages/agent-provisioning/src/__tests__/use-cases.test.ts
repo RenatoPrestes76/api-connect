@@ -1,44 +1,44 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { AtlasAgent, InMemoryAtlasAgentRepository } from '@seltriva/agent-identity';
-import { InMemoryProvisioningTokenRepository }       from '../repository/in-memory-provisioning-token-repository.js';
-import { InMemoryAgentAccessTokenRepository }        from '../repository/in-memory-agent-access-token-repository.js';
-import { ProvisioningService }                       from '../service/provisioning-service.js';
-import { ProvisioningToken }                         from '../entity/provisioning-token.js';
-import { CreateProvisioningToken }                   from '../use-cases/create-provisioning-token.js';
-import { RevokeProvisioningToken }                   from '../use-cases/revoke-provisioning-token.js';
-import { ProvisionAgent }                            from '../use-cases/provision-agent.js';
-import { UpdateAgentVersion }                        from '../use-cases/update-agent-version.js';
-import { UpdateAgentHostname }                       from '../use-cases/update-agent-hostname.js';
-import type { RegisterAgentParams }                  from '@seltriva/agent-identity';
+import { InMemoryProvisioningTokenRepository } from '../repository/in-memory-provisioning-token-repository.js';
+import { InMemoryAgentAccessTokenRepository } from '../repository/in-memory-agent-access-token-repository.js';
+import { ProvisioningService } from '../service/provisioning-service.js';
+import { ProvisioningToken } from '../entity/provisioning-token.js';
+import { CreateProvisioningToken } from '../use-cases/create-provisioning-token.js';
+import { RevokeProvisioningToken } from '../use-cases/revoke-provisioning-token.js';
+import { ProvisionAgent } from '../use-cases/provision-agent.js';
+import { UpdateAgentVersion } from '../use-cases/update-agent-version.js';
+import { UpdateAgentHostname } from '../use-cases/update-agent-hostname.js';
+import type { RegisterAgentParams } from '@seltriva/agent-identity';
 
-const FUTURE  = new Date(Date.now() + 86_400_000);
+const FUTURE = new Date(Date.now() + 86_400_000);
 const COMPANY = 'co-usecases';
 
 const AGENT_PARAMS: RegisterAgentParams = {
-  companyId:     COMPANY,
-  name:          'Runtime 1',
-  hostname:      'host01',
-  machineId:     'MACHINE-UC001-TEST',
+  companyId: COMPANY,
+  name: 'Runtime 1',
+  hostname: 'host01',
+  machineId: 'MACHINE-UC001-TEST',
   connectorType: 'POSTGRES',
-  version:       '1.2.0',
+  version: '1.2.0',
 };
 
 // ─── CreateProvisioningToken ──────────────────────────────────────────────────
 
 describe('CreateProvisioningToken', () => {
-  let repo:    InMemoryProvisioningTokenRepository;
+  let repo: InMemoryProvisioningTokenRepository;
   let useCase: CreateProvisioningToken;
 
   beforeEach(() => {
-    repo    = new InMemoryProvisioningTokenRepository();
+    repo = new InMemoryProvisioningTokenRepository();
     useCase = new CreateProvisioningToken(repo);
   });
 
   it('creates a token and returns ok=true with rawToken', async () => {
     const result = await useCase.execute({
-      companyId:   COMPANY,
+      companyId: COMPANY,
       description: 'test',
-      expiresAt:   FUTURE,
+      expiresAt: FUTURE,
     });
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -64,9 +64,9 @@ describe('CreateProvisioningToken', () => {
 
   it('returns VALIDATION_ERROR for past expiresAt', async () => {
     const result = await useCase.execute({
-      companyId:   COMPANY,
+      companyId: COMPANY,
       description: 'test',
-      expiresAt:   new Date(Date.now() - 1),
+      expiresAt: new Date(Date.now() - 1),
     });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe('VALIDATION_ERROR');
@@ -76,25 +76,25 @@ describe('CreateProvisioningToken', () => {
 // ─── RevokeProvisioningToken ──────────────────────────────────────────────────
 
 describe('RevokeProvisioningToken', () => {
-  let repo:    InMemoryProvisioningTokenRepository;
+  let repo: InMemoryProvisioningTokenRepository;
   let useCase: RevokeProvisioningToken;
 
   beforeEach(() => {
-    repo    = new InMemoryProvisioningTokenRepository();
+    repo = new InMemoryProvisioningTokenRepository();
     useCase = new RevokeProvisioningToken(repo);
   });
 
   async function createToken() {
     const { token } = ProvisioningToken.create(
       { companyId: COMPANY, description: 'x', expiresAt: FUTURE },
-      () => `tok-${Math.random()}`,
+      () => `tok-${Math.random()}`
     );
     await repo.create(token);
     return token;
   }
 
   it('revokes an existing token', async () => {
-    const token  = await createToken();
+    const token = await createToken();
     const result = await useCase.execute(token.id);
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -115,20 +115,24 @@ describe('RevokeProvisioningToken', () => {
 describe('ProvisionAgent', () => {
   let tokenRepo: InMemoryProvisioningTokenRepository;
   let agentRepo: InMemoryAtlasAgentRepository;
-  let service:   ProvisioningService;
-  let useCase:   ProvisionAgent;
+  let service: ProvisioningService;
+  let useCase: ProvisionAgent;
 
   beforeEach(() => {
     tokenRepo = new InMemoryProvisioningTokenRepository();
     agentRepo = new InMemoryAtlasAgentRepository();
-    service   = new ProvisioningService(tokenRepo, agentRepo, new InMemoryAgentAccessTokenRepository());
-    useCase   = new ProvisionAgent(service);
+    service = new ProvisioningService(
+      tokenRepo,
+      agentRepo,
+      new InMemoryAgentAccessTokenRepository()
+    );
+    useCase = new ProvisionAgent(service);
   });
 
   async function mkRawToken() {
     const { token, rawToken } = ProvisioningToken.create(
       { companyId: COMPANY, description: 'provision', expiresAt: FUTURE },
-      () => `tok-${Math.random()}`,
+      () => `tok-${Math.random()}`
     );
     await tokenRepo.create(token);
     return rawToken;
@@ -136,7 +140,7 @@ describe('ProvisionAgent', () => {
 
   it('provisions an agent successfully', async () => {
     const rawToken = await mkRawToken();
-    const result   = await useCase.execute({ rawToken, agentParams: AGENT_PARAMS });
+    const result = await useCase.execute({ rawToken, agentParams: AGENT_PARAMS });
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value.agentId).toBeDefined();
@@ -145,7 +149,7 @@ describe('ProvisionAgent', () => {
 
   it('delegates token errors correctly (TOKEN_NOT_FOUND)', async () => {
     const result = await useCase.execute({
-      rawToken:   'slp_' + '0'.repeat(64),
+      rawToken: 'slp_' + '0'.repeat(64),
       agentParams: AGENT_PARAMS,
     });
     expect(result.ok).toBe(false);
@@ -156,11 +160,11 @@ describe('ProvisionAgent', () => {
 // ─── UpdateAgentVersion ───────────────────────────────────────────────────────
 
 describe('UpdateAgentVersion', () => {
-  let repo:    InMemoryAtlasAgentRepository;
+  let repo: InMemoryAtlasAgentRepository;
   let useCase: UpdateAgentVersion;
 
   beforeEach(() => {
-    repo    = new InMemoryAtlasAgentRepository();
+    repo = new InMemoryAtlasAgentRepository();
     useCase = new UpdateAgentVersion(repo);
   });
 
@@ -171,7 +175,7 @@ describe('UpdateAgentVersion', () => {
   }
 
   it('upgrades version and returns ok=true', async () => {
-    const id     = await registerAgent();
+    const id = await registerAgent();
     const result = await useCase.execute(id, '2.0.0');
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value.version).toBe('2.0.0');
@@ -191,7 +195,7 @@ describe('UpdateAgentVersion', () => {
   });
 
   it('returns AGENT_DISABLED when agent is disabled', async () => {
-    const id    = await registerAgent();
+    const id = await registerAgent();
     const agent = await repo.findById(id);
     agent!.markHeartbeat();
     agent!.disable();
@@ -202,14 +206,14 @@ describe('UpdateAgentVersion', () => {
   });
 
   it('returns VERSION_NOT_NEWER for same or lower version', async () => {
-    const id     = await registerAgent();
+    const id = await registerAgent();
     const result = await useCase.execute(id, '1.0.0'); // same
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe('VERSION_NOT_NEWER');
   });
 
   it('returns VERSION_NOT_NEWER for an invalid version string', async () => {
-    const id     = await registerAgent();
+    const id = await registerAgent();
     const result = await useCase.execute(id, 'not-semver');
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe('VERSION_NOT_NEWER');
@@ -219,11 +223,11 @@ describe('UpdateAgentVersion', () => {
 // ─── UpdateAgentHostname ──────────────────────────────────────────────────────
 
 describe('UpdateAgentHostname', () => {
-  let repo:    InMemoryAtlasAgentRepository;
+  let repo: InMemoryAtlasAgentRepository;
   let useCase: UpdateAgentHostname;
 
   beforeEach(() => {
-    repo    = new InMemoryAtlasAgentRepository();
+    repo = new InMemoryAtlasAgentRepository();
     useCase = new UpdateAgentHostname(repo);
   });
 
@@ -234,7 +238,7 @@ describe('UpdateAgentHostname', () => {
   }
 
   it('updates hostname and returns ok=true', async () => {
-    const id     = await registerAgent();
+    const id = await registerAgent();
     const result = await useCase.execute(id, 'newhost.acme.com');
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value.hostname).toBe('newhost.acme.com');
@@ -254,7 +258,7 @@ describe('UpdateAgentHostname', () => {
   });
 
   it('returns AGENT_DISABLED when agent is disabled', async () => {
-    const id    = await registerAgent();
+    const id = await registerAgent();
     const agent = await repo.findById(id);
     agent!.markHeartbeat();
     agent!.disable();
@@ -265,7 +269,7 @@ describe('UpdateAgentHostname', () => {
   });
 
   it('returns INVALID_HOSTNAME for a bad hostname string', async () => {
-    const id     = await registerAgent();
+    const id = await registerAgent();
     const result = await useCase.execute(id, 'bad hostname!');
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe('INVALID_HOSTNAME');

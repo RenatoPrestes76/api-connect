@@ -12,51 +12,47 @@
  *  - "@hourly"     → every 1 hour
  *  - ISO duration  → "PT5M" = 5 minutes (parsed as ms)
  */
-import type {
-  SyncJobId,
-  SyncMode,
-  TenantId,
-} from '../types/index.js';
+import type { SyncJobId, SyncMode, TenantId } from '../types/index.js';
 
 export interface ScheduledJob {
-  readonly id:          SyncJobId;
-  readonly tenantId:    TenantId;
-  readonly intervalMs:  number;
-  readonly mode:        SyncMode;
-  readonly enabled:     boolean;
-  readonly lastRunAt:   number | null;
-  readonly nextRunAt:   number;
-  readonly runCount:    number;
-  readonly errorCount:  number;
+  readonly id: SyncJobId;
+  readonly tenantId: TenantId;
+  readonly intervalMs: number;
+  readonly mode: SyncMode;
+  readonly enabled: boolean;
+  readonly lastRunAt: number | null;
+  readonly nextRunAt: number;
+  readonly runCount: number;
+  readonly errorCount: number;
 }
 
 export type ScheduledJobRunner = (jobId: SyncJobId) => Promise<void>;
 
 export class SyncScheduler {
-  private readonly _jobs    = new Map<SyncJobId, ScheduledJob>();
-  private readonly _timers  = new Map<SyncJobId, ReturnType<typeof setInterval>>();
-  private          _running = false;
+  private readonly _jobs = new Map<SyncJobId, ScheduledJob>();
+  private readonly _timers = new Map<SyncJobId, ReturnType<typeof setInterval>>();
+  private _running = false;
 
   register(params: {
-    jobId:      SyncJobId;
-    tenantId:   TenantId;
-    interval:   string;
-    mode:       SyncMode;
-    enabled?:   boolean;
+    jobId: SyncJobId;
+    tenantId: TenantId;
+    interval: string;
+    mode: SyncMode;
+    enabled?: boolean;
   }): ScheduledJob {
     const intervalMs = parseInterval(params.interval);
     const now = Date.now();
 
     const job: ScheduledJob = {
-      id:          params.jobId,
-      tenantId:    params.tenantId,
+      id: params.jobId,
+      tenantId: params.tenantId,
       intervalMs,
-      mode:        params.mode,
-      enabled:     params.enabled ?? true,
-      lastRunAt:   null,
-      nextRunAt:   now + intervalMs,
-      runCount:    0,
-      errorCount:  0,
+      mode: params.mode,
+      enabled: params.enabled ?? true,
+      lastRunAt: null,
+      nextRunAt: now + intervalMs,
+      runCount: 0,
+      errorCount: 0,
     };
 
     this._jobs.set(params.jobId, job);
@@ -85,8 +81,12 @@ export class SyncScheduler {
     this._running = false;
   }
 
-  enable(jobId: SyncJobId): void  { this._setEnabled(jobId, true); }
-  disable(jobId: SyncJobId): void { this._setEnabled(jobId, false); }
+  enable(jobId: SyncJobId): void {
+    this._setEnabled(jobId, true);
+  }
+  disable(jobId: SyncJobId): void {
+    this._setEnabled(jobId, false);
+  }
 
   job(jobId: SyncJobId): ScheduledJob | undefined {
     return this._jobs.get(jobId);
@@ -111,12 +111,12 @@ export class SyncScheduler {
           ...current,
           lastRunAt: Date.now(),
           nextRunAt: Date.now() + current.intervalMs,
-          runCount:  current.runCount + 1,
+          runCount: current.runCount + 1,
         });
       } catch {
         this._jobs.set(jobId, {
           ...current,
-          lastRunAt:  Date.now(),
+          lastRunAt: Date.now(),
           errorCount: current.errorCount + 1,
         });
       }
@@ -127,7 +127,10 @@ export class SyncScheduler {
 
   private _stopTimer(jobId: SyncJobId): void {
     const t = this._timers.get(jobId);
-    if (t) { clearInterval(t); this._timers.delete(jobId); }
+    if (t) {
+      clearInterval(t);
+      this._timers.delete(jobId);
+    }
   }
 
   private _setEnabled(jobId: SyncJobId, enabled: boolean): void {
@@ -141,9 +144,9 @@ export class SyncScheduler {
 function parseInterval(expr: string): number {
   const s = expr.trim().toLowerCase();
 
-  if (s === '@daily')   return 24 * 60 * 60 * 1_000;
-  if (s === '@hourly')  return  1 * 60 * 60 * 1_000;
-  if (s === '@weekly')  return  7 * 24 * 60 * 60 * 1_000;
+  if (s === '@daily') return 24 * 60 * 60 * 1_000;
+  if (s === '@hourly') return 1 * 60 * 60 * 1_000;
+  if (s === '@weekly') return 7 * 24 * 60 * 60 * 1_000;
 
   const every = s.match(/^@every\s+(\d+)(s|m|h|d)$/);
   if (every) {
@@ -161,7 +164,7 @@ function parseInterval(expr: string): number {
   // ISO 8601 duration PT5M, PT1H, etc.
   const iso = s.match(/^pt?(\d+)(s|m|h)$/i);
   if (iso) {
-    const n    = parseInt(iso[1]!, 10);
+    const n = parseInt(iso[1]!, 10);
     const unit = iso[2]!.toLowerCase();
     if (unit === 's') return n * 1_000;
     if (unit === 'm') return n * 60_000;

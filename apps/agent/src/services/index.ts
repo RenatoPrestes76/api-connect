@@ -14,9 +14,7 @@
  *   - MetadataFingerprintCache — maintains schema fingerprints for diff
  */
 
-import type {
-  AgentResult, AgentId, ConnectorId,
-} from '../configuration/index';
+import type { AgentResult, AgentId, ConnectorId } from '../configuration/index';
 import type { HeartbeatRecord } from '../health/index';
 
 // ─── Service Registry ─────────────────────────────────────────────────────
@@ -140,7 +138,7 @@ export interface CloudBridgeService {
 }
 
 export type CloudCommandServiceHandler = (
-  payload: Record<string, unknown>,
+  payload: Record<string, unknown>
 ) => Promise<AgentResult<Record<string, unknown> | void>>;
 
 export type CloudBridgeState =

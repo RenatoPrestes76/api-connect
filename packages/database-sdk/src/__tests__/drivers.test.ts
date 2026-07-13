@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { PostgresDriver }  from '../drivers/postgres.driver.js';
-import { MySqlDriver }     from '../drivers/mysql.driver.js';
+import { PostgresDriver } from '../drivers/postgres.driver.js';
+import { MySqlDriver } from '../drivers/mysql.driver.js';
 import { SqlServerDriver } from '../drivers/sqlserver.driver.js';
-import { OracleDriver }    from '../drivers/oracle.driver.js';
-import { FirebirdDriver }  from '../drivers/firebird.driver.js';
+import { OracleDriver } from '../drivers/oracle.driver.js';
+import { FirebirdDriver } from '../drivers/firebird.driver.js';
 import type { DatabaseAdapter } from '../adapters/database-adapter.js';
 import type { SchemaReader, DatabaseSchema } from '../schema/schema-reader.js';
 import { ConnectionFailedError } from '../errors/database-errors.js';
@@ -15,45 +15,95 @@ import type { FirebirdConnection } from '../drivers/firebird.driver.js';
 // ─── Shared mock schema ──────────────────────────────────────────────────────
 
 const MOCK_SCHEMA: DatabaseSchema = {
-  name:     'testdb',
+  name: 'testdb',
   tables: [
     {
-      name:        'users',
-      columns:     [
-        { name: 'id',    type: 'integer', nullable: false, isPrimaryKey: true,  isForeignKey: false, isUnique: true  },
-        { name: 'email', type: 'varchar', nullable: false, isPrimaryKey: false, isForeignKey: false, isUnique: true  },
-        { name: 'name',  type: 'varchar', nullable: true,  isPrimaryKey: false, isForeignKey: false, isUnique: false },
+      name: 'users',
+      columns: [
+        {
+          name: 'id',
+          type: 'integer',
+          nullable: false,
+          isPrimaryKey: true,
+          isForeignKey: false,
+          isUnique: true,
+        },
+        {
+          name: 'email',
+          type: 'varchar',
+          nullable: false,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isUnique: true,
+        },
+        {
+          name: 'name',
+          type: 'varchar',
+          nullable: true,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isUnique: false,
+        },
       ],
-      primaryKey:  { columns: ['id'] },
+      primaryKey: { columns: ['id'] },
       foreignKeys: [],
-      indexes:     [
-        { name: 'pk_users', columns: ['id'],    isUnique: true,  isPrimary: true  },
-        { name: 'uq_email', columns: ['email'], isUnique: true,  isPrimary: false },
+      indexes: [
+        { name: 'pk_users', columns: ['id'], isUnique: true, isPrimary: true },
+        { name: 'uq_email', columns: ['email'], isUnique: true, isPrimary: false },
       ],
     },
     {
-      name:        'orders',
-      columns:     [
-        { name: 'id',      type: 'integer', nullable: false, isPrimaryKey: true,  isForeignKey: false, isUnique: true  },
-        { name: 'user_id', type: 'integer', nullable: false, isPrimaryKey: false, isForeignKey: true,  isUnique: false },
-        { name: 'total',   type: 'decimal', nullable: false, isPrimaryKey: false, isForeignKey: false, isUnique: false },
+      name: 'orders',
+      columns: [
+        {
+          name: 'id',
+          type: 'integer',
+          nullable: false,
+          isPrimaryKey: true,
+          isForeignKey: false,
+          isUnique: true,
+        },
+        {
+          name: 'user_id',
+          type: 'integer',
+          nullable: false,
+          isPrimaryKey: false,
+          isForeignKey: true,
+          isUnique: false,
+        },
+        {
+          name: 'total',
+          type: 'decimal',
+          nullable: false,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isUnique: false,
+        },
       ],
-      primaryKey:  { columns: ['id'] },
+      primaryKey: { columns: ['id'] },
       foreignKeys: [{ column: 'user_id', referencedTable: 'users', referencedColumn: 'id' }],
-      indexes:     [
-        { name: 'pk_orders',   columns: ['id'],      isUnique: true,  isPrimary: true  },
+      indexes: [
+        { name: 'pk_orders', columns: ['id'], isUnique: true, isPrimary: true },
         { name: 'idx_user_id', columns: ['user_id'], isUnique: false, isPrimary: false },
       ],
     },
   ],
-  relations: [{ fromTable: 'orders', fromColumn: 'user_id', toTable: 'users', toColumn: 'id', type: 'many-to-one' }],
+  relations: [
+    {
+      fromTable: 'orders',
+      fromColumn: 'user_id',
+      toTable: 'users',
+      toColumn: 'id',
+      type: 'many-to-one',
+    },
+  ],
   discoveredAt: new Date(),
 };
 
 function makeMockSchemaReader(): SchemaReader {
   return {
     readSchema: async () => MOCK_SCHEMA,
-    readTable:  async (name) => MOCK_SCHEMA.tables.find((t) => t.name === name) ?? null,
+    readTable: async (name) => MOCK_SCHEMA.tables.find((t) => t.name === name) ?? null,
     listTables: async () => MOCK_SCHEMA.tables.map((t) => t.name),
   };
 }
@@ -63,28 +113,32 @@ function makeMockSchemaReader(): SchemaReader {
 function makePgMockPool(version: string) {
   const released = { done: false };
   return {
-    connect: async () => ({ release: () => { released.done = true; } }),
-    query:   async (sql: string) => {
+    connect: async () => ({
+      release: () => {
+        released.done = true;
+      },
+    }),
+    query: async (sql: string) => {
       if (sql.includes('version()')) return { rows: [{ version }] };
       return { rows: [] };
     },
-    end:           async () => {},
-    totalCount:    1,
-    idleCount:     1,
-    waitingCount:  0,
+    end: async () => {},
+    totalCount: 1,
+    idleCount: 1,
+    waitingCount: 0,
   };
 }
 
 function makeMysqlMockPool(version: string) {
   return {
     query: async (sql: string) => {
-      if (sql === 'SELECT 1')                        return [[], []];
-      if (sql.includes('version() AS version'))      return [[{ version }], []];
+      if (sql === 'SELECT 1') return [[], []];
+      if (sql.includes('version() AS version')) return [[{ version }], []];
       return [[], []];
     },
-    end:  async () => {},
+    end: async () => {},
     pool: {
-      _allConnections:  [],
+      _allConnections: [],
       _freeConnections: [],
     },
   };
@@ -92,17 +146,18 @@ function makeMysqlMockPool(version: string) {
 
 function makeMssqlMockPool(version: string) {
   const makeRequest = () => ({
-    input: function(this: unknown) { return this; },
+    input: function (this: unknown) {
+      return this;
+    },
     query: async (sql: string) => {
-      if (sql.includes('@@VERSION'))
-        return { recordset: [{ version, conns: 1 }] };
+      if (sql.includes('@@VERSION')) return { recordset: [{ version, conns: 1 }] };
       return { recordset: [] };
     },
   });
   return {
-    connect:   async () => {},
-    close:     async () => {},
-    request:   () => makeRequest(),
+    connect: async () => {},
+    close: async () => {},
+    request: () => makeRequest(),
     connected: true,
   };
 }
@@ -116,9 +171,9 @@ function makeOracleMockPool(version: string) {
     close: async () => {},
   });
   return {
-    getConnection:    async () => makeConn(),
-    close:            async () => {},
-    connectionsOpen:  1,
+    getConnection: async () => makeConn(),
+    close: async () => {},
+    connectionsOpen: 1,
     connectionsInUse: 0,
   };
 }
@@ -132,15 +187,20 @@ function makeFirebirdMockConn(version: string): FirebirdConnection {
         cb(null, []);
       }
     },
-    detach: (cb?: (err: Error | null) => void) => { cb?.(null); },
+    detach: (cb?: (err: Error | null) => void) => {
+      cb?.(null);
+    },
   };
 }
 
 // ─── Driver variants ──────────────────────────────────────────────────────────
 
 const CFG = {
-  host: 'localhost', port: 5432, database: 'testdb',
-  username: 'sa', password: 'secret',
+  host: 'localhost',
+  port: 5432,
+  database: 'testdb',
+  username: 'sa',
+  password: 'secret',
 };
 
 type DriverFactory = () => DatabaseAdapter & { isConnected: boolean };
@@ -148,47 +208,52 @@ type DriverFactory = () => DatabaseAdapter & { isConnected: boolean };
 const DRIVERS: [string, DriverFactory, string][] = [
   [
     'PostgreSQL',
-    () => new PostgresDriver(
-      CFG,
-      () => makePgMockPool(PostgresDriver.VERSION) as never,
-      (_client: DbQueryClient, _schema: string) => makeMockSchemaReader(),
-    ),
+    () =>
+      new PostgresDriver(
+        CFG,
+        () => makePgMockPool(PostgresDriver.VERSION) as never,
+        (_client: DbQueryClient, _schema: string) => makeMockSchemaReader()
+      ),
     PostgresDriver.VERSION,
   ],
   [
     'MySQL',
-    () => new MySqlDriver(
-      CFG,
-      () => makeMysqlMockPool(MySqlDriver.VERSION) as never,
-      (_client: DbQueryClient, _db: string) => makeMockSchemaReader(),
-    ),
+    () =>
+      new MySqlDriver(
+        CFG,
+        () => makeMysqlMockPool(MySqlDriver.VERSION) as never,
+        (_client: DbQueryClient, _db: string) => makeMockSchemaReader()
+      ),
     MySqlDriver.VERSION,
   ],
   [
     'SQL Server',
-    () => new SqlServerDriver(
-      CFG,
-      () => makeMssqlMockPool(SqlServerDriver.VERSION) as never,
-      (_client: DbQueryClient, _schema: string) => makeMockSchemaReader(),
-    ),
+    () =>
+      new SqlServerDriver(
+        CFG,
+        () => makeMssqlMockPool(SqlServerDriver.VERSION) as never,
+        (_client: DbQueryClient, _schema: string) => makeMockSchemaReader()
+      ),
     SqlServerDriver.VERSION,
   ],
   [
     'Oracle',
-    () => new OracleDriver(
-      CFG,
-      async () => makeOracleMockPool(OracleDriver.VERSION) as never,
-      (_client: DbQueryClient, _owner: string) => makeMockSchemaReader(),
-    ),
+    () =>
+      new OracleDriver(
+        CFG,
+        async () => makeOracleMockPool(OracleDriver.VERSION) as never,
+        (_client: DbQueryClient, _owner: string) => makeMockSchemaReader()
+      ),
     OracleDriver.VERSION,
   ],
   [
     'Firebird',
-    () => new FirebirdDriver(
-      CFG,
-      async () => makeFirebirdMockConn(FirebirdDriver.VERSION),
-      (_client: DbQueryClient) => makeMockSchemaReader(),
-    ),
+    () =>
+      new FirebirdDriver(
+        CFG,
+        async () => makeFirebirdMockConn(FirebirdDriver.VERSION),
+        (_client: DbQueryClient) => makeMockSchemaReader()
+      ),
     FirebirdDriver.VERSION,
   ],
 ];
@@ -288,7 +353,7 @@ for (const [name, factory, version] of DRIVERS) {
     it('readTable returns specific table', async () => {
       await driver.connect();
       const d = driver as unknown as { readTable(n: string): Promise<unknown> };
-      const t = await d.readTable('users') as { name: string } | null;
+      const t = (await d.readTable('users')) as { name: string } | null;
       expect(t).not.toBeNull();
       expect(t!.name).toBe('users');
     });
@@ -309,14 +374,16 @@ for (const [name, factory, version] of DRIVERS) {
     it('transaction throws TransactionError on callback error', async () => {
       await driver.connect();
       await expect(
-        driver.transaction(() => { throw new Error('boom'); }),
+        driver.transaction(() => {
+          throw new Error('boom');
+        })
       ).rejects.toThrow('Transaction rolled back');
     });
 
     it('transaction throws when not connected', async () => {
-      await expect(
-        driver.transaction(() => Promise.resolve()),
-      ).rejects.toThrow(ConnectionFailedError);
+      await expect(driver.transaction(() => Promise.resolve())).rejects.toThrow(
+        ConnectionFailedError
+      );
     });
   });
 }

@@ -3,30 +3,24 @@
  *
  * Requires `pnpm --filter @seltriva/database db:generate` to have been run.
  */
-import {
-  ProvisioningToken,
-  ProvisioningTokenSnapshot,
-} from '../entity/provisioning-token.js';
+import { ProvisioningToken, ProvisioningTokenSnapshot } from '../entity/provisioning-token.js';
 import type { ProvisioningTokenRepository } from '../repository/provisioning-token-repository.js';
-import type {
-  AgentProvisioningDbClient,
-  PrismaProvisioningToken,
-} from './prisma-types.js';
+import type { AgentProvisioningDbClient, PrismaProvisioningToken } from './prisma-types.js';
 
 // ─── Mapping ─────────────────────────────────────────────────────────────────
 
 function toDomain(row: PrismaProvisioningToken): ProvisioningToken {
   const snap: ProvisioningTokenSnapshot = {
-    id:          row.id,
-    companyId:   row.companyId,
-    tokenHash:   row.tokenHash,
+    id: row.id,
+    companyId: row.companyId,
+    tokenHash: row.tokenHash,
     tokenPrefix: row.tokenPrefix,
     description: row.description,
-    expiresAt:   row.expiresAt,
-    revokedAt:   row.revokedAt,
-    lastUsedAt:  row.lastUsedAt,
-    createdAt:   row.createdAt,
-    updatedAt:   row.updatedAt,
+    expiresAt: row.expiresAt,
+    revokedAt: row.revokedAt,
+    lastUsedAt: row.lastUsedAt,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   };
   return ProvisioningToken.fromSnapshot(snap);
 }
@@ -40,14 +34,14 @@ export class PrismaProvisioningTokenRepository implements ProvisioningTokenRepos
     const snap = token.toSnapshot();
     await this._db.provisioningToken.create({
       data: {
-        id:          snap.id,
-        companyId:   snap.companyId,
-        tokenHash:   snap.tokenHash,
+        id: snap.id,
+        companyId: snap.companyId,
+        tokenHash: snap.tokenHash,
         tokenPrefix: snap.tokenPrefix,
         description: snap.description,
-        expiresAt:   snap.expiresAt,
-        revokedAt:   snap.revokedAt,
-        lastUsedAt:  snap.lastUsedAt,
+        expiresAt: snap.expiresAt,
+        revokedAt: snap.revokedAt,
+        lastUsedAt: snap.lastUsedAt,
       },
     });
   }
@@ -65,7 +59,7 @@ export class PrismaProvisioningTokenRepository implements ProvisioningTokenRepos
   async revoke(id: string): Promise<void> {
     await this._db.provisioningToken.update({
       where: { id },
-      data:  { revokedAt: new Date() },
+      data: { revokedAt: new Date() },
     });
   }
 
@@ -83,7 +77,7 @@ export class PrismaProvisioningTokenRepository implements ProvisioningTokenRepos
   async updateLastUse(id: string, lastUsedAt: Date): Promise<void> {
     await this._db.provisioningToken.update({
       where: { id },
-      data:  { lastUsedAt },
+      data: { lastUsedAt },
     });
   }
 }

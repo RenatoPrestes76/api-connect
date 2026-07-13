@@ -8,17 +8,17 @@ Abstracts where configuration comes from (files, environment, remote services, s
 
 ## Interfaces
 
-| Interface | Role |
-|-----------|------|
-| `ConfigurationManager` | Central facade — get, set, watch, validate |
-| `ConfigurationSchema` | JSON Schema-like descriptor for validation |
-| `ConfigValidationResult` | Validation output with per-field errors |
-| `ConfigurationProvider` | Strategy: single config source |
-| `EnvironmentConfigurationProvider` | Reads from env vars with prefix stripping |
-| `FileConfigurationProvider` | Reads from `.json`, `.yaml`, `.env` files |
-| `RemoteConfigurationProvider` | Polls Consul, Vault, AWS SSM, etc. |
-| `SecretProvider` | Retrieves secrets from a secure backend |
-| `ConfigurationLoader` | Merges multiple providers by priority |
+| Interface                          | Role                                       |
+| ---------------------------------- | ------------------------------------------ |
+| `ConfigurationManager`             | Central facade — get, set, watch, validate |
+| `ConfigurationSchema`              | JSON Schema-like descriptor for validation |
+| `ConfigValidationResult`           | Validation output with per-field errors    |
+| `ConfigurationProvider`            | Strategy: single config source             |
+| `EnvironmentConfigurationProvider` | Reads from env vars with prefix stripping  |
+| `FileConfigurationProvider`        | Reads from `.json`, `.yaml`, `.env` files  |
+| `RemoteConfigurationProvider`      | Polls Consul, Vault, AWS SSM, etc.         |
+| `SecretProvider`                   | Retrieves secrets from a secure backend    |
+| `ConfigurationLoader`              | Merges multiple providers by priority      |
 
 ## Architecture
 

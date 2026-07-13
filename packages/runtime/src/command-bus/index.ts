@@ -14,8 +14,13 @@
  */
 
 import type {
-  RuntimeResult, ModuleId, CommandId, CorrelationId,
-  SpanContext, Priority, Disposable,
+  RuntimeResult,
+  ModuleId,
+  CommandId,
+  CorrelationId,
+  SpanContext,
+  Priority,
+  Disposable,
 } from '../kernel/index';
 
 // ─── Command Bus ──────────────────────────────────────────────────────────
@@ -26,7 +31,7 @@ export interface CommandBus {
    */
   dispatch<TCommand extends Command, TResult>(
     command: TCommand,
-    options?: DispatchOptions,
+    options?: DispatchOptions
   ): Promise<RuntimeResult<TResult>>;
 
   /**
@@ -39,7 +44,7 @@ export interface CommandBus {
    */
   register<TCommand extends Command, TResult>(
     commandType: string,
-    handler: CommandHandler<TCommand, TResult>,
+    handler: CommandHandler<TCommand, TResult>
   ): Disposable;
 
   /**
@@ -106,7 +111,7 @@ export interface CommandMiddleware {
   execute<T>(
     command: Command,
     next: CommandMiddlewareNext<T>,
-    context: CommandHandlerContext,
+    context: CommandHandlerContext
   ): Promise<RuntimeResult<T>>;
 }
 
@@ -125,34 +130,34 @@ export interface DispatchOptions {
 
 export const COMMAND_TYPES = {
   // Lifecycle
-  START_MODULE:                'StartModuleCommand',
-  STOP_MODULE:                 'StopModuleCommand',
-  RELOAD_MODULE:               'ReloadModuleCommand',
+  START_MODULE: 'StartModuleCommand',
+  STOP_MODULE: 'StopModuleCommand',
+  RELOAD_MODULE: 'ReloadModuleCommand',
 
   // Configuration
-  RELOAD_CONFIGURATION:        'ReloadConfigurationCommand',
-  SET_FEATURE_FLAG:            'SetFeatureFlagCommand',
+  RELOAD_CONFIGURATION: 'ReloadConfigurationCommand',
+  SET_FEATURE_FLAG: 'SetFeatureFlagCommand',
 
   // Plugins
-  LOAD_PLUGIN:                 'LoadPluginCommand',
-  UNLOAD_PLUGIN:               'UnloadPluginCommand',
-  ENABLE_PLUGIN:               'EnablePluginCommand',
-  DISABLE_PLUGIN:              'DisablePluginCommand',
+  LOAD_PLUGIN: 'LoadPluginCommand',
+  UNLOAD_PLUGIN: 'UnloadPluginCommand',
+  ENABLE_PLUGIN: 'EnablePluginCommand',
+  DISABLE_PLUGIN: 'DisablePluginCommand',
 
   // Scheduler
-  SCHEDULE_JOB:                'ScheduleJobCommand',
-  CANCEL_JOB:                  'CancelJobCommand',
-  TRIGGER_JOB:                 'TriggerJobCommand',
+  SCHEDULE_JOB: 'ScheduleJobCommand',
+  CANCEL_JOB: 'CancelJobCommand',
+  TRIGGER_JOB: 'TriggerJobCommand',
 
   // Workers
-  SPAWN_WORKER:                'SpawnWorkerCommand',
-  TERMINATE_WORKER:            'TerminateWorkerCommand',
-  RESIZE_POOL:                 'ResizePoolCommand',
+  SPAWN_WORKER: 'SpawnWorkerCommand',
+  TERMINATE_WORKER: 'TerminateWorkerCommand',
+  RESIZE_POOL: 'ResizePoolCommand',
 
   // Platform
-  SHUTDOWN_PLATFORM:           'ShutdownPlatformCommand',
-  ROTATE_SECRET:               'RotateSecretCommand',
-  FLUSH_TELEMETRY:             'FlushTelemetryCommand',
+  SHUTDOWN_PLATFORM: 'ShutdownPlatformCommand',
+  ROTATE_SECRET: 'RotateSecretCommand',
+  FLUSH_TELEMETRY: 'FlushTelemetryCommand',
 } as const;
 
 export type BuiltInCommandType = (typeof COMMAND_TYPES)[keyof typeof COMMAND_TYPES];
@@ -166,7 +171,10 @@ export interface CommandBusStats {
   readonly timeoutTotal: number;
   readonly averageDurationMs: number;
   readonly activeHandlers: number;
-  readonly byType: Record<string, { dispatched: number; succeeded: number; failed: number; avgMs: number }>;
+  readonly byType: Record<
+    string,
+    { dispatched: number; succeeded: number; failed: number; avgMs: number }
+  >;
 }
 
 // ─── Command Log ──────────────────────────────────────────────────────────

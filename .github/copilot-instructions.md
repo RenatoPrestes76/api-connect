@@ -5,6 +5,7 @@ This file provides workspace-specific instructions to GitHub Copilot for working
 ## Project Context
 
 **Seltriva Connect** is an enterprise-grade API platform built with:
+
 - Monorepo: Turborepo + pnpm workspaces
 - Frontend: Next.js 15, React 19
 - Backend: Node.js

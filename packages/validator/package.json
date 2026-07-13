@@ -2,7 +2,12 @@
   "name": "@seltriva/validator",
   "version": "0.1.0",
   "description": "Atlas Plugin Validator — manifest, interface, compatibility, security, and performance validation",
-  "keywords": ["seltriva", "atlas", "validator", "plugin"],
+  "keywords": [
+    "seltriva",
+    "atlas",
+    "validator",
+    "plugin"
+  ],
   "license": "MIT",
   "private": false,
   "type": "module",

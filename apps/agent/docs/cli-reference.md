@@ -26,14 +26,15 @@ Register this agent with the Seltriva Connect Platform.
 seltriva-agent install [options]
 ```
 
-| Option | Description |
-|---|---|
-| `--platform-url <url>` | Seltriva platform URL |
-| `--name <name>` | Agent display name |
-| `--config <path>` | Write config to this path |
-| `--non-interactive` | Skip interactive prompts (requires all options) |
+| Option                 | Description                                     |
+| ---------------------- | ----------------------------------------------- |
+| `--platform-url <url>` | Seltriva platform URL                           |
+| `--name <name>`        | Agent display name                              |
+| `--config <path>`      | Write config to this path                       |
+| `--non-interactive`    | Skip interactive prompts (requires all options) |
 
 **What it does:**
+
 1. Creates the data directory
 2. Generates a default `agent.yaml` configuration
 3. Connects to the platform and registers the agent
@@ -41,6 +42,7 @@ seltriva-agent install [options]
 5. Runs pre-flight diagnostic checks
 
 **Example:**
+
 ```bash
 seltriva-agent install --name "production-erp-01" --platform-url https://connect.seltriva.com
 ```
@@ -55,15 +57,16 @@ Interactive configuration wizard. Edit agent settings, add connectors, set crede
 seltriva-agent configure [options]
 ```
 
-| Option | Description |
-|---|---|
-| `--connector` | Configure database connectors only |
-| `--security` | Configure security settings only |
-| `--sync` | Configure sync settings only |
-| `--validate` | Validate current config without changing it |
-| `--non-interactive` | Generate default config non-interactively |
+| Option              | Description                                 |
+| ------------------- | ------------------------------------------- |
+| `--connector`       | Configure database connectors only          |
+| `--security`        | Configure security settings only            |
+| `--sync`            | Configure sync settings only                |
+| `--validate`        | Validate current config without changing it |
+| `--non-interactive` | Generate default config non-interactively   |
 
 **Example:**
+
 ```bash
 seltriva-agent configure --connector
 ```
@@ -78,12 +81,13 @@ Start the agent as a background daemon.
 seltriva-agent start [options]
 ```
 
-| Option | Description |
-|---|---|
-| `--foreground` | Run in foreground (don't daemonize) — for Docker/systemd |
-| `--config <path>` | Use this config file |
+| Option            | Description                                              |
+| ----------------- | -------------------------------------------------------- |
+| `--foreground`    | Run in foreground (don't daemonize) — for Docker/systemd |
+| `--config <path>` | Use this config file                                     |
 
 **Example:**
+
 ```bash
 # Production: managed by systemd (uses --foreground)
 seltriva-agent start --foreground
@@ -125,6 +129,7 @@ seltriva-agent status [--json]
 ```
 
 **Output example:**
+
 ```
 Seltriva Connect Agent (Sentinel) v0.1.0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -153,15 +158,16 @@ Run diagnostic checks and display a health report.
 seltriva-agent doctor [options]
 ```
 
-| Option | Description |
-|---|---|
-| `--category <cat>` | Run only checks in this category |
-| `--verbose` | Show detailed output for each check |
-| `--json` | Output as JSON |
+| Option             | Description                         |
+| ------------------ | ----------------------------------- |
+| `--category <cat>` | Run only checks in this category    |
+| `--verbose`        | Show detailed output for each check |
+| `--json`           | Output as JSON                      |
 
 Categories: `configuration`, `connectivity`, `security`, `filesystem`, `runtime`, `connector`, `cloud`, `sync`, `performance`
 
 **Output example:**
+
 ```
 Seltriva Agent Doctor
 ━━━━━━━━━━━━━━━━━━━━
@@ -199,16 +205,17 @@ View and follow agent logs.
 seltriva-agent logs [options]
 ```
 
-| Option | Description |
-|---|---|
-| `-f, --follow` | Follow log output in real time |
-| `-n, --lines <n>` | Number of lines to show (default: 50) |
-| `--level <level>` | Filter by minimum level (error/warn/info/debug) |
-| `--since <time>` | Show logs since time (e.g., "1h", "2026-01-15T10:00:00") |
-| `--connector <id>` | Filter by connector ID |
-| `--json` | Output as JSON (one record per line) |
+| Option             | Description                                              |
+| ------------------ | -------------------------------------------------------- |
+| `-f, --follow`     | Follow log output in real time                           |
+| `-n, --lines <n>`  | Number of lines to show (default: 50)                    |
+| `--level <level>`  | Filter by minimum level (error/warn/info/debug)          |
+| `--since <time>`   | Show logs since time (e.g., "1h", "2026-01-15T10:00:00") |
+| `--connector <id>` | Filter by connector ID                                   |
+| `--json`           | Output as JSON (one record per line)                     |
 
 **Examples:**
+
 ```bash
 # Follow all logs
 seltriva-agent logs --follow
@@ -233,15 +240,16 @@ Check and apply agent updates.
 seltriva-agent update [options]
 ```
 
-| Option | Description |
-|---|---|
-| `--check` | Check for updates without downloading |
+| Option             | Description                                  |
+| ------------------ | -------------------------------------------- |
+| `--check`          | Check for updates without downloading        |
 | `--channel <chan>` | Update channel: stable (default), beta, edge |
-| `--force` | Apply even if already on latest |
-| `--version <ver>` | Install a specific version |
-| `--rollback` | Roll back to the previous version |
+| `--force`          | Apply even if already on latest              |
+| `--version <ver>`  | Install a specific version                   |
+| `--rollback`       | Roll back to the previous version            |
 
 **Examples:**
+
 ```bash
 # Check for available updates
 seltriva-agent update --check
@@ -263,14 +271,15 @@ Manually trigger a sync operation.
 seltriva-agent sync [options]
 ```
 
-| Option | Description |
-|---|---|
-| `--connector <id>` | Sync only this connector |
-| `--full` | Force full sync (ignores checkpoint) |
-| `--schema <name>` | Sync only this schema |
-| `--dry-run` | Discover and diff but don't transmit |
+| Option             | Description                          |
+| ------------------ | ------------------------------------ |
+| `--connector <id>` | Sync only this connector             |
+| `--full`           | Force full sync (ignores checkpoint) |
+| `--schema <name>`  | Sync only this schema                |
+| `--dry-run`        | Discover and diff but don't transmit |
 
 **Examples:**
+
 ```bash
 # Trigger incremental sync for all connectors
 seltriva-agent sync
@@ -292,15 +301,16 @@ Manage database connectors.
 seltriva-agent connector <subcommand> [options]
 ```
 
-| Subcommand | Description |
-|---|---|
-| `list` | List all configured connectors |
-| `add` | Add a new connector interactively |
-| `remove --id <id>` | Remove a connector |
-| `test --id <id>` | Test connectivity |
-| `show --id <id>` | Show connector details |
+| Subcommand         | Description                       |
+| ------------------ | --------------------------------- |
+| `list`             | List all configured connectors    |
+| `add`              | Add a new connector interactively |
+| `remove --id <id>` | Remove a connector                |
+| `test --id <id>`   | Test connectivity                 |
+| `show --id <id>`   | Show connector details            |
 
 **Examples:**
+
 ```bash
 # List connectors
 seltriva-agent connector list
@@ -322,12 +332,12 @@ Manage encrypted credentials.
 seltriva-agent credential <subcommand>
 ```
 
-| Subcommand | Description |
-|---|---|
-| `set --id <id>` | Store or update a credential (prompts for value) |
-| `delete --id <id>` | Delete a credential |
-| `list` | List credential IDs (never shows values) |
-| `rotate-key` | Rotate the AES-256 encryption key |
+| Subcommand         | Description                                      |
+| ------------------ | ------------------------------------------------ |
+| `set --id <id>`    | Store or update a credential (prompts for value) |
+| `delete --id <id>` | Delete a credential                              |
+| `list`             | List credential IDs (never shows values)         |
+| `rotate-key`       | Rotate the AES-256 encryption key                |
 
 ---
 
@@ -339,25 +349,25 @@ Manage plugins.
 seltriva-agent plugin <subcommand>
 ```
 
-| Subcommand | Description |
-|---|---|
-| `list` | List loaded plugins |
+| Subcommand           | Description                  |
+| -------------------- | ---------------------------- |
+| `list`               | List loaded plugins          |
 | `load --path <path>` | Load a plugin from directory |
-| `unload --id <id>` | Unload a plugin |
-| `reload --id <id>` | Hot-reload a plugin |
-| `info --id <id>` | Show plugin details |
+| `unload --id <id>`   | Unload a plugin              |
+| `reload --id <id>`   | Hot-reload a plugin          |
+| `info --id <id>`     | Show plugin details          |
 
 ---
 
 ## Exit Codes
 
-| Code | Meaning |
-|---|---|
-| `0` | Success |
-| `1` | General error |
-| `2` | Configuration error |
-| `3` | Authentication error |
-| `4` | Connector unreachable |
-| `5` | Cloud unreachable |
+| Code | Meaning                                 |
+| ---- | --------------------------------------- |
+| `0`  | Success                                 |
+| `1`  | General error                           |
+| `2`  | Configuration error                     |
+| `3`  | Authentication error                    |
+| `4`  | Connector unreachable                   |
+| `5`  | Cloud unreachable                       |
 | `10` | Agent not running (for daemon commands) |
-| `11` | Agent already running |
+| `11` | Agent already running                   |

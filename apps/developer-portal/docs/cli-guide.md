@@ -12,6 +12,7 @@ pnpm add -g @seltriva/cli
 ```
 
 Verify installation:
+
 ```bash
 atlas --version
 # Atlas CLI v0.1.0
@@ -32,11 +33,11 @@ atlas login --token sc_live_abc123...
 ```
 
 Options:
-| Flag         | Description                            |
+| Flag | Description |
 |--------------|----------------------------------------|
-| `--token`    | API token (skips browser flow)         |
-| `--cloud-url`| Custom cloud URL (self-hosted)         |
-| `--profile`  | Named profile (default: "default")     |
+| `--token` | API token (skips browser flow) |
+| `--cloud-url`| Custom cloud URL (self-hosted) |
+| `--profile` | Named profile (default: "default") |
 
 ---
 
@@ -65,15 +66,16 @@ atlas create com.acme.erp --type erp-profile --yes --skip-install
 ```
 
 Options:
-| Flag             | Default          | Description                        |
+| Flag | Default | Description |
 |------------------|------------------|------------------------------------|
-| `--type`         | (prompted)       | Plugin type (one of 12)            |
-| `--template`     | type default     | Template ID from catalog           |
-| `--dir`          | `./<name>`       | Output directory                   |
-| `--yes` / `-y`   | false            | Accept all defaults                |
-| `--skip-install` | false            | Skip pnpm install after scaffold   |
+| `--type` | (prompted) | Plugin type (one of 12) |
+| `--template` | type default | Template ID from catalog |
+| `--dir` | `./<name>` | Output directory |
+| `--yes` / `-y` | false | Accept all defaults |
+| `--skip-install` | false | Skip pnpm install after scaffold |
 
 **Example output:**
+
 ```
 ✓ Created: my-connector/atlas-plugin.json
 ✓ Created: my-connector/package.json
@@ -105,12 +107,12 @@ atlas build --out dist/
 ```
 
 Options:
-| Flag           | Description                              |
+| Flag | Description |
 |----------------|------------------------------------------|
-| `--production` | Minify output for distribution           |
-| `--watch`      | Rebuild on file changes                  |
-| `--out`        | Override output directory (default: dist)|
-| `--sourcemaps` | Include source maps (default: dev only)  |
+| `--production` | Minify output for distribution |
+| `--watch` | Rebuild on file changes |
+| `--out` | Override output directory (default: dist)|
+| `--sourcemaps` | Include source maps (default: dev only) |
 
 ---
 
@@ -127,12 +129,12 @@ atlas test --reporter junit     # CI: output JUnit XML
 ```
 
 Options:
-| Flag           | Description                              |
+| Flag | Description |
 |----------------|------------------------------------------|
-| `--coverage`   | Generate coverage report                 |
-| `--watch`      | Watch mode (re-run on file change)       |
-| `--filter`     | Filter by test name pattern              |
-| `--reporter`   | Output format: default, json, junit      |
+| `--coverage` | Generate coverage report |
+| `--watch` | Watch mode (re-run on file change) |
+| `--filter` | Filter by test name pattern |
+| `--reporter` | Output format: default, json, junit |
 
 ---
 
@@ -148,14 +150,15 @@ atlas package --dry-run      # Preview package contents without creating
 ```
 
 Options:
-| Flag         | Description                                      |
+| Flag | Description |
 |--------------|--------------------------------------------------|
-| `--sign`     | Sign the package with Ed25519 key                |
-| `--key-file` | Path to Ed25519 private key PEM file             |
-| `--output`   | Output directory (default: ./dist)               |
-| `--dry-run`  | List files to be packaged without creating       |
+| `--sign` | Sign the package with Ed25519 key |
+| `--key-file` | Path to Ed25519 private key PEM file |
+| `--output` | Output directory (default: ./dist) |
+| `--dry-run` | List files to be packaged without creating |
 
 **Package contents:**
+
 ```
 my-connector-1.0.0.atlasp
 ├── atlas-plugin.json   (manifest)
@@ -178,12 +181,12 @@ atlas publish --dry-run      # Validate only, don't upload
 ```
 
 Options:
-| Flag          | Description                              |
+| Flag | Description |
 |---------------|------------------------------------------|
-| `--channel`   | Release channel: stable, beta, edge      |
-| `--package`   | Path to .atlasp file (default: auto-detect)|
-| `--dry-run`   | Validate without publishing              |
-| `--force`     | Override version conflict warning        |
+| `--channel` | Release channel: stable, beta, edge |
+| `--package` | Path to .atlasp file (default: auto-detect)|
+| `--dry-run` | Validate without publishing |
+| `--force` | Override version conflict warning |
 
 ---
 
@@ -197,20 +200,20 @@ atlas doctor --fix      # Auto-fix fixable issues
 ```
 
 Checks performed:
-| Check ID              | Category      | Description                            |
+| Check ID | Category | Description |
 |-----------------------|---------------|----------------------------------------|
-| `dc-node-version`     | environment   | Node.js ≥20.0.0                        |
-| `dc-pnpm-installed`   | environment   | pnpm is installed                      |
-| `dc-atlas-auth`       | auth          | Logged in to Atlas Cloud               |
-| `dc-manifest-exists`  | project       | atlas-plugin.json exists               |
-| `dc-manifest-valid`   | project       | Manifest passes schema validation      |
-| `dc-entry-point-exists`| project      | entryPoint file exists (after build)   |
-| `dc-deps-installed`   | dependencies  | node_modules installed                 |
-| `dc-sdk-version`      | dependencies  | @seltriva/plugin-sdk version compatible|
-| `dc-build-output`     | build         | dist/ directory exists and non-empty   |
-| `dc-network-cloud`    | network       | Atlas Cloud is reachable               |
-| `dc-signing-key`      | project       | Signing key found (if publish --sign)  |
-| `dc-ts-config`        | project       | tsconfig.json is valid                 |
+| `dc-node-version` | environment | Node.js ≥20.0.0 |
+| `dc-pnpm-installed` | environment | pnpm is installed |
+| `dc-atlas-auth` | auth | Logged in to Atlas Cloud |
+| `dc-manifest-exists` | project | atlas-plugin.json exists |
+| `dc-manifest-valid` | project | Manifest passes schema validation |
+| `dc-entry-point-exists`| project | entryPoint file exists (after build) |
+| `dc-deps-installed` | dependencies | node_modules installed |
+| `dc-sdk-version` | dependencies | @seltriva/plugin-sdk version compatible|
+| `dc-build-output` | build | dist/ directory exists and non-empty |
+| `dc-network-cloud` | network | Atlas Cloud is reachable |
+| `dc-signing-key` | project | Signing key found (if publish --sign) |
+| `dc-ts-config` | project | tsconfig.json is valid |
 
 ---
 
@@ -219,7 +222,7 @@ Checks performed:
 Place `atlas.yaml` in the project root to configure CLI behavior:
 
 ```yaml
-version: "1"
+version: '1'
 name: my-connector
 type: connector
 src: src
@@ -269,10 +272,10 @@ test:
 
 ## Exit Codes
 
-| Code | Meaning                        |
-|------|--------------------------------|
-| 0    | Success                        |
-| 1    | General error / build failure  |
-| 2    | Validation error               |
-| 3    | Authentication error           |
-| 4    | Network error                  |
+| Code | Meaning                       |
+| ---- | ----------------------------- |
+| 0    | Success                       |
+| 1    | General error / build failure |
+| 2    | Validation error              |
+| 3    | Authentication error          |
+| 4    | Network error                 |

@@ -26,12 +26,14 @@ const PEDIDO = asTableName('pedido');
 describe('SchemaDiscovery', () => {
   describe('getServerInfo()', () => {
     it('returns server version, encoding, collation, timezone', async () => {
-      const runner = makeRunner([{
-        server_version: '15.3',
-        encoding: 'UTF8',
-        collation: 'en_US.UTF-8',
-        timezone: 'UTC',
-      }]);
+      const runner = makeRunner([
+        {
+          server_version: '15.3',
+          encoding: 'UTF8',
+          collation: 'en_US.UTF-8',
+          timezone: 'UTC',
+        },
+      ]);
       const discovery = new SchemaDiscovery(runner);
       const info = await discovery.getServerInfo();
 
@@ -94,23 +96,25 @@ describe('SchemaDiscovery', () => {
 
   describe('getColumns()', () => {
     it('maps all column fields correctly', async () => {
-      const runner = makeRunner([{
-        column_name:           'preco_venda',
-        ordinal_position:      '3',
-        column_default:        null,
-        is_nullable:           'NO',
-        data_type:             'numeric',
-        udt_name:              'numeric',
-        character_maximum_length: null,
-        numeric_precision:     '12',
-        numeric_scale:         '2',
-        datetime_precision:    null,
-        is_identity:           'NO',
-        identity_generation:   null,
-        is_generated:          'NEVER',
-        generation_expression: null,
-        comment:               'Preço de venda com IPI',
-      }]);
+      const runner = makeRunner([
+        {
+          column_name: 'preco_venda',
+          ordinal_position: '3',
+          column_default: null,
+          is_nullable: 'NO',
+          data_type: 'numeric',
+          udt_name: 'numeric',
+          character_maximum_length: null,
+          numeric_precision: '12',
+          numeric_scale: '2',
+          datetime_precision: null,
+          is_identity: 'NO',
+          identity_generation: null,
+          is_generated: 'NEVER',
+          generation_expression: null,
+          comment: 'Preço de venda com IPI',
+        },
+      ]);
       const discovery = new SchemaDiscovery(runner);
       const cols = await discovery.getColumns(PUBLIC, PEDIDO);
 
@@ -125,30 +129,50 @@ describe('SchemaDiscovery', () => {
     });
 
     it('marks column as nullable when is_nullable=YES', async () => {
-      const runner = makeRunner([{
-        column_name: 'deleted_at', ordinal_position: '5',
-        column_default: null, is_nullable: 'YES',
-        data_type: 'timestamp with time zone', udt_name: 'timestamptz',
-        character_maximum_length: null, numeric_precision: null,
-        numeric_scale: null, datetime_precision: '6',
-        is_identity: 'NO', identity_generation: null,
-        is_generated: 'NEVER', generation_expression: null, comment: null,
-      }]);
+      const runner = makeRunner([
+        {
+          column_name: 'deleted_at',
+          ordinal_position: '5',
+          column_default: null,
+          is_nullable: 'YES',
+          data_type: 'timestamp with time zone',
+          udt_name: 'timestamptz',
+          character_maximum_length: null,
+          numeric_precision: null,
+          numeric_scale: null,
+          datetime_precision: '6',
+          is_identity: 'NO',
+          identity_generation: null,
+          is_generated: 'NEVER',
+          generation_expression: null,
+          comment: null,
+        },
+      ]);
       const discovery = new SchemaDiscovery(runner);
       const [col] = await discovery.getColumns(PUBLIC, PEDIDO);
       expect(col!.isNullable).toBe(true);
     });
 
     it('sets userDefinedType when udt_name differs from data_type', async () => {
-      const runner = makeRunner([{
-        column_name: 'status', ordinal_position: '2',
-        column_default: "'pendente'", is_nullable: 'NO',
-        data_type: 'USER-DEFINED', udt_name: 'status_pedido',
-        character_maximum_length: null, numeric_precision: null,
-        numeric_scale: null, datetime_precision: null,
-        is_identity: 'NO', identity_generation: null,
-        is_generated: 'NEVER', generation_expression: null, comment: null,
-      }]);
+      const runner = makeRunner([
+        {
+          column_name: 'status',
+          ordinal_position: '2',
+          column_default: "'pendente'",
+          is_nullable: 'NO',
+          data_type: 'USER-DEFINED',
+          udt_name: 'status_pedido',
+          character_maximum_length: null,
+          numeric_precision: null,
+          numeric_scale: null,
+          datetime_precision: null,
+          is_identity: 'NO',
+          identity_generation: null,
+          is_generated: 'NEVER',
+          generation_expression: null,
+          comment: null,
+        },
+      ]);
       const discovery = new SchemaDiscovery(runner);
       const [col] = await discovery.getColumns(PUBLIC, PEDIDO);
       expect(col!.userDefinedType).toBe('status_pedido');
@@ -157,9 +181,7 @@ describe('SchemaDiscovery', () => {
 
   describe('getPrimaryKey()', () => {
     it('returns PrimaryKeyMetadata with columns', async () => {
-      const runner = makeRunner([
-        { constraint_name: 'pedido_pkey', column_name: 'id' },
-      ]);
+      const runner = makeRunner([{ constraint_name: 'pedido_pkey', column_name: 'id' }]);
       const discovery = new SchemaDiscovery(runner);
       const pk = await discovery.getPrimaryKey(PUBLIC, PEDIDO);
 
@@ -191,12 +213,12 @@ describe('SchemaDiscovery', () => {
       const runner = makeRunner([
         {
           constraint_name: 'pedido_cliente_fk',
-          column_name:     'cliente_id',
-          foreign_schema:  'public',
-          foreign_table:   'cliente',
-          foreign_column:  'id',
-          update_rule:     'NO ACTION',
-          delete_rule:     'RESTRICT',
+          column_name: 'cliente_id',
+          foreign_schema: 'public',
+          foreign_table: 'cliente',
+          foreign_column: 'id',
+          update_rule: 'NO ACTION',
+          delete_rule: 'RESTRICT',
         },
       ]);
       const discovery = new SchemaDiscovery(runner);
@@ -220,19 +242,19 @@ describe('SchemaDiscovery', () => {
     it('maps index metadata correctly', async () => {
       const runner = makeRunner([
         {
-          index_name:   'idx_pedido_cliente',
-          definition:   'CREATE INDEX idx_pedido_cliente ON public.pedido USING btree (cliente_id)',
-          is_unique:    false,
-          is_primary:   false,
-          index_type:   'btree',
+          index_name: 'idx_pedido_cliente',
+          definition: 'CREATE INDEX idx_pedido_cliente ON public.pedido USING btree (cliente_id)',
+          is_unique: false,
+          is_primary: false,
+          index_type: 'btree',
           column_names: 'cliente_id',
         },
         {
-          index_name:   'pedido_pkey',
-          definition:   'CREATE UNIQUE INDEX pedido_pkey ON public.pedido USING btree (id)',
-          is_unique:    true,
-          is_primary:   true,
-          index_type:   'btree',
+          index_name: 'pedido_pkey',
+          definition: 'CREATE UNIQUE INDEX pedido_pkey ON public.pedido USING btree (id)',
+          is_unique: true,
+          is_primary: true,
+          index_type: 'btree',
           column_names: 'id',
         },
       ]);
@@ -262,15 +284,17 @@ describe('SchemaDiscovery', () => {
 
   describe('getSequences()', () => {
     it('maps sequence metadata', async () => {
-      const runner = makeRunner([{
-        sequence_name: 'produto_seq',
-        data_type:     'bigint',
-        start_value:   '1000',
-        increment:     '1',
-        minimum_value: '1',
-        maximum_value: '9223372036854775807',
-        cycle_option:  'NO',
-      }]);
+      const runner = makeRunner([
+        {
+          sequence_name: 'produto_seq',
+          data_type: 'bigint',
+          start_value: '1000',
+          increment: '1',
+          minimum_value: '1',
+          maximum_value: '9223372036854775807',
+          cycle_option: 'NO',
+        },
+      ]);
       const discovery = new SchemaDiscovery(runner);
       const seqs = await discovery.getSequences(PUBLIC);
 

@@ -9,10 +9,7 @@
  * Generic middleware in a request/response pipeline
  */
 export interface Middleware<TRequest, TResponse> {
-  handle(
-    request: TRequest,
-    next: (req: TRequest) => Promise<TResponse>
-  ): Promise<TResponse>;
+  handle(request: TRequest, next: (req: TRequest) => Promise<TResponse>): Promise<TResponse>;
   readonly order: number;
   readonly name: string;
   shouldExecute?(request: TRequest): boolean;

@@ -25,36 +25,38 @@ import type {
 } from '../types/index.js';
 import { ALL_ENTITY_TYPES } from '../types/index.js';
 
-const WEIGHT_NAME         = 0.35;
-const WEIGHT_COLUMNS      = 0.30;
-const WEIGHT_RELATIONSHIP = 0.20;
-const WEIGHT_STATISTICS   = 0.10;
-const WEIGHT_SAMPLING     = 0.05;
+const WEIGHT_NAME = 0.35;
+const WEIGHT_COLUMNS = 0.3;
+const WEIGHT_RELATIONSHIP = 0.2;
+const WEIGHT_STATISTICS = 0.1;
+const WEIGHT_SAMPLING = 0.05;
 
 export interface CompositeScoreResult {
-  readonly entity:      EntityType;
-  readonly confidence:  number;
-  readonly reasons:     readonly ScoringReason[];
+  readonly entity: EntityType;
+  readonly confidence: number;
+  readonly reasons: readonly ScoringReason[];
   readonly alternatives: readonly AlternativeEntity[];
 }
 
 export class CompositeScorer {
-  private readonly _name         = new NameScorer();
-  private readonly _column       = new ColumnScorer();
+  private readonly _name = new NameScorer();
+  private readonly _column = new ColumnScorer();
   private readonly _relationship = new RelationshipScorer();
-  private readonly _statistics   = new StatisticsScorer();
-  private readonly _sampling     = new SamplingScorer();
+  private readonly _statistics = new StatisticsScorer();
+  private readonly _sampling = new SamplingScorer();
 
   score(
     table: TableInput,
     entityHints: Readonly<Partial<Record<string, EntityType>>>,
     allTables: readonly TableInput[],
-    sampledColumns: readonly SampledColumn[] = [],
-  ): CompositeScoreResult & { readonly fieldRoles: ReturnType<ColumnScorer['score']>['fieldRoles'] } {
-    const nameResult   = this._name.score(table.name);
-    const colResult    = this._column.score(table.columns);
-    const relResult    = this._relationship.score(table, entityHints, allTables);
-    const statResult   = this._statistics.score(table.statistics);
+    sampledColumns: readonly SampledColumn[] = []
+  ): CompositeScoreResult & {
+    readonly fieldRoles: ReturnType<ColumnScorer['score']>['fieldRoles'];
+  } {
+    const nameResult = this._name.score(table.name);
+    const colResult = this._column.score(table.columns);
+    const relResult = this._relationship.score(table, entityHints, allTables);
+    const statResult = this._statistics.score(table.statistics);
     const sampleResult = this._sampling.score(sampledColumns);
 
     const allReasons: ScoringReason[] = [
@@ -70,17 +72,17 @@ export class CompositeScorer {
     for (const entity of ALL_ENTITY_TYPES) {
       if (entity === 'UNKNOWN') continue;
 
-      const nameScore   = nameResult.scores[entity]   ?? 0;
-      const colScore    = colResult.scores[entity]    ?? 0;
-      const relScore    = relResult.scores[entity]    ?? 0;
-      const statScore   = statResult.scores[entity]   ?? 0;
+      const nameScore = nameResult.scores[entity] ?? 0;
+      const colScore = colResult.scores[entity] ?? 0;
+      const relScore = relResult.scores[entity] ?? 0;
+      const statScore = statResult.scores[entity] ?? 0;
       const sampleScore = sampleResult.scores[entity] ?? 0;
 
       const composite =
-        nameScore   * WEIGHT_NAME +
-        colScore    * WEIGHT_COLUMNS +
-        relScore    * WEIGHT_RELATIONSHIP +
-        statScore   * WEIGHT_STATISTICS +
+        nameScore * WEIGHT_NAME +
+        colScore * WEIGHT_COLUMNS +
+        relScore * WEIGHT_RELATIONSHIP +
+        statScore * WEIGHT_STATISTICS +
         sampleScore * WEIGHT_SAMPLING;
 
       if (composite > 0) {
@@ -89,11 +91,10 @@ export class CompositeScorer {
     }
 
     // Rank results
-    const ranked = (Object.entries(combined) as [EntityType, number][])
-      .sort((a, b) => b[1] - a[1]);
+    const ranked = (Object.entries(combined) as [EntityType, number][]).sort((a, b) => b[1] - a[1]);
 
     const topEntity: EntityType = ranked[0]?.[0] ?? 'UNKNOWN';
-    const topConfidence         = ranked[0]?.[1] ?? 0;
+    const topConfidence = ranked[0]?.[1] ?? 0;
 
     const alternatives: AlternativeEntity[] = ranked
       .slice(1, 4)
@@ -101,11 +102,11 @@ export class CompositeScorer {
       .map(([e, c]) => ({ entity: e, confidence: c }));
 
     return {
-      entity:      topEntity,
-      confidence:  topConfidence,
-      reasons:     allReasons,
+      entity: topEntity,
+      confidence: topConfidence,
+      reasons: allReasons,
       alternatives,
-      fieldRoles:  colResult.fieldRoles,
+      fieldRoles: colResult.fieldRoles,
     };
   }
 }

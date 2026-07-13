@@ -30,7 +30,7 @@ import { randomUUID } from 'crypto';
 
 export interface DispatchOptions {
   readonly correlationId: CorrelationId;
-  readonly tenantId:      TenantId;
+  readonly tenantId: TenantId;
 }
 
 export class CloudDispatcher {
@@ -41,19 +41,19 @@ export class CloudDispatcher {
   }
 
   async dispatch(
-    batch:   CompressedBatch | EncryptedBatch,
-    options: DispatchOptions,
+    batch: CompressedBatch | EncryptedBatch,
+    options: DispatchOptions
   ): Promise<SyncResult<DispatchResult>> {
     const encrypted = 'encrypted' in batch && (batch as EncryptedBatch).encrypted;
     const headers: Record<string, string> = {
-      'Authorization':     `Bearer ${this._target.apiKey}`,
-      'Content-Type':      'application/octet-stream',
-      'X-Correlation-Id':  options.correlationId,
-      'X-Tenant-Id':       options.tenantId,
-      'X-Batch-Id':        batch.batchId,
-      'X-Schema':          batch.schema,
-      'X-Table':           batch.table,
-      'X-Record-Count':    String(batch.records),
+      Authorization: `Bearer ${this._target.apiKey}`,
+      'Content-Type': 'application/octet-stream',
+      'X-Correlation-Id': options.correlationId,
+      'X-Tenant-Id': options.tenantId,
+      'X-Batch-Id': batch.batchId,
+      'X-Schema': batch.schema,
+      'X-Table': batch.table,
+      'X-Record-Count': String(batch.records),
     };
 
     if (batch.compressed && batch.algorithm !== 'none') {
@@ -62,9 +62,9 @@ export class CloudDispatcher {
 
     if (encrypted) {
       const enc = batch as EncryptedBatch;
-      headers['X-Encryption-IV']  = enc.iv;
+      headers['X-Encryption-IV'] = enc.iv;
       headers['X-Encryption-Tag'] = enc.authTag;
-      headers['X-Key-Id']         = enc.keyId;
+      headers['X-Key-Id'] = enc.keyId;
     }
 
     const start = Date.now();
@@ -73,11 +73,11 @@ export class CloudDispatcher {
       const response = await this._fetchWithTimeout(
         `${this._target.url}/api/v1/sync/batches`,
         {
-          method:  'POST',
+          method: 'POST',
           headers,
-          body:    batch.payload,
+          body: batch.payload,
         },
-        this._target.timeout,
+        this._target.timeout
       );
 
       if (!response.ok) {
@@ -86,20 +86,23 @@ export class CloudDispatcher {
         return syncFail(
           `HTTP_${response.status}`,
           `Atlas Cloud rejected batch: ${response.status} ${body.slice(0, 200)}`,
-          { retryable, context: { batchId: batch.batchId, status: response.status } },
+          { retryable, context: { batchId: batch.batchId, status: response.status } }
         );
       }
 
-      const json = await response.json() as { serverRef?: string; accepted?: number; rejected?: number };
+      const json = (await response.json()) as {
+        serverRef?: string;
+        accepted?: number;
+        rejected?: number;
+      };
 
       return syncOk({
-        batchId:   batch.batchId,
-        accepted:  json.accepted ?? batch.records,
-        rejected:  json.rejected ?? 0,
+        batchId: batch.batchId,
+        accepted: json.accepted ?? batch.records,
+        rejected: json.rejected ?? 0,
         serverRef: json.serverRef ?? randomUUID(),
         latencyMs: Date.now() - start,
       });
-
     } catch (err) {
       const msg = (err as Error).message;
       const retryable = /ECONNRESET|ETIMEDOUT|ECONNREFUSED|fetch failed/i.test(msg);
@@ -112,9 +115,9 @@ export class CloudDispatcher {
   }
 
   private async _fetchWithTimeout(
-    url:     string,
-    init:    RequestInit,
-    timeout: number,
+    url: string,
+    init: RequestInit,
+    timeout: number
   ): Promise<Response> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);

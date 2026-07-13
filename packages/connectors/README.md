@@ -117,7 +117,7 @@ export interface ConnectorPlugin {
   createConnector(config): Promise<Connector>;
   validateConfig(config): Promise<ConnectorResult<PluginConfigValidationResult>>;
   describeCapabilities(config): CapabilitySet;
-  configSchema: ConnectorConfigSchema;  // drives UI form generation
+  configSchema: ConnectorConfigSchema; // drives UI form generation
 }
 ```
 
@@ -140,11 +140,11 @@ Each connector type has a specialized `DiscoveryEngine` (relational, document, A
 
 ```typescript
 interface HealthReport {
-  latency:    LatencyMetrics;   // p50, p95, p99
+  latency: LatencyMetrics; // p50, p95, p99
   connection: ConnectionStatus; // pool size, active connections
-  auth:       AuthenticationStatus;
+  auth: AuthenticationStatus;
   permissions: PermissionStatus[];
-  warnings:   HealthWarning[];  // HIGH_LATENCY, AUTH_EXPIRING_SOON, etc.
+  warnings: HealthWarning[]; // HIGH_LATENCY, AUTH_EXPIRING_SOON, etc.
 }
 ```
 
@@ -184,7 +184,7 @@ console.log(health.data?.latency.p95);
 
 // Discover schema
 const discovery = await pg.discover();
-discovery.data?.tree.children.forEach(schema =>
+discovery.data?.tree.children.forEach((schema) =>
   console.log(schema.name, schema.children?.length, 'tables')
 );
 
@@ -200,19 +200,19 @@ await pg.disconnect();
 Import only what you need for tree-shaking:
 
 ```typescript
-import type { Connector }           from '@seltriva/connectors/core';
-import type { CapabilitySet }       from '@seltriva/connectors/capabilities';
-import type { MetadataEngine }      from '@seltriva/connectors/metadata';
-import type { DiscoveryEngine }     from '@seltriva/connectors/discovery';
-import type { HealthEngine }        from '@seltriva/connectors/health';
-import type { ConnectorRegistry }   from '@seltriva/connectors/registry';
-import type { ConnectorFactory }    from '@seltriva/connectors/factory';
-import type { ConnectorPlugin }     from '@seltriva/connectors/sdk';
+import type { Connector } from '@seltriva/connectors/core';
+import type { CapabilitySet } from '@seltriva/connectors/capabilities';
+import type { MetadataEngine } from '@seltriva/connectors/metadata';
+import type { DiscoveryEngine } from '@seltriva/connectors/discovery';
+import type { HealthEngine } from '@seltriva/connectors/health';
+import type { ConnectorRegistry } from '@seltriva/connectors/registry';
+import type { ConnectorFactory } from '@seltriva/connectors/factory';
+import type { ConnectorPlugin } from '@seltriva/connectors/sdk';
 import type { PostgreSQLConnector } from '@seltriva/connectors/connectors/database';
-import type { RESTConnector }       from '@seltriva/connectors/connectors/api';
-import type { CSVConnector }        from '@seltriva/connectors/connectors/file';
-import type { S3Connector }         from '@seltriva/connectors/connectors/cloud';
-import type { KafkaConnector }      from '@seltriva/connectors/connectors/queue';
+import type { RESTConnector } from '@seltriva/connectors/connectors/api';
+import type { CSVConnector } from '@seltriva/connectors/connectors/file';
+import type { S3Connector } from '@seltriva/connectors/connectors/cloud';
+import type { KafkaConnector } from '@seltriva/connectors/connectors/queue';
 ```
 
 ## Constraints
@@ -225,11 +225,11 @@ import type { KafkaConnector }      from '@seltriva/connectors/connectors/queue'
 
 ## Connector Count
 
-| Category | Count | Connectors |
-|----------|-------|-----------|
-| Database | 8 | PostgreSQL, SQL Server, Oracle, Firebird, MySQL, MariaDB, SQLite, MongoDB |
-| API | 5 | REST, SOAP, GraphQL, gRPC, Webhook |
-| File | 6 | CSV, Excel, XML, JSON, TXT, ODS |
-| Cloud | 4 | Amazon S3, Azure Blob Storage, Google Cloud Storage, Supabase Storage |
-| Queue | 3 | RabbitMQ, Apache Kafka, Redis Streams |
-| **Total** | **26** | |
+| Category  | Count  | Connectors                                                                |
+| --------- | ------ | ------------------------------------------------------------------------- |
+| Database  | 8      | PostgreSQL, SQL Server, Oracle, Firebird, MySQL, MariaDB, SQLite, MongoDB |
+| API       | 5      | REST, SOAP, GraphQL, gRPC, Webhook                                        |
+| File      | 6      | CSV, Excel, XML, JSON, TXT, ODS                                           |
+| Cloud     | 4      | Amazon S3, Azure Blob Storage, Google Cloud Storage, Supabase Storage     |
+| Queue     | 3      | RabbitMQ, Apache Kafka, Redis Streams                                     |
+| **Total** | **26** |                                                                           |

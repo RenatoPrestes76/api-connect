@@ -18,11 +18,11 @@ export class PriorityQueue<T> {
 
   enqueue(payload: T, priority: QueuePriority = 3): QueueItem<T> {
     const item: QueueItem<T> = {
-      id:          randomUUID(),
+      id: randomUUID(),
       payload,
       priority,
-      enqueuedAt:  Date.now(),
-      attempts:    0,
+      enqueuedAt: Date.now(),
+      attempts: 0,
     };
 
     // Insert in sorted position (priority asc, then enqueuedAt asc)
@@ -50,9 +50,13 @@ export class PriorityQueue<T> {
     return true;
   }
 
-  get size(): number { return this._items.length; }
+  get size(): number {
+    return this._items.length;
+  }
 
-  isEmpty(): boolean { return this._items.length === 0; }
+  isEmpty(): boolean {
+    return this._items.length === 0;
+  }
 
   drain(): readonly QueueItem<T>[] {
     return this._items.splice(0, this._items.length);
@@ -67,8 +71,8 @@ export class PriorityQueue<T> {
 // ─── Retry Queue ──────────────────────────────────────────────────────────────
 
 interface RetryEntry<T> {
-  readonly item:      QueueItem<T>;
-  readonly retryAt:   number;
+  readonly item: QueueItem<T>;
+  readonly retryAt: number;
 }
 
 export class RetryQueue<T> {
@@ -77,7 +81,7 @@ export class RetryQueue<T> {
   schedule(item: QueueItem<T>, delayMs: number, error: string): void {
     const updated: QueueItem<T> = {
       ...item,
-      attempts:  item.attempts + 1,
+      attempts: item.attempts + 1,
       lastError: error,
     };
     this._entries.push({ item: updated, retryAt: Date.now() + delayMs });
@@ -95,7 +99,9 @@ export class RetryQueue<T> {
     return due;
   }
 
-  get size(): number { return this._entries.length; }
+  get size(): number {
+    return this._entries.length;
+  }
 
   nextRetryMs(): number | null {
     const next = this._entries[0];
@@ -107,15 +113,15 @@ export class RetryQueue<T> {
 // ─── Dead Letter Queue ────────────────────────────────────────────────────────
 
 export interface DeadLetterEntry<T> {
-  readonly item:         QueueItem<T>;
-  readonly failedAt:     number;
-  readonly finalError:   string;
+  readonly item: QueueItem<T>;
+  readonly failedAt: number;
+  readonly finalError: string;
   readonly totalAttempts: number;
 }
 
 export class DeadLetterQueue<T> {
   private readonly _entries: Array<DeadLetterEntry<T>> = [];
-  private readonly _maxSize:  number;
+  private readonly _maxSize: number;
 
   constructor(maxSize = 10_000) {
     this._maxSize = maxSize;
@@ -124,7 +130,7 @@ export class DeadLetterQueue<T> {
   enqueue(item: QueueItem<T>, finalError: string): void {
     this._entries.push({
       item,
-      failedAt:      Date.now(),
+      failedAt: Date.now(),
       finalError,
       totalAttempts: item.attempts,
     });
@@ -139,17 +145,21 @@ export class DeadLetterQueue<T> {
     return [...this._entries];
   }
 
-  clear(): void { this._entries.length = 0; }
+  clear(): void {
+    this._entries.length = 0;
+  }
 
-  get size(): number { return this._entries.length; }
+  get size(): number {
+    return this._entries.length;
+  }
 }
 
 // ─── Composite Queue Manager ──────────────────────────────────────────────────
 
 export class QueueManager<T> {
   readonly priority = new PriorityQueue<T>();
-  readonly retry    = new RetryQueue<T>();
-  readonly dlq      = new DeadLetterQueue<T>();
+  readonly retry = new RetryQueue<T>();
+  readonly dlq = new DeadLetterQueue<T>();
 
   private readonly _maxAttempts: number;
 

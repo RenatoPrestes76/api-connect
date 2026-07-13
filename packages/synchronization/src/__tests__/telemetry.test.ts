@@ -99,7 +99,9 @@ describe('Telemetry', () => {
 
   it('observer errors do not stop execution', () => {
     const t = new Telemetry({}, 'DEBUG');
-    t.observe(() => { throw new Error('observer crash'); });
+    t.observe(() => {
+      throw new Error('observer crash');
+    });
     expect(() => t.info('safe')).not.toThrow();
   });
 });

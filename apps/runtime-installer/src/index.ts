@@ -16,7 +16,9 @@ import { runSetupWizard } from './wizard/setup-wizard.js';
 import { registerRuntime, RegistrationError } from './activation/registration.js';
 import { getMachineId, detectPlatform } from './utils/platform.js';
 import {
-  ensureRuntimeDirectories, getDefaultRuntimeRoot, runtimeDir,
+  ensureRuntimeDirectories,
+  getDefaultRuntimeRoot,
+  runtimeDir,
 } from './config/directory-setup.js';
 import { writeRuntimeConfig, runtimeConfigExists } from './config/runtime-config.js';
 import { ServiceManager } from './service/service-manager.js';
@@ -28,8 +30,8 @@ const VERSION = '0.1.0';
 
 // ─── CLI argument parsing ─────────────────────────────────────────────────────
 
-const args          = process.argv.slice(2);
-const subcommand    = args[0] && !args[0].startsWith('-') ? args[0] : undefined;
+const args = process.argv.slice(2);
+const subcommand = args[0] && !args[0].startsWith('-') ? args[0] : undefined;
 const flag = (name: string): string | undefined => {
   const idx = args.indexOf(name);
   return idx !== -1 ? args[idx + 1] : undefined;
@@ -50,7 +52,7 @@ async function main(): Promise<void> {
   }
 
   const runtimeRoot = flag('--runtime-root') ?? getDefaultRuntimeRoot();
-  const apiBaseUrl  = flag('--api-url') ?? process.env['ATLAS_API_URL'];
+  const apiBaseUrl = flag('--api-url') ?? process.env['ATLAS_API_URL'];
 
   if (subcommand === 'health') {
     await runHealthCommand(runtimeRoot, apiBaseUrl ?? 'https://api.seltriva.com');
@@ -71,14 +73,14 @@ async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Prom
   if (runtimeConfigExists(runtimeRoot)) {
     process.stderr.write(
       `\n  This machine already has an Atlas runtime configured at:\n` +
-      `    ${runtimeRoot}\n\n` +
-      `  To reinstall, uninstall first: atlas-install uninstall\n\n`,
+        `    ${runtimeRoot}\n\n` +
+        `  To reinstall, uninstall first: atlas-install uninstall\n\n`
     );
     process.exit(1);
   }
 
   const wizard = await runSetupWizard({
-    token:      flag('--token'),
+    token: flag('--token'),
     apiBaseUrl: apiBaseUrl,
   });
 
@@ -86,7 +88,7 @@ async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Prom
 
   ensureRuntimeDirectories(runtimeRoot);
 
-  const logger   = new Logger(runtimeDir(runtimeRoot, 'logs'));
+  const logger = new Logger(runtimeDir(runtimeRoot, 'logs'));
   const platform = detectPlatform();
   const machineId = getMachineId();
 
@@ -98,12 +100,12 @@ async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Prom
   try {
     credentials = await registerRuntime({
       activationToken: wizard.activationToken,
-      name:            wizard.name,
-      hostname:        wizard.hostname,
+      name: wizard.name,
+      hostname: wizard.hostname,
       machineId,
-      version:         VERSION,
-      connectorType:   wizard.connectorType,
-      apiBaseUrl:      wizard.apiBaseUrl,
+      version: VERSION,
+      connectorType: wizard.connectorType,
+      apiBaseUrl: wizard.apiBaseUrl,
     });
   } catch (err) {
     const message = err instanceof RegistrationError ? err.message : String(err);
@@ -115,11 +117,11 @@ async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Prom
   // ── Step 2: Write runtime.json ───────────────────────────────────────────
   process.stdout.write('  Writing runtime configuration...\n');
   writeRuntimeConfig(runtimeRoot, credentials, {
-    apiBaseUrl:    wizard.apiBaseUrl,
-    name:          wizard.name,
-    hostname:      wizard.hostname,
+    apiBaseUrl: wizard.apiBaseUrl,
+    name: wizard.name,
+    hostname: wizard.hostname,
     machineId,
-    version:       VERSION,
+    version: VERSION,
     connectorType: wizard.connectorType,
   });
   logger.info('installer.log', `Runtime config written to ${runtimeRoot}/config/runtime.json`);
@@ -181,7 +183,7 @@ async function runHealthCommand(runtimeRoot: string, apiBaseUrl: string): Promis
 async function runUninstallCommand(runtimeRoot: string): Promise<void> {
   process.stdout.write('\n  Uninstalling Atlas Runtime...\n');
   const platform = detectPlatform();
-  const svc      = new ServiceManager(platform);
+  const svc = new ServiceManager(platform);
 
   if (svc.exists()) {
     try {

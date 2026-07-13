@@ -12,12 +12,12 @@ import type { DatabaseIntelligenceReport } from '@seltriva/database-intelligence
 const DEFAULT_TTL_MS = 30 * 60 * 1000;
 
 interface Entry {
-  readonly report:    DatabaseIntelligenceReport;
+  readonly report: DatabaseIntelligenceReport;
   readonly expiresAt: number;
 }
 
 export class PrometheusStore {
-  private readonly _store  = new Map<string, Entry>();
+  private readonly _store = new Map<string, Entry>();
   private readonly _ttlMs: number;
 
   constructor(ttlMs = DEFAULT_TTL_MS) {
@@ -39,7 +39,9 @@ export class PrometheusStore {
     return entry.report;
   }
 
-  get size(): number { return this._store.size; }
+  get size(): number {
+    return this._store.size;
+  }
 
   entries(): Array<[string, DatabaseIntelligenceReport]> {
     this._evict();

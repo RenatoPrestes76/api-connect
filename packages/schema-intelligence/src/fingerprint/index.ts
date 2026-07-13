@@ -15,7 +15,12 @@
 
 import type { SchemaId, EntityId, FieldId, FingerprintId } from '../models/index';
 import type { SIEResult } from '../core/index';
-import type { CanonicalSchema, CanonicalEntity, CanonicalField, CanonicalType } from '../canonical/index';
+import type {
+  CanonicalSchema,
+  CanonicalEntity,
+  CanonicalField,
+  CanonicalType,
+} from '../canonical/index';
 
 // ─── Fingerprint Engine ───────────────────────────────────────────────────
 
@@ -23,17 +28,26 @@ export interface FingerprintEngine {
   /**
    * Generate a fingerprint for an entire schema
    */
-  fingerprintSchema(schema: CanonicalSchema, options?: FingerprintOptions): SIEResult<SchemaFingerprint>;
+  fingerprintSchema(
+    schema: CanonicalSchema,
+    options?: FingerprintOptions
+  ): SIEResult<SchemaFingerprint>;
 
   /**
    * Generate a fingerprint for a single entity
    */
-  fingerprintEntity(entity: CanonicalEntity, options?: FingerprintOptions): SIEResult<EntityFingerprint>;
+  fingerprintEntity(
+    entity: CanonicalEntity,
+    options?: FingerprintOptions
+  ): SIEResult<EntityFingerprint>;
 
   /**
    * Generate a fingerprint for a single field
    */
-  fingerprintField(field: CanonicalField, options?: FingerprintOptions): SIEResult<FieldFingerprint>;
+  fingerprintField(
+    field: CanonicalField,
+    options?: FingerprintOptions
+  ): SIEResult<FieldFingerprint>;
 
   /**
    * Generate a type signature string (normalized type representation)

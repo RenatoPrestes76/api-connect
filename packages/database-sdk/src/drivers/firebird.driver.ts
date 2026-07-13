@@ -14,15 +14,18 @@ export interface FirebirdConnection {
 }
 
 export interface FirebirdDatabase {
-  attach(options: FirebirdOptions, callback: (err: Error | null, db: FirebirdConnection) => void): void;
+  attach(
+    options: FirebirdOptions,
+    callback: (err: Error | null, db: FirebirdConnection) => void
+  ): void;
   detach(callback?: (err: Error | null) => void): void;
 }
 
 export interface FirebirdOptions {
-  host:     string;
-  port:     number;
+  host: string;
+  port: number;
   database: string;
-  user:     string;
+  user: string;
   password: string;
 }
 
@@ -61,17 +64,17 @@ export class FirebirdDriver extends SqlAdapter implements SchemaReader {
   constructor(
     config: DriverConfig,
     private readonly _connFactory: FirebirdFactory = defaultFirebirdFactory,
-    private readonly _schemaReaderFactory?: (client: DbQueryClient) => SchemaReader,
+    private readonly _schemaReaderFactory?: (client: DbQueryClient) => SchemaReader
   ) {
     super(config, 'firebird');
   }
 
   async connect(): Promise<void> {
     this._conn = await this._connFactory({
-      host:     this._config.host,
-      port:     this._config.port,
+      host: this._config.host,
+      port: this._config.port,
       database: this._config.database,
-      user:     this._config.username,
+      user: this._config.username,
       password: this._config.password,
     });
     this._isConnected = true;
@@ -82,7 +85,7 @@ export class FirebirdDriver extends SqlAdapter implements SchemaReader {
       if (this._conn) this._conn.detach(() => resolve());
       else resolve();
     });
-    this._conn        = null;
+    this._conn = null;
     this._isConnected = false;
   }
 
@@ -100,14 +103,21 @@ export class FirebirdDriver extends SqlAdapter implements SchemaReader {
       if (err instanceof ConnectionFailedError) throw err;
       throw new QueryError(
         err instanceof Error ? err.message : String(err),
-        err instanceof Error ? err : undefined,
+        err instanceof Error ? err : undefined
       );
     }
   }
 
   async health(): Promise<DatabaseHealth> {
     if (!this._conn) {
-      return { connected: false, latency: 0, databaseVersion: '', activeConnections: 0, poolUsage: 0, status: 'unhealthy' };
+      return {
+        connected: false,
+        latency: 0,
+        databaseVersion: '',
+        activeConnections: 0,
+        poolUsage: 0,
+        status: 'unhealthy',
+      };
     }
     try {
       const start = Date.now();
@@ -118,15 +128,22 @@ export class FirebirdDriver extends SqlAdapter implements SchemaReader {
         });
       });
       return {
-        connected:         true,
-        latency:           Date.now() - start,
-        databaseVersion:   FirebirdDriver.VERSION,
+        connected: true,
+        latency: Date.now() - start,
+        databaseVersion: FirebirdDriver.VERSION,
         activeConnections: 1,
-        poolUsage:         0,
-        status:            'healthy',
+        poolUsage: 0,
+        status: 'healthy',
       };
     } catch {
-      return { connected: false, latency: 0, databaseVersion: '', activeConnections: 0, poolUsage: 0, status: 'unhealthy' };
+      return {
+        connected: false,
+        latency: 0,
+        databaseVersion: '',
+        activeConnections: 0,
+        poolUsage: 0,
+        status: 'unhealthy',
+      };
     }
   }
 
@@ -139,8 +156,12 @@ export class FirebirdDriver extends SqlAdapter implements SchemaReader {
     return reader.readSchema();
   }
 
-  async readSchema():            Promise<DatabaseSchema> { return this.schema(); }
-  async listTables():            Promise<string[]>        { return (await this.schema()).tables.map((t) => t.name); }
+  async readSchema(): Promise<DatabaseSchema> {
+    return this.schema();
+  }
+  async listTables(): Promise<string[]> {
+    return (await this.schema()).tables.map((t) => t.name);
+  }
   async readTable(name: string): Promise<Table | null> {
     return (await this.schema()).tables.find((t) => t.name === name) ?? null;
   }

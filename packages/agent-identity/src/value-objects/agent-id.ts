@@ -20,7 +20,9 @@ export class AgentId {
     return new AgentId(value.trim().toLowerCase());
   }
 
-  toString(): string { return this._value; }
+  toString(): string {
+    return this._value;
+  }
 
   equals(other: AgentId): boolean {
     return this._value === other._value;
