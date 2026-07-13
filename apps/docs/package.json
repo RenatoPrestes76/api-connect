@@ -4,6 +4,9 @@
   "description": "Seltriva Connect Documentation",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "next dev -p 3004",
     "build": "next build",

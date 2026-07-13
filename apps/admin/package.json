@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "Atlas Control Plane — global administrative portal",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "next dev -p 3006",
     "build": "next build",

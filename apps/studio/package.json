@@ -4,6 +4,9 @@
   "description": "Seltriva Connect Studio - Development and testing interface",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "next dev -p 3002",
     "build": "next build",
