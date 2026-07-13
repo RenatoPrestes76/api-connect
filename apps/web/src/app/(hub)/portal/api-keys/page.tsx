@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useApiKeys, useCreateApiKey, useRevokeApiKey } from '@/hooks/use-portal';
 import { ApiKeyRow } from '@/components/portal/api-key-row';
-import { PageLoading, ErrorState } from '@/components/common/loading-state';
+import { PageLoading } from '@/components/common/loading-state';
+import { ErrorState } from '@/components/common/error-boundary';
 
 export default function ApiKeysPage() {
   const [showForm, setShowForm] = useState(false);

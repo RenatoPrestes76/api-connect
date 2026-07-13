@@ -1,28 +1,21 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard,
-  Server,
-  Building2,
-  Plug,
-  ScrollText,
-  Activity,
-} from 'lucide-react';
-import { cn } from '../../lib/utils.js';
+import { LayoutDashboard, Server, Building2, Plug, ScrollText, Activity } from 'lucide-react';
+import { cn } from '../../lib/utils';
 
 interface NavItem {
-  href:  string;
+  href: string;
   label: string;
-  icon:  typeof LayoutDashboard;
+  icon: typeof LayoutDashboard;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/dashboard',  label: 'Dashboard',  icon: LayoutDashboard },
-  { href: '/agents',     label: 'Agents',     icon: Server          },
-  { href: '/companies',  label: 'Companies',  icon: Building2       },
-  { href: '/connectors', label: 'Connectors', icon: Plug            },
-  { href: '/logs',       label: 'Logs',       icon: ScrollText      },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/agents', label: 'Agents', icon: Server },
+  { href: '/companies', label: 'Companies', icon: Building2 },
+  { href: '/connectors', label: 'Connectors', icon: Plug },
+  { href: '/logs', label: 'Logs', icon: ScrollText },
 ];
 
 export function Sidebar() {
@@ -43,7 +36,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-0.5 px-2 py-3">
-        {NAV_ITEMS.map(item => {
+        {NAV_ITEMS.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
@@ -53,7 +46,7 @@ export function Sidebar() {
                 'flex items-center gap-3 rounded px-3 py-2 text-sm font-medium transition-colors',
                 active
                   ? 'bg-slate-800 text-white'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200',
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
               )}
             >
               <item.icon className="h-4 w-4 shrink-0" />

@@ -1,7 +1,8 @@
 'use client';
 import { useChecklist, useMarkChecklistItem } from '@/hooks/use-release';
 import { ChecklistItemRow } from '@/components/release/checklist-item';
-import { PageLoading, ErrorState } from '@/components/common/loading-state';
+import { PageLoading } from '@/components/common/loading-state';
+import { ErrorState } from '@/components/common/error-boundary';
 import type { ChecklistCategory, ChecklistStatus } from '@/types/release';
 import { cn } from '@/lib/utils';
 

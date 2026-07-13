@@ -1,7 +1,8 @@
 'use client';
 import { usePortalDashboard, useCompleteOnboardingStep } from '@/hooks/use-portal';
 import { OnboardingStepper } from '@/components/portal/onboarding-stepper';
-import { PageLoading, ErrorState } from '@/components/common/loading-state';
+import { PageLoading } from '@/components/common/loading-state';
+import { ErrorState } from '@/components/common/error-boundary';
 import type { OnboardingStep } from '@/types/portal';
 
 function KpiCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {

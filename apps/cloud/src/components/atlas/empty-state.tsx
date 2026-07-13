@@ -1,12 +1,12 @@
-import { cn } from '../../lib/utils.js';
+import { cn } from '../../lib/utils';
 import type { LucideIcon } from 'lucide-react';
 
 interface EmptyStateProps {
-  icon?:        LucideIcon;
-  title:        string;
+  icon?: LucideIcon;
+  title: string;
   description?: string;
-  action?:      React.ReactNode;
-  className?:   string;
+  action?: React.ReactNode;
+  className?: string;
 }
 
 export function EmptyState({ icon: Icon, title, description, action, className }: EmptyStateProps) {
@@ -18,9 +18,7 @@ export function EmptyState({ icon: Icon, title, description, action, className }
         </div>
       )}
       <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-      {description && (
-        <p className="mt-1 max-w-sm text-sm text-slate-500">{description}</p>
-      )}
+      {description && <p className="mt-1 max-w-sm text-sm text-slate-500">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

@@ -14,8 +14,15 @@
  */
 
 import type {
-  OrganizationId, WorkspaceId, EnvironmentId, AgentId, UserId,
-  OrganizationTier, MemberRole, EnvironmentKind, SemVer,
+  OrganizationId,
+  WorkspaceId,
+  EnvironmentId,
+  AgentId,
+  UserId,
+  OrganizationTier,
+  MemberRole,
+  EnvironmentKind,
+  SemVer,
 } from '../domain/index';
 
 // ─── Response Envelope ────────────────────────────────────────────────────
@@ -321,82 +328,82 @@ export interface ValidationResult<T> {
 
 export const API_ROUTES = {
   // Organizations
-  ORGANIZATIONS:           '/api/v1/organizations',
-  ORGANIZATION:            '/api/v1/organizations/:id',
-  ORGANIZATION_MEMBERS:    '/api/v1/organizations/:id/members',
-  ORGANIZATION_INVITE:     '/api/v1/organizations/:id/members/invite',
+  ORGANIZATIONS: '/api/v1/organizations',
+  ORGANIZATION: '/api/v1/organizations/:id',
+  ORGANIZATION_MEMBERS: '/api/v1/organizations/:id/members',
+  ORGANIZATION_INVITE: '/api/v1/organizations/:id/members/invite',
 
   // Workspaces
-  WORKSPACES:              '/api/v1/organizations/:orgId/workspaces',
-  WORKSPACE:               '/api/v1/workspaces/:id',
+  WORKSPACES: '/api/v1/organizations/:orgId/workspaces',
+  WORKSPACE: '/api/v1/workspaces/:id',
 
   // Environments
-  ENVIRONMENTS:            '/api/v1/workspaces/:workspaceId/environments',
-  ENVIRONMENT:             '/api/v1/environments/:id',
+  ENVIRONMENTS: '/api/v1/workspaces/:workspaceId/environments',
+  ENVIRONMENT: '/api/v1/environments/:id',
 
   // Agents
-  AGENT_REGISTER:          '/api/v1/agents/register',
-  AGENT:                   '/api/v1/agents/:id',
-  AGENT_HEARTBEAT:         '/api/v1/agents/:id/heartbeat',
-  AGENT_COMMANDS:          '/api/v1/agents/:id/commands',
-  AGENT_TELEMETRY:         '/api/v1/agents/:id/telemetry',
+  AGENT_REGISTER: '/api/v1/agents/register',
+  AGENT: '/api/v1/agents/:id',
+  AGENT_HEARTBEAT: '/api/v1/agents/:id/heartbeat',
+  AGENT_COMMANDS: '/api/v1/agents/:id/commands',
+  AGENT_TELEMETRY: '/api/v1/agents/:id/telemetry',
 
   // Plugins
-  PLUGINS:                 '/api/v1/plugins',
-  PLUGIN:                  '/api/v1/plugins/:id',
-  PLUGIN_INSTALL:          '/api/v1/organizations/:orgId/plugins/:pluginId/install',
-  PLUGIN_UNINSTALL:        '/api/v1/organizations/:orgId/plugins/:pluginId',
+  PLUGINS: '/api/v1/plugins',
+  PLUGIN: '/api/v1/plugins/:id',
+  PLUGIN_INSTALL: '/api/v1/organizations/:orgId/plugins/:pluginId/install',
+  PLUGIN_UNINSTALL: '/api/v1/organizations/:orgId/plugins/:pluginId',
 
   // Configuration
-  CONFIG:                  '/api/v1/workspaces/:workspaceId/config',
-  CONFIG_KEY:              '/api/v1/workspaces/:workspaceId/config/:key',
+  CONFIG: '/api/v1/workspaces/:workspaceId/config',
+  CONFIG_KEY: '/api/v1/workspaces/:workspaceId/config/:key',
 
   // Feature Flags
-  FEATURE_FLAGS:           '/api/v1/organizations/:orgId/feature-flags',
-  FEATURE_FLAG:            '/api/v1/organizations/:orgId/feature-flags/:key',
+  FEATURE_FLAGS: '/api/v1/organizations/:orgId/feature-flags',
+  FEATURE_FLAG: '/api/v1/organizations/:orgId/feature-flags/:key',
 
   // API Keys
-  API_KEYS:                '/api/v1/organizations/:orgId/api-keys',
-  API_KEY:                 '/api/v1/organizations/:orgId/api-keys/:id',
+  API_KEYS: '/api/v1/organizations/:orgId/api-keys',
+  API_KEY: '/api/v1/organizations/:orgId/api-keys/:id',
 
   // Licenses
-  LICENSES:                '/api/v1/organizations/:orgId/licenses',
-  LICENSE_ACTIVATE:        '/api/v1/organizations/:orgId/licenses/activate',
+  LICENSES: '/api/v1/organizations/:orgId/licenses',
+  LICENSE_ACTIVATE: '/api/v1/organizations/:orgId/licenses/activate',
 
   // Audit
-  AUDIT_LOG:               '/api/v1/organizations/:orgId/audit',
+  AUDIT_LOG: '/api/v1/organizations/:orgId/audit',
 
   // Health
-  HEALTH:                  '/api/v1/health',
-  HEALTH_READY:            '/api/v1/health/ready',
-  HEALTH_LIVE:             '/api/v1/health/live',
+  HEALTH: '/api/v1/health',
+  HEALTH_READY: '/api/v1/health/ready',
+  HEALTH_LIVE: '/api/v1/health/live',
 
   // Metrics
-  METRICS:                 '/api/v1/organizations/:orgId/metrics',
+  METRICS: '/api/v1/organizations/:orgId/metrics',
 
   // Notifications
-  NOTIFICATIONS:           '/api/v1/organizations/:orgId/notifications',
+  NOTIFICATIONS: '/api/v1/organizations/:orgId/notifications',
 } as const;
 
 // ─── API Scopes ───────────────────────────────────────────────────────────
 
 export const API_SCOPES = {
-  ORGANIZATIONS_READ:    'organizations:read',
-  ORGANIZATIONS_WRITE:   'organizations:write',
-  WORKSPACES_READ:       'workspaces:read',
-  WORKSPACES_WRITE:      'workspaces:write',
-  AGENTS_READ:           'agents:read',
-  AGENTS_WRITE:          'agents:write',
-  AGENTS_HEARTBEAT:      'agents:heartbeat',
-  PLUGINS_READ:          'plugins:read',
-  PLUGINS_WRITE:         'plugins:write',
-  CONFIG_READ:           'config:read',
-  CONFIG_WRITE:          'config:write',
-  AUDIT_READ:            'audit:read',
-  MEMBERS_READ:          'members:read',
-  MEMBERS_WRITE:         'members:write',
-  LICENSES_READ:         'licenses:read',
-  LICENSES_WRITE:        'licenses:write',
-  METRICS_READ:          'metrics:read',
-  ADMIN:                 'admin:*',
+  ORGANIZATIONS_READ: 'organizations:read',
+  ORGANIZATIONS_WRITE: 'organizations:write',
+  WORKSPACES_READ: 'workspaces:read',
+  WORKSPACES_WRITE: 'workspaces:write',
+  AGENTS_READ: 'agents:read',
+  AGENTS_WRITE: 'agents:write',
+  AGENTS_HEARTBEAT: 'agents:heartbeat',
+  PLUGINS_READ: 'plugins:read',
+  PLUGINS_WRITE: 'plugins:write',
+  CONFIG_READ: 'config:read',
+  CONFIG_WRITE: 'config:write',
+  AUDIT_READ: 'audit:read',
+  MEMBERS_READ: 'members:read',
+  MEMBERS_WRITE: 'members:write',
+  LICENSES_READ: 'licenses:read',
+  LICENSES_WRITE: 'licenses:write',
+  METRICS_READ: 'metrics:read',
+  ADMIN: 'admin:*',
 } as const;

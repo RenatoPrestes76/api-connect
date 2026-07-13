@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from 'react';
+import type { InputHTMLAttributes, JSX } from 'react';
 import { cn } from '../utils';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -13,10 +13,7 @@ export function Input({ label, error, hint, className, id, ...props }: InputProp
   return (
     <div className="w-full space-y-1.5">
       {label && (
-        <label
-          htmlFor={inputId}
-          className="block text-sm font-medium leading-none text-slate-700"
-        >
+        <label htmlFor={inputId} className="block text-sm font-medium leading-none text-slate-700">
           {label}
         </label>
       )}

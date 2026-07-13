@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import { useSupportTickets, useCreateTicket, useUpdateTicketStatus } from '@/hooks/use-portal';
 import { SupportTicketRow } from '@/components/portal/support-ticket-row';
-import { PageLoading, ErrorState } from '@/components/common/loading-state';
+import { PageLoading } from '@/components/common/loading-state';
+import { ErrorState } from '@/components/common/error-boundary';
 import type { SupportStatus } from '@/types/portal';
 
 const STATUS_TABS: { value: SupportStatus | 'all'; label: string }[] = [

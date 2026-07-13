@@ -64,20 +64,31 @@ export type RuntimeErrorCode =
 
 // ─── Branded IDs ──────────────────────────────────────────────────────────
 
-export type ModuleId        = string & { readonly __brand: 'ModuleId' };
-export type ServiceId       = string & { readonly __brand: 'ServiceId' };
-export type PluginId        = string & { readonly __brand: 'PluginId' };
-export type WorkerId        = string & { readonly __brand: 'WorkerId' };
-export type WorkerPoolId    = string & { readonly __brand: 'WorkerPoolId' };
-export type JobId           = string & { readonly __brand: 'JobId' };
-export type ScheduleId      = string & { readonly __brand: 'ScheduleId' };
-export type CommandId       = string & { readonly __brand: 'CommandId' };
-export type EventId         = string & { readonly __brand: 'EventId' };
-export type CorrelationId   = string & { readonly __brand: 'CorrelationId' };
-export type TraceId         = string & { readonly __brand: 'TraceId' };
-export type SpanId          = string & { readonly __brand: 'SpanId' };
-export type PermissionId    = string & { readonly __brand: 'PermissionId' };
-export type SandboxId       = string & { readonly __brand: 'SandboxId' };
+export type ModuleId = string & { readonly __brand: 'ModuleId' };
+export type ServiceId = string & { readonly __brand: 'ServiceId' };
+export type PluginId = string & { readonly __brand: 'PluginId' };
+export type WorkerId = string & { readonly __brand: 'WorkerId' };
+export type WorkerPoolId = string & { readonly __brand: 'WorkerPoolId' };
+export type JobId = string & { readonly __brand: 'JobId' };
+export type ScheduleId = string & { readonly __brand: 'ScheduleId' };
+export type CommandId = string & { readonly __brand: 'CommandId' };
+export type EventId = string & { readonly __brand: 'EventId' };
+export type CorrelationId = string & { readonly __brand: 'CorrelationId' };
+export type TraceId = string & { readonly __brand: 'TraceId' };
+export type SpanId = string & { readonly __brand: 'SpanId' };
+export type PermissionId = string & { readonly __brand: 'PermissionId' };
+export type SandboxId = string & { readonly __brand: 'SandboxId' };
+
+// ─── Tracing ──────────────────────────────────────────────────────────────
+
+/**
+ * Distributed-tracing context propagated through the command and event buses.
+ */
+export interface SpanContext {
+  readonly traceId: TraceId;
+  readonly spanId: SpanId;
+  readonly parentSpanId?: SpanId;
+}
 
 // ─── Identifiable ─────────────────────────────────────────────────────────
 
@@ -110,13 +121,13 @@ export type RuntimeEnvironment = 'development' | 'test' | 'staging' | 'productio
 // ─── Module Kinds ─────────────────────────────────────────────────────────
 
 export type ModuleKind =
-  | 'core'          // platform-internal modules (kernel, bootstrap)
+  | 'core' // platform-internal modules (kernel, bootstrap)
   | 'infrastructure' // databases, queues, cache
-  | 'integration'   // connector adapters
-  | 'analytics'     // reporting, telemetry aggregation
-  | 'ai'            // AI/ML modules
-  | 'plugin'        // third-party plugins
-  | 'extension';    // user-defined extensions
+  | 'integration' // connector adapters
+  | 'analytics' // reporting, telemetry aggregation
+  | 'ai' // AI/ML modules
+  | 'plugin' // third-party plugins
+  | 'extension'; // user-defined extensions
 
 // ─── Module Descriptor ────────────────────────────────────────────────────
 
@@ -161,41 +172,44 @@ export interface AsyncIterable<T> {
 
 // ─── Token (DI) ───────────────────────────────────────────────────────────
 
-export type Token<T = unknown> = string | symbol | { readonly token: string | symbol; readonly __type?: T };
+export type Token<T = unknown> =
+  | string
+  | symbol
+  | { readonly token: string | symbol; readonly __type?: T };
 
 // ─── Platform Constants ───────────────────────────────────────────────────
 
 export const PLATFORM_EVENTS = {
-  BOOTSTRAP_STARTED:         'platform.bootstrap.started',
+  BOOTSTRAP_STARTED: 'platform.bootstrap.started',
   BOOTSTRAP_PHASE_COMPLETED: 'platform.bootstrap.phase.completed',
-  PLATFORM_READY:            'platform.ready',
-  MODULE_REGISTERED:         'platform.module.registered',
-  MODULE_STARTED:            'platform.module.started',
-  MODULE_STOPPED:            'platform.module.stopped',
-  MODULE_FAILED:             'platform.module.failed',
-  PLUGIN_LOADED:             'platform.plugin.loaded',
-  PLUGIN_UNLOADED:           'platform.plugin.unloaded',
-  PLUGIN_FAULTED:            'platform.plugin.faulted',
-  SERVICE_REGISTERED:        'platform.service.registered',
-  SERVICE_UNREGISTERED:      'platform.service.unregistered',
-  JOB_SCHEDULED:             'platform.job.scheduled',
-  JOB_COMPLETED:             'platform.job.completed',
-  JOB_FAILED:                'platform.job.failed',
-  WORKER_SPAWNED:            'platform.worker.spawned',
-  WORKER_TERMINATED:         'platform.worker.terminated',
-  HEALTH_DEGRADED:           'platform.health.degraded',
-  HEALTH_RECOVERED:          'platform.health.recovered',
-  SHUTDOWN_INITIATED:        'platform.shutdown.initiated',
-  SHUTDOWN_COMPLETED:        'platform.shutdown.completed',
+  PLATFORM_READY: 'platform.ready',
+  MODULE_REGISTERED: 'platform.module.registered',
+  MODULE_STARTED: 'platform.module.started',
+  MODULE_STOPPED: 'platform.module.stopped',
+  MODULE_FAILED: 'platform.module.failed',
+  PLUGIN_LOADED: 'platform.plugin.loaded',
+  PLUGIN_UNLOADED: 'platform.plugin.unloaded',
+  PLUGIN_FAULTED: 'platform.plugin.faulted',
+  SERVICE_REGISTERED: 'platform.service.registered',
+  SERVICE_UNREGISTERED: 'platform.service.unregistered',
+  JOB_SCHEDULED: 'platform.job.scheduled',
+  JOB_COMPLETED: 'platform.job.completed',
+  JOB_FAILED: 'platform.job.failed',
+  WORKER_SPAWNED: 'platform.worker.spawned',
+  WORKER_TERMINATED: 'platform.worker.terminated',
+  HEALTH_DEGRADED: 'platform.health.degraded',
+  HEALTH_RECOVERED: 'platform.health.recovered',
+  SHUTDOWN_INITIATED: 'platform.shutdown.initiated',
+  SHUTDOWN_COMPLETED: 'platform.shutdown.completed',
 } as const;
 
 export type PlatformEventName = (typeof PLATFORM_EVENTS)[keyof typeof PLATFORM_EVENTS];
 
 // ─── Severity / Priority ──────────────────────────────────────────────────
 
-export type Severity  = 'critical' | 'high' | 'medium' | 'low' | 'info';
-export type Priority  = 'critical' | 'high' | 'normal' | 'low' | 'background';
-export type LogLevel  = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
+export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';
+export type Priority = 'critical' | 'high' | 'normal' | 'low' | 'background';
+export type LogLevel = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
 
 // ─── Time Range ───────────────────────────────────────────────────────────
 

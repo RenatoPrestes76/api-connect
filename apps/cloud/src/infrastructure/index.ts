@@ -10,8 +10,14 @@
 import type { PrismaClient } from '@prisma/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
-  OrganizationId, AgentId, WorkspaceId, UserId, PluginId,
-  LicenseId, DomainResult, CloudDomainEvent,
+  OrganizationId,
+  AgentId,
+  WorkspaceId,
+  UserId,
+  PluginId,
+  LicenseId,
+  DomainResult,
+  CloudDomainEvent,
 } from '../domain/index';
 
 // ─── DI Container ─────────────────────────────────────────────────────────
@@ -23,15 +29,15 @@ export function createToken<T>(description: string): InfrastructureToken<T> {
 }
 
 export const INFRASTRUCTURE_TOKENS = {
-  PRISMA_CLIENT:          createToken<PrismaClient>('PrismaClient'),
-  SUPABASE_CLIENT:        createToken<SupabaseClient>('SupabaseClient'),
-  REALTIME_PUBLISHER:     createToken<IRealtimePublisher>('RealtimePublisher'),
-  CACHE_PROVIDER:         createToken<ICacheProvider>('CacheProvider'),
-  STORAGE_PROVIDER:       createToken<IStorageProvider>('StorageProvider'),
-  EMAIL_PROVIDER:         createToken<IEmailProvider>('EmailProvider'),
-  WEBHOOK_PROVIDER:       createToken<IWebhookProvider>('WebhookProvider'),
-  QUEUE_PROVIDER:         createToken<IQueueProvider>('QueueProvider'),
-  ENCRYPTION_PROVIDER:    createToken<IEncryptionProvider>('EncryptionProvider'),
+  PRISMA_CLIENT: createToken<PrismaClient>('PrismaClient'),
+  SUPABASE_CLIENT: createToken<SupabaseClient>('SupabaseClient'),
+  REALTIME_PUBLISHER: createToken<IRealtimePublisher>('RealtimePublisher'),
+  CACHE_PROVIDER: createToken<ICacheProvider>('CacheProvider'),
+  STORAGE_PROVIDER: createToken<IStorageProvider>('StorageProvider'),
+  EMAIL_PROVIDER: createToken<IEmailProvider>('EmailProvider'),
+  WEBHOOK_PROVIDER: createToken<IWebhookProvider>('WebhookProvider'),
+  QUEUE_PROVIDER: createToken<IQueueProvider>('QueueProvider'),
+  ENCRYPTION_PROVIDER: createToken<IEncryptionProvider>('EncryptionProvider'),
 } as const;
 
 // ─── Prisma Client Factory ────────────────────────────────────────────────
@@ -74,21 +80,26 @@ export interface ICacheProvider {
 }
 
 export const CACHE_KEYS = {
-  ORGANIZATION:     (id: OrganizationId) => `org:${id}`,
+  ORGANIZATION: (id: OrganizationId) => `org:${id}`,
   ORGANIZATION_SLUG: (slug: string) => `org:slug:${slug}`,
-  AGENT:            (id: AgentId) => `agent:${id}`,
-  AGENT_STATUS:     (id: AgentId) => `agent:status:${id}`,
-  LICENSE:          (id: LicenseId) => `license:${id}`,
-  ORG_LICENSE:      (orgId: OrganizationId) => `org:${orgId}:license`,
-  FEATURE_FLAGS:    (orgId: OrganizationId, envId?: string) => `ff:${orgId}:${envId ?? 'global'}`,
-  RATE_LIMIT:       (key: string) => `rl:${key}`,
-  SESSION:          (token: string) => `session:${token}`,
+  AGENT: (id: AgentId) => `agent:${id}`,
+  AGENT_STATUS: (id: AgentId) => `agent:status:${id}`,
+  LICENSE: (id: LicenseId) => `license:${id}`,
+  ORG_LICENSE: (orgId: OrganizationId) => `org:${orgId}:license`,
+  FEATURE_FLAGS: (orgId: OrganizationId, envId?: string) => `ff:${orgId}:${envId ?? 'global'}`,
+  RATE_LIMIT: (key: string) => `rl:${key}`,
+  SESSION: (token: string) => `session:${token}`,
 } as const;
 
 // ─── Storage Provider ─────────────────────────────────────────────────────
 
 export interface IStorageProvider {
-  upload(bucket: string, path: string, data: Buffer, options?: UploadOptions): Promise<DomainResult<StoredFile>>;
+  upload(
+    bucket: string,
+    path: string,
+    data: Buffer,
+    options?: UploadOptions
+  ): Promise<DomainResult<StoredFile>>;
   download(bucket: string, path: string): Promise<DomainResult<Buffer>>;
   delete(bucket: string, path: string): Promise<DomainResult<void>>;
   getPublicUrl(bucket: string, path: string): string;
@@ -114,10 +125,10 @@ export interface StoredFile {
 }
 
 export const STORAGE_BUCKETS = {
-  PLUGIN_ASSETS:  'plugin-assets',
-  ORG_LOGOS:      'org-logos',
-  AUDIT_EXPORTS:  'audit-exports',
-  REPORTS:        'reports',
+  PLUGIN_ASSETS: 'plugin-assets',
+  ORG_LOGOS: 'org-logos',
+  AUDIT_EXPORTS: 'audit-exports',
+  REPORTS: 'reports',
 } as const;
 
 // ─── Email Provider ───────────────────────────────────────────────────────
@@ -141,7 +152,10 @@ export interface EmailMessage {
 // ─── Webhook Provider ─────────────────────────────────────────────────────
 
 export interface IWebhookProvider {
-  deliver(endpoint: WebhookEndpoint, payload: WebhookPayload): Promise<DomainResult<WebhookDeliveryResult>>;
+  deliver(
+    endpoint: WebhookEndpoint,
+    payload: WebhookPayload
+  ): Promise<DomainResult<WebhookDeliveryResult>>;
   verify(signature: string, body: string, secret: string): boolean;
 }
 
@@ -259,11 +273,11 @@ export interface RateLimitResult {
 }
 
 export const RATE_LIMIT_POLICIES = {
-  API_DEFAULT:     { limit: 1000, windowSeconds: 60 },
-  API_AUTH:        { limit: 20,   windowSeconds: 60 },
-  API_AGENTS:      { limit: 500,  windowSeconds: 60 },
-  WEBHOOK:         { limit: 50,   windowSeconds: 60 },
-  INVITE:          { limit: 10,   windowSeconds: 3600 },
+  API_DEFAULT: { limit: 1000, windowSeconds: 60 },
+  API_AUTH: { limit: 20, windowSeconds: 60 },
+  API_AGENTS: { limit: 500, windowSeconds: 60 },
+  WEBHOOK: { limit: 50, windowSeconds: 60 },
+  INVITE: { limit: 10, windowSeconds: 3600 },
 } as const;
 
 // ─── Database Transaction ─────────────────────────────────────────────────

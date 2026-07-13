@@ -3,16 +3,17 @@
  * Job engine: definition, execution, retry, and history.
  */
 
-import type {
-  OrganizationId, JobId, DomainResult, PaginatedResult,
-} from '../domain/index';
+import type { OrganizationId, JobId, DomainResult, PaginatedResult } from '../domain/index';
 
 export interface IJobEngine {
   enqueue(input: EnqueueJobInput): Promise<DomainResult<JobRecord>>;
   cancel(jobId: JobId): Promise<DomainResult<void>>;
   retry(jobId: JobId): Promise<DomainResult<void>>;
   getById(jobId: JobId): Promise<JobRecord | null>;
-  listByOrganization(orgId: OrganizationId, filter?: JobFilter): Promise<PaginatedResult<JobRecord>>;
+  listByOrganization(
+    orgId: OrganizationId,
+    filter?: JobFilter
+  ): Promise<PaginatedResult<JobRecord>>;
   listPending(): Promise<JobRecord[]>;
   registerHandler(kind: string, handler: JobHandler): void;
   startProcessing(concurrency?: number): void;
@@ -80,12 +81,12 @@ export interface JobEngineStats {
 }
 
 export const JOB_KINDS = {
-  AGENT_STATUS_CHECK:    'agent-status-check',
+  AGENT_STATUS_CHECK: 'agent-status-check',
   LICENSE_EXPIRY_NOTIFY: 'license-expiry-notify',
-  SEND_EMAIL:            'send-email',
-  SEND_WEBHOOK:          'send-webhook',
-  AUDIT_EXPORT:          'audit-export',
-  METRICS_ROLLUP:        'metrics-rollup',
-  DEAD_AGENT_ALERT:      'dead-agent-alert',
-  INVITE_EMAIL:          'invite-email',
+  SEND_EMAIL: 'send-email',
+  SEND_WEBHOOK: 'send-webhook',
+  AUDIT_EXPORT: 'audit-export',
+  METRICS_ROLLUP: 'metrics-rollup',
+  DEAD_AGENT_ALERT: 'dead-agent-alert',
+  INVITE_EMAIL: 'invite-email',
 } as const;

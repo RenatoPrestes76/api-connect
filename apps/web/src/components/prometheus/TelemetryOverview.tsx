@@ -6,7 +6,12 @@ interface Props {
   data: TelemetryOverview;
 }
 
-const CARD_CFG = [
+const CARD_CFG: ReadonlyArray<{
+  key: keyof TelemetryOverview;
+  label: string;
+  color: string;
+  suffix?: string;
+}> = [
   { key: 'totalTraces', label: 'Total Traces', color: 'text-indigo-600 dark:text-indigo-400' },
   { key: 'errorTraces', label: 'Error Traces', color: 'text-red-600 dark:text-red-400' },
   { key: 'timeoutTraces', label: 'Timeout Traces', color: 'text-orange-600 dark:text-orange-400' },
@@ -25,7 +30,7 @@ const CARD_CFG = [
   { key: 'activeAlerts', label: 'Active Alerts', color: 'text-red-600 dark:text-red-400' },
   { key: 'openIncidents', label: 'Open Incidents', color: 'text-orange-600 dark:text-orange-400' },
   { key: 'logsPerMin', label: 'Logs/min', color: 'text-zinc-700 dark:text-zinc-300' },
-] as const;
+];
 
 export function TelemetryOverview({ data }: Props) {
   return (

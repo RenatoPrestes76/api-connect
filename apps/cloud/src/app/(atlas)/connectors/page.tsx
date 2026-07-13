@@ -1,17 +1,17 @@
-import { PageHeader } from '../../../components/atlas/page-header.js';
-import { Badge } from '../../../components/ui/badge.js';
-import { Card, CardContent } from '../../../components/ui/card.js';
-import { CONNECTOR_CATALOG } from '../../../lib/constants.js';
+import { PageHeader } from '../../../components/atlas/page-header';
+import { Badge } from '../../../components/ui/badge';
+import { Card, CardContent } from '../../../components/ui/card';
+import { CONNECTOR_CATALOG } from '../../../lib/constants';
 import { Plug } from 'lucide-react';
 
 const VENDOR_ICONS: Record<string, string> = {
-  Microsoft:  'MS',
+  Microsoft: 'MS',
   PostgreSQL: 'PG',
-  Oracle:     'OC',
-  Generic:    'GN',
-  SAP:        'SP',
-  TOTVS:      'TV',
-  CISS:       'CS',
+  Oracle: 'OC',
+  Generic: 'GN',
+  SAP: 'SP',
+  TOTVS: 'TV',
+  CISS: 'CS',
 };
 
 export default function ConnectorsPage() {
@@ -24,7 +24,7 @@ export default function ConnectorsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {CONNECTOR_CATALOG.map(connector => (
+        {CONNECTOR_CATALOG.map((connector) => (
           <Card key={connector.id}>
             <CardContent className="pt-5">
               <div className="flex items-start gap-3">

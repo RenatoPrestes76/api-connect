@@ -92,15 +92,15 @@ export interface AgentMetricSummary {
 }
 
 export const METRIC_NAMES = {
-  AGENT_CPU_PCT:         'agent.cpu.percent',
-  AGENT_MEM_PCT:         'agent.memory.percent',
-  AGENT_DISK_PCT:        'agent.disk.percent',
-  AGENT_LATENCY_MS:      'agent.latency.ms',
-  AGENT_SYNC_DURATION:   'agent.sync.duration_ms',
-  AGENT_SYNC_ERRORS:     'agent.sync.errors',
-  API_REQUESTS:          'api.requests.total',
-  API_LATENCY_MS:        'api.latency.ms',
-  API_ERRORS:            'api.errors.total',
-  JOB_DURATION_MS:       'job.duration_ms',
-  JOB_QUEUE_DEPTH:       'job.queue.depth',
+  AGENT_CPU_PCT: 'agent.cpu.percent',
+  AGENT_MEM_PCT: 'agent.memory.percent',
+  AGENT_DISK_PCT: 'agent.disk.percent',
+  AGENT_LATENCY_MS: 'agent.latency.ms',
+  AGENT_SYNC_DURATION: 'agent.sync.duration_ms',
+  AGENT_SYNC_ERRORS: 'agent.sync.errors',
+  API_REQUESTS: 'api.requests.total',
+  API_LATENCY_MS: 'api.latency.ms',
+  API_ERRORS: 'api.errors.total',
+  JOB_DURATION_MS: 'job.duration_ms',
+  JOB_QUEUE_DEPTH: 'job.queue.depth',
 } as const;

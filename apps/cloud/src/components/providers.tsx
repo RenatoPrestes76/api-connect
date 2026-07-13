@@ -13,12 +13,8 @@ export function Providers({ children }: ProvidersProps) {
         defaultOptions: {
           queries: { retry: 1, refetchOnWindowFocus: true },
         },
-      }),
+      })
   );
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

@@ -71,9 +71,9 @@ export type StorageBucket =
   | 'updates';
 
 export const STORAGE_LIMITS = {
-  MAX_FILE_SIZE_BYTES:      100 * 1024 * 1024,    // 100 MB
-  FREE_STORAGE_BYTES:       1  * 1024 * 1024 * 1024,  // 1 GB
-  STARTER_STORAGE_BYTES:   10  * 1024 * 1024 * 1024,  // 10 GB
-  PRO_STORAGE_BYTES:       100  * 1024 * 1024 * 1024,  // 100 GB
-  ENTERPRISE_STORAGE_BYTES: -1,                    // unlimited
+  MAX_FILE_SIZE_BYTES: 100 * 1024 * 1024, // 100 MB
+  FREE_STORAGE_BYTES: 1 * 1024 * 1024 * 1024, // 1 GB
+  STARTER_STORAGE_BYTES: 10 * 1024 * 1024 * 1024, // 10 GB
+  PRO_STORAGE_BYTES: 100 * 1024 * 1024 * 1024, // 100 GB
+  ENTERPRISE_STORAGE_BYTES: -1, // unlimited
 } as const;

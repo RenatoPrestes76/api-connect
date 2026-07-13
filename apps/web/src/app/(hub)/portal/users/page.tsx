@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import { UserPlus, Shield } from 'lucide-react';
 import { usePortalUsers, useInviteUser, usePortalDashboard } from '@/hooks/use-portal';
-import { PageLoading, ErrorState } from '@/components/common/loading-state';
+import { PageLoading } from '@/components/common/loading-state';
+import { ErrorState } from '@/components/common/error-boundary';
 import type { UserRole } from '@/types/portal';
 import { cn } from '@/lib/utils';
 

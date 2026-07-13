@@ -7,7 +7,11 @@
  */
 
 import type {
-  OrganizationId, UserId, AuditEntryId, DomainResult, PaginatedResult,
+  OrganizationId,
+  UserId,
+  AuditEntryId,
+  DomainResult,
+  PaginatedResult,
 } from '../domain/index';
 
 // ─── Audit Service ────────────────────────────────────────────────────────

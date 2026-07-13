@@ -1,12 +1,12 @@
-import { cn } from '../../lib/utils.js';
+import { cn } from '../../lib/utils';
 import type { LucideIcon } from 'lucide-react';
-import { Card, CardContent } from '../ui/card.js';
+import { Card, CardContent } from '../ui/card';
 
 interface MetricCardProps {
-  title:      string;
-  value:      number | string;
-  icon?:      LucideIcon;
-  sub?:       string;
+  title: string;
+  value: number | string;
+  icon?: LucideIcon;
+  sub?: string;
   className?: string;
 }
 

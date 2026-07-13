@@ -4,8 +4,13 @@
  */
 
 import type {
-  OrganizationId, WorkspaceId, AgentId, UserId,
-  Configuration, ConfigurationId, DomainResult,
+  OrganizationId,
+  WorkspaceId,
+  AgentId,
+  UserId,
+  Configuration,
+  ConfigurationId,
+  DomainResult,
 } from '../domain/index';
 
 export interface IConfigurationService {

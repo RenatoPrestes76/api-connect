@@ -1,7 +1,7 @@
 'use client';
 import { RefreshCw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { cn } from '../../lib/utils.js';
+import { cn } from '../../lib/utils';
 
 interface TopbarProps {
   className?: string;
@@ -18,7 +18,7 @@ export function Topbar({ className }: TopbarProps) {
     <header
       className={cn(
         'flex h-14 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6',
-        className,
+        className
       )}
     >
       <div className="flex items-center gap-3">

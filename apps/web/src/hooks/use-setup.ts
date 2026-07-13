@@ -135,7 +135,7 @@ export function useSetupWizard() {
   );
 
   const runProvision = useCallback(async () => {
-    if (!state.sessionId) return;
+    if (!state.sessionId) return null;
     setLoading(true);
     try {
       const agent = state.agent ?? { name: 'atlas-agent-01', type: 'connector' };

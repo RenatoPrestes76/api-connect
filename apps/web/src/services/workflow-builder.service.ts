@@ -7,7 +7,7 @@ import type {
   WorkflowTemplate,
   VersionRecord,
 } from '@/types/workflow-builder';
-import type { WorkflowGraph } from '@/types/workflow';
+import type { Workflow, WorkflowGraph } from '@/types/workflow';
 
 const BASE_WB = '/api/v1/workflow-builder';
 const BASE_OR = '/api/v1/orchestrator/workflows';
@@ -38,7 +38,7 @@ export const fetchTemplate = (id: string): Promise<WorkflowTemplate> =>
   api.get(`${BASE_WB}/templates/${id}`);
 
 export const useTemplate = (id: string, body?: { name?: string; description?: string }) =>
-  api.post(`${BASE_WB}/templates/${id}/use`, body ?? {});
+  api.post<Workflow>(`${BASE_WB}/templates/${id}/use`, body ?? {});
 
 // ─── Versions ─────────────────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { Sidebar } from '../../components/atlas/sidebar.js';
-import { Topbar } from '../../components/atlas/topbar.js';
+import { Sidebar } from '../../components/atlas/sidebar';
+import { Topbar } from '../../components/atlas/topbar';
 
 export default function AtlasLayout({ children }: { children: ReactNode }) {
   return (
@@ -8,9 +8,7 @@ export default function AtlasLayout({ children }: { children: ReactNode }) {
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar />
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>
   );

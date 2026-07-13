@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { Loader2, LayoutTemplate } from 'lucide-react';
-import { PageHeader } from '@/components/layout/page-header';
+import { Loader2 } from 'lucide-react';
+import { PageHeader } from '@/components/common/page-header';
 import { TemplateCard } from '@/components/workflow/template-card';
 import { useTemplates } from '@/hooks/use-workflow-builder';
 
@@ -24,7 +24,6 @@ export default function TemplatesPage() {
       <PageHeader
         title="Templates de Workflow"
         description="Comece rapidamente com templates de integração pré-construídos e personalize conforme sua necessidade."
-        icon={<LayoutTemplate className="h-5 w-5" />}
       />
 
       <div className="flex flex-wrap gap-2">

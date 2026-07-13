@@ -1,7 +1,8 @@
 'use client';
 import { useGoLiveMetrics, useCurrentVersion, useChecklist } from '@/hooks/use-release';
 import { VersionBadge } from '@/components/release/version-badge';
-import { PageLoading, ErrorState } from '@/components/common/loading-state';
+import { PageLoading } from '@/components/common/loading-state';
+import { ErrorState } from '@/components/common/error-boundary';
 import { cn } from '@/lib/utils';
 
 function MetricCard({

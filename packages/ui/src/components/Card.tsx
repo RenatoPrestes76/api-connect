@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from 'react';
+import type { HTMLAttributes, JSX } from 'react';
 import { cn } from '../utils';
 
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>): JSX.Element {
@@ -10,10 +10,7 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>): J
   );
 }
 
-export function CardHeader({
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement>): JSX.Element {
+export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>): JSX.Element {
   return <div className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />;
 }
 
@@ -36,16 +33,10 @@ export function CardDescription({
   return <p className={cn('text-sm text-slate-500', className)} {...props} />;
 }
 
-export function CardContent({
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement>): JSX.Element {
+export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>): JSX.Element {
   return <div className={cn('p-6 pt-0', className)} {...props} />;
 }
 
-export function CardFooter({
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement>): JSX.Element {
+export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>): JSX.Element {
   return <div className={cn('flex items-center p-6 pt-0', className)} {...props} />;
 }

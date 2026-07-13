@@ -16,7 +16,12 @@ import type { ICloudScheduler } from '../scheduler/index';
 import type { IAuditService } from '../audit/index';
 import type { IStorageService } from '../storage/index';
 import type { IConfigurationService, IFeatureFlagService } from '../configuration/index';
-import type { IAuthenticationService, IAuthorizationService, IApiKeyService, IRateLimitService } from '../security/index';
+import type {
+  IAuthenticationService,
+  IAuthorizationService,
+  IApiKeyService,
+  IRateLimitService,
+} from '../security/index';
 import type { IHealthMonitor } from '../health/index';
 import type { IAgentTelemetryIngestion } from '../telemetry/index';
 
@@ -24,34 +29,34 @@ import type { IAgentTelemetryIngestion } from '../telemetry/index';
 
 export interface CloudServiceContainer {
   // Core platform
-  readonly health:            IHealthMonitor;
-  readonly runtime:           CloudRuntimeContext;
+  readonly health: IHealthMonitor;
+  readonly runtime: CloudRuntimeContext;
 
   // Business domain
-  readonly organizations:     IOrganizationService;
-  readonly members:           IMemberService;
-  readonly agents:            IAgentService;
-  readonly users:             IUserService;
-  readonly licenses:          ILicenseService;
-  readonly plugins:           IPluginRegistryService;
-  readonly configuration:     IConfigurationService;
-  readonly featureFlags:      IFeatureFlagService;
+  readonly organizations: IOrganizationService;
+  readonly members: IMemberService;
+  readonly agents: IAgentService;
+  readonly users: IUserService;
+  readonly licenses: ILicenseService;
+  readonly plugins: IPluginRegistryService;
+  readonly configuration: IConfigurationService;
+  readonly featureFlags: IFeatureFlagService;
 
   // Platform services
-  readonly notifications:     INotificationService;
-  readonly monitoring:        IMonitoringService;
-  readonly metrics:           IMetricsService;
-  readonly jobs:              IJobEngine;
-  readonly scheduler:         ICloudScheduler;
-  readonly audit:             IAuditService;
-  readonly storage:           IStorageService;
-  readonly agentTelemetry:    IAgentTelemetryIngestion;
+  readonly notifications: INotificationService;
+  readonly monitoring: IMonitoringService;
+  readonly metrics: IMetricsService;
+  readonly jobs: IJobEngine;
+  readonly scheduler: ICloudScheduler;
+  readonly audit: IAuditService;
+  readonly storage: IStorageService;
+  readonly agentTelemetry: IAgentTelemetryIngestion;
 
   // Security
-  readonly auth:              IAuthenticationService;
-  readonly authorization:     IAuthorizationService;
-  readonly apiKeys:           IApiKeyService;
-  readonly rateLimiter:       IRateLimitService;
+  readonly auth: IAuthenticationService;
+  readonly authorization: IAuthorizationService;
+  readonly apiKeys: IApiKeyService;
+  readonly rateLimiter: IRateLimitService;
 }
 
 // ─── Runtime Context ──────────────────────────────────────────────────────
@@ -96,16 +101,16 @@ export type CloudEventHandler<T = unknown> = (event: CloudEvent<T>) => Promise<v
 export type Unsubscribe = () => void;
 
 export const CLOUD_EVENT_TOPICS = {
-  ORGANIZATION_CREATED:   'organization.created',
+  ORGANIZATION_CREATED: 'organization.created',
   ORGANIZATION_SUSPENDED: 'organization.suspended',
-  AGENT_REGISTERED:       'agent.registered',
-  AGENT_STATUS_CHANGED:   'agent.status.changed',
-  AGENT_HEARTBEAT:        'agent.heartbeat.received',
-  LICENSE_ACTIVATED:      'license.activated',
-  LICENSE_EXPIRING:       'license.expiring',
-  PLUGIN_INSTALLED:       'plugin.installed',
-  USER_INVITED:           'user.invited',
-  JOB_COMPLETED:          'job.completed',
-  JOB_FAILED:             'job.failed',
-  ALERT_CREATED:          'alert.created',
+  AGENT_REGISTERED: 'agent.registered',
+  AGENT_STATUS_CHANGED: 'agent.status.changed',
+  AGENT_HEARTBEAT: 'agent.heartbeat.received',
+  LICENSE_ACTIVATED: 'license.activated',
+  LICENSE_EXPIRING: 'license.expiring',
+  PLUGIN_INSTALLED: 'plugin.installed',
+  USER_INVITED: 'user.invited',
+  JOB_COMPLETED: 'job.completed',
+  JOB_FAILED: 'job.failed',
+  ALERT_CREATED: 'alert.created',
 } as const;

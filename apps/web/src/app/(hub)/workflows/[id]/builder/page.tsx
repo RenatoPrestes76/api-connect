@@ -108,7 +108,7 @@ export default function WorkflowBuilderPage({ params }: { params: Promise<{ id: 
 
   const togglePanel = (panel: Exclude<RightPanel, 'config' | null>) => {
     setRightPanel((prev) => (prev === panel ? null : panel));
-    if (panel !== 'config') setSelectedNodeId(null);
+    setSelectedNodeId(null);
   };
 
   if (isLoading) return <PageLoading message="Loading workflow…" />;

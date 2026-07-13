@@ -63,14 +63,14 @@ export interface ScheduledJobDescriptor extends ScheduledJobStatus {
 }
 
 export const CLOUD_JOB_IDS = {
-  AGENT_STALE_CHECK:         'job-agent-stale-check',
-  LICENSE_EXPIRY_CHECK:      'job-license-expiry-check',
-  NOTIFICATION_DIGEST:       'job-notification-digest',
-  AUDIT_EXPORT_CLEANUP:      'job-audit-export-cleanup',
-  METRICS_ROLLUP:            'job-metrics-rollup',
-  DEAD_AGENT_CLEANUP:        'job-dead-agent-cleanup',
-  SESSION_CLEANUP:           'job-session-cleanup',
-  WEBHOOK_RETRY:             'job-webhook-retry',
-  ALERT_ESCALATION:          'job-alert-escalation',
-  PLATFORM_HEALTH_REPORT:    'job-platform-health-report',
+  AGENT_STALE_CHECK: 'job-agent-stale-check',
+  LICENSE_EXPIRY_CHECK: 'job-license-expiry-check',
+  NOTIFICATION_DIGEST: 'job-notification-digest',
+  AUDIT_EXPORT_CLEANUP: 'job-audit-export-cleanup',
+  METRICS_ROLLUP: 'job-metrics-rollup',
+  DEAD_AGENT_CLEANUP: 'job-dead-agent-cleanup',
+  SESSION_CLEANUP: 'job-session-cleanup',
+  WEBHOOK_RETRY: 'job-webhook-retry',
+  ALERT_ESCALATION: 'job-alert-escalation',
+  PLATFORM_HEALTH_REPORT: 'job-platform-health-report',
 } as const;

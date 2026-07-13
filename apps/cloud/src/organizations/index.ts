@@ -4,29 +4,54 @@
  */
 
 import type {
-  Organization, OrganizationId, UserId, WorkspaceId,
-  MemberRole, OrganizationTier, OrganizationStatus,
-  PaginatedResult, DomainResult, Email, Slug,
+  Organization,
+  OrganizationId,
+  UserId,
+  WorkspaceId,
+  MemberRole,
+  OrganizationTier,
+  OrganizationStatus,
+  PaginatedResult,
+  DomainResult,
+  Email,
+  Slug,
 } from '../domain/index';
 
 export interface IOrganizationService {
   create(input: CreateOrganizationInput): Promise<DomainResult<Organization>>;
   getById(id: OrganizationId): Promise<Organization | null>;
   getBySlug(slug: Slug): Promise<Organization | null>;
-  update(id: OrganizationId, input: UpdateOrganizationInput, actorId: UserId): Promise<DomainResult<Organization>>;
+  update(
+    id: OrganizationId,
+    input: UpdateOrganizationInput,
+    actorId: UserId
+  ): Promise<DomainResult<Organization>>;
   suspend(id: OrganizationId, reason: string, actorId: UserId): Promise<DomainResult<void>>;
   activate(id: OrganizationId, actorId: UserId): Promise<DomainResult<void>>;
   delete(id: OrganizationId, actorId: UserId): Promise<DomainResult<void>>;
   list(filter: OrganizationListFilter): Promise<PaginatedResult<Organization>>;
   getSummary(id: OrganizationId): Promise<OrganizationSummaryView | null>;
-  changeTier(id: OrganizationId, tier: OrganizationTier, actorId: UserId): Promise<DomainResult<void>>;
+  changeTier(
+    id: OrganizationId,
+    tier: OrganizationTier,
+    actorId: UserId
+  ): Promise<DomainResult<void>>;
 }
 
 export interface IMemberService {
   invite(input: InviteMemberInput): Promise<DomainResult<void>>;
   acceptInvite(token: string, userId: UserId): Promise<DomainResult<Organization>>;
-  removeMember(orgId: OrganizationId, memberId: UserId, actorId: UserId): Promise<DomainResult<void>>;
-  updateRole(orgId: OrganizationId, memberId: UserId, role: MemberRole, actorId: UserId): Promise<DomainResult<void>>;
+  removeMember(
+    orgId: OrganizationId,
+    memberId: UserId,
+    actorId: UserId
+  ): Promise<DomainResult<void>>;
+  updateRole(
+    orgId: OrganizationId,
+    memberId: UserId,
+    role: MemberRole,
+    actorId: UserId
+  ): Promise<DomainResult<void>>;
   getMembers(orgId: OrganizationId): Promise<OrganizationMemberView[]>;
   getMember(orgId: OrganizationId, userId: UserId): Promise<OrganizationMemberView | null>;
 }

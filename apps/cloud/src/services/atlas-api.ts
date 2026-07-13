@@ -1,8 +1,12 @@
-import { ATLAS_API_URL } from '../lib/constants.js';
+import { ATLAS_API_URL } from '../lib/constants';
 import type {
-  Agent, AgentListResponse, DashboardMetrics,
-  ActivityData, Company, AgentFilter,
-} from '../types/atlas.js';
+  Agent,
+  AgentListResponse,
+  DashboardMetrics,
+  ActivityData,
+  Company,
+  AgentFilter,
+} from '../types/atlas';
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${ATLAS_API_URL}${path}`, {
@@ -14,21 +18,21 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     const text = await res.text().catch(() => res.statusText);
     throw new Error(`API ${res.status}: ${text}`);
   }
-  const json = await res.json() as { data: T };
+  const json = (await res.json()) as { data: T };
   return json.data;
 }
 
 function buildQuery(filter: AgentFilter): string {
   const p = new URLSearchParams();
-  if (filter.companyId)     p.set('companyId',     filter.companyId);
-  if (filter.healthStatus)  p.set('healthStatus',  filter.healthStatus);
+  if (filter.companyId) p.set('companyId', filter.companyId);
+  if (filter.healthStatus) p.set('healthStatus', filter.healthStatus);
   if (filter.connectorType) p.set('connectorType', filter.connectorType);
-  if (filter.version)       p.set('version',       filter.version);
-  if (filter.hostname)      p.set('hostname',       filter.hostname);
-  if (filter.page)          p.set('page',           String(filter.page));
-  if (filter.pageSize)      p.set('pageSize',       String(filter.pageSize));
-  if (filter.sortBy)        p.set('sortBy',         filter.sortBy);
-  if (filter.sortOrder)     p.set('sortOrder',      filter.sortOrder);
+  if (filter.version) p.set('version', filter.version);
+  if (filter.hostname) p.set('hostname', filter.hostname);
+  if (filter.page) p.set('page', String(filter.page));
+  if (filter.pageSize) p.set('pageSize', String(filter.pageSize));
+  if (filter.sortBy) p.set('sortBy', filter.sortBy);
+  if (filter.sortOrder) p.set('sortOrder', filter.sortOrder);
   const qs = p.toString();
   return qs ? `?${qs}` : '';
 }
@@ -85,8 +89,8 @@ export async function listCompanies(): Promise<Company[]> {
     map.set(a.companyId, c);
   }
   return Array.from(map.entries()).map(([id, v]) => ({
-    companyId:   id,
-    agentCount:  v.total,
+    companyId: id,
+    agentCount: v.total,
     onlineCount: v.online,
   }));
 }

@@ -2,7 +2,9 @@
 
 # Dependencies
 node_modules/
-pnpm-lock.yaml
+# pnpm-lock.yaml is intentionally tracked (single source of truth for a pnpm
+# workspace) — untracking it means fresh clones (CI, Vercel, Docker) never
+# get a lockfile at all, breaking `pnpm install --frozen-lockfile` everywhere.
 package-lock.json
 yarn.lock
 

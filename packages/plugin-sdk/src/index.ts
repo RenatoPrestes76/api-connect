@@ -11,9 +11,9 @@
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };
 
-export type PluginId     = Branded<string, 'PluginId'>;
-export type SemVer       = Branded<string, 'SemVer'>;
-export type SpdxLicense  = Branded<string, 'SpdxLicense'>;
+export type PluginId = Branded<string, 'PluginId'>;
+export type SemVer = Branded<string, 'SemVer'>;
+export type SpdxLicense = Branded<string, 'SpdxLicense'>;
 
 // ─── Plugin Type Enumeration ────────────────────────────────────────────────
 
@@ -35,24 +35,24 @@ export type PluginType =
 
 export interface PluginManifest {
   // --- Identity (required) ---
-  readonly id: string;              // Reverse-domain: com.vendor.plugin-name
-  readonly name: string;            // Machine-readable slug (kebab-case)
-  readonly displayName: string;     // Human-readable name
-  readonly version: SemVer;         // Semantic versioning (x.y.z)
-  readonly type: PluginType;        // One of 12 plugin types
+  readonly id: string; // Reverse-domain: com.vendor.plugin-name
+  readonly name: string; // Machine-readable slug (kebab-case)
+  readonly displayName: string; // Human-readable name
+  readonly version: SemVer; // Semantic versioning (x.y.z)
+  readonly type: PluginType; // One of 12 plugin types
 
   // --- Description (required) ---
-  readonly description: string;     // One-sentence description
+  readonly description: string; // One-sentence description
   readonly longDescription?: string; // Markdown content for marketplace
   readonly author: PluginAuthor;
-  readonly license: SpdxLicense;   // SPDX identifier (e.g. "MIT", "Apache-2.0")
+  readonly license: SpdxLicense; // SPDX identifier (e.g. "MIT", "Apache-2.0")
 
   // --- Discovery (optional) ---
   readonly homepage?: string;
   readonly repository?: string;
   readonly bugs?: string;
   readonly keywords?: string[];
-  readonly icon?: string;           // URL or data:image/png;base64,...
+  readonly icon?: string; // URL or data:image/png;base64,...
   readonly screenshots?: string[];
 
   // --- Runtime Requirements (required) ---
@@ -66,16 +66,16 @@ export interface PluginManifest {
   readonly configSchema?: PluginConfigSchema;
 
   // --- Entry Point (required) ---
-  readonly entryPoint: string;      // Relative path: "dist/index.js"
+  readonly entryPoint: string; // Relative path: "dist/index.js"
 
   // --- Compatibility (required) ---
   readonly platformVersion: string; // semver range: ">=0.1.0"
-  readonly sdkVersion: string;      // semver range: ">=0.1.0"
+  readonly sdkVersion: string; // semver range: ">=0.1.0"
 
   // --- Integrity (set by packaging tool) ---
   readonly checksums?: { readonly sha256: string };
-  readonly signature?: string;      // Ed25519 base64url signature of manifest hash
-  readonly publishedAt?: string;    // ISO 8601
+  readonly signature?: string; // Ed25519 base64url signature of manifest hash
+  readonly publishedAt?: string; // ISO 8601
 
   // --- Deprecation (set by registry) ---
   readonly deprecated?: boolean;
@@ -91,7 +91,7 @@ export interface PluginAuthor {
 }
 
 export interface PluginRuntimeRequirements {
-  readonly nodeVersion: string;      // semver range: ">=20.0.0"
+  readonly nodeVersion: string; // semver range: ">=20.0.0"
   readonly platform?: NodePlatform[];
   readonly arch?: NodeArch[];
   readonly memoryMb?: number;
@@ -99,7 +99,7 @@ export interface PluginRuntimeRequirements {
 }
 
 export type NodePlatform = 'linux' | 'darwin' | 'win32';
-export type NodeArch     = 'x64' | 'arm64' | 'arm';
+export type NodeArch = 'x64' | 'arm64' | 'arm';
 
 export type PluginCapability =
   | 'database-read'
@@ -151,7 +151,7 @@ export interface PluginConfigProperty {
 // ─── Plugin Result ──────────────────────────────────────────────────────────
 
 export type PluginResult<T = void> =
-  | { readonly ok: true;  readonly value: T }
+  | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly error: PluginError };
 
 export interface PluginError {
@@ -361,7 +361,10 @@ export interface IAIProviderPlugin extends Plugin {
   getModels(): AIModelDescriptor[];
   complete(request: AICompletionRequest): Promise<PluginResult<AICompletionResponse>>;
   embed?(text: string[]): Promise<PluginResult<number[][]>>;
-  streamComplete?(request: AICompletionRequest, stream: AIStreamHandler): Promise<PluginResult<void>>;
+  streamComplete?(
+    request: AICompletionRequest,
+    stream: AIStreamHandler
+  ): Promise<PluginResult<void>>;
 }
 
 export interface AIModelDescriptor {
@@ -417,7 +420,11 @@ export interface NotificationPayload {
 // 5. Storage Plugin
 export interface IStoragePlugin extends Plugin {
   readonly type: 'storage';
-  upload(key: string, content: Buffer, metadata?: Record<string, string>): Promise<PluginResult<StorageUploadResult>>;
+  upload(
+    key: string,
+    content: Buffer,
+    metadata?: Record<string, string>
+  ): Promise<PluginResult<StorageUploadResult>>;
   download(key: string): Promise<PluginResult<Buffer>>;
   delete(key: string): Promise<PluginResult<void>>;
   list(prefix?: string): Promise<PluginResult<StorageObject[]>>;
@@ -558,7 +565,7 @@ export interface IMappingStrategyPlugin extends Plugin {
   createMapping(config: MappingConfig): Promise<PluginResult<MappingHandle>>;
   apply(handle: MappingHandle, record: unknown): Promise<PluginResult<unknown>>;
   applyBatch(handle: MappingHandle, records: unknown[]): Promise<PluginResult<unknown[]>>;
-  destroy(handle: MappingHandle): Promise<void>;
+  destroyMapping(handle: MappingHandle): Promise<void>;
 }
 
 export interface MappingDescriptor {
@@ -726,11 +733,28 @@ export function validateManifestSchema(manifest: unknown): ManifestValidationRes
   const warnings: string[] = [];
 
   if (!manifest || typeof manifest !== 'object') {
-    return { valid: false, errors: [{ field: 'root', message: 'Manifest must be an object' }], warnings };
+    return {
+      valid: false,
+      errors: [{ field: 'root', message: 'Manifest must be an object' }],
+      warnings,
+    };
   }
 
   const m = manifest as Record<string, unknown>;
-  const required = ['id', 'name', 'displayName', 'version', 'type', 'description', 'author', 'license', 'runtime', 'entryPoint', 'platformVersion', 'sdkVersion'];
+  const required = [
+    'id',
+    'name',
+    'displayName',
+    'version',
+    'type',
+    'description',
+    'author',
+    'license',
+    'runtime',
+    'entryPoint',
+    'platformVersion',
+    'sdkVersion',
+  ];
 
   for (const field of required) {
     if (!m[field]) {
@@ -740,7 +764,10 @@ export function validateManifestSchema(manifest: unknown): ManifestValidationRes
 
   if (m['id'] && typeof m['id'] === 'string') {
     if (!/^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/.test(m['id'] as string)) {
-      errors.push({ field: 'id', message: 'Plugin ID must be a reverse-domain identifier (e.g. com.vendor.plugin-name)' });
+      errors.push({
+        field: 'id',
+        message: 'Plugin ID must be a reverse-domain identifier (e.g. com.vendor.plugin-name)',
+      });
     }
   }
 
@@ -750,7 +777,20 @@ export function validateManifestSchema(manifest: unknown): ManifestValidationRes
     }
   }
 
-  const validTypes: PluginType[] = ['connector', 'erp-profile', 'ai-provider', 'notification', 'storage', 'transformation', 'validator', 'sync-strategy', 'mapping-strategy', 'security-provider', 'license-provider', 'export-provider'];
+  const validTypes: PluginType[] = [
+    'connector',
+    'erp-profile',
+    'ai-provider',
+    'notification',
+    'storage',
+    'transformation',
+    'validator',
+    'sync-strategy',
+    'mapping-strategy',
+    'security-provider',
+    'license-provider',
+    'export-provider',
+  ];
   if (m['type'] && !validTypes.includes(m['type'] as PluginType)) {
     errors.push({ field: 'type', message: `Plugin type must be one of: ${validTypes.join(', ')}` });
   }
@@ -771,7 +811,7 @@ export const PLUGIN_SDK_VERSION = '0.1.0';
 export const PLUGIN_SDK_CODENAME = 'Forge';
 
 export const MANIFEST_FILE_NAME = 'atlas-plugin.json';
-export const PACKAGE_EXTENSION  = '.atlasp';
+export const PACKAGE_EXTENSION = '.atlasp';
 
 export const PLUGIN_TYPES: PluginType[] = [
   'connector',

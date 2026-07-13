@@ -31,7 +31,7 @@ module.exports = {
       }
     ],
     "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/explicit-function-return-types": [
+    "@typescript-eslint/explicit-function-return-type": [
       "error",
       {
         allowExpressions: true,
@@ -56,7 +56,7 @@ module.exports = {
     {
       files: ["**/*.config.ts"],
       rules: {
-        "@typescript-eslint/explicit-function-return-types": "off"
+        "@typescript-eslint/explicit-function-return-type": "off"
       }
     }
   ]

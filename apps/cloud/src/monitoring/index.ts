@@ -3,9 +3,7 @@
  * Platform-wide monitoring: agent fleet status, alerts, and dashboards.
  */
 
-import type {
-  OrganizationId, AgentId, AgentStatus, DomainResult,
-} from '../domain/index';
+import type { OrganizationId, AgentId, AgentStatus, DomainResult } from '../domain/index';
 
 export interface IMonitoringService {
   getFleetStatus(orgId: OrganizationId): Promise<AgentFleetStatus>;
@@ -100,4 +98,4 @@ export type AlertKind =
   | 'custom';
 
 export type AlertSeverity = 'info' | 'warning' | 'critical';
-export type AlertStatus    = 'open' | 'acknowledged' | 'resolved';
+export type AlertStatus = 'open' | 'acknowledged' | 'resolved';

@@ -76,34 +76,34 @@ export const CLOUD_BOOTSTRAP_PHASE_ORDER: CloudBootstrapPhase[] = [
 
 export const CLOUD_BOOTSTRAP_TASK_IDS = {
   // configuration
-  LOAD_ENV:              'task-load-env',
-  VALIDATE_ENV:          'task-validate-env',
-  INIT_LOGGER:           'task-init-logger',
-  INIT_TRACER:           'task-init-tracer',
+  LOAD_ENV: 'task-load-env',
+  VALIDATE_ENV: 'task-validate-env',
+  INIT_LOGGER: 'task-init-logger',
+  INIT_TRACER: 'task-init-tracer',
 
   // database
-  INIT_PRISMA:           'task-init-prisma',
-  PING_DATABASE:         'task-ping-database',
-  RUN_MIGRATIONS:        'task-run-migrations',
+  INIT_PRISMA: 'task-init-prisma',
+  PING_DATABASE: 'task-ping-database',
+  RUN_MIGRATIONS: 'task-run-migrations',
 
   // services
-  INIT_SUPABASE:         'task-init-supabase',
-  INIT_REDIS:            'task-init-redis',
-  INIT_STORAGE:          'task-init-storage',
-  INIT_EMAIL:            'task-init-email',
-  INIT_QUEUE:            'task-init-queue',
-  WIRE_SERVICES:         'task-wire-services',
+  INIT_SUPABASE: 'task-init-supabase',
+  INIT_REDIS: 'task-init-redis',
+  INIT_STORAGE: 'task-init-storage',
+  INIT_EMAIL: 'task-init-email',
+  INIT_QUEUE: 'task-init-queue',
+  WIRE_SERVICES: 'task-wire-services',
 
   // scheduler
-  REGISTER_JOBS:         'task-register-jobs',
-  START_SCHEDULER:       'task-start-scheduler',
+  REGISTER_JOBS: 'task-register-jobs',
+  START_SCHEDULER: 'task-start-scheduler',
 
   // health
-  REGISTER_CHECKS:       'task-register-health-checks',
+  REGISTER_CHECKS: 'task-register-health-checks',
 
   // ready
-  EMIT_READY:            'task-emit-ready',
+  EMIT_READY: 'task-emit-ready',
 } as const;
 
-export const CLOUD_VERSION  = '0.1.0';
+export const CLOUD_VERSION = '0.1.0';
 export const CLOUD_CODENAME = 'Atlas';

@@ -1,8 +1,8 @@
-import { cn } from '../../lib/utils.js';
-import { Skeleton } from '../ui/skeleton.js';
+import { cn } from '../../lib/utils';
+import { Skeleton } from '../ui/skeleton';
 
 interface LoadingProps {
-  rows?:      number;
+  rows?: number;
   className?: string;
 }
 

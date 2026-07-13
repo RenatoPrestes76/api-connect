@@ -1,9 +1,8 @@
-import type { NextConfig } from 'next'
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
-  transpilePackages: ['@seltriva/ui']
-}
+  transpilePackages: ['@seltriva/ui'],
+};
 
-export default nextConfig
+export default nextConfig;

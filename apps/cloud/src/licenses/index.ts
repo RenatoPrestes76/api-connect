@@ -4,12 +4,21 @@
  */
 
 import type {
-  License, LicenseId, OrganizationId, UserId,
-  OrganizationTier, LicenseStatus, DomainResult,
+  License,
+  LicenseId,
+  OrganizationId,
+  UserId,
+  OrganizationTier,
+  LicenseStatus,
+  DomainResult,
 } from '../domain/index';
 
 export interface ILicenseService {
-  activate(orgId: OrganizationId, licenseKey: string, actorId: UserId): Promise<DomainResult<License>>;
+  activate(
+    orgId: OrganizationId,
+    licenseKey: string,
+    actorId: UserId
+  ): Promise<DomainResult<License>>;
   revoke(licenseId: LicenseId, reason: string, actorId: UserId): Promise<DomainResult<void>>;
   getActiveForOrganization(orgId: OrganizationId): Promise<License | null>;
   getAllForOrganization(orgId: OrganizationId): Promise<License[]>;
@@ -60,19 +69,40 @@ export type LicenseFeature =
   | 'unlimited-history';
 
 export const TIER_FEATURES: Record<OrganizationTier, LicenseFeature[]> = {
-  FREE:       ['api-access'],
-  STARTER:    ['api-access', 'webhook-notifications', 'audit-export'],
-  PRO:        ['api-access', 'webhook-notifications', 'audit-export', 'advanced-analytics', 'custom-plugins', 'sso'],
-  ENTERPRISE: ['api-access', 'webhook-notifications', 'audit-export', 'advanced-analytics',
-               'custom-plugins', 'sso', 'advanced-security', 'priority-support', 'custom-branding',
-               'dedicated-infrastructure', 'sla-99-9', 'unlimited-history'],
+  FREE: ['api-access'],
+  STARTER: ['api-access', 'webhook-notifications', 'audit-export'],
+  PRO: [
+    'api-access',
+    'webhook-notifications',
+    'audit-export',
+    'advanced-analytics',
+    'custom-plugins',
+    'sso',
+  ],
+  ENTERPRISE: [
+    'api-access',
+    'webhook-notifications',
+    'audit-export',
+    'advanced-analytics',
+    'custom-plugins',
+    'sso',
+    'advanced-security',
+    'priority-support',
+    'custom-branding',
+    'dedicated-infrastructure',
+    'sla-99-9',
+    'unlimited-history',
+  ],
 } as const;
 
-export const TIER_LIMITS: Record<OrganizationTier, { agents: number; workspaces: number; users: number }> = {
-  FREE:       { agents: 2,  workspaces: 1,   users: 3 },
-  STARTER:    { agents: 10, workspaces: 5,   users: 15 },
-  PRO:        { agents: 50, workspaces: 25,  users: 100 },
-  ENTERPRISE: { agents: -1, workspaces: -1,  users: -1 },  // -1 = unlimited
+export const TIER_LIMITS: Record<
+  OrganizationTier,
+  { agents: number; workspaces: number; users: number }
+> = {
+  FREE: { agents: 2, workspaces: 1, users: 3 },
+  STARTER: { agents: 10, workspaces: 5, users: 15 },
+  PRO: { agents: 50, workspaces: 25, users: 100 },
+  ENTERPRISE: { agents: -1, workspaces: -1, users: -1 }, // -1 = unlimited
 } as const;
 
 export interface LicenseValidationReport {

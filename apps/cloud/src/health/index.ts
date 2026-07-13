@@ -60,11 +60,11 @@ export interface ReadinessResult {
 }
 
 export const HEALTH_CHECK_IDS = {
-  DATABASE:        'hc-database',
-  SUPABASE:        'hc-supabase',
-  REDIS:           'hc-redis',
-  STORAGE:         'hc-storage',
-  EMAIL:           'hc-email',
-  QUEUE:           'hc-queue',
-  SCHEDULER:       'hc-scheduler',
+  DATABASE: 'hc-database',
+  SUPABASE: 'hc-supabase',
+  REDIS: 'hc-redis',
+  STORAGE: 'hc-storage',
+  EMAIL: 'hc-email',
+  QUEUE: 'hc-queue',
+  SCHEDULER: 'hc-scheduler',
 } as const;

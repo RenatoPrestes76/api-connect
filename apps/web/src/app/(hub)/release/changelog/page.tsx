@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { useChangelog } from '@/hooks/use-release';
-import { PageLoading, ErrorState } from '@/components/common/loading-state';
+import { PageLoading } from '@/components/common/loading-state';
+import { ErrorState } from '@/components/common/error-boundary';
 import type { ChangeType } from '@/types/release';
 import { cn } from '@/lib/utils';
 

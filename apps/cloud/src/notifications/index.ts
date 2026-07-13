@@ -4,17 +4,27 @@
  */
 
 import type {
-  OrganizationId, UserId, NotificationId, DomainResult, PaginatedResult,
+  OrganizationId,
+  UserId,
+  NotificationId,
+  DomainResult,
+  PaginatedResult,
 } from '../domain/index';
 
 export interface INotificationService {
   send(input: SendNotificationInput): Promise<DomainResult<void>>;
   sendBatch(inputs: SendNotificationInput[]): Promise<DomainResult<void>>;
-  getForUser(userId: UserId, filter?: NotificationFilter): Promise<PaginatedResult<NotificationView>>;
+  getForUser(
+    userId: UserId,
+    filter?: NotificationFilter
+  ): Promise<PaginatedResult<NotificationView>>;
   markAsRead(notificationId: NotificationId, userId: UserId): Promise<DomainResult<void>>;
   markAllAsRead(userId: UserId, orgId: OrganizationId): Promise<DomainResult<void>>;
   getUnreadCount(userId: UserId): Promise<number>;
-  registerWebhook(orgId: OrganizationId, config: WebhookConfig): Promise<DomainResult<RegisteredWebhook>>;
+  registerWebhook(
+    orgId: OrganizationId,
+    config: WebhookConfig
+  ): Promise<DomainResult<RegisteredWebhook>>;
   removeWebhook(webhookId: string, orgId: OrganizationId): Promise<DomainResult<void>>;
 }
 
@@ -83,13 +93,13 @@ export interface RegisteredWebhook {
 }
 
 export const NOTIFICATION_TEMPLATES = {
-  AGENT_OFFLINE:        'tpl-agent-offline',
-  AGENT_DEGRADED:       'tpl-agent-degraded',
-  LICENSE_EXPIRING:     'tpl-license-expiring',
-  LICENSE_EXPIRED:      'tpl-license-expired',
-  MEMBER_INVITED:       'tpl-member-invited',
-  MEMBER_JOINED:        'tpl-member-joined',
-  SECURITY_ALERT:       'tpl-security-alert',
-  JOB_FAILED:           'tpl-job-failed',
-  WELCOME:              'tpl-welcome',
+  AGENT_OFFLINE: 'tpl-agent-offline',
+  AGENT_DEGRADED: 'tpl-agent-degraded',
+  LICENSE_EXPIRING: 'tpl-license-expiring',
+  LICENSE_EXPIRED: 'tpl-license-expired',
+  MEMBER_INVITED: 'tpl-member-invited',
+  MEMBER_JOINED: 'tpl-member-joined',
+  SECURITY_ALERT: 'tpl-security-alert',
+  JOB_FAILED: 'tpl-job-failed',
+  WELCOME: 'tpl-welcome',
 } as const;

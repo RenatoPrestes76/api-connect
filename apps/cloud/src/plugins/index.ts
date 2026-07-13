@@ -4,9 +4,16 @@
  */
 
 import type {
-  Plugin, PluginId, PluginManifest, PluginStatus,
-  OrganizationId, UserId, DomainResult, PaginatedResult,
-  SemVer, Slug,
+  Plugin,
+  PluginId,
+  PluginManifest,
+  PluginStatus,
+  OrganizationId,
+  UserId,
+  DomainResult,
+  PaginatedResult,
+  SemVer,
+  Slug,
 } from '../domain/index';
 
 export interface IPluginRegistryService {
@@ -17,9 +24,24 @@ export interface IPluginRegistryService {
   getBySlug(slug: Slug): Promise<Plugin | null>;
   listPublished(filter: PluginSearchFilter): Promise<PaginatedResult<PluginListItem>>;
   listByOrganization(orgId: OrganizationId): Promise<InstalledPluginView[]>;
-  install(orgId: OrganizationId, pluginId: PluginId, version: SemVer, config: Record<string, unknown> | undefined, actorId: UserId): Promise<DomainResult<void>>;
-  uninstall(orgId: OrganizationId, pluginId: PluginId, actorId: UserId): Promise<DomainResult<void>>;
-  updateConfig(orgId: OrganizationId, pluginId: PluginId, config: Record<string, unknown>, actorId: UserId): Promise<DomainResult<void>>;
+  install(
+    orgId: OrganizationId,
+    pluginId: PluginId,
+    version: SemVer,
+    config: Record<string, unknown> | undefined,
+    actorId: UserId
+  ): Promise<DomainResult<void>>;
+  uninstall(
+    orgId: OrganizationId,
+    pluginId: PluginId,
+    actorId: UserId
+  ): Promise<DomainResult<void>>;
+  updateConfig(
+    orgId: OrganizationId,
+    pluginId: PluginId,
+    config: Record<string, unknown>,
+    actorId: UserId
+  ): Promise<DomainResult<void>>;
   validateManifest(manifest: unknown): PluginManifestValidationResult;
 }
 

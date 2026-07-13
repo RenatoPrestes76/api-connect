@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Slot } from '@radix-ui/react-slot';
-import type { ButtonHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes, JSX } from 'react';
 import { cn } from '../utils';
 
 const buttonVariants = cva(
@@ -9,8 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500',
-        secondary:
-          'bg-slate-100 text-slate-900 hover:bg-slate-200 focus-visible:ring-slate-500',
+        secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200 focus-visible:ring-slate-500',
         outline:
           'border border-slate-200 bg-transparent hover:bg-slate-100 focus-visible:ring-slate-500',
         ghost: 'hover:bg-slate-100 text-slate-900 focus-visible:ring-slate-500',
@@ -32,8 +31,7 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 

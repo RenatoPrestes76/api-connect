@@ -8,42 +8,42 @@
 
 // ─── Branded IDs (Value Objects) ─────────────────────────────────────────
 
-export type OrganizationId  = string & { readonly __brand: 'OrganizationId' };
-export type WorkspaceId     = string & { readonly __brand: 'WorkspaceId' };
-export type EnvironmentId   = string & { readonly __brand: 'EnvironmentId' };
-export type AgentId         = string & { readonly __brand: 'AgentId' };
-export type UserId          = string & { readonly __brand: 'UserId' };
-export type PluginId        = string & { readonly __brand: 'PluginId' };
-export type LicenseId       = string & { readonly __brand: 'LicenseId' };
-export type ApiKeyId        = string & { readonly __brand: 'ApiKeyId' };
-export type JobId           = string & { readonly __brand: 'JobId' };
-export type NotificationId  = string & { readonly __brand: 'NotificationId' };
-export type AuditEntryId    = string & { readonly __brand: 'AuditEntryId' };
+export type OrganizationId = string & { readonly __brand: 'OrganizationId' };
+export type WorkspaceId = string & { readonly __brand: 'WorkspaceId' };
+export type EnvironmentId = string & { readonly __brand: 'EnvironmentId' };
+export type AgentId = string & { readonly __brand: 'AgentId' };
+export type UserId = string & { readonly __brand: 'UserId' };
+export type PluginId = string & { readonly __brand: 'PluginId' };
+export type LicenseId = string & { readonly __brand: 'LicenseId' };
+export type ApiKeyId = string & { readonly __brand: 'ApiKeyId' };
+export type JobId = string & { readonly __brand: 'JobId' };
+export type NotificationId = string & { readonly __brand: 'NotificationId' };
+export type AuditEntryId = string & { readonly __brand: 'AuditEntryId' };
 export type ConfigurationId = string & { readonly __brand: 'ConfigurationId' };
-export type FeatureFlagId   = string & { readonly __brand: 'FeatureFlagId' };
+export type FeatureFlagId = string & { readonly __brand: 'FeatureFlagId' };
 export type MetricSnapshotId = string & { readonly __brand: 'MetricSnapshotId' };
 
 // ─── Value Objects ────────────────────────────────────────────────────────
 
-export type Slug      = string & { readonly __brand: 'Slug' };
-export type Email     = string & { readonly __brand: 'Email' };
-export type SemVer    = string & { readonly __brand: 'SemVer' };
-export type KeyHash   = string & { readonly __brand: 'KeyHash' };
+export type Slug = string & { readonly __brand: 'Slug' };
+export type Email = string & { readonly __brand: 'Email' };
+export type SemVer = string & { readonly __brand: 'SemVer' };
+export type KeyHash = string & { readonly __brand: 'KeyHash' };
 export type KeyPrefix = string & { readonly __brand: 'KeyPrefix' };
 
 // ─── Enumerations ─────────────────────────────────────────────────────────
 
-export type OrganizationTier   = 'FREE' | 'STARTER' | 'PRO' | 'ENTERPRISE';
+export type OrganizationTier = 'FREE' | 'STARTER' | 'PRO' | 'ENTERPRISE';
 export type OrganizationStatus = 'ACTIVE' | 'SUSPENDED' | 'PENDING_VERIFICATION' | 'DELETED';
-export type WorkspaceStatus    = 'ACTIVE' | 'ARCHIVED' | 'DELETED';
-export type EnvironmentKind    = 'DEVELOPMENT' | 'STAGING' | 'PRODUCTION';
-export type EnvironmentStatus  = 'ACTIVE' | 'INACTIVE' | 'DELETED';
-export type AgentStatus        = 'ONLINE' | 'OFFLINE' | 'DEGRADED' | 'UNRESPONSIVE' | 'RETIRED';
-export type MemberRole         = 'OWNER' | 'ADMIN' | 'DEVELOPER' | 'VIEWER';
-export type LicenseStatus      = 'ACTIVE' | 'EXPIRED' | 'REVOKED' | 'TRIAL' | 'PENDING';
-export type PluginStatus       = 'PUBLISHED' | 'DRAFT' | 'DEPRECATED' | 'ARCHIVED';
-export type FeatureFlagKind    = 'BOOLEAN' | 'PERCENTAGE' | 'VARIANT';
-export type ApiKeyStatus       = 'ACTIVE' | 'REVOKED' | 'EXPIRED';
+export type WorkspaceStatus = 'ACTIVE' | 'ARCHIVED' | 'DELETED';
+export type EnvironmentKind = 'DEVELOPMENT' | 'STAGING' | 'PRODUCTION';
+export type EnvironmentStatus = 'ACTIVE' | 'INACTIVE' | 'DELETED';
+export type AgentStatus = 'ONLINE' | 'OFFLINE' | 'DEGRADED' | 'UNRESPONSIVE' | 'RETIRED';
+export type MemberRole = 'OWNER' | 'ADMIN' | 'DEVELOPER' | 'VIEWER';
+export type LicenseStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED' | 'TRIAL' | 'PENDING';
+export type PluginStatus = 'PUBLISHED' | 'DRAFT' | 'DEPRECATED' | 'ARCHIVED';
+export type FeatureFlagKind = 'BOOLEAN' | 'PERCENTAGE' | 'VARIANT';
+export type ApiKeyStatus = 'ACTIVE' | 'REVOKED' | 'EXPIRED';
 
 // ─── Domain Entities ──────────────────────────────────────────────────────
 

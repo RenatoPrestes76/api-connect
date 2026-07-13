@@ -4,8 +4,14 @@
  */
 
 import type {
-  Agent, AgentId, AgentStatus, AgentHeartbeat,
-  OrganizationId, EnvironmentId, DomainResult, SemVer,
+  Agent,
+  AgentId,
+  AgentStatus,
+  AgentHeartbeat,
+  OrganizationId,
+  EnvironmentId,
+  DomainResult,
+  SemVer,
 } from '../domain/index';
 
 export interface IAgentService {

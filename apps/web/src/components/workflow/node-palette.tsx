@@ -5,10 +5,10 @@ import type { NodeType, NodePaletteItem } from '@/types/workflow';
 import { cn } from '@/lib/utils';
 
 const CATEGORY_LABELS: Record<NodePaletteItem['category'], string> = {
-  trigger: 'Trigger',
-  processing: 'Processing',
-  control: 'Control Flow',
-  output: 'Output',
+  Entrada: 'Entrada',
+  Processamento: 'Processamento',
+  IA: 'IA',
+  Saída: 'Saída',
 };
 
 const ICON_MAP: Record<NodeType, string> = {
@@ -22,6 +22,26 @@ const ICON_MAP: Record<NodeType, string> = {
   notification: '✉',
   log: '≡',
   dlq: '✕',
+  webhook: '⚓',
+  schedule: '◷',
+  'file-watch': '👁',
+  'email-trigger': '✉',
+  'api-trigger': '⚡',
+  'queue-trigger': '☰',
+  'manual-trigger': '▶',
+  loop: '↻',
+  aggregate: 'Σ',
+  filter: '▽',
+  merge: '⋈',
+  split: '⑂',
+  'ai-classify': '◈',
+  'ai-extract': '⊃',
+  'ai-generate': '✦',
+  'ai-translate': '⇄',
+  'ai-summarize': '≣',
+  'ai-embed': '⊙',
+  'database-write': '⛁',
+  'file-write': '⇩',
 };
 
 interface NodePaletteProps {
@@ -29,7 +49,7 @@ interface NodePaletteProps {
 }
 
 export function NodePalette({ onDragStart }: NodePaletteProps) {
-  const categories = ['trigger', 'processing', 'control', 'output'] as const;
+  const categories = ['Entrada', 'Processamento', 'IA', 'Saída'] as const;
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>, type: NodeType) => {
     e.dataTransfer.setData('application/workflow-node-type', type);
