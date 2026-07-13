@@ -16,6 +16,15 @@ out/
 *.tsbuildinfo
 .turbo/
 
+# Compiled JS must never live under a package's src/ (TypeScript source
+# only) — this has leaked in from tsc rootDir/outDir misconfiguration more
+# than once. Note: .d.ts is NOT included here — some packages have
+# legitimate hand-written ambient declaration files (env.d.ts, globals.d.ts)
+# committed under src/.
+**/src/**/*.js
+**/src/**/*.js.map
+**/src/**/*.d.ts.map
+
 # Environment
 .env
 .env.local
