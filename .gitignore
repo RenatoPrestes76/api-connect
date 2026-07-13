@@ -47,7 +47,11 @@ coverage/
 jest.log
 
 # Logs
-logs/
+# Anchored to repo root (leading /) — an unanchored "logs/" silently matched
+# *any* directory named logs anywhere in the tree, including real source
+# folders like apps/web/src/components/logs/ and apps/*/src/logs/, which were
+# never actually committed as a result. Found via a Vercel build failure.
+/logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
