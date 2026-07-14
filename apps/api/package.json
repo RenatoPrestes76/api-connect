@@ -28,6 +28,7 @@
     "@seltriva/agent-observability": "workspace:*",
     "@seltriva/agent-provisioning": "workspace:*",
     "@seltriva/config": "workspace:*",
+    "@seltriva/core": "workspace:*",
     "@seltriva/database": "workspace:*",
     "@seltriva/database-intelligence": "workspace:*",
     "@seltriva/database-sdk": "workspace:*",

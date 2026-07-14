@@ -259,6 +259,9 @@ importers:
       '@seltriva/connector-registry':
         specifier: workspace:*
         version: link:../../packages/connector-registry
+      '@seltriva/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@seltriva/database':
         specifier: workspace:*
         version: link:../../packages/database
