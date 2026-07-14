@@ -1,13 +1,10 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import { evaluatePoliciesWithAudit } from '@seltriva/aegis';
 import type { PolicyContext } from '@seltriva/aegis';
-
-function resolveTenant(ctx: RouteContext): string {
-  return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
-}
 
 export function registerPoliciesRoutes(router: {
   get: Function;
@@ -17,7 +14,7 @@ export function registerPoliciesRoutes(router: {
 }): void {
   // GET /api/v1/security/policies
   router.get('/api/v1/security/policies', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const policies = securityStore.getPolicies(tenantId);
     json(res, { policies, total: policies.length });
   });
@@ -33,7 +30,7 @@ export function registerPoliciesRoutes(router: {
   router.post(
     '/api/v1/security/policies/evaluate',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const tenantId = resolveTenant(ctx);
+      const tenantId = requireTenantId(ctx);
       const body = ctx.body as Record<string, unknown>;
       const rawContext = (body?.['context'] as Record<string, string | number | undefined>) || {};
       const context: PolicyContext = {
@@ -48,7 +45,7 @@ export function registerPoliciesRoutes(router: {
 
   // POST /api/v1/security/policies
   router.post('/api/v1/security/policies', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const body = ctx.body as Record<string, unknown>;
     const { name, description, conditions, logic, effect, priority, active } = body ?? ({} as any);
     if (!name || !effect || !logic) return apiError(res, 'name, effect, logic required', 400);

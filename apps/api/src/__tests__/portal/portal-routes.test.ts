@@ -342,3 +342,30 @@ describe('DELETE /api/v1/portal/users/:id', () => {
     expect(body.deleted).toBe(true);
   });
 });
+
+// ─── Tenant enforcement (Sprint 00.1) ──────────────────────────────────────────
+// No route may fall back to a default tenant — every request below omits
+// x-tenant-id and must fail with 400 TENANT_REQUIRED.
+
+describe('Tenant enforcement — no hardcoded tenant fallback', () => {
+  const NO_TENANT_ROUTES = [
+    '/api/v1/portal/dashboard',
+    '/api/v1/portal/support',
+    '/api/v1/portal/api-keys',
+    '/api/v1/portal/connectors',
+    '/api/v1/portal/users',
+  ];
+
+  for (const path of NO_TENANT_ROUTES) {
+    it(`GET ${path} returns 400 TENANT_REQUIRED without a tenant`, async () => {
+      const { status, body } = await get<{ error: { code: string } }>(srv.baseUrl, path);
+      expect(status).toBe(400);
+      expect(body.error.code).toBe('TENANT_REQUIRED');
+    });
+  }
+
+  it('a valid tenant continues to work (no regression)', async () => {
+    const { status } = await get(srv.baseUrl, '/api/v1/portal/dashboard', ENT);
+    expect(status).toBe(200);
+  });
+});

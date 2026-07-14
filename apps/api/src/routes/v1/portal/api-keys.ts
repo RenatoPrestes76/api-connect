@@ -1,11 +1,8 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { portalStore } from '../../../modules/portal/portal-store.js';
-
-function tenantId(ctx: RouteContext): string {
-  return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
-}
 
 export function registerApiKeysRoutes(router: {
   get: Function;
@@ -13,7 +10,7 @@ export function registerApiKeysRoutes(router: {
   delete: Function;
 }): void {
   router.get('/api/v1/portal/api-keys', (ctx: RouteContext, res: ServerResponse) => {
-    const keys = portalStore.listApiKeys(tenantId(ctx));
+    const keys = portalStore.listApiKeys(requireTenantId(ctx));
     json(res, { total: keys.length, keys });
   });
 
@@ -27,7 +24,7 @@ export function registerApiKeysRoutes(router: {
     }
 
     const created = portalStore.createApiKey({
-      tenantId: tenantId(ctx),
+      tenantId: requireTenantId(ctx),
       name,
       scopes,
       expiresAt: expiresAt ?? undefined,

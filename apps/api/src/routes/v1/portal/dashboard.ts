@@ -1,15 +1,12 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { portalStore } from '../../../modules/portal/portal-store.js';
-
-function tenantId(ctx: RouteContext): string {
-  return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
-}
 
 export function registerPortalDashboardRoutes(router: { get: Function; post: Function }): void {
   router.get('/api/v1/portal/dashboard', (ctx: RouteContext, res: ServerResponse) => {
-    json(res, portalStore.getDashboard(tenantId(ctx)));
+    json(res, portalStore.getDashboard(requireTenantId(ctx)));
   });
 
   router.post(
@@ -21,7 +18,7 @@ export function registerPortalDashboardRoutes(router: { get: Function; post: Fun
         res.end(JSON.stringify({ error: { code: 'MISSING_STEP', message: '"step" is required' } }));
         return;
       }
-      const progress = portalStore.completeStep(tenantId(ctx), step);
+      const progress = portalStore.completeStep(requireTenantId(ctx), step);
       if (!progress) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(

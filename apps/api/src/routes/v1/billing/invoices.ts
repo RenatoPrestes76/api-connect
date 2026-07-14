@@ -1,17 +1,12 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { billingStore } from '../../../modules/billing/billing-store.js';
-
-function resolveTenant(ctx: RouteContext): string {
-  const header = ctx.headers?.['x-tenant-id'];
-  const fromHeader = Array.isArray(header) ? header[0] : header;
-  return fromHeader ?? ctx.query.get('tenantId') ?? 'tenant-professional';
-}
 
 // GET /api/v1/billing/invoices
 export async function listInvoices(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const tenantId = resolveTenant(ctx);
+  const tenantId = requireTenantId(ctx);
   const statusFilter = ctx.query.get('status') ?? '';
   const limitStr = ctx.query.get('limit') ?? '20';
   const offsetStr = ctx.query.get('offset') ?? '0';

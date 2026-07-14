@@ -1,6 +1,7 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import {
   generateTotpSecret,
@@ -10,10 +11,6 @@ import {
   base32Decode,
 } from '@seltriva/aegis';
 
-function resolveTenant(ctx: RouteContext): string {
-  return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
-}
-
 export function registerMfaRoutes(router: {
   get: Function;
   post: Function;
@@ -21,7 +18,7 @@ export function registerMfaRoutes(router: {
 }): void {
   // GET /api/v1/security/mfa/status
   router.get('/api/v1/security/mfa/status', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const userId = ctx.query.get('userId') || `admin@atlas.${tenantId.replace('tenant-', '')}.com`;
     const rec = securityStore.getMfaRecord(tenantId, userId);
     if (!rec) return json(res, { enrolled: false, userId, tenantId });
@@ -34,7 +31,7 @@ export function registerMfaRoutes(router: {
 
   // POST /api/v1/security/mfa/setup
   router.post('/api/v1/security/mfa/setup', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const body = ctx.body as Record<string, unknown>;
     const userId =
       (body?.['userId'] as string) || `admin@atlas.${tenantId.replace('tenant-', '')}.com`;
@@ -68,7 +65,7 @@ export function registerMfaRoutes(router: {
 
   // POST /api/v1/security/mfa/verify
   router.post('/api/v1/security/mfa/verify', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const body = ctx.body as Record<string, unknown>;
     const userId = body?.['userId'] as string;
     const token = body?.['token'] as string;
@@ -84,7 +81,7 @@ export function registerMfaRoutes(router: {
 
   // DELETE /api/v1/security/mfa/disable  (userId as query param)
   router.delete('/api/v1/security/mfa/disable', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const userId = ctx.query.get('userId') || `admin@atlas.${tenantId.replace('tenant-', '')}.com`;
     const rec = securityStore.getMfaRecord(tenantId, userId);
     if (!rec) return apiError(res, 'MFA record not found', 404);
@@ -102,7 +99,7 @@ export function registerMfaRoutes(router: {
   router.get(
     '/api/v1/security/mfa/backup-codes',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const tenantId = resolveTenant(ctx);
+      const tenantId = requireTenantId(ctx);
       const userId =
         ctx.query.get('userId') || `admin@atlas.${tenantId.replace('tenant-', '')}.com`;
       const rec = securityStore.getMfaRecord(tenantId, userId);

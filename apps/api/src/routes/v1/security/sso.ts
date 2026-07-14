@@ -1,12 +1,9 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import { generateKey, generateNonce } from '@seltriva/aegis';
-
-function resolveTenant(ctx: RouteContext): string {
-  return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
-}
 
 export function registerSsoRoutes(router: {
   get: Function;
@@ -15,7 +12,7 @@ export function registerSsoRoutes(router: {
 }): void {
   // GET /api/v1/security/sso
   router.get('/api/v1/security/sso', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const providers = securityStore.getSsoProviders(tenantId);
     json(res, { providers, total: providers.length });
   });
@@ -45,7 +42,7 @@ export function registerSsoRoutes(router: {
 
   // POST /api/v1/security/sso
   router.post('/api/v1/security/sso', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const body = ctx.body as Record<string, string | undefined>;
     const { name, slug, protocol, issuer, clientId, discoveryUrl, ssoUrl, logoutUrl, certificate } =
       body ?? {};

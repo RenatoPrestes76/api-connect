@@ -473,3 +473,46 @@ describe('GET /api/v1/billing/admin/invoices', () => {
     expect(body.items.every((i) => i.status === 'paid')).toBe(true);
   });
 });
+
+// ─── Tenant enforcement (Sprint 00.1) ──────────────────────────────────────────
+// No route may fall back to a default tenant — every request below omits
+// tenantId and must fail with 400 TENANT_REQUIRED.
+
+describe('Tenant enforcement — no hardcoded tenant fallback', () => {
+  const NO_TENANT_ROUTES: Array<[string, string]> = [
+    ['GET', '/api/v1/billing/subscription'],
+    ['GET', '/api/v1/billing/invoices'],
+    ['GET', '/api/v1/billing/usage'],
+    ['GET', '/api/v1/billing/license'],
+    ['GET', '/api/v1/billing/customer-portal'],
+  ];
+
+  for (const [method, path] of NO_TENANT_ROUTES) {
+    it(`${method} ${path} returns 400 TENANT_REQUIRED without a tenant`, async () => {
+      const { status, body } =
+        method === 'GET'
+          ? await get<{ error: { code: string } }>(ctx.baseUrl, path)
+          : await post<{ error: { code: string } }>(ctx.baseUrl, path);
+      expect(status).toBe(400);
+      expect(body.error.code).toBe('TENANT_REQUIRED');
+    });
+  }
+
+  it('POST /api/v1/billing/checkout returns 400 TENANT_REQUIRED without a tenant', async () => {
+    const { status, body } = await post<{ error: { code: string } }>(
+      ctx.baseUrl,
+      '/api/v1/billing/checkout',
+      { planSlug: 'professional' }
+    );
+    expect(status).toBe(400);
+    expect(body.error.code).toBe('TENANT_REQUIRED');
+  });
+
+  it('a valid tenant continues to work (no regression)', async () => {
+    const { status } = await get(
+      ctx.baseUrl,
+      '/api/v1/billing/subscription?tenantId=tenant-professional'
+    );
+    expect(status).toBe(200);
+  });
+});

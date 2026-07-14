@@ -1,12 +1,9 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import type { DataRequestType } from '@seltriva/aegis';
-
-function resolveTenant(ctx: RouteContext): string {
-  return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
-}
 
 export function registerComplianceRoutes(router: { get: Function; post: Function }): void {
   // GET /api/v1/security/compliance
@@ -31,7 +28,7 @@ export function registerComplianceRoutes(router: { get: Function; post: Function
   router.get(
     '/api/v1/security/compliance/data-requests',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const tenantId = resolveTenant(ctx);
+      const tenantId = requireTenantId(ctx);
       const requests = securityStore.getDataRequests(tenantId);
       json(res, { requests, total: requests.length });
     }
@@ -41,7 +38,7 @@ export function registerComplianceRoutes(router: { get: Function; post: Function
   router.post(
     '/api/v1/security/compliance/data-request',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const tenantId = resolveTenant(ctx);
+      const tenantId = requireTenantId(ctx);
       const body = (ctx.body ?? {}) as Record<string, unknown>;
       const type = body['type'] as DataRequestType | undefined;
       const requestorEmail = body['requestorEmail'] as string | undefined;

@@ -5,6 +5,7 @@ import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { WebSocketServer } from 'ws';
 import { Router, apiError } from './http/router.js';
+import { MissingTenantError } from './http/tenant.js';
 import { authMiddleware } from './middleware/auth.js';
 import { securityHeaders } from './middleware/security-headers.js';
 import { createAgentAuthMiddleware } from './middleware/agent-auth.js';
@@ -96,7 +97,9 @@ async function withErrorBoundary(
     console.error(`[ERROR] ${req.method} ${req.url}:`, message);
 
     if (!res.headersSent) {
-      if (code === 'P2002') {
+      if (err instanceof MissingTenantError) {
+        apiError(res, err.message, err.status, err.code);
+      } else if (code === 'P2002') {
         apiError(res, 'Resource already exists', 409, 'CONFLICT');
       } else if (code === 'P2025') {
         apiError(res, 'Resource not found', 404, 'NOT_FOUND');

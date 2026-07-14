@@ -1,6 +1,7 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { titanStore } from '../../../modules/titan/titan-store.js';
 import type { JobPriority } from '../../../modules/titan/titan-store.js';
 
@@ -23,11 +24,7 @@ export function registerQueuesRoutes(router: {
   router.post('/api/v1/ops/queues/enqueue', (ctx: RouteContext, res: ServerResponse) => {
     const body = ctx.body as any;
     const type = body?.['type'] as string | undefined;
-    const tenantId =
-      (ctx.headers['x-tenant-id'] as string) ||
-      ctx.query.get('tenantId') ||
-      (body?.['tenantId'] as string | undefined) ||
-      'tenant-enterprise';
+    const tenantId = requireTenantId(ctx, body?.['tenantId'] as string | undefined);
 
     if (!type) return apiError(res, '"type" is required', 400, 'MISSING_TYPE');
 

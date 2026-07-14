@@ -1,16 +1,13 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
-
-function resolveTenant(ctx: RouteContext): string {
-  return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
-}
 
 export function registerCertificatesRoutes(router: { get: Function; post: Function }): void {
   // GET /api/v1/security/certificates
   router.get('/api/v1/security/certificates', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const certs = securityStore.getCertificates(tenantId);
     const expiringSoon = certs.filter((c) => c.daysUntilExpiry <= 30);
     json(res, { certificates: certs, expiringSoon: expiringSoon.length, total: certs.length });

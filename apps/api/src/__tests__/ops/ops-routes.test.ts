@@ -76,6 +76,7 @@ describe('POST /api/v1/ops/queues/enqueue', () => {
       type: 'test_job',
       priority: 'low',
       payload: { x: 1 },
+      tenantId: 'tenant-enterprise',
     });
     expect(status).toBe(201);
     expect(body.job.type).toBe('test_job');
@@ -85,6 +86,7 @@ describe('POST /api/v1/ops/queues/enqueue', () => {
   it('returns 400 when type is missing', async () => {
     const { status, body } = await post<any>(srv.baseUrl, '/api/v1/ops/queues/enqueue', {
       priority: 'normal',
+      tenantId: 'tenant-enterprise',
     });
     expect(status).toBe(400);
     expect(body.error.code).toBe('MISSING_TYPE');
@@ -95,13 +97,25 @@ describe('POST /api/v1/ops/queues/enqueue', () => {
     await post<any>(srv.baseUrl, '/api/v1/ops/queues/enqueue', {
       type: 'my_job',
       idempotencyKey: key,
+      tenantId: 'tenant-enterprise',
     });
     const { status, body } = await post<any>(srv.baseUrl, '/api/v1/ops/queues/enqueue', {
       type: 'my_job',
       idempotencyKey: key,
+      tenantId: 'tenant-enterprise',
     });
     expect(status).toBe(409);
     expect(body.error.code).toBe('DUPLICATE_JOB');
+  });
+
+  it('returns 400 TENANT_REQUIRED when no tenant is provided', async () => {
+    const { status, body } = await post<{ error: { code: string } }>(
+      srv.baseUrl,
+      '/api/v1/ops/queues/enqueue',
+      { type: 'test_job' }
+    );
+    expect(status).toBe(400);
+    expect(body.error.code).toBe('TENANT_REQUIRED');
   });
 });
 

@@ -1,17 +1,14 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import { verifyChain, toSiemRecord } from '@seltriva/aegis';
-
-function resolveTenant(ctx: RouteContext): string {
-  return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
-}
 
 export function registerAuditRoutes(router: { get: Function; post: Function }): void {
   // GET /api/v1/security/audit
   router.get('/api/v1/security/audit', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const limit = parseInt(ctx.query.get('limit') || '50', 10);
     const offset = parseInt(ctx.query.get('offset') || '0', 10);
     const action = ctx.query.get('action');
@@ -34,7 +31,7 @@ export function registerAuditRoutes(router: { get: Function; post: Function }): 
 
   // POST /api/v1/security/audit/export
   router.post('/api/v1/security/audit/export', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const entries = securityStore.getAuditEntries(tenantId, 1000, 0);
     const siemRecords = entries.map(toSiemRecord);
     json(res, { format: 'ecs', records: siemRecords, total: siemRecords.length });

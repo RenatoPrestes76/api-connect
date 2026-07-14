@@ -1,18 +1,13 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { billingStore } from '../../../modules/billing/billing-store.js';
 import { PLANS } from '@seltriva/billing';
 
-function resolveTenant(ctx: RouteContext): string {
-  const header = ctx.headers?.['x-tenant-id'];
-  const fromHeader = Array.isArray(header) ? header[0] : header;
-  return fromHeader ?? ctx.query.get('tenantId') ?? 'tenant-professional';
-}
-
 // GET /api/v1/billing/usage
 export async function getUsage(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const tenantId = resolveTenant(ctx);
+  const tenantId = requireTenantId(ctx);
   const current = billingStore.getCurrentUsage(tenantId);
   if (!current) {
     apiError(res, 'No usage data found for current period', 404, 'NOT_FOUND');
@@ -35,7 +30,7 @@ export async function getUsage(ctx: RouteContext, res: ServerResponse): Promise<
 
 // GET /api/v1/billing/usage/history
 export async function getUsageHistory(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const tenantId = resolveTenant(ctx);
+  const tenantId = requireTenantId(ctx);
   const records = billingStore.getUsageHistory(tenantId);
   records.sort((a, b) => b.month.localeCompare(a.month));
   json(res, { total: records.length, items: records });

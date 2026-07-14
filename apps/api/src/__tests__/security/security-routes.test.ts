@@ -648,3 +648,38 @@ describe('GET /api/v1/security/dashboard', () => {
     expect(body.compliance.GDPR).toBeTruthy();
   });
 });
+
+// ─── Tenant enforcement (Sprint 00.1) ──────────────────────────────────────────
+// No route may fall back to a default tenant — every request below omits
+// x-tenant-id and tenantId and must fail with 400 TENANT_REQUIRED.
+
+describe('Tenant enforcement — no hardcoded tenant fallback', () => {
+  const NO_TENANT_ROUTES: Array<[string, string]> = [
+    ['GET', '/api/v1/security/secrets'],
+    ['GET', '/api/v1/security/policies'],
+    ['GET', '/api/v1/security/risk'],
+    ['GET', '/api/v1/security/consent'],
+    ['GET', '/api/v1/security/compliance/data-requests'],
+    ['GET', '/api/v1/security/sso'],
+    ['GET', '/api/v1/security/mfa/status'],
+    ['GET', '/api/v1/security/dashboard'],
+    ['GET', '/api/v1/security/certificates'],
+    ['GET', '/api/v1/security/audit'],
+  ];
+
+  for (const [method, path] of NO_TENANT_ROUTES) {
+    it(`${method} ${path} returns 400 TENANT_REQUIRED without a tenant`, async () => {
+      const { status, body } =
+        method === 'GET'
+          ? await get<{ error: { code: string } }>(srv.baseUrl, path)
+          : await post<{ error: { code: string } }>(srv.baseUrl, path);
+      expect(status).toBe(400);
+      expect(body.error.code).toBe('TENANT_REQUIRED');
+    });
+  }
+
+  it('a valid tenant continues to work (no regression)', async () => {
+    const { status } = await get(srv.baseUrl, `/api/v1/security/secrets${Q()}`);
+    expect(status).toBe(200);
+  });
+});

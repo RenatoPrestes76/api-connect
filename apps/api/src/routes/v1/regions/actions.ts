@@ -8,8 +8,6 @@ import type {
   SyncResult,
 } from '../../../modules/regions/types.js';
 
-const KNOWN_TENANTS = ['tenant-enterprise', 'tenant-professional', 'tenant-community'];
-
 function nowIso(): string {
   return new Date().toISOString();
 }

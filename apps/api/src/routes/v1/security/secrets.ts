@@ -1,12 +1,9 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import { envelopeDecrypt, deserializeEnvelope, type AuditAction } from '@seltriva/aegis';
-
-function resolveTenant(ctx: RouteContext): string {
-  return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
-}
 
 function actor(ctx: RouteContext): string {
   return ctx.adminEmail ?? ctx.userId ?? 'unknown';
@@ -48,7 +45,7 @@ export function registerSecretsRoutes(router: {
 }): void {
   // GET /api/v1/security/secrets
   router.get('/api/v1/security/secrets', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const secrets = securityStore.getSecrets(tenantId);
     json(res, { secrets, total: secrets.length });
   });
@@ -81,7 +78,7 @@ export function registerSecretsRoutes(router: {
 
   // POST /api/v1/security/secrets
   router.post('/api/v1/security/secrets', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const body = ctx.body as Record<string, unknown>;
     const {
       name,

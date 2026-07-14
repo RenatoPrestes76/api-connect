@@ -1,17 +1,14 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import type { RiskType, RiskLevel } from '@seltriva/aegis';
-
-function resolveTenant(ctx: RouteContext): string {
-  return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
-}
 
 export function registerRiskRoutes(router: { get: Function; post: Function }): void {
   // GET /api/v1/security/risk
   router.get('/api/v1/security/risk', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const resolved = ctx.query.get('resolved');
     let events = securityStore.getRiskEvents(tenantId);
     if (resolved === 'false') events = events.filter((e) => !e.resolved);
@@ -30,7 +27,7 @@ export function registerRiskRoutes(router: { get: Function; post: Function }): v
 
   // POST /api/v1/security/risk/assess
   router.post('/api/v1/security/risk/assess', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = resolveTenant(ctx);
+    const tenantId = requireTenantId(ctx);
     const body = (ctx.body ?? {}) as Record<string, unknown>;
     const type = body['type'] as RiskType | undefined;
     const actor = body['actor'] as string | undefined;

@@ -1,18 +1,13 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { billingStore } from '../../../modules/billing/billing-store.js';
 import { isValidKeyFormat, keyFingerprint } from '@seltriva/billing';
 
-function resolveTenant(ctx: RouteContext): string {
-  const header = ctx.headers?.['x-tenant-id'];
-  const fromHeader = Array.isArray(header) ? header[0] : header;
-  return fromHeader ?? ctx.query.get('tenantId') ?? 'tenant-professional';
-}
-
 // GET /api/v1/billing/license
 export async function getLicense(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const tenantId = resolveTenant(ctx);
+  const tenantId = requireTenantId(ctx);
   const lic = billingStore.getLicense(tenantId);
   if (!lic) {
     apiError(res, 'License not found', 404, 'NOT_FOUND');

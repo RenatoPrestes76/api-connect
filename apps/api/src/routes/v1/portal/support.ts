@@ -1,6 +1,7 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { portalStore } from '../../../modules/portal/portal-store.js';
 import type { SupportSeverity, SupportCategory, SupportStatus } from '@seltriva/release';
 
@@ -14,10 +15,6 @@ const VALID_CATEGORIES: SupportCategory[] = [
 ];
 const VALID_STATUSES: SupportStatus[] = ['open', 'in_progress', 'resolved', 'closed'];
 
-function tenantId(ctx: RouteContext): string {
-  return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
-}
-
 export function registerSupportRoutes(router: {
   get: Function;
   post: Function;
@@ -25,7 +22,7 @@ export function registerSupportRoutes(router: {
 }): void {
   router.get('/api/v1/portal/support', (ctx: RouteContext, res: ServerResponse) => {
     const status = ctx.query.get('status') as SupportStatus | null;
-    const tickets = portalStore.listTickets(tenantId(ctx), status ?? undefined);
+    const tickets = portalStore.listTickets(requireTenantId(ctx), status ?? undefined);
     json(res, { total: tickets.length, tickets });
   });
 
@@ -60,7 +57,7 @@ export function registerSupportRoutes(router: {
     }
 
     const ticket = portalStore.createTicket({
-      tenantId: tenantId(ctx),
+      tenantId: requireTenantId(ctx),
       title,
       description,
       severity,

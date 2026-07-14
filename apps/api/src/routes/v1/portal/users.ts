@@ -1,14 +1,11 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requireTenantId } from '../../../http/tenant.js';
 import { portalStore } from '../../../modules/portal/portal-store.js';
 import type { UserRole } from '@seltriva/release';
 
 const VALID_ROLES: UserRole[] = ['owner', 'admin', 'developer', 'viewer'];
-
-function tenantId(ctx: RouteContext): string {
-  return (ctx.headers['x-tenant-id'] as string) || ctx.query.get('tenantId') || 'tenant-enterprise';
-}
 
 export function registerPortalUsersRoutes(router: {
   get: Function;
@@ -17,7 +14,7 @@ export function registerPortalUsersRoutes(router: {
   delete: Function;
 }): void {
   router.get('/api/v1/portal/users', (ctx: RouteContext, res: ServerResponse) => {
-    const users = portalStore.listUsers(tenantId(ctx));
+    const users = portalStore.listUsers(requireTenantId(ctx));
     json(res, { total: users.length, users });
   });
 
@@ -38,7 +35,7 @@ export function registerPortalUsersRoutes(router: {
       return apiError(res, `role must be one of: ${VALID_ROLES.join(', ')}`, 400, 'INVALID_ROLE');
     }
 
-    const user = portalStore.inviteUser({ tenantId: tenantId(ctx), email, name, role });
+    const user = portalStore.inviteUser({ tenantId: requireTenantId(ctx), email, name, role });
     json(res, user, 201);
   });
 
