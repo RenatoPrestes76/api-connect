@@ -81,7 +81,7 @@ export interface EventHandlerFactory {
  * Creates repository instances for a given entity type
  */
 export interface RepositoryFactory {
-  create<TEntity>(entityName: string): unknown; // returns Repository<TEntity>
+  create<_TEntity>(entityName: string): unknown; // returns Repository<TEntity>
   register(entityName: string, repositoryClass: new () => unknown): void;
   supports(entityName: string): boolean;
 }

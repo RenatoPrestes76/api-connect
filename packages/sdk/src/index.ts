@@ -309,7 +309,7 @@ export interface IAtlasClient {
   readonly webhooks: IWebhooksClient;
 }
 
-export function createAtlasClient(config: AtlasClientConfig): IAtlasClient {
+export function createAtlasClient(_config: AtlasClientConfig): IAtlasClient {
   throw new Error(
     'createAtlasClient is an interface contract. Import the concrete implementation from @seltriva/sdk/client.'
   );
