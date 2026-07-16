@@ -25,7 +25,10 @@ export type Permission =
   | 'audit.read'
   | 'billing.manage'
   | 'settings.manage'
-  | 'dashboard.view';
+  | 'dashboard.view'
+  | 'projects.read'
+  | 'projects.write'
+  | 'projects.delete';
 
 export interface AdminUser {
   id: string;

@@ -136,6 +136,112 @@ describe('Organizations', () => {
   });
 });
 
+// ─── Projects (Sprint 46.4 — Atlas Control Plane Core Modules) ───────────────
+
+describe('Projects', () => {
+  it('creating a project links it to its organization', async () => {
+    const { body: orgs } = await G('/admin/control-plane/organizations');
+    const org = (orgs as any).organizations[0];
+
+    const create = await P('/admin/control-plane/projects', {
+      organizationId: org.id,
+      name: 'Seltriva',
+      slug: 'seltriva',
+    });
+    expect(create.status).toBe(201);
+    const project = create.body as any;
+    expect(project.organizationId).toBe(org.id);
+    expect(project.status).toBe('ACTIVE');
+
+    const { body: list } = await G(`/admin/control-plane/projects?organizationId=${org.id}`);
+    expect((list as any).projects.some((p: any) => p.id === project.id)).toBe(true);
+  });
+
+  it('returns 404 ORGANIZATION_NOT_FOUND when the organization does not exist', async () => {
+    const { status, body } = await P('/admin/control-plane/projects', {
+      organizationId: 'org-does-not-exist',
+      name: 'Ghost',
+      slug: 'ghost',
+    });
+    expect(status).toBe(404);
+    expect((body as any).error.code).toBe('ORGANIZATION_NOT_FOUND');
+  });
+
+  it('returns 400 MISSING_FIELDS when creating without organizationId/name/slug', async () => {
+    const { status, body } = await P('/admin/control-plane/projects', { name: 'Incomplete' });
+    expect(status).toBe(400);
+    expect((body as any).error.code).toBe('MISSING_FIELDS');
+  });
+
+  it('reads, updates the status, and soft-deletes a project', async () => {
+    const { body: orgs } = await G('/admin/control-plane/organizations');
+    const org = (orgs as any).organizations[0];
+
+    const { body: created } = await P('/admin/control-plane/projects', {
+      organizationId: org.id,
+      name: 'ToArchive',
+      slug: 'to-archive',
+    });
+    const id = (created as any).id;
+
+    const read = await G(`/admin/control-plane/projects/${id}`);
+    expect(read.status).toBe(200);
+    expect((read.body as any).name).toBe('ToArchive');
+
+    const updated = await PA(`/admin/control-plane/projects/${id}`, { status: 'ARCHIVED' });
+    expect(updated.status).toBe(200);
+    expect((updated.body as any).status).toBe('ARCHIVED');
+
+    const deleted = await D(`/admin/control-plane/projects/${id}`);
+    expect(deleted.status).toBe(200);
+    expect((await G(`/admin/control-plane/projects/${id}`)).status).toBe(404);
+  });
+
+  it('records CREATE_PROJECT in the audit log', async () => {
+    const { body: orgs } = await G('/admin/control-plane/organizations');
+    const org = (orgs as any).organizations[0];
+    await P('/admin/control-plane/projects', {
+      organizationId: org.id,
+      name: 'AuditedProject',
+      slug: 'audited-project',
+    });
+    const { body } = await G('/admin/audit-log?limit=200');
+    const entries = (body as any).entries as Array<{ action: string }>;
+    expect(entries.some((e) => e.action === 'CREATE_PROJECT')).toBe(true);
+  });
+
+  it('rejects unauthenticated access', async () => {
+    const { status } = await G('/admin/control-plane/projects', {});
+    expect(status).toBe(401);
+  });
+
+  it('DEVOPS (no projects.write) is forbidden from creating a project', async () => {
+    const role = adminIdentityStore.getRoleByName('DEVOPS')!;
+    const password = 'DevOpsProjPass123!';
+    const user = adminIdentityStore.createUser({
+      name: 'DevOps Projects User',
+      email: 'devops-projects@atlasconnect.com.br',
+      passwordHash: await hashPassword(password),
+      roleId: role.id,
+    });
+    const { body: loginBody } = await P(
+      '/admin/auth/login',
+      { email: user.email, password },
+      { 'x-forwarded-for': '10.10.9.2' }
+    );
+    const devopsAuth = bearer((loginBody as any).accessToken);
+
+    const { body: orgs } = await G('/admin/control-plane/organizations');
+    const org = (orgs as any).organizations[0];
+    const forbidden = await P(
+      '/admin/control-plane/projects',
+      { organizationId: org.id, name: 'Nope', slug: 'nope-project' },
+      devopsAuth
+    );
+    expect(forbidden.status).toBe(403);
+  });
+});
+
 // ─── Environments ───────────────────────────────────────────────────────────
 
 describe('Environments', () => {

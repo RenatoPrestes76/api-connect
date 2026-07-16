@@ -36,6 +36,25 @@ export interface Organization {
   deletedAt?: string;
 }
 
+// ─── Projects ───────────────────────────────────────────────────────────────
+// Sprint 46.4 (Atlas Control Plane Core Modules) — a labeling/grouping layer
+// under an Organization. Additive only: Environments still attach directly to
+// Organization, unchanged from before this sprint.
+
+export type ProjectStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+
+export interface Project {
+  id: string;
+  organizationId: string;
+  name: string;
+  slug: string;
+  status: ProjectStatus;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
 // ─── Workspaces (internal — one default workspace per org, not user-facing) ──
 
 export type WorkspaceStatus = 'ACTIVE' | 'ARCHIVED' | 'DELETED';

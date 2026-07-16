@@ -25,7 +25,8 @@ export type PermissionResource =
   | 'billing'
   | 'settings'
   | 'dashboard'
-  | 'erp-integration';
+  | 'erp-integration'
+  | 'projects';
 
 export type PermissionAction =
   | 'read'
@@ -111,6 +112,9 @@ export type AdminAuditAction =
   | 'CREATE_ORGANIZATION'
   | 'UPDATE_ORGANIZATION'
   | 'DELETE_ORGANIZATION'
+  | 'CREATE_PROJECT'
+  | 'UPDATE_PROJECT'
+  | 'DELETE_PROJECT'
   | 'CREATE_ENVIRONMENT'
   | 'DELETE_ENVIRONMENT'
   | 'RESTART_RUNTIME'

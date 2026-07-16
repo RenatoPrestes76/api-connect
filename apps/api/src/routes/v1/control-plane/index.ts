@@ -1,5 +1,6 @@
 import { registerTenantRoutes } from './tenants.js';
 import { registerOrganizationRoutes } from './organizations.js';
+import { registerProjectRoutes } from './projects.js';
 import { registerEnvironmentRoutes } from './environments.js';
 import { registerRuntimeRoutes } from './runtimes.js';
 import { registerConnectorRoutes } from './connectors.js';
@@ -25,6 +26,7 @@ export function registerControlPlaneRoutes(
 ): void {
   registerTenantRoutes(router);
   registerOrganizationRoutes(router);
+  registerProjectRoutes(router);
   registerEnvironmentRoutes(router);
   registerRuntimeRoutes(router);
   registerConnectorRoutes(router);

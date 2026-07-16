@@ -2,6 +2,7 @@ import { randomUUID, randomBytes, createHash } from 'node:crypto';
 import type {
   Tenant,
   Organization,
+  Project,
   Workspace,
   Environment,
   Runtime,
@@ -20,6 +21,7 @@ let _instance: ControlPlaneStore | null = null;
 export interface ControlPlaneSnapshot {
   tenants: Tenant[];
   organizations: Organization[];
+  projects: Project[];
   workspaces: Workspace[];
   environments: Environment[];
   runtimes: Runtime[];
@@ -34,6 +36,7 @@ export interface ControlPlaneSnapshot {
 export class ControlPlaneStore {
   private tenants: Tenant[] = [];
   private organizations: Organization[] = [];
+  private projects: Project[] = [];
   private workspaces: Workspace[] = [];
   private environments: Environment[] = [];
   private runtimes: Runtime[] = [];
@@ -175,6 +178,62 @@ export class ControlPlaneStore {
     const org = this.getOrganization(id);
     if (!org) return false;
     org.deletedAt = new Date().toISOString();
+    return true;
+  }
+
+  // ─── Projects ───────────────────────────────────────────────────────────
+  // Sprint 46.4 (Atlas Control Plane Core Modules) — grouping layer under an
+  // Organization. Additive only: does not own Environments.
+
+  listProjects(filters: { organizationId?: string; status?: string } = {}): Project[] {
+    let list = this.projects.filter((p) => !p.deletedAt);
+    if (filters.organizationId)
+      list = list.filter((p) => p.organizationId === filters.organizationId);
+    if (filters.status) list = list.filter((p) => p.status === filters.status);
+    return list;
+  }
+
+  getProject(id: string): Project | undefined {
+    return this.projects.find((p) => p.id === id && !p.deletedAt);
+  }
+
+  createProject(input: {
+    organizationId: string;
+    name: string;
+    slug: string;
+    description?: string;
+  }): Project | 'ORGANIZATION_NOT_FOUND' {
+    const org = this.getOrganization(input.organizationId);
+    if (!org) return 'ORGANIZATION_NOT_FOUND';
+    const now = new Date().toISOString();
+    const project: Project = {
+      id: randomUUID(),
+      organizationId: org.id,
+      name: input.name,
+      slug: input.slug,
+      status: 'ACTIVE',
+      description: input.description,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.projects.push(project);
+    return project;
+  }
+
+  updateProject(
+    id: string,
+    patch: Partial<Pick<Project, 'name' | 'status' | 'description'>>
+  ): Project | null {
+    const project = this.getProject(id);
+    if (!project) return null;
+    Object.assign(project, patch, { updatedAt: new Date().toISOString() });
+    return project;
+  }
+
+  deleteProject(id: string): boolean {
+    const project = this.getProject(id);
+    if (!project) return false;
+    project.deletedAt = new Date().toISOString();
     return true;
   }
 
@@ -602,6 +661,7 @@ export class ControlPlaneStore {
     return {
       tenants: structuredClone(this.tenants),
       organizations: structuredClone(this.organizations),
+      projects: structuredClone(this.projects),
       workspaces: structuredClone(this.workspaces),
       environments: structuredClone(this.environments),
       runtimes: structuredClone(this.runtimes),
@@ -618,6 +678,7 @@ export class ControlPlaneStore {
   importSnapshot(snapshot: ControlPlaneSnapshot): void {
     this.tenants = structuredClone(snapshot.tenants);
     this.organizations = structuredClone(snapshot.organizations);
+    this.projects = structuredClone(snapshot.projects);
     this.workspaces = structuredClone(snapshot.workspaces);
     this.environments = structuredClone(snapshot.environments);
     this.runtimes = structuredClone(snapshot.runtimes);

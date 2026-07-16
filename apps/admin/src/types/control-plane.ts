@@ -24,6 +24,19 @@ export interface Organization {
   updatedAt: string;
 }
 
+export type ProjectStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+
+export interface Project {
+  id: string;
+  organizationId: string;
+  name: string;
+  slug: string;
+  status: ProjectStatus;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type EnvironmentKind = 'DEVELOPMENT' | 'STAGING' | 'PRODUCTION';
 export type EnvironmentStatus = 'ACTIVE' | 'INACTIVE' | 'DELETED';
 

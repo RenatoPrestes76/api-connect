@@ -44,6 +44,9 @@ export const PERMISSION_CATALOG: Array<{
     action: 'manage',
     description: "Register or update a company's ERP integration mode",
   },
+  { resource: 'projects', action: 'read', description: 'View projects' },
+  { resource: 'projects', action: 'write', description: 'Create and edit projects' },
+  { resource: 'projects', action: 'delete', description: 'Delete projects' },
 ];
 
 export function permissionKey(
@@ -81,6 +84,9 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'dashboard.view',
     'erp-integration.read',
     'erp-integration.manage',
+    'projects.read',
+    'projects.write',
+    'projects.delete',
   ],
   SUPORTE: ['companies.read', 'runtime.read', 'marketplace.review', 'audit.read', 'dashboard.view'],
   CUSTOMER_SUCCESS: ['companies.read', 'companies.write', 'marketplace.review', 'dashboard.view'],
