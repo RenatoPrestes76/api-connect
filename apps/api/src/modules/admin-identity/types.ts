@@ -24,7 +24,8 @@ export type PermissionResource =
   | 'audit'
   | 'billing'
   | 'settings'
-  | 'dashboard';
+  | 'dashboard'
+  | 'erp-integration';
 
 export type PermissionAction =
   | 'read'

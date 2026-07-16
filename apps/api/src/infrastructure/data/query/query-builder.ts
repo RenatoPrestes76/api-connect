@@ -13,15 +13,26 @@ export interface PrismaFindManyArgs {
   take?: number;
 }
 
-/** Builds a tenant-scoped `where` clause, merging in any additional filters. */
-export function buildWhere(extra?: Record<string, unknown>): Record<string, unknown> {
+/**
+ * Builds a tenant-scoped `where` clause, merging in any additional filters.
+ * `tenantField` lets a repository scope by a differently-named column (e.g.
+ * `organizationId`) when the table has no literal `tenantId` field — the
+ * ambient TenantContext is still the single source of truth either way.
+ */
+export function buildWhere(
+  extra?: Record<string, unknown>,
+  tenantField = 'tenantId'
+): Record<string, unknown> {
   const { tenantId } = getTenantContext();
-  return { tenantId, ...(extra ?? {}) };
+  return { [tenantField]: tenantId, ...(extra ?? {}) };
 }
 
 /** Translates RepositoryCriteria into tenant-scoped Prisma findMany args. */
-export function buildFindManyArgs(criteria?: RepositoryCriteria): PrismaFindManyArgs {
-  const args: PrismaFindManyArgs = { where: buildWhere(criteria?.filters) };
+export function buildFindManyArgs(
+  criteria?: RepositoryCriteria,
+  tenantField = 'tenantId'
+): PrismaFindManyArgs {
+  const args: PrismaFindManyArgs = { where: buildWhere(criteria?.filters, tenantField) };
 
   if (criteria?.orderBy) {
     args.orderBy = { [criteria.orderBy]: criteria.orderDir ?? 'asc' };

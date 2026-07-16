@@ -34,6 +34,16 @@ export const PERMISSION_CATALOG: Array<{
   { resource: 'billing', action: 'manage', description: 'Manage licenses and billing' },
   { resource: 'settings', action: 'manage', description: 'Manage global Control Plane settings' },
   { resource: 'dashboard', action: 'view', description: 'View the Control Plane dashboard' },
+  {
+    resource: 'erp-integration',
+    action: 'read',
+    description: "Read a company's ERP integration mode and health status",
+  },
+  {
+    resource: 'erp-integration',
+    action: 'manage',
+    description: "Register or update a company's ERP integration mode",
+  },
 ];
 
 export function permissionKey(
@@ -69,6 +79,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'audit.read',
     'settings.manage',
     'dashboard.view',
+    'erp-integration.read',
+    'erp-integration.manage',
   ],
   SUPORTE: ['companies.read', 'runtime.read', 'marketplace.review', 'audit.read', 'dashboard.view'],
   CUSTOMER_SUCCESS: ['companies.read', 'companies.write', 'marketplace.review', 'dashboard.view'],

@@ -486,6 +486,7 @@ model Organization {
   featureFlags FeatureFlag[]
   jobs         Job[]
   deployments  Deployment[]
+  erpIntegration ErpIntegration?
   alerts         RuntimeAlert[]
   deploymentJobs DeploymentJob[]
   metricSnapshots MetricSnapshot[]
@@ -1189,4 +1190,43 @@ model DeploymentTask {
   completedAt DateTime?
 
   @@index([jobId])
+}
+
+// ─── ERP INTEGRATION MODE ─────────────────────────────────────────────────
+// Foundation-only: identifies which ERP integration mode a company uses
+// (OFF = replica/offline database, ON = direct ERP connection). No pricing,
+// ERP write path, or automated sync/rebate logic lives on this model.
+
+enum ErpIntegrationType {
+  OFF
+  ON
+}
+
+enum ErpIntegrationStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model ErpIntegration {
+  id             String @id @default(cuid())
+  organizationId String @unique
+
+  integrationType ErpIntegrationType   @default(OFF)
+  status          ErpIntegrationStatus @default(ACTIVE)
+
+  erpName String?
+  host     String?
+  database String?
+  schema   String?
+
+  lastConnectionAt DateTime?
+  lastSyncAt       DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([integrationType])
+  @@index([status])
 }

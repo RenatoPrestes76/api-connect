@@ -17,7 +17,8 @@ export abstract class BaseRepository<TEntity extends Entity<string>, TRow> imple
 > {
   protected constructor(
     protected readonly delegate: PrismaModelDelegate<TRow>,
-    protected readonly idField: string = 'id'
+    protected readonly idField: string = 'id',
+    protected readonly tenantField: string = 'tenantId'
   ) {}
 
   /** Maps a raw Prisma row to the domain entity. */
@@ -27,28 +28,33 @@ export abstract class BaseRepository<TEntity extends Entity<string>, TRow> imple
   protected abstract toPersistence(entity: TEntity): Record<string, unknown>;
 
   async findById(id: string): Promise<TEntity | null> {
-    const row = await this.delegate.findFirst({ where: buildWhere({ [this.idField]: id }) });
+    const row = await this.delegate.findFirst({
+      where: buildWhere({ [this.idField]: id }, this.tenantField),
+    });
     return row ? this.toDomain(row) : null;
   }
 
   async findAll(criteria?: RepositoryCriteria): Promise<TEntity[]> {
-    const rows = await this.delegate.findMany(buildFindManyArgs(criteria));
+    const rows = await this.delegate.findMany(buildFindManyArgs(criteria, this.tenantField));
     return rows.map((row) => this.toDomain(row));
   }
 
   async save(entity: TEntity): Promise<void> {
     const { tenantId } = getTenantContext();
-    const data = { ...this.toPersistence(entity), tenantId };
+    const data = { ...this.toPersistence(entity), [this.tenantField]: tenantId };
 
     if (await this.exists(entity.id)) {
-      await this.delegate.update({ where: buildWhere({ [this.idField]: entity.id }), data });
+      await this.delegate.update({
+        where: buildWhere({ [this.idField]: entity.id }, this.tenantField),
+        data,
+      });
     } else {
       await this.delegate.create({ data });
     }
   }
 
   async delete(id: string): Promise<void> {
-    await this.delegate.delete({ where: buildWhere({ [this.idField]: id }) });
+    await this.delegate.delete({ where: buildWhere({ [this.idField]: id }, this.tenantField) });
   }
 
   async exists(id: string): Promise<boolean> {
@@ -56,7 +62,7 @@ export abstract class BaseRepository<TEntity extends Entity<string>, TRow> imple
   }
 
   async count(criteria?: RepositoryCriteria): Promise<number> {
-    const { where } = buildFindManyArgs(criteria);
+    const { where } = buildFindManyArgs(criteria, this.tenantField);
     return this.delegate.count({ where });
   }
 }
