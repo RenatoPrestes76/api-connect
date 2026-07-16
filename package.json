@@ -17,7 +17,7 @@
     "dev:api": "turbo run dev --filter='./apps/api'",
     "dev:studio": "turbo run dev --filter='./apps/studio'",
     "dev:agent": "turbo run dev --filter='./apps/agent'",
-    "lint": "turbo run lint",
+    "lint": "turbo run lint --filter='!./apps/docs' --filter='!./apps/developer-portal'",
     "lint:fix": "turbo run lint --env-mode=loose -- --fix",
     "format": "prettier --write '**/*.{ts,tsx,json,md,yml,yaml}'",
     "format:check": "prettier --check '**/*.{ts,tsx,json,md,yml,yaml}'",
