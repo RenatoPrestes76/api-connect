@@ -1,7 +1,8 @@
 'use client';
+import type { ButtonHTMLAttributes, ReactElement } from 'react';
 import { cn } from '../../lib/utils';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
   size?: 'sm' | 'md' | 'lg';
 }
@@ -27,7 +28,7 @@ export function Button({
   children,
   disabled,
   ...props
-}: ButtonProps) {
+}: ButtonProps): ReactElement {
   return (
     <button
       {...props}

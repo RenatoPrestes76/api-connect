@@ -1,11 +1,12 @@
+import type { ReactElement, ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 
 interface CardProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }
 
-export function Card({ children, className }: CardProps) {
+export function Card({ children, className }: CardProps): ReactElement {
   return (
     <div className={cn('rounded-lg border border-slate-200 bg-white shadow-sm', className)}>
       {children}
@@ -13,7 +14,7 @@ export function Card({ children, className }: CardProps) {
   );
 }
 
-export function CardHeader({ children, className }: CardProps) {
+export function CardHeader({ children, className }: CardProps): ReactElement {
   return (
     <div
       className={cn(
@@ -26,10 +27,10 @@ export function CardHeader({ children, className }: CardProps) {
   );
 }
 
-export function CardTitle({ children, className }: CardProps) {
+export function CardTitle({ children, className }: CardProps): ReactElement {
   return <h3 className={cn('text-sm font-semibold text-slate-900', className)}>{children}</h3>;
 }
 
-export function CardContent({ children, className }: CardProps) {
+export function CardContent({ children, className }: CardProps): ReactElement {
   return <div className={cn('p-5', className)}>{children}</div>;
 }

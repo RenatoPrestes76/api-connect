@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -12,7 +13,7 @@ interface BreadcrumbProps {
   className?: string;
 }
 
-export function Breadcrumb({ items, className }: BreadcrumbProps) {
+export function Breadcrumb({ items, className }: BreadcrumbProps): ReactElement {
   return (
     <nav aria-label="Breadcrumb" className={cn('flex items-center gap-1 text-sm', className)}>
       {items.map((item, i) => (

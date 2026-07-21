@@ -1,4 +1,5 @@
 'use client';
+import type { ReactElement } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Server, Building2, Plug, ScrollText, Activity } from 'lucide-react';
@@ -18,7 +19,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/logs', label: 'Logs', icon: ScrollText },
 ];
 
-export function Sidebar() {
+export function Sidebar(): ReactElement {
   const pathname = usePathname();
 
   return (

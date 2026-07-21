@@ -1,9 +1,10 @@
+import type { ReactElement, ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 
 export interface TableColumn<T> {
   key: string;
   header: string;
-  cell: (row: T) => React.ReactNode;
+  cell: (row: T) => ReactNode;
   className?: string;
   headerClass?: string;
 }
@@ -22,7 +23,7 @@ export function DataTable<T>({
   keyExtractor,
   onRowClick,
   className,
-}: DataTableProps<T>) {
+}: DataTableProps<T>): ReactElement {
   return (
     <div className={cn('w-full overflow-x-auto', className)}>
       <table className="w-full border-collapse text-sm">

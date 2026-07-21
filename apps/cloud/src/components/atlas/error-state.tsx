@@ -1,4 +1,5 @@
 'use client';
+import type { ReactElement } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -15,7 +16,7 @@ export function ErrorState({
   message,
   onRetry,
   className,
-}: ErrorStateProps) {
+}: ErrorStateProps): ReactElement {
   return (
     <div className={cn('flex flex-col items-center justify-center py-16 text-center', className)}>
       <div className="mb-4 rounded-full bg-rose-50 p-4">

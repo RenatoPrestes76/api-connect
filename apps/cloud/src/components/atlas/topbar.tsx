@@ -1,4 +1,5 @@
 'use client';
+import type { ReactElement } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '../../lib/utils';
@@ -7,7 +8,7 @@ interface TopbarProps {
   className?: string;
 }
 
-export function Topbar({ className }: TopbarProps) {
+export function Topbar({ className }: TopbarProps): ReactElement {
   const qc = useQueryClient();
 
   function handleRefresh(): void {

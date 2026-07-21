@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { cn } from '../../lib/utils';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
@@ -10,7 +11,13 @@ interface MetricCardProps {
   className?: string;
 }
 
-export function MetricCard({ title, value, icon: Icon, sub, className }: MetricCardProps) {
+export function MetricCard({
+  title,
+  value,
+  icon: Icon,
+  sub,
+  className,
+}: MetricCardProps): ReactElement {
   return (
     <Card className={cn('', className)}>
       <CardContent className="pt-5">

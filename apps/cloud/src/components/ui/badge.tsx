@@ -1,7 +1,8 @@
+import type { ReactElement, ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 
 interface BadgeProps {
-  children: React.ReactNode;
+  children: ReactNode;
   variant?: 'default' | 'outline' | 'success' | 'warning' | 'danger' | 'info' | 'muted';
   className?: string;
 }
@@ -16,7 +17,7 @@ const VARIANTS: Record<NonNullable<BadgeProps['variant']>, string> = {
   muted: 'bg-slate-100 text-slate-400',
 };
 
-export function Badge({ children, variant = 'default', className }: BadgeProps) {
+export function Badge({ children, variant = 'default', className }: BadgeProps): ReactElement {
   return (
     <span
       className={cn(

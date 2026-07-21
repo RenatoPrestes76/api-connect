@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { cn } from '../../lib/utils';
 import { Skeleton } from '../ui/skeleton';
 
@@ -6,7 +7,7 @@ interface LoadingProps {
   className?: string;
 }
 
-export function Loading({ rows = 5, className }: LoadingProps) {
+export function Loading({ rows = 5, className }: LoadingProps): ReactElement {
   return (
     <div className={cn('space-y-3', className)}>
       {Array.from({ length: rows }).map((_, i) => (
@@ -16,7 +17,7 @@ export function Loading({ rows = 5, className }: LoadingProps) {
   );
 }
 
-export function LoadingCard({ className }: { className?: string }) {
+export function LoadingCard({ className }: { className?: string }): ReactElement {
   return (
     <div className={cn('space-y-3 rounded-lg border border-slate-200 bg-white p-5', className)}>
       <Skeleton className="h-4 w-1/3" />
@@ -25,7 +26,7 @@ export function LoadingCard({ className }: { className?: string }) {
   );
 }
 
-export function LoadingSpinner({ className }: { className?: string }) {
+export function LoadingSpinner({ className }: { className?: string }): ReactElement {
   return (
     <div className={cn('flex items-center justify-center py-8', className)}>
       <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-slate-600" />

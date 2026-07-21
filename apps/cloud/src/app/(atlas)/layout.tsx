@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Sidebar } from '../../components/atlas/sidebar';
 import { Topbar } from '../../components/atlas/topbar';
 
-export default function AtlasLayout({ children }: { children: ReactNode }) {
+export default function AtlasLayout({ children }: { children: ReactNode }): ReactElement {
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
       <Sidebar />

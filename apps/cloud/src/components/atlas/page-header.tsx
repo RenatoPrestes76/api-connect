@@ -1,3 +1,4 @@
+import type { ReactElement, ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 import { Breadcrumb } from './breadcrumb';
 import type { BreadcrumbItem } from './breadcrumb';
@@ -6,7 +7,7 @@ interface PageHeaderProps {
   title: string;
   description?: string;
   breadcrumb?: BreadcrumbItem[];
-  actions?: React.ReactNode;
+  actions?: ReactNode;
   className?: string;
 }
 
@@ -16,7 +17,7 @@ export function PageHeader({
   breadcrumb,
   actions,
   className,
-}: PageHeaderProps) {
+}: PageHeaderProps): ReactElement {
   return (
     <div className={cn('mb-6', className)}>
       {breadcrumb && <Breadcrumb items={breadcrumb} className="mb-2" />}

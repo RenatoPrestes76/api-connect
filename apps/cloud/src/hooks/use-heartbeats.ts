@@ -1,9 +1,11 @@
 'use client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { getDashboardActivity } from '../services/atlas-api';
 import { POLL_INTERVAL_MS } from '../lib/constants';
 
-export function useActivity(sinceMs = 3_600_000) {
+export function useActivity(
+  sinceMs = 3_600_000
+): UseQueryResult<Awaited<ReturnType<typeof getDashboardActivity>>> {
   return useQuery({
     queryKey: ['dashboard', 'activity', sinceMs],
     queryFn: () => getDashboardActivity(sinceMs),

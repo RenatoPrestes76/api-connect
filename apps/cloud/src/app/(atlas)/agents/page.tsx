@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, type ReactElement } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAgents } from '../../../hooks/use-agents';
 import { PageHeader } from '../../../components/atlas/page-header';
@@ -65,7 +65,7 @@ const COLUMNS: TableColumn<Agent>[] = [
   },
 ];
 
-export default function AgentsPage() {
+export default function AgentsPage(): ReactElement {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [healthFilter, setHealthFilter] = useState<AgentHealthStatus | ''>('');

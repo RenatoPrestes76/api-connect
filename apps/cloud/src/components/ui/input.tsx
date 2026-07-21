@@ -1,8 +1,9 @@
+import type { InputHTMLAttributes, ReactElement, SelectHTMLAttributes } from 'react';
 import { cn } from '../../lib/utils';
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+type InputProps = InputHTMLAttributes<HTMLInputElement>;
 
-export function Input({ className, ...props }: InputProps) {
+export function Input({ className, ...props }: InputProps): ReactElement {
   return (
     <input
       {...props}
@@ -16,9 +17,9 @@ export function Input({ className, ...props }: InputProps) {
   );
 }
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {}
+type SelectProps = SelectHTMLAttributes<HTMLSelectElement>;
 
-export function Select({ className, children, ...props }: SelectProps) {
+export function Select({ className, children, ...props }: SelectProps): ReactElement {
   return (
     <select
       {...props}

@@ -7,7 +7,6 @@ import type {
   Organization,
   OrganizationId,
   UserId,
-  WorkspaceId,
   MemberRole,
   OrganizationTier,
   OrganizationStatus,

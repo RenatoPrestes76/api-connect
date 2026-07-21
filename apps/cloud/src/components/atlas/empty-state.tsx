@@ -1,3 +1,4 @@
+import type { ReactElement, ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 import type { LucideIcon } from 'lucide-react';
 
@@ -5,11 +6,17 @@ interface EmptyStateProps {
   icon?: LucideIcon;
   title: string;
   description?: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
   className?: string;
 }
 
-export function EmptyState({ icon: Icon, title, description, action, className }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+  className,
+}: EmptyStateProps): ReactElement {
   return (
     <div className={cn('flex flex-col items-center justify-center py-16 text-center', className)}>
       {Icon && (

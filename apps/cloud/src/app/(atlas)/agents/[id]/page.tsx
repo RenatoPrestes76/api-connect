@@ -1,4 +1,5 @@
 'use client';
+import type { ReactElement } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAgent } from '../../../../hooks/use-agent';
 import { useActivity } from '../../../../hooks/use-heartbeats';
@@ -13,7 +14,13 @@ import { disableAgent, enableAgent, deleteAgent } from '../../../../services/atl
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
-function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
+function InfoRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null | undefined;
+}): ReactElement {
   return (
     <div className="flex items-start gap-4 py-2.5 border-b border-slate-100 last:border-0">
       <span className="w-40 shrink-0 text-xs font-medium text-slate-500">{label}</span>
@@ -22,7 +29,7 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
   );
 }
 
-export default function AgentDetailPage() {
+export default function AgentDetailPage(): ReactElement {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const qc = useQueryClient();
@@ -35,7 +42,7 @@ export default function AgentDetailPage() {
   const heartbeats = activity.data?.heartbeats.filter((h) => h.agentId === id) ?? [];
   const syncs = activity.data?.syncs.filter((s) => s.agentId === id) ?? [];
 
-  async function handleAction(action: 'disable' | 'enable' | 'delete') {
+  async function handleAction(action: 'disable' | 'enable' | 'delete'): Promise<void> {
     if (busy) return;
     setBusy(true);
     try {

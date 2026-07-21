@@ -1,10 +1,12 @@
 'use client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { listAgents } from '../services/atlas-api';
 import type { AgentFilter } from '../types/atlas';
 import { POLL_INTERVAL_MS } from '../lib/constants';
 
-export function useAgents(filter: AgentFilter = {}) {
+export function useAgents(
+  filter: AgentFilter = {}
+): UseQueryResult<Awaited<ReturnType<typeof listAgents>>> {
   return useQuery({
     queryKey: ['agents', filter],
     queryFn: () => listAgents(filter),

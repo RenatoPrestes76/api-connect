@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, type ReactElement } from 'react';
 import { useActivity } from '../../../hooks/use-heartbeats';
 import { PageHeader } from '../../../components/atlas/page-header';
 import { Card, CardContent } from '../../../components/ui/card';
@@ -17,7 +17,7 @@ const SINCE_OPTIONS = [
   { value: 86_400_000, label: 'Last 24h' },
 ];
 
-export default function LogsPage() {
+export default function LogsPage(): ReactElement {
   const [tab, setTab] = useState<Tab>('heartbeats');
   const [sinceMs, setSinceMs] = useState(3_600_000);
 

@@ -1,4 +1,5 @@
 'use client';
+import type { ReactElement } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCompanies } from '../../../hooks/use-companies';
 import { PageHeader } from '../../../components/atlas/page-header';
@@ -8,7 +9,7 @@ import { EmptyState } from '../../../components/atlas/empty-state';
 import { ErrorState } from '../../../components/atlas/error-state';
 import { Building2 } from 'lucide-react';
 
-export default function CompaniesPage() {
+export default function CompaniesPage(): ReactElement {
   const router = useRouter();
   const { data, isLoading, error, refetch } = useCompanies();
 

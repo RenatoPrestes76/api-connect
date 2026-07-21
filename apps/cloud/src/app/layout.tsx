@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Inter } from 'next/font/google';
 import { Providers } from '../components/providers';
 import './globals.css';
@@ -19,7 +19,7 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
-}>) {
+}>): ReactElement {
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased">

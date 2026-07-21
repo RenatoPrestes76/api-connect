@@ -6,7 +6,6 @@
 import type {
   OrganizationId,
   WorkspaceId,
-  AgentId,
   UserId,
   Configuration,
   ConfigurationId,

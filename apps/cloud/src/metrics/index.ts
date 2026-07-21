@@ -3,7 +3,7 @@
  * Metrics collection, aggregation, and time-series querying.
  */
 
-import type { OrganizationId, AgentId, MetricSnapshotId, DomainResult } from '../domain/index';
+import type { OrganizationId, AgentId, MetricSnapshotId } from '../domain/index';
 
 export interface IMetricsService {
   record(snapshot: MetricSnapshotInput): Promise<void>;

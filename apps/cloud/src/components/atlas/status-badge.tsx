@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { cn } from '../../lib/utils';
 import { STATUS_COLORS } from '../../lib/constants';
 import type { AgentHealthStatus, AgentDomainStatus } from '../../types/atlas';
@@ -9,7 +10,7 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+export function StatusBadge({ status, className }: StatusBadgeProps): ReactElement {
   const colors = STATUS_COLORS[status as keyof typeof STATUS_COLORS] ?? STATUS_COLORS.OFFLINE;
   return (
     <span

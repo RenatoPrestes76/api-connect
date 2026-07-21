@@ -12,9 +12,6 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   OrganizationId,
   AgentId,
-  WorkspaceId,
-  UserId,
-  PluginId,
   LicenseId,
   DomainResult,
   CloudDomainEvent,

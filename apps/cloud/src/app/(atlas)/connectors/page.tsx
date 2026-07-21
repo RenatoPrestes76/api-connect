@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { PageHeader } from '../../../components/atlas/page-header';
 import { Badge } from '../../../components/ui/badge';
 import { Card, CardContent } from '../../../components/ui/card';
@@ -14,7 +15,7 @@ const VENDOR_ICONS: Record<string, string> = {
   CISS: 'CS',
 };
 
-export default function ConnectorsPage() {
+export default function ConnectorsPage(): ReactElement {
   return (
     <div className="space-y-4">
       <PageHeader

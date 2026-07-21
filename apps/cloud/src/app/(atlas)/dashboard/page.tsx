@@ -1,4 +1,5 @@
 'use client';
+import type { ReactElement } from 'react';
 import { Building2, Server, Activity, AlertTriangle, WifiOff, RefreshCw } from 'lucide-react';
 import { useDashboardMetrics } from '../../../hooks/use-dashboard-metrics';
 import { useActivity } from '../../../hooks/use-heartbeats';
@@ -8,9 +9,9 @@ import { StatusBadge } from '../../../components/atlas/status-badge';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui/card';
 import { LoadingCard, LoadingSpinner } from '../../../components/atlas/loading';
 import { ErrorState } from '../../../components/atlas/error-state';
-import { formatRelative, formatBytes } from '../../../lib/utils';
+import { formatRelative } from '../../../lib/utils';
 
-export default function DashboardPage() {
+export default function DashboardPage(): ReactElement {
   const metrics = useDashboardMetrics();
   const activity = useActivity();
 
