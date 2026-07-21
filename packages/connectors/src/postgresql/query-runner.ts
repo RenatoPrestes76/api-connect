@@ -82,7 +82,7 @@ export class CircuitBreaker {
     this._transitionIfNeeded();
 
     if (this._state === 'OPEN') {
-      throw new CircuitOpenError(this._openedAt!);
+      throw new CircuitOpenError(this._openedAt ?? new Date());
     }
 
     try {

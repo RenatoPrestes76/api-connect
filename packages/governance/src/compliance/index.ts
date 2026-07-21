@@ -15,7 +15,6 @@
  */
 
 import type { GovernanceResult, PolicyId } from '../policies/index';
-import type { AuditPeriod } from '../audit/index';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };

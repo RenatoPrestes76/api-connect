@@ -34,11 +34,11 @@ export function getConfig(): Config {
   return {
     env: process.env.NODE_ENV || 'development',
     database: {
-      url: process.env.DATABASE_URL!,
+      url: process.env.DATABASE_URL as string,
     },
     api: {
       port: parseInt(process.env.API_PORT || '3001', 10),
-      secretKey: process.env.API_SECRET_KEY!,
+      secretKey: process.env.API_SECRET_KEY as string,
       logLevel: process.env.LOG_LEVEL || 'info',
     },
     cloud: {

@@ -6,7 +6,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryRunner, CircuitBreaker, DEFAULT_QUERY_RUNNER_OPTIONS } from '../query-runner.js';
-import { ReadOnlyViolationError, QueryTimeoutError, CircuitOpenError } from '../types.js';
+import { ReadOnlyViolationError, CircuitOpenError } from '../types.js';
 import type { PostgreSQLConnectionManager } from '../connection.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -89,7 +89,7 @@ describe('CircuitBreaker', () => {
       openDurationMs: 1000,
       successThreshold: 1,
     });
-    const fail = () => Promise.reject(new Error('fail'));
+    const fail = (): Promise<never> => Promise.reject(new Error('fail'));
 
     await cb.execute(fail).catch(() => undefined);
     await cb.execute(fail).catch(() => undefined);
@@ -102,7 +102,7 @@ describe('CircuitBreaker', () => {
       openDurationMs: 1000,
       successThreshold: 1,
     });
-    const fail = () => Promise.reject(new Error('fail'));
+    const fail = (): Promise<never> => Promise.reject(new Error('fail'));
 
     for (let i = 0; i < 3; i++) {
       await cb.execute(fail).catch(() => undefined);

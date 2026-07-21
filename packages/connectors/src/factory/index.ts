@@ -181,8 +181,7 @@ export interface QueueConnectorFactory extends ConnectorFactory {
  */
 export interface ConnectorFactoryRegistry {
   registerFactory(type: ConnectorType, factory: ConnectorFactory): void;
-  getFactory(type: ConnectorType): ConnectorFactory | null;
-  getFactory(typeId: string): ConnectorFactory | null;
+  getFactory(type: ConnectorType | string): ConnectorFactory | null;
   hasFactory(type: ConnectorType | string): boolean;
   getSupportedTypes(): ConnectorType[];
 }

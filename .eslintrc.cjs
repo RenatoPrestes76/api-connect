@@ -21,7 +21,12 @@ module.exports = {
     es2020: true
   },
   rules: {
-    "turbo/no-undeclared-env-vars": "warn",
+    // turbo.json has never declared a globalEnv list, so this rule flags
+    // essentially every process.env access repo-wide — a build-cache-key
+    // concern, not a code-correctness one. Off until someone deliberately
+    // curates turbo.json's env list; --max-warnings 0 would otherwise turn
+    // every one of those into a hard CI failure.
+    "turbo/no-undeclared-env-vars": "off",
     "prettier/prettier": "error",
     "@typescript-eslint/no-unused-vars": [
       "error",
@@ -57,6 +62,15 @@ module.exports = {
       files: ["**/*.config.ts"],
       rules: {
         "@typescript-eslint/explicit-function-return-type": "off"
+      }
+    },
+    {
+      // Non-null assertions on test fixtures (array.find(...)! etc.) just make
+      // a bad test fail fast with a clear TypeError — no production blast
+      // radius, so this rule isn't worth enforcing here.
+      files: ["**/*.test.ts", "**/*.test.tsx", "**/__tests__/**/*.ts", "**/__tests__/**/*.tsx"],
+      rules: {
+        "@typescript-eslint/no-non-null-assertion": "off"
       }
     }
   ]

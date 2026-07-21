@@ -318,10 +318,11 @@ export class SchemaDiscovery {
       [schema, table]
     );
 
-    if (rows.length === 0) return null;
+    const [first] = rows;
+    if (!first) return null;
 
     return {
-      constraintName: asConstraintName(rows[0]!.constraint_name),
+      constraintName: asConstraintName(first.constraint_name),
       columns: rows.map((r) => asColumnName(r.column_name)),
     };
   }
@@ -364,8 +365,9 @@ export class SchemaDiscovery {
     const groups = new Map<string, ForeignKeyMetadata>();
     for (const r of rows) {
       const key = r.constraint_name;
-      if (!groups.has(key)) {
-        groups.set(key, {
+      let fk = groups.get(key);
+      if (!fk) {
+        fk = {
           constraintName: asConstraintName(r.constraint_name),
           columns: [],
           referencedSchema: asSchemaName(r.foreign_schema),
@@ -373,9 +375,9 @@ export class SchemaDiscovery {
           referencedColumns: [],
           updateRule: r.update_rule,
           deleteRule: r.delete_rule,
-        });
+        };
+        groups.set(key, fk);
       }
-      const fk = groups.get(key)!;
       (fk.columns as ReturnType<typeof asColumnName>[]).push(asColumnName(r.column_name));
       (fk.referencedColumns as ReturnType<typeof asColumnName>[]).push(
         asColumnName(r.foreign_column)

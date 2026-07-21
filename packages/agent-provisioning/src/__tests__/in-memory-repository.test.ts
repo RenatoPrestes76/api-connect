@@ -5,7 +5,7 @@ import { InMemoryProvisioningTokenRepository } from '../repository/in-memory-pro
 const FUTURE = new Date(Date.now() + 86_400_000);
 const BASE = { companyId: 'co-1', description: 'test token', expiresAt: FUTURE };
 
-function mkToken(overrides = {}) {
+function mkToken(overrides = {}): ProvisioningToken {
   return ProvisioningToken.create({ ...BASE, ...overrides }, () => `id-${Math.random()}`);
 }
 

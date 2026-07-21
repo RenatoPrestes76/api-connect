@@ -1,8 +1,4 @@
-import {
-  ProvisioningToken,
-  CreateProvisioningTokenParams,
-  ProvisioningTokenDomainError,
-} from '../entity/provisioning-token.js';
+import { ProvisioningToken, CreateProvisioningTokenParams } from '../entity/provisioning-token.js';
 import type { ProvisioningTokenRepository } from '../repository/provisioning-token-repository.js';
 
 export interface CreateProvisioningTokenResult {

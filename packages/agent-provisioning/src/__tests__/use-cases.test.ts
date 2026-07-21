@@ -84,7 +84,7 @@ describe('RevokeProvisioningToken', () => {
     useCase = new RevokeProvisioningToken(repo);
   });
 
-  async function createToken() {
+  async function createToken(): Promise<ProvisioningToken> {
     const { token } = ProvisioningToken.create(
       { companyId: COMPANY, description: 'x', expiresAt: FUTURE },
       () => `tok-${Math.random()}`
@@ -129,7 +129,7 @@ describe('ProvisionAgent', () => {
     useCase = new ProvisionAgent(service);
   });
 
-  async function mkRawToken() {
+  async function mkRawToken(): Promise<string> {
     const { token, rawToken } = ProvisioningToken.create(
       { companyId: COMPANY, description: 'provision', expiresAt: FUTURE },
       () => `tok-${Math.random()}`
@@ -168,7 +168,7 @@ describe('UpdateAgentVersion', () => {
     useCase = new UpdateAgentVersion(repo);
   });
 
-  async function registerAgent() {
+  async function registerAgent(): Promise<string> {
     const agent = AtlasAgent.register(AGENT_PARAMS);
     await repo.save(agent);
     return agent.id.toString();
@@ -231,7 +231,7 @@ describe('UpdateAgentHostname', () => {
     useCase = new UpdateAgentHostname(repo);
   });
 
-  async function registerAgent() {
+  async function registerAgent(): Promise<string> {
     const agent = AtlasAgent.register(AGENT_PARAMS);
     await repo.save(agent);
     return agent.id.toString();

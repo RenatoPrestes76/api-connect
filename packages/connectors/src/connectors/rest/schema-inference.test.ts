@@ -5,7 +5,7 @@
  * nullable detection, nested objects, paginated response unwrapping.
  */
 import { describe, it, expect } from 'vitest';
-import { inferSchema, schemaToMarkdown } from './schema-inference.js';
+import { inferSchema, schemaToMarkdown, type InferredField } from './schema-inference.js';
 
 describe('inferSchema', () => {
   describe('primitive', () => {
@@ -33,7 +33,7 @@ describe('inferSchema', () => {
       const data = { name: 'Bob', count: 5, enabled: false, meta: { x: 1 } };
       const schema = inferSchema(data);
 
-      const find = (key: string) => schema.fields.find((f) => f.key === key)!;
+      const find = (key: string): InferredField => schema.fields.find((f) => f.key === key)!;
       expect(find('name').type).toBe('string');
       expect(find('count').type).toBe('number');
       expect(find('enabled').type).toBe('boolean');

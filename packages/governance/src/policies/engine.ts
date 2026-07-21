@@ -25,7 +25,6 @@ import type {
   PolicyObligation,
   ApplicablePolicyResult,
   ConflictResolution,
-  RuleId,
 } from './index.js';
 
 // ─── Attribute Path Resolver ─────────────────────────────────────────────────
@@ -229,7 +228,8 @@ function applyConflictResolution(
     }
 
     case 'only-one': {
-      if (applicable.length === 1) return applicable[0]!.decision;
+      const [only] = applicable;
+      if (applicable.length === 1 && only) return only.decision;
       return 'indeterminate';
     }
 
@@ -394,9 +394,10 @@ function policyMatchesScope(policyScope: PolicyScope, requestScope: PolicyScope)
   }
 
   if (policyScope.resourceTypes && policyScope.resourceTypes.length > 0) {
+    const resourceTypes = policyScope.resourceTypes;
     const covers =
-      policyScope.resourceTypes.includes('*') ||
-      requestScope.resourceTypes?.some((rt) => policyScope.resourceTypes!.includes(rt));
+      resourceTypes.includes('*') ||
+      requestScope.resourceTypes?.some((rt) => resourceTypes.includes(rt));
     if (!covers) return false;
   }
 

@@ -11,7 +11,6 @@
 import type {
   Connector,
   ConnectorDescriptor,
-  ConnectorConfig,
   ConnectorCredentials,
   ConnectorState,
   ConnectorResult,

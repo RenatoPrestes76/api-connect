@@ -26,7 +26,7 @@ function detectFormat(value: string): InferredField['format'] | undefined {
   if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return 'date-time';
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return 'date';
   if (/^https?:\/\//.test(value)) return 'uri';
-  if (/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(value)) return 'email';
+  if (/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)) return 'email';
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) return 'uuid';
   return undefined;
 }
@@ -56,7 +56,8 @@ function inferField(key: string, values: unknown[]): InferredField {
     typeCounts.set(t, (typeCounts.get(t) ?? 0) + 1);
   }
 
-  const dominantType = [...typeCounts.entries()].sort((a, b) => b[1] - a[1])[0]![0];
+  const sortedTypes = [...typeCounts.entries()].sort((a, b) => b[1] - a[1]);
+  const dominantType = sortedTypes[0]?.[0] ?? 'unknown';
   const example = nonNull[0];
 
   const field: InferredField = {

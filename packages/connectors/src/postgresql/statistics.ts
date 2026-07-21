@@ -15,7 +15,6 @@ import type { QueryRunner } from './query-runner.js';
 import {
   quoteIdent,
   qualifiedName,
-  asSchemaName,
   asTableName,
   asColumnName,
   type SchemaName,

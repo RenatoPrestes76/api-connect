@@ -56,7 +56,14 @@ function makeTokenRow(overrides: Partial<PrismaProvisioningToken> = {}): PrismaP
   };
 }
 
-function makeAgentRegisterParams() {
+function makeAgentRegisterParams(): {
+  companyId: string;
+  name: string;
+  hostname: string;
+  machineId: string;
+  connectorType: string;
+  version: string;
+} {
   return {
     companyId: 'co-1',
     name: 'Test Agent',
