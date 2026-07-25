@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "buildCommand": "cd ../.. && npx turbo run build --filter=@seltriva/web",
+  "buildCommand": "npx turbo run build --filter=@seltriva/web",
   "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" != \"master\" ]; then exit 0; fi; npx turbo-ignore"
 }
