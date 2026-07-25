@@ -21,7 +21,7 @@ export async function listWorkflows(_ctx: RouteContext, res: ServerResponse): Pr
 // ─── Get ──────────────────────────────────────────────────────────────────────
 
 export async function getWorkflow(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const wf = orchestratorStore.workflows.get(ctx.params['id']!);
+  const wf = orchestratorStore.workflows.get(ctx.params['id']);
   if (!wf) {
     apiError(res, 'Workflow not found', 404, 'NOT_FOUND');
     return;
@@ -97,7 +97,7 @@ export async function createWorkflow(ctx: RouteContext, res: ServerResponse): Pr
 // ─── Update ───────────────────────────────────────────────────────────────────
 
 export async function updateWorkflow(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const wf = orchestratorStore.workflows.get(ctx.params['id']!);
+  const wf = orchestratorStore.workflows.get(ctx.params['id']);
   if (!wf) {
     apiError(res, 'Workflow not found', 404, 'NOT_FOUND');
     return;
@@ -141,7 +141,7 @@ export async function updateWorkflow(ctx: RouteContext, res: ServerResponse): Pr
 // ─── Delete ───────────────────────────────────────────────────────────────────
 
 export async function deleteWorkflow(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const id = ctx.params['id']!;
+  const id = ctx.params['id'];
   if (!orchestratorStore.workflows.has(id)) {
     apiError(res, 'Workflow not found', 404, 'NOT_FOUND');
     return;
@@ -156,7 +156,7 @@ export async function deleteWorkflow(ctx: RouteContext, res: ServerResponse): Pr
 // ─── Activate / Deactivate ───────────────────────────────────────────────────
 
 export async function activateWorkflow(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const wf = orchestratorStore.workflows.get(ctx.params['id']!);
+  const wf = orchestratorStore.workflows.get(ctx.params['id']);
   if (!wf) {
     apiError(res, 'Workflow not found', 404, 'NOT_FOUND');
     return;
@@ -168,7 +168,7 @@ export async function activateWorkflow(ctx: RouteContext, res: ServerResponse): 
 }
 
 export async function deactivateWorkflow(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const wf = orchestratorStore.workflows.get(ctx.params['id']!);
+  const wf = orchestratorStore.workflows.get(ctx.params['id']);
   if (!wf) {
     apiError(res, 'Workflow not found', 404, 'NOT_FOUND');
     return;
@@ -182,7 +182,7 @@ export async function deactivateWorkflow(ctx: RouteContext, res: ServerResponse)
 // ─── Run (manual trigger) ─────────────────────────────────────────────────────
 
 export async function runWorkflow(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const wf = orchestratorStore.workflows.get(ctx.params['id']!);
+  const wf = orchestratorStore.workflows.get(ctx.params['id']);
   if (!wf) {
     apiError(res, 'Workflow not found', 404, 'NOT_FOUND');
     return;
@@ -202,7 +202,7 @@ export async function runWorkflow(ctx: RouteContext, res: ServerResponse): Promi
 // ─── Versions ────────────────────────────────────────────────────────────────
 
 export async function listWorkflowVersions(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const id = ctx.params['id']!;
+  const id = ctx.params['id'];
   if (!orchestratorStore.workflows.has(id)) {
     apiError(res, 'Workflow not found', 404, 'NOT_FOUND');
     return;

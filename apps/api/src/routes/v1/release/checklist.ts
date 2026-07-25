@@ -12,7 +12,7 @@ export function registerChecklistRoutes(router: Router): void {
   });
 
   router.get('/api/v1/release/checklist/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const item = releaseStore.checklist.get(ctx.params['id']!);
+    const item = releaseStore.checklist.get(ctx.params['id']);
     if (!item) return apiError(res, 'Checklist item not found', 404, 'NOT_FOUND');
     json(res, item);
   });
@@ -30,7 +30,7 @@ export function registerChecklistRoutes(router: Router): void {
       );
     }
 
-    const item = releaseStore.markChecklist(ctx.params['id']!, status, { notes, checkedBy });
+    const item = releaseStore.markChecklist(ctx.params['id'], status, { notes, checkedBy });
     if (!item) return apiError(res, 'Checklist item not found', 404, 'NOT_FOUND');
     json(res, item);
   });

@@ -15,7 +15,7 @@ export function registerSsoRoutes(router: Router): void {
 
   // GET /api/v1/security/sso/:id
   router.get('/api/v1/security/sso/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const provider = securityStore.getSsoProviderById(ctx.params['id']!);
+    const provider = securityStore.getSsoProviderById(ctx.params['id']);
     if (!provider) return apiError(res, 'SSO provider not found', 404);
     json(res, { provider });
   });
@@ -24,7 +24,7 @@ export function registerSsoRoutes(router: Router): void {
   router.post(
     '/api/v1/security/sso/:id/initiate',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const provider = securityStore.getSsoProviderById(ctx.params['id']!);
+      const provider = securityStore.getSsoProviderById(ctx.params['id']);
       if (!provider) return apiError(res, 'SSO provider not found', 404);
       if (!provider.active) return apiError(res, 'SSO provider is inactive', 400);
       const state = generateKey(16);
@@ -62,7 +62,7 @@ export function registerSsoRoutes(router: Router): void {
 
   // DELETE /api/v1/security/sso/:id
   router.delete('/api/v1/security/sso/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const ok = securityStore.deleteSsoProvider(ctx.params['id']!);
+    const ok = securityStore.deleteSsoProvider(ctx.params['id']);
     if (!ok) return apiError(res, 'SSO provider not found', 404);
     json(res, { deleted: true });
   });

@@ -156,7 +156,7 @@ export function createListAgentsHandler(agentRepo: AtlasAgentRepository) {
 
 export function createGetAgentHandler(agentRepo: AtlasAgentRepository) {
   return async (ctx: RouteContext, res: ServerResponse): Promise<void> => {
-    const agent = await agentRepo.findById(ctx.params['id']!);
+    const agent = await agentRepo.findById(ctx.params['id']);
     if (!agent) {
       apiError(res, 'Agent not found', 404, 'NOT_FOUND');
       return;
@@ -169,7 +169,7 @@ export function createGetAgentHandler(agentRepo: AtlasAgentRepository) {
 
 export function createListCompanyAgentsHandler(agentRepo: AtlasAgentRepository) {
   return async (ctx: RouteContext, res: ServerResponse): Promise<void> => {
-    const companyId = ctx.params['companyId']!;
+    const companyId = ctx.params['companyId'];
     const agents = await agentRepo.findByCompany(companyId);
     json(res, { data: agents.map(agentToView), meta: { total: agents.length } });
   };
@@ -179,7 +179,7 @@ export function createListCompanyAgentsHandler(agentRepo: AtlasAgentRepository) 
 
 export function createDisableAgentHandler(agentRepo: AtlasAgentRepository) {
   return async (ctx: RouteContext, res: ServerResponse): Promise<void> => {
-    const agent = await agentRepo.findById(ctx.params['id']!);
+    const agent = await agentRepo.findById(ctx.params['id']);
     if (!agent) {
       apiError(res, 'Agent not found', 404, 'NOT_FOUND');
       return;
@@ -194,7 +194,7 @@ export function createDisableAgentHandler(agentRepo: AtlasAgentRepository) {
 
 export function createEnableAgentHandler(agentRepo: AtlasAgentRepository) {
   return async (ctx: RouteContext, res: ServerResponse): Promise<void> => {
-    const agent = await agentRepo.findById(ctx.params['id']!);
+    const agent = await agentRepo.findById(ctx.params['id']);
     if (!agent) {
       apiError(res, 'Agent not found', 404, 'NOT_FOUND');
       return;
@@ -213,7 +213,7 @@ export function createEnableAgentHandler(agentRepo: AtlasAgentRepository) {
 
 export function createDeleteAgentHandler(agentRepo: AtlasAgentRepository) {
   return async (ctx: RouteContext, res: ServerResponse): Promise<void> => {
-    const id = ctx.params['id']!;
+    const id = ctx.params['id'];
     const agent = await agentRepo.findById(id);
     if (!agent) {
       apiError(res, 'Agent not found', 404, 'NOT_FOUND');

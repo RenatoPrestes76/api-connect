@@ -20,7 +20,7 @@ export function registerRiskRoutes(router: Router): void {
   router.get(
     '/api/v1/security/risk/score/:tenantId',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const score = securityStore.computeRiskScore(ctx.params['tenantId']!);
+      const score = securityStore.computeRiskScore(ctx.params['tenantId']);
       json(res, score);
     }
   );
@@ -57,7 +57,7 @@ export function registerRiskRoutes(router: Router): void {
   router.post(
     '/api/v1/security/risk/:id/resolve',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const event = securityStore.resolveRiskEvent(ctx.params['id']!);
+      const event = securityStore.resolveRiskEvent(ctx.params['id']);
       if (!event) return apiError(res, 'Risk event not found', 404);
       json(res, { event });
     }

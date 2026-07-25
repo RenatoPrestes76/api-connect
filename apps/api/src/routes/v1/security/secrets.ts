@@ -47,11 +47,11 @@ export function registerSecretsRoutes(router: Router): void {
 
   // GET /api/v1/security/secrets/:id
   router.get('/api/v1/security/secrets/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const secret = securityStore.getSecretById(ctx.params['id']!);
+    const secret = securityStore.getSecretById(ctx.params['id']);
     if (!secret) return apiError(res, 'Secret not found', 404);
     const { encryptedValue: _, ...metadata } = secret;
     json(res, {
-      secret: { ...metadata, masked: `***${ctx.params['id']!.slice(-4).toUpperCase()}` },
+      secret: { ...metadata, masked: `***${ctx.params['id'].slice(-4).toUpperCase()}` },
     });
   });
 
@@ -59,7 +59,7 @@ export function registerSecretsRoutes(router: Router): void {
   router.post(
     '/api/v1/security/secrets/:id/decrypt',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const secret = securityStore.getSecretById(ctx.params['id']!);
+      const secret = securityStore.getSecretById(ctx.params['id']);
       if (!secret) return apiError(res, 'Secret not found', 404);
       try {
         const value = envelopeDecrypt(deserializeEnvelope(secret.encryptedValue));
@@ -115,9 +115,9 @@ export function registerSecretsRoutes(router: Router): void {
     async (ctx: RouteContext, res: ServerResponse) => {
       const body = ctx.body as Record<string, unknown>;
       if (!body?.['value']) return apiError(res, 'value required', 400);
-      const existing = securityStore.getSecretById(ctx.params['id']!);
+      const existing = securityStore.getSecretById(ctx.params['id']);
       if (!existing) return apiError(res, 'Secret not found', 404);
-      const secret = await securityStore.rotateSecret(ctx.params['id']!, body['value'] as string);
+      const secret = await securityStore.rotateSecret(ctx.params['id'], body['value'] as string);
       if (!secret) return apiError(res, 'Secret not found', 404);
       auditSecretEvent(ctx, 'secret_rotated', existing.tenantId, secret.id, {
         version: secret.version,
@@ -128,9 +128,9 @@ export function registerSecretsRoutes(router: Router): void {
 
   // DELETE /api/v1/security/secrets/:id
   router.delete('/api/v1/security/secrets/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const existing = securityStore.getSecretById(ctx.params['id']!);
+    const existing = securityStore.getSecretById(ctx.params['id']);
     if (!existing) return apiError(res, 'Secret not found', 404);
-    const ok = securityStore.deleteSecret(ctx.params['id']!);
+    const ok = securityStore.deleteSecret(ctx.params['id']);
     if (!ok) return apiError(res, 'Secret not found', 404);
     auditSecretEvent(ctx, 'secret_deleted', existing.tenantId, existing.id, {
       name: existing.name,

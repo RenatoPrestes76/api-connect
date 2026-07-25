@@ -33,7 +33,7 @@ export async function hubCreateUser(ctx: RouteContext, res: ServerResponse): Pro
 }
 
 export async function hubUpdateUser(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const user = hubStore.users.get(ctx.params['id']!);
+  const user = hubStore.users.get(ctx.params['id']);
   if (!user) {
     apiError(res, 'User not found', 404, 'NOT_FOUND');
     return;
@@ -47,7 +47,7 @@ export async function hubUpdateUser(ctx: RouteContext, res: ServerResponse): Pro
 }
 
 export async function hubDeleteUser(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const id = ctx.params['id']!;
+  const id = ctx.params['id'];
   if (!hubStore.users.has(id)) {
     apiError(res, 'User not found', 404, 'NOT_FOUND');
     return;

@@ -8,7 +8,7 @@ export async function hubListDatabases(_ctx: RouteContext, res: ServerResponse):
 }
 
 export async function hubGetDatabase(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const d = hubStore.databases.get(ctx.params['id']!);
+  const d = hubStore.databases.get(ctx.params['id']);
   if (!d) {
     apiError(res, 'Database not found', 404, 'NOT_FOUND');
     return;

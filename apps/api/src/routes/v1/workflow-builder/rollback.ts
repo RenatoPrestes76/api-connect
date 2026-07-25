@@ -6,7 +6,7 @@ import { orchestratorStore } from '../../../modules/orchestrator/orchestrator-st
 import type { WorkflowGraph } from '../../../modules/orchestrator/types.js';
 
 export async function rollbackWorkflow(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const workflowId = ctx.params['id']!;
+  const workflowId = ctx.params['id'];
   const version = parseInt(ctx.params['version'] ?? '0', 10);
 
   const wf = orchestratorStore.workflows.get(workflowId);

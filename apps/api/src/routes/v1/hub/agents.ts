@@ -8,7 +8,7 @@ export async function hubListAgents(_ctx: RouteContext, res: ServerResponse): Pr
 }
 
 export async function hubGetAgent(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const a = hubStore.agents.get(ctx.params['id']!);
+  const a = hubStore.agents.get(ctx.params['id']);
   if (!a) {
     apiError(res, 'Agent not found', 404, 'NOT_FOUND');
     return;
@@ -17,7 +17,7 @@ export async function hubGetAgent(ctx: RouteContext, res: ServerResponse): Promi
 }
 
 export async function hubRestartAgent(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const a = hubStore.agents.get(ctx.params['id']!);
+  const a = hubStore.agents.get(ctx.params['id']);
   if (!a) {
     apiError(res, 'Agent not found', 404, 'NOT_FOUND');
     return;

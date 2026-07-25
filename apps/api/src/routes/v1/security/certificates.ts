@@ -17,7 +17,7 @@ export function registerCertificatesRoutes(router: Router): void {
   router.post(
     '/api/v1/security/certificates/renew/:id',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const cert = securityStore.renewCertificate(ctx.params['id']!);
+      const cert = securityStore.renewCertificate(ctx.params['id']);
       if (!cert) return apiError(res, 'Certificate not found', 404);
       json(res, { certificate: cert });
     }

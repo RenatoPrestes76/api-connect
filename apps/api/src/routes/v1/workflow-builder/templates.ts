@@ -12,7 +12,7 @@ export async function listTemplates(ctx: RouteContext, res: ServerResponse): Pro
 }
 
 export async function getTemplateById(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const tpl = wbStore.getTemplate(ctx.params['id']!);
+  const tpl = wbStore.getTemplate(ctx.params['id']);
   if (!tpl) {
     apiError(res, 'Template not found', 404, 'NOT_FOUND');
     return;
@@ -21,7 +21,7 @@ export async function getTemplateById(ctx: RouteContext, res: ServerResponse): P
 }
 
 export async function useTemplate(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const tpl = wbStore.getTemplate(ctx.params['id']!);
+  const tpl = wbStore.getTemplate(ctx.params['id']);
   if (!tpl) {
     apiError(res, 'Template not found', 404, 'NOT_FOUND');
     return;

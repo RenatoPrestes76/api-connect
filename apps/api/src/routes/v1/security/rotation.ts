@@ -28,7 +28,7 @@ export function registerSecretRotationRoutes(router: Router): void {
   router.post(
     '/api/v1/security/secrets/:id/rotate-now',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const result = await secretRotationScheduler.rotateNow(ctx.params['id']!);
+      const result = await secretRotationScheduler.rotateNow(ctx.params['id']);
       if (!result) return apiError(res, 'Secret not found', 404);
       json(res, result);
     }

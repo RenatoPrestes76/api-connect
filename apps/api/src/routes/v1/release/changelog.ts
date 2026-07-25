@@ -20,7 +20,7 @@ export function registerChangelogRoutes(router: Router): void {
   router.get(
     '/api/v1/release/changelog/:version',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const v = releaseStore.changelog.get(ctx.params['version']!);
+      const v = releaseStore.changelog.get(ctx.params['version']);
       if (!v) return apiError(res, 'Version not found in changelog', 404, 'NOT_FOUND');
       json(res, v);
     }

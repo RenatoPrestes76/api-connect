@@ -16,7 +16,7 @@ export function registerPoliciesRoutes(router: Router): void {
 
   // GET /api/v1/security/policies/:id
   router.get('/api/v1/security/policies/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const policy = securityStore.getPolicyById(ctx.params['id']!);
+    const policy = securityStore.getPolicyById(ctx.params['id']);
     if (!policy) return apiError(res, 'Policy not found', 404);
     json(res, { policy });
   });
@@ -59,14 +59,14 @@ export function registerPoliciesRoutes(router: Router): void {
 
   // PUT /api/v1/security/policies/:id
   router.put('/api/v1/security/policies/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const policy = securityStore.updatePolicy(ctx.params['id']!, ctx.body as any);
+    const policy = securityStore.updatePolicy(ctx.params['id'], ctx.body as any);
     if (!policy) return apiError(res, 'Policy not found', 404);
     json(res, { policy });
   });
 
   // DELETE /api/v1/security/policies/:id
   router.delete('/api/v1/security/policies/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const ok = securityStore.deletePolicy(ctx.params['id']!);
+    const ok = securityStore.deletePolicy(ctx.params['id']);
     if (!ok) return apiError(res, 'Policy not found', 404);
     json(res, { deleted: true });
   });

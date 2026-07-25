@@ -8,7 +8,7 @@ export async function hubListConnectors(_ctx: RouteContext, res: ServerResponse)
 }
 
 export async function hubGetConnector(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const c = hubStore.connectors.get(ctx.params['id']!);
+  const c = hubStore.connectors.get(ctx.params['id']);
   if (!c) {
     apiError(res, 'Connector not found', 404, 'NOT_FOUND');
     return;
@@ -17,7 +17,7 @@ export async function hubGetConnector(ctx: RouteContext, res: ServerResponse): P
 }
 
 export async function hubStartConnector(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const c = hubStore.connectors.get(ctx.params['id']!);
+  const c = hubStore.connectors.get(ctx.params['id']);
   if (!c) {
     apiError(res, 'Connector not found', 404, 'NOT_FOUND');
     return;
@@ -32,7 +32,7 @@ export async function hubStartConnector(ctx: RouteContext, res: ServerResponse):
 }
 
 export async function hubStopConnector(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const c = hubStore.connectors.get(ctx.params['id']!);
+  const c = hubStore.connectors.get(ctx.params['id']);
   if (!c) {
     apiError(res, 'Connector not found', 404, 'NOT_FOUND');
     return;
@@ -46,7 +46,7 @@ export async function hubStopConnector(ctx: RouteContext, res: ServerResponse): 
 }
 
 export async function hubRestartConnector(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const c = hubStore.connectors.get(ctx.params['id']!);
+  const c = hubStore.connectors.get(ctx.params['id']);
   if (!c) {
     apiError(res, 'Connector not found', 404, 'NOT_FOUND');
     return;

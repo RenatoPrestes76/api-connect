@@ -18,7 +18,7 @@ export function registerSloRoutes(router: Router): void {
 
   // GET /api/v1/ops/slo/:id
   router.get('/api/v1/ops/slo/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const slo = titanStore.getSlo(ctx.params['id']!);
+    const slo = titanStore.getSlo(ctx.params['id']);
     if (!slo) return apiError(res, 'SLO not found', 404, 'SLO_NOT_FOUND');
     json(res, slo);
   });

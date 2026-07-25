@@ -21,7 +21,7 @@ export function registerVersionRoutes(router: Router): void {
   router.get(
     '/api/v1/release/versions/:version',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const version = releaseStore.versions.get(ctx.params['version']!);
+      const version = releaseStore.versions.get(ctx.params['version']);
       if (!version) return apiError(res, 'Version not found', 404, 'NOT_FOUND');
       json(res, version);
     }
@@ -34,7 +34,7 @@ export function registerVersionRoutes(router: Router): void {
       if (!certifiedBy) {
         return apiError(res, '"certifiedBy" is required', 400, 'MISSING_FIELD');
       }
-      const version = releaseStore.versions.certify(ctx.params['version']!, certifiedBy);
+      const version = releaseStore.versions.certify(ctx.params['version'], certifiedBy);
       if (!version) return apiError(res, 'Version not found', 404, 'NOT_FOUND');
       json(res, version);
     }

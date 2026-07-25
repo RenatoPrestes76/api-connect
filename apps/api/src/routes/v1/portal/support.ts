@@ -23,7 +23,7 @@ export function registerSupportRoutes(router: Router): void {
   });
 
   router.get('/api/v1/portal/support/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const ticket = portalStore.getTicket(ctx.params['id']!);
+    const ticket = portalStore.getTicket(ctx.params['id']);
     if (!ticket) return apiError(res, 'Ticket not found', 404, 'NOT_FOUND');
     json(res, ticket);
   });
@@ -74,7 +74,7 @@ export function registerSupportRoutes(router: Router): void {
           'INVALID_STATUS'
         );
       }
-      const ticket = portalStore.updateTicketStatus(ctx.params['id']!, status);
+      const ticket = portalStore.updateTicketStatus(ctx.params['id'], status);
       if (!ticket) return apiError(res, 'Ticket not found', 404, 'NOT_FOUND');
       json(res, ticket);
     }

@@ -23,7 +23,7 @@ export async function getDlq(_ctx: RouteContext, res: ServerResponse): Promise<v
 }
 
 export async function retryDlqJob(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const job = retryFromDlq(ctx.params['jobId']!);
+  const job = retryFromDlq(ctx.params['jobId']);
   if (!job) {
     apiError(res, 'DLQ job not found', 404, 'NOT_FOUND');
     return;

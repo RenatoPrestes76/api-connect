@@ -31,7 +31,7 @@ export function registerPortalConnectorRoutes(router: Router): void {
           'INVALID_HEALTH'
         );
       }
-      const connector = portalStore.updateConnectorHealth(ctx.params['id']!, health);
+      const connector = portalStore.updateConnectorHealth(ctx.params['id'], health);
       if (!connector) return apiError(res, 'Connector not found', 404, 'NOT_FOUND');
       json(res, connector);
     }

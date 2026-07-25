@@ -19,7 +19,7 @@ export function registerFeatureFlagsRoutes(router: Router): void {
   router.post(
     '/api/v1/ops/feature-flags/:id/evaluate',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const id = ctx.params['id']!;
+      const id = ctx.params['id'];
       const flag = titanStore.getFlag(id) ?? titanStore.getFlagByKey(id);
       if (!flag) return apiError(res, 'Feature flag not found', 404, 'FLAG_NOT_FOUND');
       const evalCtx = ((ctx.body as any)?.['context'] ?? {}) as FlagEvaluationContext;
@@ -30,7 +30,7 @@ export function registerFeatureFlagsRoutes(router: Router): void {
 
   // GET /api/v1/ops/feature-flags/:id
   router.get('/api/v1/ops/feature-flags/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const id = ctx.params['id']!;
+    const id = ctx.params['id'];
     const flag = titanStore.getFlag(id) ?? titanStore.getFlagByKey(id);
     if (!flag) return apiError(res, 'Feature flag not found', 404, 'FLAG_NOT_FOUND');
     json(res, flag);
@@ -63,7 +63,7 @@ export function registerFeatureFlagsRoutes(router: Router): void {
 
   // PUT /api/v1/ops/feature-flags/:id — full update
   router.put('/api/v1/ops/feature-flags/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const id = ctx.params['id']!;
+    const id = ctx.params['id'];
     const body = ctx.body as Partial<FeatureFlag> | null;
     const updated = titanStore.patchFlag(id, body ?? {});
     if (!updated) return apiError(res, 'Feature flag not found', 404, 'FLAG_NOT_FOUND');
@@ -72,7 +72,7 @@ export function registerFeatureFlagsRoutes(router: Router): void {
 
   // DELETE /api/v1/ops/feature-flags/:id
   router.delete('/api/v1/ops/feature-flags/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const id = ctx.params['id']!;
+    const id = ctx.params['id'];
     const deleted = titanStore.deleteFlag(id);
     if (!deleted) return apiError(res, 'Feature flag not found', 404, 'FLAG_NOT_FOUND');
     json(res, { deleted: true });

@@ -6,7 +6,7 @@ import { orchestratorStore } from '../../../modules/orchestrator/orchestrator-st
 import type { WorkflowGraph } from '@seltriva/workflow-builder';
 
 export async function listWorkflowVersions(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const workflowId = ctx.params['id']!;
+  const workflowId = ctx.params['id'];
   const wf = orchestratorStore.workflows.get(workflowId);
   if (!wf) {
     apiError(res, 'Workflow not found', 404, 'NOT_FOUND');
@@ -16,7 +16,7 @@ export async function listWorkflowVersions(ctx: RouteContext, res: ServerRespons
 }
 
 export async function saveWorkflowVersion(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const workflowId = ctx.params['id']!;
+  const workflowId = ctx.params['id'];
   const wf = orchestratorStore.workflows.get(workflowId);
   if (!wf) {
     apiError(res, 'Workflow not found', 404, 'NOT_FOUND');

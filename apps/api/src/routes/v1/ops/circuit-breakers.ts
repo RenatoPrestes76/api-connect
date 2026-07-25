@@ -14,7 +14,7 @@ export function registerCircuitBreakersRoutes(router: Router): void {
   router.post(
     '/api/v1/ops/circuit-breakers/:name/reset',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const name = ctx.params['name']!;
+      const name = ctx.params['name'];
       const ok = titanStore.circuits.reset(name);
       if (!ok) return apiError(res, `Circuit '${name}' not found`, 404, 'CIRCUIT_NOT_FOUND');
       json(res, { reset: true, name, state: 'CLOSED' });
