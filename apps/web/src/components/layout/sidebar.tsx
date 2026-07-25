@@ -68,6 +68,7 @@ import {
   BookOpen,
   ShieldCheck as ShieldCheckIcon,
   Building2,
+  Blocks,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -104,6 +105,7 @@ const ICONS: Record<string, typeof LayoutDashboard> = {
   '/portal/api-keys': Key,
   '/portal/users': UserCog,
   '/portal/connectors': Wifi,
+  '/portal/connector-catalog': Blocks,
   '/portal/environments': Layers,
   '/portal/organization': Building2,
   '/portal/audit': ScrollText,
@@ -214,6 +216,7 @@ const GROUPS = [
       '/portal/gateway/logs',
       '/portal/health',
       '/portal/connectors',
+      '/portal/connector-catalog',
       '/portal/audit',
     ],
   },
@@ -286,6 +289,7 @@ const LABELS: Record<string, string> = {
   '/portal/api-keys': 'Chaves de API',
   '/portal/users': 'Usuários',
   '/portal/connectors': 'Conectores',
+  '/portal/connector-catalog': 'Catálogo de Conectores',
   '/portal/environments': 'Ambientes',
   '/portal/organization': 'Organização',
   '/portal/audit': 'Auditoria',

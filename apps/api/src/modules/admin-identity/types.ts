@@ -26,7 +26,8 @@ export type PermissionResource =
   | 'settings'
   | 'dashboard'
   | 'erp-integration'
-  | 'projects';
+  | 'projects'
+  | 'connector-registry';
 
 export type PermissionAction =
   | 'read'
@@ -143,7 +144,18 @@ export type AdminAuditAction =
   | 'CREATE_AUTOSCALE_POLICY'
   | 'UPDATE_AUTOSCALE_POLICY'
   | 'DELETE_AUTOSCALE_POLICY'
-  | 'RUN_CHAOS_SCENARIO';
+  | 'RUN_CHAOS_SCENARIO'
+  // Sprint 46.6 — Connector Registry
+  | 'CONNECTOR_REGISTERED'
+  | 'CONNECTOR_UPDATED'
+  | 'CONNECTOR_DELETED'
+  | 'CONNECTOR_ACTIVATED'
+  | 'CONNECTOR_DEACTIVATED'
+  | 'CONNECTOR_VERSION_PUBLISHED'
+  | 'CONNECTOR_PARAMETER_UPDATED'
+  | 'CONNECTOR_PARAMETER_DELETED'
+  | 'CONNECTOR_TEMPLATE_CREATED'
+  | 'CONNECTOR_TEMPLATE_DELETED';
 
 export interface AdminAuditEntry {
   id: string;

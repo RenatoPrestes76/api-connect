@@ -28,7 +28,10 @@ export type Permission =
   | 'dashboard.view'
   | 'projects.read'
   | 'projects.write'
-  | 'projects.delete';
+  | 'projects.delete'
+  | 'connector-registry.read'
+  | 'connector-registry.write'
+  | 'connector-registry.delete';
 
 export interface AdminUser {
   id: string;

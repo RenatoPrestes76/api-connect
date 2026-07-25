@@ -47,6 +47,17 @@ export const PERMISSION_CATALOG: Array<{
   { resource: 'projects', action: 'read', description: 'View projects' },
   { resource: 'projects', action: 'write', description: 'Create and edit projects' },
   { resource: 'projects', action: 'delete', description: 'Delete projects' },
+  { resource: 'connector-registry', action: 'read', description: 'View the connector registry' },
+  {
+    resource: 'connector-registry',
+    action: 'write',
+    description: 'Register connectors, publish versions, manage parameters and templates',
+  },
+  {
+    resource: 'connector-registry',
+    action: 'delete',
+    description: 'Delete connectors, parameters, and templates',
+  },
 ];
 
 export function permissionKey(
@@ -87,12 +98,41 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'projects.read',
     'projects.write',
     'projects.delete',
+    'connector-registry.read',
+    'connector-registry.write',
+    'connector-registry.delete',
   ],
-  SUPORTE: ['companies.read', 'runtime.read', 'marketplace.review', 'audit.read', 'dashboard.view'],
-  CUSTOMER_SUCCESS: ['companies.read', 'companies.write', 'marketplace.review', 'dashboard.view'],
+  SUPORTE: [
+    'companies.read',
+    'runtime.read',
+    'marketplace.review',
+    'audit.read',
+    'dashboard.view',
+    'connector-registry.read',
+  ],
+  CUSTOMER_SUCCESS: [
+    'companies.read',
+    'companies.write',
+    'marketplace.review',
+    'dashboard.view',
+    'connector-registry.read',
+  ],
   COMERCIAL: ['companies.read', 'companies.write', 'billing.manage', 'dashboard.view'],
-  DEVOPS: ['runtime.read', 'runtime.restart', 'runtime.update', 'runtime.token', 'dashboard.view'],
-  AUDITOR: ['companies.read', 'runtime.read', 'audit.read', 'dashboard.view'],
+  DEVOPS: [
+    'runtime.read',
+    'runtime.restart',
+    'runtime.update',
+    'runtime.token',
+    'dashboard.view',
+    'connector-registry.read',
+  ],
+  AUDITOR: [
+    'companies.read',
+    'runtime.read',
+    'audit.read',
+    'dashboard.view',
+    'connector-registry.read',
+  ],
 };
 
 export function buildPermissionRecords(): Permission[] {

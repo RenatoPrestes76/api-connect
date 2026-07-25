@@ -37,6 +37,7 @@ import { registerAdminIdentityRoutes } from './routes/v1/admin-identity/index.js
 import { registerControlPlaneRoutes } from './routes/v1/control-plane/index.js';
 import { registerFleetRoutes } from './routes/v1/fleet/index.js';
 import { registerChaosRoutes } from './routes/v1/chaos/index.js';
+import { registerConnectorRegistryRoutes } from './routes/v1/connector-registry/index.js';
 import { wsHub } from './modules/fleet-ops/websocket-hub.js';
 import { healthHandler } from './routes/health.js';
 import { liveHandler, readyHandler } from './routes/live-ready.js';
@@ -244,6 +245,9 @@ export function createApiServer(
 
   // ATLAS FORTRESS — HA & ENTERPRISE RESILIENCE — Sprint 47
   registerChaosRoutes(router);
+
+  // CONNECTOR REGISTRY — Sprint 46.6
+  registerConnectorRegistryRoutes(router);
 
   const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
     withErrorBoundary(req, res, () => router.dispatch(req, res));

@@ -148,3 +148,70 @@ export interface PortalUser {
   createdAt: string;
   updatedAt: string;
 }
+
+// ─── Connector catalog (Sprint 46.6, read-only browse) ───────────────────────
+
+export type ConnectorCatalogCategory =
+  | 'DATABASE'
+  | 'ERP'
+  | 'REST_API'
+  | 'SOAP'
+  | 'FTP_SFTP'
+  | 'MESSAGING'
+  | 'FILES'
+  | 'WEBHOOK'
+  | 'CUSTOM';
+
+export interface ConnectorCatalogEntry {
+  id: string;
+  identifier: string;
+  name: string;
+  category: ConnectorCatalogCategory;
+  vendor: string;
+  description: string;
+  icon?: string;
+  currentVersion: string | null;
+  status: 'active' | 'beta' | 'deprecated';
+  minRuntimeVersion: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ConnectorCatalogParameterType =
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'secret'
+  | 'enum'
+  | 'url';
+
+export interface ConnectorCatalogParameter {
+  id: string;
+  connectorId: string;
+  key: string;
+  label: string;
+  type: ConnectorCatalogParameterType;
+  required: boolean;
+  defaultValue?: string | number | boolean;
+  validationPattern?: string;
+  options?: string[];
+  sensitive: boolean;
+  description?: string;
+  order: number;
+  requiredIf?: { key: string; equals: string | number | boolean };
+}
+
+export interface ConnectorCatalogTemplate {
+  id: string;
+  connectorId: string;
+  name: string;
+  description?: string;
+  values: Record<string, string | number | boolean>;
+  secretKeys: string[];
+}
+
+export interface ConnectorCatalogDetail {
+  connector: ConnectorCatalogEntry;
+  parameters: ConnectorCatalogParameter[];
+  templates: ConnectorCatalogTemplate[];
+}

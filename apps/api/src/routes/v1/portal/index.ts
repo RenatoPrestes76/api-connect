@@ -8,6 +8,7 @@ import { registerPortalEnvironmentRoutes } from './environments.js';
 import { registerPortalOrganizationRoutes } from './organization.js';
 import { registerPortalAuditRoutes } from './audit.js';
 import { registerGatewayRoutes } from './gateway/index.js';
+import { registerPortalConnectorCatalogRoutes } from './connector-catalog.js';
 
 export function registerPortalRoutes(router: {
   get: Function;
@@ -28,4 +29,6 @@ export function registerPortalRoutes(router: {
   registerPortalAuditRoutes(router);
   // Sprint 46.5 — API Gateway Foundation
   registerGatewayRoutes(router);
+  // Sprint 46.6 — Connector Registry (read-only browse for org members)
+  registerPortalConnectorCatalogRoutes(router);
 }

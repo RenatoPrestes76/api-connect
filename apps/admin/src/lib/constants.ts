@@ -15,6 +15,7 @@ import {
   Gauge,
   Activity,
   Settings,
+  Blocks,
 } from 'lucide-react';
 import type { MenuItem } from '@/types';
 
@@ -29,6 +30,7 @@ export const NAV_ITEMS: MenuItem[] = [
   { href: '/environments', label: 'Ambientes', icon: Layers },
   { href: '/runtimes', label: 'Runtimes', icon: ServerCog },
   { href: '/marketplace', label: 'Connectors', icon: Plug },
+  { href: '/connector-registry', label: 'Connector Registry', icon: Blocks },
   { href: '/deployments', label: 'Deploy Center', icon: Rocket },
   { href: '/feature-flags', label: 'Feature Flags', icon: ToggleLeft },
   { href: '/alerts', label: 'Alert Center', icon: ShieldAlert },

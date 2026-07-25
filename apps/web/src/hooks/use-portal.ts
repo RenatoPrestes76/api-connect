@@ -9,6 +9,7 @@ import type {
   Organization,
   EnvironmentKind,
   OnboardingStep,
+  ConnectorCatalogCategory,
 } from '@/types/portal';
 
 export function usePortalDashboard(tenantId?: string) {
@@ -207,6 +208,21 @@ export function useAuditLog(limit?: number) {
   return useQuery({
     queryKey: ['portal', 'audit-log', limit],
     queryFn: () => portalService.getAuditLog(limit),
+  });
+}
+
+export function useConnectorCatalog(category?: ConnectorCatalogCategory) {
+  return useQuery({
+    queryKey: ['portal', 'connector-catalog', category],
+    queryFn: () => portalService.listConnectorCatalog(category),
+  });
+}
+
+export function useConnectorCatalogEntry(id: string | null) {
+  return useQuery({
+    queryKey: ['portal', 'connector-catalog', 'detail', id],
+    queryFn: () => portalService.getConnectorCatalogEntry(id as string),
+    enabled: Boolean(id),
   });
 }
 

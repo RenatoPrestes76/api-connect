@@ -15,6 +15,9 @@ import type {
   EnvironmentKind,
   OrgInvite,
   OrgAuditEntry,
+  ConnectorCatalogCategory,
+  ConnectorCatalogEntry,
+  ConnectorCatalogDetail,
 } from '@/types/portal';
 
 export interface PortalSessionUser {
@@ -141,4 +144,13 @@ export const portalService = {
 
   removeUser: (id: string) =>
     portalFetch<{ deleted: boolean }>(`/users/${id}`, { method: 'DELETE' }),
+
+  // Connector catalog (Sprint 46.6, read-only browse)
+  listConnectorCatalog: (category?: ConnectorCatalogCategory) =>
+    portalFetch<{ total: number; connectors: ConnectorCatalogEntry[] }>(
+      `/connector-catalog${category ? `?category=${category}` : ''}`
+    ),
+
+  getConnectorCatalogEntry: (id: string) =>
+    portalFetch<ConnectorCatalogDetail>(`/connector-catalog/${id}`),
 };
