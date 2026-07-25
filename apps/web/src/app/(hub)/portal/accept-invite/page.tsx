@@ -1,10 +1,10 @@
 'use client';
-import { useState, type FormEvent } from 'react';
+import { Suspense, useState, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useInvite, useAcceptInvite } from '@/hooks/use-portal';
 import { PageLoading } from '@/components/common/loading-state';
 
-export default function AcceptInvitePage() {
+function AcceptInviteForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -112,5 +112,13 @@ export default function AcceptInvitePage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function AcceptInvitePage() {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <AcceptInviteForm />
+    </Suspense>
   );
 }
