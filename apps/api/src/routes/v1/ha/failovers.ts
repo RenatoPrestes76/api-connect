@@ -1,17 +1,17 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { haStore } from '../../../modules/ha/ha-store.js';
 import { failoverEngine } from '../../../modules/ha/failover-engine.js';
 
-export function registerHaFailoverRoutes(router: { get: Function; post: Function }): void {
-  router.get('/api/v1/ha/failovers', (ctx: RouteContext, res: ServerResponse) => {
+export function registerHaFailoverRoutes(router: Router): void {
+  router.get('/api/v1/ha/failovers', async (ctx: RouteContext, res: ServerResponse) => {
     const limit = Math.min(parseInt(ctx.query.get('limit') ?? '50', 10), 200);
     const events = haStore.getFailoverEvents(limit);
     json(res, { total: events.length, events });
   });
 
-  router.post('/api/v1/ha/failover', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/ha/failover', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { fromNodeId, toNodeId, reason = 'Manual failover initiated by admin' } = body;
 

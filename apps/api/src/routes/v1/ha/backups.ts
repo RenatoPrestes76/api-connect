@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { haStore } from '../../../modules/ha/ha-store.js';
 import { backupService } from '../../../modules/ha/backup-service.js';
@@ -7,8 +7,8 @@ import type { BackupStatus } from '../../../modules/ha/types.js';
 
 const VALID_STATUSES: BackupStatus[] = ['completed', 'failed', 'in_progress'];
 
-export function registerHaBackupRoutes(router: { get: Function; post: Function }): void {
-  router.get('/api/v1/ha/backups', (ctx: RouteContext, res: ServerResponse) => {
+export function registerHaBackupRoutes(router: Router): void {
+  router.get('/api/v1/ha/backups', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = ctx.query.get('tenantId') ?? undefined;
     const status = ctx.query.get('status') ?? undefined;
 
@@ -26,7 +26,7 @@ export function registerHaBackupRoutes(router: { get: Function; post: Function }
     json(res, { total: backups.length, totalSizeBytes: totalSize, backups });
   });
 
-  router.post('/api/v1/ha/backup', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/ha/backup', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { tenantId, type = 'full' } = body;
 
@@ -39,7 +39,7 @@ export function registerHaBackupRoutes(router: { get: Function; post: Function }
     json(res, record, 201);
   });
 
-  router.post('/api/v1/ha/restore', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/ha/restore', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { backupId, tenantId, environment = 'staging' } = body;
 

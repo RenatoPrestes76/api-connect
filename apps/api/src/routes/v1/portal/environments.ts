@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { portalIdentityStore } from '../../../modules/portal-identity/portal-identity-store.js';
 import { requirePortalPermission } from '../../../middleware/portal-auth.js';
@@ -14,11 +14,7 @@ interface CreateEnvironmentBody {
   timezone?: string;
 }
 
-export function registerPortalEnvironmentRoutes(router: {
-  get: Function;
-  post: Function;
-  delete: Function;
-}): void {
+export function registerPortalEnvironmentRoutes(router: Router): void {
   router.get(
     '/api/v1/portal/environments',
     requirePortalPermission('environments.read')(async (ctx: RouteContext, res: ServerResponse) => {

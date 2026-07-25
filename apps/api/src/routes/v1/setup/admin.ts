@@ -1,11 +1,11 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { onboardingStore } from '../../../modules/onboarding/onboarding-store.js';
 import type { AdminData } from '../../../modules/onboarding/types.js';
 
-export function registerSetupAdminRoute(router: { post: Function }): void {
-  router.post('/api/v1/setup/admin', (ctx: RouteContext, res: ServerResponse) => {
+export function registerSetupAdminRoute(router: Router): void {
+  router.post('/api/v1/setup/admin', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { sessionId, name, email, phone, mfaEnabled = false, password } = body;
 

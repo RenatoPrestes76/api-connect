@@ -1,18 +1,18 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { heliosStore } from '../../../modules/helios/helios-store.js';
 import { tenantOf, assertTenantAccess } from './util.js';
 
-export function registerReplayRoutes(router: { get: Function; post: Function }): void {
-  router.get('/api/v1/helios/replay', (ctx: RouteContext, res: ServerResponse) => {
+export function registerReplayRoutes(router: Router): void {
+  router.get('/api/v1/helios/replay', async (ctx: RouteContext, res: ServerResponse) => {
     const status = ctx.query.get('status') ?? undefined;
     const tenantId = tenantOf(ctx);
     const jobs = heliosStore.getReplayJobs({ status, tenantId });
     json(res, { jobs, total: jobs.length });
   });
 
-  router.get('/api/v1/helios/replay/:id', (ctx: RouteContext, res: ServerResponse) => {
+  router.get('/api/v1/helios/replay/:id', async (ctx: RouteContext, res: ServerResponse) => {
     const id = ctx.params?.id as string;
     const job = heliosStore.getReplayJobById(id);
     if (!job || !assertTenantAccess(job.tenantId, ctx))

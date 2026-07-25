@@ -1,10 +1,10 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json } from '../../../http/router.js';
 import { fleetOpsStore } from '../../../modules/fleet-ops/fleet-ops-store.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
 
-export function registerFleetDashboardRoutes(router: { get: Function }): void {
+export function registerFleetDashboardRoutes(router: Router): void {
   // GET /admin/fleet — Fleet Dashboard overview
   router.get(
     '/admin/fleet',

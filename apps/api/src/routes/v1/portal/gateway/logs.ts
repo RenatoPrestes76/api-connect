@@ -1,10 +1,10 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../../http/router.js';
+import type { RouteContext, Router } from '../../../../http/router.js';
 import { json } from '../../../../http/router.js';
 import { gatewayStore } from '../../../../modules/gateway/gateway-store.js';
 import { requirePortalPermission } from '../../../../middleware/portal-auth.js';
 
-export function registerGatewayLogRoutes(router: { get: Function }): void {
+export function registerGatewayLogRoutes(router: Router): void {
   router.get(
     '/api/v1/portal/gateway/logs',
     requirePortalPermission('api-logs.read')(async (ctx: RouteContext, res: ServerResponse) => {

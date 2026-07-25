@@ -10,13 +10,8 @@ import { registerPortalAuditRoutes } from './audit.js';
 import { registerGatewayRoutes } from './gateway/index.js';
 import { registerPortalConnectorCatalogRoutes } from './connector-catalog.js';
 
-export function registerPortalRoutes(router: {
-  get: Function;
-  post: Function;
-  put: Function;
-  patch: Function;
-  delete: Function;
-}): void {
+import type { Router } from '../../../http/router.js';
+export function registerPortalRoutes(router: Router): void {
   registerPortalDashboardRoutes(router);
   registerSupportRoutes(router);
   registerPortalConnectorRoutes(router);

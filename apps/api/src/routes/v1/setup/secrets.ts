@@ -1,13 +1,13 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { onboardingStore } from '../../../modules/onboarding/onboarding-store.js';
 import type { SecretsData, SecretsProvider } from '../../../modules/onboarding/types.js';
 
 const VALID_PROVIDERS: SecretsProvider[] = ['vault', 'aws', 'azure', 'gcp', 'internal'];
 
-export function registerSetupSecretsRoute(router: { post: Function }): void {
-  router.post('/api/v1/setup/secrets', (ctx: RouteContext, res: ServerResponse) => {
+export function registerSetupSecretsRoute(router: Router): void {
+  router.post('/api/v1/setup/secrets', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { sessionId, provider } = body;
 

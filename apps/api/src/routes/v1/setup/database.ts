@@ -1,13 +1,13 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { onboardingStore } from '../../../modules/onboarding/onboarding-store.js';
 import type { DatabaseData, DatabaseType } from '../../../modules/onboarding/types.js';
 
 const VALID_TYPES: DatabaseType[] = ['postgresql', 'mysql', 'sqlserver', 'oracle', 'supabase'];
 
-export function registerSetupDatabaseRoute(router: { post: Function }): void {
-  router.post('/api/v1/setup/database', (ctx: RouteContext, res: ServerResponse) => {
+export function registerSetupDatabaseRoute(router: Router): void {
+  router.post('/api/v1/setup/database', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const {
       sessionId,

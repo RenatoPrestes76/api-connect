@@ -1,10 +1,10 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { onboardingStore } from '../../../modules/onboarding/onboarding-store.js';
 
-export function registerSetupStatusRoute(router: { get: Function }): void {
-  router.get('/api/v1/setup/status', (ctx: RouteContext, res: ServerResponse) => {
+export function registerSetupStatusRoute(router: Router): void {
+  router.get('/api/v1/setup/status', async (ctx: RouteContext, res: ServerResponse) => {
     const sessionId = ctx.query.get('sessionId');
     if (!sessionId) {
       return apiError(res, '"sessionId" query param is required', 400, 'MISSING_FIELDS');

@@ -6,12 +6,8 @@ import { registerSloRoutes } from './slo.js';
 import { registerDrRoutes } from './dr.js';
 import { registerCircuitBreakersRoutes } from './circuit-breakers.js';
 
-export function registerOpsRoutes(router: {
-  get: Function;
-  post: Function;
-  put: Function;
-  delete: Function;
-}): void {
+import type { Router } from '../../../http/router.js';
+export function registerOpsRoutes(router: Router): void {
   registerHealthRoutes(router);
   registerDashboardRoutes(router);
   registerQueuesRoutes(router);

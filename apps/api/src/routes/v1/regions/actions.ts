@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { regionsStore } from '../../../modules/regions/regions-store.js';
 import type {
@@ -12,9 +12,9 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
-export function registerRegionActionRoutes(router: { post: Function }): void {
+export function registerRegionActionRoutes(router: Router): void {
   // POST /api/v1/regions/failover
-  router.post('/api/v1/regions/failover', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/regions/failover', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { tenantId, fromRegion, toRegion, reason = 'Manual failover' } = body;
 
@@ -57,7 +57,7 @@ export function registerRegionActionRoutes(router: { post: Function }): void {
   });
 
   // POST /api/v1/regions/failover/auto — picks the nearest eligible active region automatically.
-  router.post('/api/v1/regions/failover/auto', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/regions/failover/auto', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { tenantId, reason = 'Automatic geographic failover' } = body;
 
@@ -78,7 +78,7 @@ export function registerRegionActionRoutes(router: { post: Function }): void {
   });
 
   // POST /api/v1/regions/migrate-tenant
-  router.post('/api/v1/regions/migrate-tenant', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/regions/migrate-tenant', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { tenantId, targetRegion, reason = 'Planned migration' } = body;
 
@@ -142,7 +142,7 @@ export function registerRegionActionRoutes(router: { post: Function }): void {
   });
 
   // POST /api/v1/regions/sync
-  router.post('/api/v1/regions/sync', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/regions/sync', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { sourceRegion, targetRegion, scope = 'full' } = body;
 

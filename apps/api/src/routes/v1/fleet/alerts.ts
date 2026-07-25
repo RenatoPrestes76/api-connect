@@ -1,11 +1,11 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { fleetOpsStore } from '../../../modules/fleet-ops/fleet-ops-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
 
-export function registerAlertRoutes(router: { get: Function; post: Function }): void {
+export function registerAlertRoutes(router: Router): void {
   router.get(
     '/admin/fleet/alerts',
     requirePermission('dashboard.view')(async (ctx: RouteContext, res: ServerResponse) => {

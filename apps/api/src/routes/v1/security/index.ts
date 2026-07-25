@@ -10,12 +10,8 @@ import { registerRiskRoutes } from './risk.js';
 import { registerCertificatesRoutes } from './certificates.js';
 import { registerDashboardRoutes } from './dashboard.js';
 
-export function registerSecurityRoutes(router: {
-  get: Function;
-  post: Function;
-  put: Function;
-  delete: Function;
-}): void {
+import type { Router } from '../../../http/router.js';
+export function registerSecurityRoutes(router: Router): void {
   registerSecretsRoutes(router);
   registerSecretRotationRoutes(router);
   registerMfaRoutes(router);

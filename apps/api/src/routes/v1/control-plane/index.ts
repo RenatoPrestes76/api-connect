@@ -15,13 +15,9 @@ import { ErpIntegrationRepository } from '../../../modules/erp-integration/erp-i
 import { prisma } from '../../../services/prisma.js';
 import { OrganizationService } from '../../../services/organization.service.js';
 
+import type { Router } from '../../../http/router.js';
 export function registerControlPlaneRoutes(
-  router: {
-    get: Function;
-    post: Function;
-    patch: Function;
-    delete: Function;
-  },
+  router: Router,
   erpIntegrationDeps?: ErpIntegrationInfrastructureDeps
 ): void {
   registerTenantRoutes(router);

@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { operationsStore } from '../../../modules/operations/operations-store.js';
 import { healthEngine } from '../../../modules/operations/health-engine.js';
@@ -27,11 +27,11 @@ function buildResult(
   };
 }
 
-export function registerOperationsActionsRoutes(router: { post: Function }): void {
+export function registerOperationsActionsRoutes(router: Router): void {
   // POST /restart-agent
   router.post(
     '/api/v1/operations/actions/restart-agent',
-    (ctx: RouteContext, res: ServerResponse) => {
+    async (ctx: RouteContext, res: ServerResponse) => {
       const body = (ctx.body as any) ?? {};
       const { tenantId, agentId } = body;
 
@@ -75,56 +75,62 @@ export function registerOperationsActionsRoutes(router: { post: Function }): voi
   );
 
   // POST /retry
-  router.post('/api/v1/operations/actions/retry', (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
-    const { tenantId, connectorId, jobId } = body;
+  router.post(
+    '/api/v1/operations/actions/retry',
+    async (ctx: RouteContext, res: ServerResponse) => {
+      const body = (ctx.body as any) ?? {};
+      const { tenantId, connectorId, jobId } = body;
 
-    if (!tenantId) return apiError(res, '"tenantId" is required', 400, 'MISSING_FIELDS');
-    if (!connectorId && !jobId)
-      return apiError(res, '"connectorId" or "jobId" is required', 400, 'MISSING_FIELDS');
+      if (!tenantId) return apiError(res, '"tenantId" is required', 400, 'MISSING_FIELDS');
+      if (!connectorId && !jobId)
+        return apiError(res, '"connectorId" or "jobId" is required', 400, 'MISSING_FIELDS');
 
-    const tenant = operationsStore.getTenant(tenantId);
-    if (!tenant) return apiError(res, 'Tenant not found', 404, 'NOT_FOUND');
+      const tenant = operationsStore.getTenant(tenantId);
+      if (!tenant) return apiError(res, 'Tenant not found', 404, 'NOT_FOUND');
 
-    const target = connectorId ?? jobId;
-    operationsStore.addEvent({
-      tenantId,
-      event: 'retry.initiated',
-      severity: 'info',
-      payload: { target, retriedBy: 'admin' },
-    });
+      const target = connectorId ?? jobId;
+      operationsStore.addEvent({
+        tenantId,
+        event: 'retry.initiated',
+        severity: 'info',
+        payload: { target, retriedBy: 'admin' },
+      });
 
-    const result = buildResult('retry', target, tenantId, `Retry initiated for ${target}`);
-    operationsStore.addAction(result);
-    json(res, result);
-  });
+      const result = buildResult('retry', target, tenantId, `Retry initiated for ${target}`);
+      operationsStore.addAction(result);
+      json(res, result);
+    }
+  );
 
   // POST /run-health
-  router.post('/api/v1/operations/actions/run-health', (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
-    const { tenantId } = body;
+  router.post(
+    '/api/v1/operations/actions/run-health',
+    async (ctx: RouteContext, res: ServerResponse) => {
+      const body = (ctx.body as any) ?? {};
+      const { tenantId } = body;
 
-    const checks = healthEngine.runHealthCheck(tenantId ?? undefined);
+      const checks = healthEngine.runHealthCheck(tenantId ?? undefined);
 
-    operationsStore.addEvent({
-      tenantId: tenantId ?? 'system',
-      event: 'health.check.ran',
-      severity: 'info',
-      payload: { checksRan: checks.length, tenantId: tenantId ?? 'all' },
-    });
+      operationsStore.addEvent({
+        tenantId: tenantId ?? 'system',
+        event: 'health.check.ran',
+        severity: 'info',
+        payload: { checksRan: checks.length, tenantId: tenantId ?? 'all' },
+      });
 
-    const result = buildResult(
-      'run-health',
-      tenantId ?? 'all',
-      tenantId ?? 'system',
-      `Health check completed: ${checks.length} components checked`
-    );
-    operationsStore.addAction(result);
-    json(res, { ...result, checksRan: checks.length, checks });
-  });
+      const result = buildResult(
+        'run-health',
+        tenantId ?? 'all',
+        tenantId ?? 'system',
+        `Health check completed: ${checks.length} components checked`
+      );
+      operationsStore.addAction(result);
+      json(res, { ...result, checksRan: checks.length, checks });
+    }
+  );
 
   // POST /sync
-  router.post('/api/v1/operations/actions/sync', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/operations/actions/sync', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { tenantId, scope = 'full' } = body;
 

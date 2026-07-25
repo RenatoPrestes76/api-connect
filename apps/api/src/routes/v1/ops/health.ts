@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json } from '../../../http/router.js';
 import { HealthChecker, makeSimulatedCheck } from '@seltriva/titan';
 import { titanStore } from '../../../modules/titan/titan-store.js';
@@ -23,12 +23,7 @@ checker.register(
   makeSimulatedCheck('external-erp', 5, 'degraded', 'Response time elevated: 420ms avg')
 );
 
-export function registerHealthRoutes(router: {
-  get: Function;
-  post: Function;
-  put: Function;
-  delete: Function;
-}): void {
+export function registerHealthRoutes(router: Router): void {
   router.get('/api/v1/ops/health', async (_ctx: RouteContext, res: ServerResponse) => {
     const report = await checker.run();
     const status = report.status === 'unhealthy' ? 503 : report.status === 'degraded' ? 207 : 200;

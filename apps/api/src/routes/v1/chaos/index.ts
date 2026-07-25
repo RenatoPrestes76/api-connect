@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { chaosRunner } from '../../../modules/chaos/chaos-runner.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
@@ -15,7 +15,7 @@ const VALID_SCENARIOS: ChaosScenarioType[] = [
   'autoscaler_load_spike',
 ];
 
-export function registerChaosRoutes(router: { get: Function; post: Function }): void {
+export function registerChaosRoutes(router: Router): void {
   router.get(
     '/admin/chaos/history',
     requirePermission('settings.manage')(async (ctx: RouteContext, res: ServerResponse) => {

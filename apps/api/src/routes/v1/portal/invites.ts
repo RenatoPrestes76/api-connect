@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { portalIdentityStore } from '../../../modules/portal-identity/portal-identity-store.js';
 import { hashPassword } from '../../../modules/portal-identity/password.js';
@@ -19,7 +19,7 @@ interface AcceptBody {
   password?: string;
 }
 
-export function registerPortalInviteRoutes(router: { get: Function; post: Function }): void {
+export function registerPortalInviteRoutes(router: Router): void {
   router.get(
     '/api/v1/portal/invites',
     requirePortalPermission('invites.read')(async (ctx: RouteContext, res: ServerResponse) => {

@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../../http/router.js';
+import type { RouteContext, Router } from '../../../../http/router.js';
 import { json, apiError } from '../../../../http/router.js';
 import { gatewayStore } from '../../../../modules/gateway/gateway-store.js';
 import { portalIdentityStore } from '../../../../modules/portal-identity/portal-identity-store.js';
@@ -14,11 +14,7 @@ interface UpsertRuleBody {
   limit?: number;
 }
 
-export function registerGatewayRateLimitRoutes(router: {
-  get: Function;
-  post: Function;
-  delete: Function;
-}): void {
+export function registerGatewayRateLimitRoutes(router: Router): void {
   router.get(
     '/api/v1/portal/gateway/rate-limits',
     requirePortalPermission('rate-limits.read')(async (ctx: RouteContext, res: ServerResponse) => {

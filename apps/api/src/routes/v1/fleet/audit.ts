@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json } from '../../../http/router.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
@@ -9,7 +9,7 @@ import { requirePermission } from '../../../middleware/admin-auth.js';
  * modules/admin-identity), presented under the fleet namespace for the Audit
  * Timeline UI. Not a separate AuditTimeline model/store — one audit trail.
  */
-export function registerFleetAuditRoutes(router: { get: Function }): void {
+export function registerFleetAuditRoutes(router: Router): void {
   router.get(
     '/admin/fleet/audit',
     requirePermission('audit.read')(async (ctx: RouteContext, res: ServerResponse) => {

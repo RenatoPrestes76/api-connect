@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { portalIdentityStore } from '../../../modules/portal-identity/portal-identity-store.js';
 import { hashPassword, verifyPassword } from '../../../modules/portal-identity/password.js';
@@ -22,7 +22,7 @@ interface LoginBody {
   password?: string;
 }
 
-export function registerPortalAuthRoutes(router: { get: Function; post: Function }): void {
+export function registerPortalAuthRoutes(router: Router): void {
   router.post('/api/v1/portal/auth/register', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body ?? {}) as RegisterBody;
     const { name, razaoSocial, cnpj, internalCode, plan, owner } = body;

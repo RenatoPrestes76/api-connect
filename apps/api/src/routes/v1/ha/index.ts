@@ -5,7 +5,8 @@ import { registerHaRecoveryRoutes } from './recovery.js';
 import { registerHaElectionRoutes } from './election.js';
 import { registerHaLoadBalancerRoutes } from './load-balancer.js';
 
-export function registerHaRoutes(router: { get: Function; post: Function }): void {
+import type { Router } from '../../../http/router.js';
+export function registerHaRoutes(router: Router): void {
   registerHaClusterRoutes(router);
   registerHaFailoverRoutes(router);
   registerHaBackupRoutes(router);

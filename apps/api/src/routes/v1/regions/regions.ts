@@ -1,14 +1,14 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { regionsStore } from '../../../modules/regions/regions-store.js';
 import type { RegionStatus } from '../../../modules/regions/types.js';
 
 const VALID_STATUSES: RegionStatus[] = ['active', 'degraded', 'offline', 'maintenance'];
 
-export function registerRegionListRoutes(router: { get: Function }): void {
+export function registerRegionListRoutes(router: Router): void {
   // GET /api/v1/regions
-  router.get('/api/v1/regions', (ctx: RouteContext, res: ServerResponse) => {
+  router.get('/api/v1/regions', async (ctx: RouteContext, res: ServerResponse) => {
     const status = ctx.query.get('status') ?? undefined;
     const continent = ctx.query.get('continent') ?? undefined;
 
@@ -25,12 +25,12 @@ export function registerRegionListRoutes(router: { get: Function }): void {
   });
 
   // GET /api/v1/regions/status
-  router.get('/api/v1/regions/status', (_ctx: RouteContext, res: ServerResponse) => {
+  router.get('/api/v1/regions/status', async (_ctx: RouteContext, res: ServerResponse) => {
     json(res, regionsStore.getStatusSummary());
   });
 
   // GET /api/v1/regions/health
-  router.get('/api/v1/regions/health', (ctx: RouteContext, res: ServerResponse) => {
+  router.get('/api/v1/regions/health', async (ctx: RouteContext, res: ServerResponse) => {
     const status = ctx.query.get('status') ?? undefined;
     const continent = ctx.query.get('continent') ?? undefined;
 
@@ -66,7 +66,7 @@ export function registerRegionListRoutes(router: { get: Function }): void {
   });
 
   // GET /api/v1/regions/nearest?lat=..&lon=.. — real haversine-distance nearest-region selection.
-  router.get('/api/v1/regions/nearest', (ctx: RouteContext, res: ServerResponse) => {
+  router.get('/api/v1/regions/nearest', async (ctx: RouteContext, res: ServerResponse) => {
     const latParam = ctx.query.get('lat');
     const lonParam = ctx.query.get('lon');
     if (latParam === null || lonParam === null) {

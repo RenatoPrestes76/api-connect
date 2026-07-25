@@ -1,16 +1,12 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { controlPlaneStore } from '../../../modules/control-plane/control-plane-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
 import type { Environment } from '../../../modules/control-plane/types.js';
 
-export function registerEnvironmentRoutes(router: {
-  get: Function;
-  post: Function;
-  delete: Function;
-}): void {
+export function registerEnvironmentRoutes(router: Router): void {
   router.get(
     '/admin/control-plane/environments',
     requirePermission('companies.read')(async (ctx: RouteContext, res: ServerResponse) => {

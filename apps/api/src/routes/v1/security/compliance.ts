@@ -1,11 +1,11 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import type { DataRequestType } from '@seltriva/aegis';
 
-export function registerComplianceRoutes(router: { get: Function; post: Function }): void {
+export function registerComplianceRoutes(router: Router): void {
   // GET /api/v1/security/compliance
   router.get('/api/v1/security/compliance', async (ctx: RouteContext, res: ServerResponse) => {
     const framework = ctx.query.get('framework') || undefined;

@@ -1,13 +1,13 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { operationsStore } from '../../../modules/operations/operations-store.js';
 import type { SlaPeriod } from '../../../modules/operations/types.js';
 
 const VALID_PERIODS: SlaPeriod[] = ['today', '7d', '30d', '12m'];
 
-export function registerOperationsSlaRoute(router: { get: Function }): void {
-  router.get('/api/v1/operations/sla', (ctx: RouteContext, res: ServerResponse) => {
+export function registerOperationsSlaRoute(router: Router): void {
+  router.get('/api/v1/operations/sla', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = ctx.query.get('tenantId') ?? undefined;
     const period = (ctx.query.get('period') ?? 'today') as SlaPeriod;
 

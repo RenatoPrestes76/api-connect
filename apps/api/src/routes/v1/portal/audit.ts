@@ -1,10 +1,10 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json } from '../../../http/router.js';
 import { portalIdentityStore } from '../../../modules/portal-identity/portal-identity-store.js';
 import { requirePortalPermission } from '../../../middleware/portal-auth.js';
 
-export function registerPortalAuditRoutes(router: { get: Function }): void {
+export function registerPortalAuditRoutes(router: Router): void {
   router.get(
     '/api/v1/portal/audit-log',
     requirePortalPermission('audit.read')(async (ctx: RouteContext, res: ServerResponse) => {

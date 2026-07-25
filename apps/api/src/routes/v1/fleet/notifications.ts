@@ -1,12 +1,12 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { fleetOpsStore } from '../../../modules/fleet-ops/fleet-ops-store.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
 import { wsHub } from '../../../modules/fleet-ops/websocket-hub.js';
 import type { NotificationChannel } from '../../../modules/fleet-ops/types.js';
 
-export function registerNotificationRoutes(router: { get: Function; post: Function }): void {
+export function registerNotificationRoutes(router: Router): void {
   router.get(
     '/admin/fleet/notifications',
     requirePermission('dashboard.view')(async (ctx: RouteContext, res: ServerResponse) => {

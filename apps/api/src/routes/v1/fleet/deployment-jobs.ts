@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { fleetOpsStore } from '../../../modules/fleet-ops/fleet-ops-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
@@ -8,7 +8,7 @@ import type { DeploymentMode, DeploymentStrategy } from '../../../modules/fleet-
 
 const VALID_STRATEGIES: DeploymentStrategy[] = ['ROLLING', 'BLUE_GREEN', 'CANARY'];
 
-export function registerDeploymentJobRoutes(router: { get: Function; post: Function }): void {
+export function registerDeploymentJobRoutes(router: Router): void {
   // GET /admin/fleet/deployments — DeploymentJob list (approval/scheduling wrapper around
   // /admin/control-plane/deployments, which stays the low-level version-rollout record).
   router.get(

@@ -1,15 +1,11 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import { generateKey, generateNonce } from '@seltriva/aegis';
 
-export function registerSsoRoutes(router: {
-  get: Function;
-  post: Function;
-  delete: Function;
-}): void {
+export function registerSsoRoutes(router: Router): void {
   // GET /api/v1/security/sso
   router.get('/api/v1/security/sso', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = requireTenantId(ctx);

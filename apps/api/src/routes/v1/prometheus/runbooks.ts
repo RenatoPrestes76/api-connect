@@ -1,17 +1,17 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { prometheusStore } from '../../../modules/prometheus/prometheus-store.js';
 
-export function registerRunbookRoutes(router: { get: Function; post: Function }): void {
-  router.get('/api/v1/prometheus/runbooks', (ctx: RouteContext, res: ServerResponse) => {
+export function registerRunbookRoutes(router: Router): void {
+  router.get('/api/v1/prometheus/runbooks', async (ctx: RouteContext, res: ServerResponse) => {
     const mode = ctx.query.get('mode') ?? undefined;
     const trigger = ctx.query.get('trigger') ?? undefined;
     const runbooks = prometheusStore.getRunbooks({ mode, trigger });
     json(res, { runbooks, total: runbooks.length });
   });
 
-  router.get('/api/v1/prometheus/runbooks/:id', (ctx: RouteContext, res: ServerResponse) => {
+  router.get('/api/v1/prometheus/runbooks/:id', async (ctx: RouteContext, res: ServerResponse) => {
     const id = ctx.params?.id as string;
     const runbook = prometheusStore.getRunbookById(id);
     if (!runbook) return apiError(res, 'Runbook not found', 404, 'RUNBOOK_NOT_FOUND');
@@ -20,7 +20,7 @@ export function registerRunbookRoutes(router: { get: Function; post: Function })
 
   router.post(
     '/api/v1/prometheus/runbooks/:id/execute',
-    (ctx: RouteContext, res: ServerResponse) => {
+    async (ctx: RouteContext, res: ServerResponse) => {
       const id = ctx.params?.id as string;
       const runbook = prometheusStore.executeRunbook(id);
       if (!runbook) return apiError(res, 'Runbook not found', 404, 'RUNBOOK_NOT_FOUND');

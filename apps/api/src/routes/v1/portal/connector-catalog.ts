@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { connectorsStore } from '../../../modules/connectors/connectors-store.js';
 import { requirePortalAuth } from '../../../middleware/portal-auth.js';
@@ -12,7 +12,7 @@ import type { ConnectorCategory } from '../../../modules/connectors/types.js';
  * (admin-identity, see routes/v1/connector-registry/) can register
  * connectors or publish versions.
  */
-export function registerPortalConnectorCatalogRoutes(router: { get: Function }): void {
+export function registerPortalConnectorCatalogRoutes(router: Router): void {
   router.get(
     '/api/v1/portal/connector-catalog',
     requirePortalAuth(async (ctx: RouteContext, res: ServerResponse) => {

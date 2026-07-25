@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
@@ -11,11 +11,7 @@ import {
   base32Decode,
 } from '@seltriva/aegis';
 
-export function registerMfaRoutes(router: {
-  get: Function;
-  post: Function;
-  delete: Function;
-}): void {
+export function registerMfaRoutes(router: Router): void {
   // GET /api/v1/security/mfa/status
   router.get('/api/v1/security/mfa/status', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = requireTenantId(ctx);

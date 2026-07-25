@@ -1,15 +1,10 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json } from '../../../http/router.js';
 import { titanStore } from '../../../modules/titan/titan-store.js';
 
-export function registerDashboardRoutes(router: {
-  get: Function;
-  post: Function;
-  put: Function;
-  delete: Function;
-}): void {
-  router.get('/api/v1/ops/dashboard', (_ctx: RouteContext, res: ServerResponse) => {
+export function registerDashboardRoutes(router: Router): void {
+  router.get('/api/v1/ops/dashboard', async (_ctx: RouteContext, res: ServerResponse) => {
     const slos = titanStore.listSlos();
     const queueStats = titanStore.getQueueStats();
     const circuits = titanStore.circuits.list();

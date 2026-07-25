@@ -1,10 +1,10 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { healthEngine } from '../../../modules/operations/health-engine.js';
 
-export function registerOperationsHealthRoute(router: { get: Function }): void {
-  router.get('/api/v1/operations/health', (ctx: RouteContext, res: ServerResponse) => {
+export function registerOperationsHealthRoute(router: Router): void {
+  router.get('/api/v1/operations/health', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = ctx.query.get('tenantId') ?? undefined;
 
     if (tenantId) {

@@ -1,11 +1,11 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { heliosStore } from '../../../modules/helios/helios-store.js';
 import { parseLimit, tenantOf, assertTenantAccess } from './util.js';
 
-export function registerBusRoutes(router: { get: Function; post: Function }): void {
-  router.get('/api/v1/helios/bus/topics', (ctx: RouteContext, res: ServerResponse) => {
+export function registerBusRoutes(router: Router): void {
+  router.get('/api/v1/helios/bus/topics', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = tenantOf(ctx);
     const status = ctx.query.get('status') ?? undefined;
     const limit = ctx.query.get('limit') ? parseLimit(ctx.query.get('limit'), 200) : undefined;
@@ -13,7 +13,7 @@ export function registerBusRoutes(router: { get: Function; post: Function }): vo
     json(res, { topics, total: topics.length });
   });
 
-  router.get('/api/v1/helios/bus/topics/:id', (ctx: RouteContext, res: ServerResponse) => {
+  router.get('/api/v1/helios/bus/topics/:id', async (ctx: RouteContext, res: ServerResponse) => {
     const id = ctx.params?.id as string;
     const topic = heliosStore.getTopicById(id);
     if (!topic || !assertTenantAccess(topic.tenantId, ctx))
@@ -40,17 +40,20 @@ export function registerBusRoutes(router: { get: Function; post: Function }): vo
     }
   );
 
-  router.get('/api/v1/helios/bus/topics/:id/messages', (ctx: RouteContext, res: ServerResponse) => {
-    const id = ctx.params?.id as string;
-    const limit = parseLimit(ctx.query.get('limit'), 20);
-    const topic = heliosStore.getTopicById(id);
-    if (!topic || !assertTenantAccess(topic.tenantId, ctx))
-      return apiError(res, 'Topic not found', 404, 'TOPIC_NOT_FOUND');
-    const messages = heliosStore.getTopicMessages(id, limit);
-    json(res, { messages, total: messages.length });
-  });
+  router.get(
+    '/api/v1/helios/bus/topics/:id/messages',
+    async (ctx: RouteContext, res: ServerResponse) => {
+      const id = ctx.params?.id as string;
+      const limit = parseLimit(ctx.query.get('limit'), 20);
+      const topic = heliosStore.getTopicById(id);
+      if (!topic || !assertTenantAccess(topic.tenantId, ctx))
+        return apiError(res, 'Topic not found', 404, 'TOPIC_NOT_FOUND');
+      const messages = heliosStore.getTopicMessages(id, limit);
+      json(res, { messages, total: messages.length });
+    }
+  );
 
-  router.get('/api/v1/helios/mesh/clusters', (_ctx: RouteContext, res: ServerResponse) => {
+  router.get('/api/v1/helios/mesh/clusters', async (_ctx: RouteContext, res: ServerResponse) => {
     const clusters = heliosStore.getClusters();
     json(res, { clusters, total: clusters.length });
   });

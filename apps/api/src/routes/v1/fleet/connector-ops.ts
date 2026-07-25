@@ -1,16 +1,12 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { fleetOpsStore } from '../../../modules/fleet-ops/fleet-ops-store.js';
 import { controlPlaneStore } from '../../../modules/control-plane/control-plane-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
 
-export function registerConnectorOpsRoutes(router: {
-  get: Function;
-  post: Function;
-  delete: Function;
-}): void {
+export function registerConnectorOpsRoutes(router: Router): void {
   router.post(
     '/admin/fleet/connectors/:id/install',
     requirePermission('marketplace.publish')(async (ctx: RouteContext, res: ServerResponse) => {

@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
@@ -37,12 +37,7 @@ function auditSecretEvent(
   });
 }
 
-export function registerSecretsRoutes(router: {
-  get: Function;
-  post: Function;
-  put: Function;
-  delete: Function;
-}): void {
+export function registerSecretsRoutes(router: Router): void {
   // GET /api/v1/security/secrets
   router.get('/api/v1/security/secrets', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = requireTenantId(ctx);

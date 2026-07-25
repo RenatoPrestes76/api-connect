@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { connectorsStore } from '../../../modules/connectors/connectors-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
@@ -14,7 +14,7 @@ interface PublishVersionBody {
   dependencies?: string[];
 }
 
-export function registerConnectorVersionRoutes(router: { get: Function; post: Function }): void {
+export function registerConnectorVersionRoutes(router: Router): void {
   router.get(
     '/admin/connector-registry/connectors/:id/versions',
     requirePermission('connector-registry.read')(async (ctx: RouteContext, res: ServerResponse) => {

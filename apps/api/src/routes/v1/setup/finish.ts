@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { onboardingStore } from '../../../modules/onboarding/onboarding-store.js';
 import type { InstallationReport } from '../../../modules/onboarding/types.js';
@@ -8,8 +8,8 @@ function genId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export function registerSetupFinishRoute(router: { post: Function }): void {
-  router.post('/api/v1/setup/finish', (ctx: RouteContext, res: ServerResponse) => {
+export function registerSetupFinishRoute(router: Router): void {
+  router.post('/api/v1/setup/finish', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { sessionId } = body;
 

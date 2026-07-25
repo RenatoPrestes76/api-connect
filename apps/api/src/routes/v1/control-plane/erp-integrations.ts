@@ -4,7 +4,7 @@
  * this themselves. No ERP write path, pricing, or sync automation lives here.
  */
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
 import { runWithTenantContext } from '../../../infrastructure/data/tenant-context.js';
@@ -37,7 +37,7 @@ async function requireOrganization(
 }
 
 export function registerErpIntegrationRoutes(
-  router: { get: Function; post: Function },
+  router: Router,
   deps: ErpIntegrationInfrastructureDeps
 ): void {
   const { erpIntegrationRepository, organizationExists } = deps;

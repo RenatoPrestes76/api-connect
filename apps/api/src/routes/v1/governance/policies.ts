@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { governanceStore } from '../../../modules/governance/governance-store.js';
 import type { PolicyCategory, PolicyEnforcement } from '../../../modules/governance/types.js';
@@ -14,9 +14,9 @@ const VALID_CATEGORIES: PolicyCategory[] = [
 ];
 const VALID_ENFORCEMENTS: PolicyEnforcement[] = ['mandatory', 'advisory', 'disabled'];
 
-export function registerPoliciesRoutes(router: { get: Function; post: Function }): void {
+export function registerPoliciesRoutes(router: Router): void {
   // GET /api/v1/governance/policies
-  router.get('/api/v1/governance/policies', (ctx: RouteContext, res: ServerResponse) => {
+  router.get('/api/v1/governance/policies', async (ctx: RouteContext, res: ServerResponse) => {
     const category = ctx.query.get('category') ?? undefined;
     const enabledParam = ctx.query.get('enabled');
     const enabled = enabledParam === 'true' ? true : enabledParam === 'false' ? false : undefined;
@@ -34,7 +34,7 @@ export function registerPoliciesRoutes(router: { get: Function; post: Function }
   });
 
   // POST /api/v1/governance/policies
-  router.post('/api/v1/governance/policies', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/governance/policies', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { name, category, description, enforcement, rules, appliesTo } = body;
 

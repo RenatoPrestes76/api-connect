@@ -6,11 +6,8 @@ import { registerOperationsMetricsRoute } from './metrics.js';
 import { registerOperationsSlaRoute } from './sla.js';
 import { registerOperationsActionsRoutes } from './actions.js';
 
-export function registerOperationsRoutes(router: {
-  get: Function;
-  post: Function;
-  patch: Function;
-}): void {
+import type { Router } from '../../../http/router.js';
+export function registerOperationsRoutes(router: Router): void {
   registerOperationsOverviewRoute(router);
   registerOperationsHealthRoute(router);
   registerOperationsAlertsRoutes(router);

@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../../http/router.js';
+import type { RouteContext, Router } from '../../../../http/router.js';
 import { json, apiError } from '../../../../http/router.js';
 import { gatewayStore } from '../../../../modules/gateway/gateway-store.js';
 import { portalIdentityStore } from '../../../../modules/portal-identity/portal-identity-store.js';
@@ -15,7 +15,7 @@ interface UpdateSettingsBody {
   internalBaseUrl?: string;
 }
 
-export function registerGatewaySettingsRoutes(router: { get: Function; patch: Function }): void {
+export function registerGatewaySettingsRoutes(router: Router): void {
   router.get(
     '/api/v1/portal/gateway/settings/:environmentId',
     requirePortalPermission('gateway-settings.read')(

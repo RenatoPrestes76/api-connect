@@ -8,7 +8,8 @@ import { registerCapacityRoutes } from './capacity.js';
 import { registerRunbookRoutes } from './runbooks.js';
 import { registerCopilotRoutes } from './copilot.js';
 
-export function registerPrometheusRoutes(router: { get: Function; post: Function }): void {
+import type { Router } from '../../../http/router.js';
+export function registerPrometheusRoutes(router: Router): void {
   registerTelemetryRoutes(router);
   registerDashboardRoutes(router);
   registerIncidentRoutes(router);

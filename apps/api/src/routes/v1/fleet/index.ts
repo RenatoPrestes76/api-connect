@@ -7,12 +7,8 @@ import { registerNotificationRoutes } from './notifications.js';
 import { registerFleetAuditRoutes } from './audit.js';
 import { registerAutoscalerRoutes } from './autoscaler.js';
 
-export function registerFleetRoutes(router: {
-  get: Function;
-  post: Function;
-  patch: Function;
-  delete: Function;
-}): void {
+import type { Router } from '../../../http/router.js';
+export function registerFleetRoutes(router: Router): void {
   registerFleetDashboardRoutes(router);
   registerRuntimeOpsRoutes(router);
   registerConnectorOpsRoutes(router);

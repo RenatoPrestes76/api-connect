@@ -4,12 +4,8 @@ import { registerChangelogRoutes } from './changelog.js';
 import { registerSBOMRoutes } from './sbom.js';
 import { registerGoLiveMetricsRoutes } from './metrics.js';
 
-export function registerReleaseRoutes(router: {
-  get: Function;
-  post: Function;
-  put: Function;
-  delete: Function;
-}): void {
+import type { Router } from '../../../http/router.js';
+export function registerReleaseRoutes(router: Router): void {
   registerChecklistRoutes(router);
   registerVersionRoutes(router);
   registerChangelogRoutes(router);

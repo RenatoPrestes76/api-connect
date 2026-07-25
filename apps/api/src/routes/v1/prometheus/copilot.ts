@@ -1,9 +1,9 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { prometheusStore } from '../../../modules/prometheus/prometheus-store.js';
 
-export function registerCopilotRoutes(router: { post: Function }): void {
+export function registerCopilotRoutes(router: Router): void {
   router.post('/api/v1/prometheus/copilot', async (ctx: RouteContext, res: ServerResponse) => {
     const body = ctx.body as { question?: string } | undefined;
     const question = body?.question?.trim();

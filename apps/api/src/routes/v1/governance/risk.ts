@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { governanceStore } from '../../../modules/governance/governance-store.js';
 import type { RiskCategory, RiskStatus, RiskSeverity } from '../../../modules/governance/types.js';
@@ -15,9 +15,9 @@ const VALID_CATEGORIES: RiskCategory[] = [
 const VALID_STATUSES: RiskStatus[] = ['open', 'mitigating', 'mitigated', 'accepted', 'transferred'];
 const VALID_SEVERITIES: RiskSeverity[] = ['critical', 'high', 'medium', 'low'];
 
-export function registerRiskRoutes(router: { get: Function; post: Function }): void {
+export function registerRiskRoutes(router: Router): void {
   // GET /api/v1/risk
-  router.get('/api/v1/risk', (ctx: RouteContext, res: ServerResponse) => {
+  router.get('/api/v1/risk', async (ctx: RouteContext, res: ServerResponse) => {
     const category = ctx.query.get('category') ?? undefined;
     const status = ctx.query.get('status') ?? undefined;
     const severity = ctx.query.get('severity') ?? undefined;
@@ -42,7 +42,7 @@ export function registerRiskRoutes(router: { get: Function; post: Function }): v
   });
 
   // POST /api/v1/risk
-  router.post('/api/v1/risk', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/risk', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const {
       title,

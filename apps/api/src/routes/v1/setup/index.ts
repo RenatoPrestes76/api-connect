@@ -8,7 +8,8 @@ import { registerSetupProvisionRoute } from './provision.js';
 import { registerSetupStatusRoute } from './status.js';
 import { registerSetupFinishRoute } from './finish.js';
 
-export function registerSetupRoutes(router: { get: Function; post: Function }): void {
+import type { Router } from '../../../http/router.js';
+export function registerSetupRoutes(router: Router): void {
   registerSetupStartRoute(router);
   registerSetupCompanyRoute(router);
   registerSetupAdminRoute(router);

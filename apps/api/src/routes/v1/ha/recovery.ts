@@ -1,11 +1,11 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { haStore } from '../../../modules/ha/ha-store.js';
 import { recoveryService } from '../../../modules/ha/recovery-service.js';
 
-export function registerHaRecoveryRoutes(router: { get: Function; post: Function }): void {
-  router.get('/api/v1/ha/recovery', (ctx: RouteContext, res: ServerResponse) => {
+export function registerHaRecoveryRoutes(router: Router): void {
+  router.get('/api/v1/ha/recovery', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = ctx.query.get('tenantId') ?? undefined;
     const tests = haStore.getRecoveryTests(tenantId);
     const passed = tests.filter((t) => t.result === 'passed').length;
@@ -21,7 +21,7 @@ export function registerHaRecoveryRoutes(router: { get: Function; post: Function
     });
   });
 
-  router.post('/api/v1/ha/recovery-test', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/ha/recovery-test', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { tenantId } = body;
 

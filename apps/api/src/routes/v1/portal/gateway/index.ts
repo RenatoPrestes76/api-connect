@@ -3,12 +3,8 @@ import { registerGatewayRateLimitRoutes } from './rate-limits.js';
 import { registerGatewaySettingsRoutes } from './settings.js';
 import { registerGatewayLogRoutes } from './logs.js';
 
-export function registerGatewayRoutes(router: {
-  get: Function;
-  post: Function;
-  patch: Function;
-  delete: Function;
-}): void {
+import type { Router } from '../../../../http/router.js';
+export function registerGatewayRoutes(router: Router): void {
   registerGatewayApiKeyRoutes(router);
   registerGatewayRateLimitRoutes(router);
   registerGatewaySettingsRoutes(router);

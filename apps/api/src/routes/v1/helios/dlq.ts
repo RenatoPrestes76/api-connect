@@ -1,18 +1,18 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { heliosStore } from '../../../modules/helios/helios-store.js';
 import { tenantOf, assertTenantAccess } from './util.js';
 
-export function registerDLQRoutes(router: { get: Function; post: Function }): void {
-  router.get('/api/v1/helios/dlq', (ctx: RouteContext, res: ServerResponse) => {
+export function registerDLQRoutes(router: Router): void {
+  router.get('/api/v1/helios/dlq', async (ctx: RouteContext, res: ServerResponse) => {
     const status = ctx.query.get('status') ?? undefined;
     const tenantId = tenantOf(ctx);
     const entries = heliosStore.getDLQEntries({ status, tenantId });
     json(res, { entries, total: entries.length });
   });
 
-  router.post('/api/v1/helios/dlq/:id/requeue', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/helios/dlq/:id/requeue', async (ctx: RouteContext, res: ServerResponse) => {
     const id = ctx.params?.id as string;
     const entries = heliosStore.getDLQEntries();
     const entry = entries.find((e) => e.id === id);
@@ -31,7 +31,7 @@ export function registerDLQRoutes(router: { get: Function; post: Function }): vo
     json(res, result);
   });
 
-  router.post('/api/v1/helios/dlq/:id/discard', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/helios/dlq/:id/discard', async (ctx: RouteContext, res: ServerResponse) => {
     const id = ctx.params?.id as string;
     const entries = heliosStore.getDLQEntries();
     const entry = entries.find((e) => e.id === id);

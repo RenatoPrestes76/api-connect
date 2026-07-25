@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { connectorsStore } from '../../../modules/connectors/connectors-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
@@ -28,12 +28,7 @@ interface CreateConnectorBody {
   minRuntimeVersion?: string;
 }
 
-export function registerConnectorRoutes(router: {
-  get: Function;
-  post: Function;
-  patch: Function;
-  delete: Function;
-}): void {
+export function registerConnectorRoutes(router: Router): void {
   router.get(
     '/admin/connector-registry/connectors',
     requirePermission('connector-registry.read')(async (ctx: RouteContext, res: ServerResponse) => {

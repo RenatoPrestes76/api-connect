@@ -4,7 +4,8 @@ import { registerComplianceRoutes } from './compliance.js';
 import { registerRiskRoutes } from './risk.js';
 import { registerChangesRoutes } from './changes.js';
 
-export function registerGovernanceRoutes(router: { get: Function; post: Function }): void {
+import type { Router } from '../../../http/router.js';
+export function registerGovernanceRoutes(router: Router): void {
   registerPoliciesRoutes(router);
   registerAuditRoutes(router);
   registerComplianceRoutes(router);

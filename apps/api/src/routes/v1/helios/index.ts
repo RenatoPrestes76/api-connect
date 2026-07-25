@@ -9,7 +9,8 @@ import { registerEventGovernanceRoutes } from './governance.js';
 import { registerEventAIRoutes } from './ai.js';
 import { registerStudioRoutes } from './studio.js';
 
-export function registerHeliosRoutes(router: { get: Function; post: Function }): void {
+import type { Router } from '../../../http/router.js';
+export function registerHeliosRoutes(router: Router): void {
   registerBusRoutes(router);
   registerAnalyticsRoutes(router);
   registerCatalogRoutes(router);

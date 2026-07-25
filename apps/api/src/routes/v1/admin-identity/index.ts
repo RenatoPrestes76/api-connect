@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
 import { hashPassword, verifyPassword } from '../../../modules/admin-identity/password.js';
@@ -22,7 +22,7 @@ function userAgent(ctx: RouteContext): string {
   return (Array.isArray(header) ? header[0] : header) ?? 'unknown';
 }
 
-export function registerAdminIdentityRoutes(router: { get: Function; post: Function }): void {
+export function registerAdminIdentityRoutes(router: Router): void {
   // ─── POST /admin/auth/login ────────────────────────────────────────────
   router.post('/admin/auth/login', async (ctx: RouteContext, res: ServerResponse) => {
     const body = ctx.body as { email?: string; password?: string } | undefined;

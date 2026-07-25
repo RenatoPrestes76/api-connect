@@ -1,12 +1,12 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { onboardingStore } from '../../../modules/onboarding/onboarding-store.js';
 import { provisionEngine } from '../../../modules/onboarding/provision-engine.js';
 import type { AgentData } from '../../../modules/onboarding/types.js';
 
-export function registerSetupProvisionRoute(router: { post: Function }): void {
-  router.post('/api/v1/setup/provision', (ctx: RouteContext, res: ServerResponse) => {
+export function registerSetupProvisionRoute(router: Router): void {
+  router.post('/api/v1/setup/provision', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { sessionId, agentName, agentType = 'connector' } = body;
 

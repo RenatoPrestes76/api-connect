@@ -1,11 +1,11 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json } from '../../../http/router.js';
 import { healthEngine } from '../../../modules/operations/health-engine.js';
 import { operationsStore } from '../../../modules/operations/operations-store.js';
 
-export function registerOperationsOverviewRoute(router: { get: Function }): void {
-  router.get('/api/v1/operations/overview', (_ctx: RouteContext, res: ServerResponse) => {
+export function registerOperationsOverviewRoute(router: Router): void {
+  router.get('/api/v1/operations/overview', async (_ctx: RouteContext, res: ServerResponse) => {
     const tenants = healthEngine.getAllTenantHealth();
     const allMetrics = operationsStore.getMetrics();
     const openAlerts = operationsStore.getAlerts(undefined, { resolved: false });

@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { fleetOpsStore } from '../../../modules/fleet-ops/fleet-ops-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
@@ -17,7 +17,7 @@ const REMOTE_ACTIONS: Array<{ path: string; type: RuntimeCommandType }> = [
   { path: 'enable', type: 'ENABLE' },
 ];
 
-export function registerRuntimeOpsRoutes(router: { get: Function; post: Function }): void {
+export function registerRuntimeOpsRoutes(router: Router): void {
   // GET /admin/fleet/runtime/status — lightweight status feed for all runtimes
   router.get(
     '/admin/fleet/runtime/status',

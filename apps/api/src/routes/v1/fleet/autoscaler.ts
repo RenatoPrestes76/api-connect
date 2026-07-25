@@ -1,16 +1,11 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { autoscaler } from '../../../modules/fleet-ops/autoscaler.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
 
-export function registerAutoscalerRoutes(router: {
-  get: Function;
-  post: Function;
-  patch: Function;
-  delete: Function;
-}): void {
+export function registerAutoscalerRoutes(router: Router): void {
   router.get(
     '/admin/fleet/autoscaler/policies',
     requirePermission('runtime.read')(async (ctx: RouteContext, res: ServerResponse) => {

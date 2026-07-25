@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { governanceStore } from '../../../modules/governance/governance-store.js';
 import type {
@@ -26,9 +26,9 @@ const VALID_TYPES: ChangeType[] = [
 ];
 const VALID_PRIORITIES: ChangePriority[] = ['critical', 'high', 'medium', 'low'];
 
-export function registerChangesRoutes(router: { get: Function; post: Function }): void {
+export function registerChangesRoutes(router: Router): void {
   // GET /api/v1/changes
-  router.get('/api/v1/changes', (ctx: RouteContext, res: ServerResponse) => {
+  router.get('/api/v1/changes', async (ctx: RouteContext, res: ServerResponse) => {
     const status = ctx.query.get('status') ?? undefined;
     const type = ctx.query.get('type') ?? undefined;
     const priority = ctx.query.get('priority') ?? undefined;
@@ -50,7 +50,7 @@ export function registerChangesRoutes(router: { get: Function; post: Function })
   });
 
   // POST /api/v1/changes
-  router.post('/api/v1/changes', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/changes', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const {
       title,
@@ -93,7 +93,7 @@ export function registerChangesRoutes(router: { get: Function; post: Function })
   });
 
   // POST /api/v1/changes/:id/approve
-  router.post('/api/v1/changes/:id/approve', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/changes/:id/approve', async (ctx: RouteContext, res: ServerResponse) => {
     const id = ctx.params['id'];
     if (!id) return apiError(res, '"id" param required', 400, 'MISSING_FIELDS');
 
@@ -116,7 +116,7 @@ export function registerChangesRoutes(router: { get: Function; post: Function })
   });
 
   // POST /api/v1/changes/:id/reject
-  router.post('/api/v1/changes/:id/reject', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/changes/:id/reject', async (ctx: RouteContext, res: ServerResponse) => {
     const id = ctx.params['id'];
     if (!id) return apiError(res, '"id" param required', 400, 'MISSING_FIELDS');
 

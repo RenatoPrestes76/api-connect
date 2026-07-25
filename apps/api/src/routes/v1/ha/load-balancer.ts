@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import {
   loadBalancer,
@@ -7,12 +7,12 @@ import {
   LoadBalancerError,
 } from '../../../modules/ha/load-balancer.js';
 
-export function registerHaLoadBalancerRoutes(router: { get: Function; post: Function }): void {
-  router.get('/api/v1/ha/load-balancer', (_ctx: RouteContext, res: ServerResponse) => {
+export function registerHaLoadBalancerRoutes(router: Router): void {
+  router.get('/api/v1/ha/load-balancer', async (_ctx: RouteContext, res: ServerResponse) => {
     json(res, { targets: loadBalancer.getDistribution() });
   });
 
-  router.post('/api/v1/ha/load-balancer/route', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/ha/load-balancer/route', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { strategy = 'round_robin', includeLeader = false } = body;
 
@@ -36,16 +36,19 @@ export function registerHaLoadBalancerRoutes(router: { get: Function; post: Func
     }
   });
 
-  router.post('/api/v1/ha/load-balancer/release', (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
-    const { nodeId } = body;
-    if (!nodeId) return apiError(res, '"nodeId" is required', 400, 'MISSING_FIELDS');
+  router.post(
+    '/api/v1/ha/load-balancer/release',
+    async (ctx: RouteContext, res: ServerResponse) => {
+      const body = (ctx.body as any) ?? {};
+      const { nodeId } = body;
+      if (!nodeId) return apiError(res, '"nodeId" is required', 400, 'MISSING_FIELDS');
 
-    loadBalancer.release(nodeId);
-    json(res, { released: true, nodeId });
-  });
+      loadBalancer.release(nodeId);
+      json(res, { released: true, nodeId });
+    }
+  );
 
-  router.post('/api/v1/ha/load-balancer/weight', (ctx: RouteContext, res: ServerResponse) => {
+  router.post('/api/v1/ha/load-balancer/weight', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { nodeId, weight } = body;
     if (!nodeId) return apiError(res, '"nodeId" is required', 400, 'MISSING_FIELDS');

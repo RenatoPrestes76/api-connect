@@ -1,10 +1,10 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json } from '../../../http/router.js';
 import { onboardingStore } from '../../../modules/onboarding/onboarding-store.js';
 
-export function registerSetupStartRoute(router: { post: Function }): void {
-  router.post('/api/v1/setup/start', (_ctx: RouteContext, res: ServerResponse) => {
+export function registerSetupStartRoute(router: Router): void {
+  router.post('/api/v1/setup/start', async (_ctx: RouteContext, res: ServerResponse) => {
     const session = onboardingStore.createSession();
     json(
       res,

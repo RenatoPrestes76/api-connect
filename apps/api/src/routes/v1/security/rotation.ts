@@ -1,9 +1,9 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { secretRotationScheduler } from '../../../modules/security/secret-rotation.js';
 
-export function registerSecretRotationRoutes(router: { get: Function; post: Function }): void {
+export function registerSecretRotationRoutes(router: Router): void {
   // GET /api/v1/security/secrets/rotation/history
   router.get(
     '/api/v1/security/secrets/rotation/history',

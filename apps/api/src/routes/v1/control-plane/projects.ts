@@ -1,17 +1,12 @@
 import type { ServerResponse } from 'http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { controlPlaneStore } from '../../../modules/control-plane/control-plane-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
 import type { Project } from '../../../modules/control-plane/types.js';
 
-export function registerProjectRoutes(router: {
-  get: Function;
-  post: Function;
-  patch: Function;
-  delete: Function;
-}): void {
+export function registerProjectRoutes(router: Router): void {
   router.get(
     '/admin/control-plane/projects',
     requirePermission('projects.read')(async (ctx: RouteContext, res: ServerResponse) => {

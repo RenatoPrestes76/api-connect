@@ -1,13 +1,13 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { operationsStore } from '../../../modules/operations/operations-store.js';
 import type { AlertSeverity } from '../../../modules/operations/types.js';
 
 const VALID_SEVERITIES: AlertSeverity[] = ['info', 'warning', 'error', 'critical'];
 
-export function registerOperationsAlertsRoutes(router: { get: Function; patch: Function }): void {
-  router.get('/api/v1/operations/alerts', (ctx: RouteContext, res: ServerResponse) => {
+export function registerOperationsAlertsRoutes(router: Router): void {
+  router.get('/api/v1/operations/alerts', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = ctx.query.get('tenantId') ?? undefined;
     const severity = ctx.query.get('severity') ?? undefined;
     const resolvedParam = ctx.query.get('resolved');
@@ -27,7 +27,7 @@ export function registerOperationsAlertsRoutes(router: { get: Function; patch: F
     json(res, { total: alerts.length, alerts });
   });
 
-  router.patch('/api/v1/operations/alerts/:id', (ctx: RouteContext, res: ServerResponse) => {
+  router.patch('/api/v1/operations/alerts/:id', async (ctx: RouteContext, res: ServerResponse) => {
     const id = ctx.params['id'];
     if (!id) return apiError(res, '"id" param required', 400, 'MISSING_FIELDS');
 

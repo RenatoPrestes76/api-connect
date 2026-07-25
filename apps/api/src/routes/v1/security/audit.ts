@@ -1,11 +1,11 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json } from '../../../http/router.js';
 import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import { verifyChain, toSiemRecord } from '@seltriva/aegis';
 
-export function registerAuditRoutes(router: { get: Function; post: Function }): void {
+export function registerAuditRoutes(router: Router): void {
   // GET /api/v1/security/audit
   router.get('/api/v1/security/audit', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = requireTenantId(ctx);

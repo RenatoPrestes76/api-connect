@@ -1,13 +1,13 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { governanceStore } from '../../../modules/governance/governance-store.js';
 
 const VALID_FORMATS = ['json', 'csv', 'pdf'];
 
-export function registerAuditRoutes(router: { get: Function }): void {
+export function registerAuditRoutes(router: Router): void {
   // GET /api/v1/audit/logs
-  router.get('/api/v1/audit/logs', (ctx: RouteContext, res: ServerResponse) => {
+  router.get('/api/v1/audit/logs', async (ctx: RouteContext, res: ServerResponse) => {
     const actor = ctx.query.get('actor') ?? undefined;
     const action = ctx.query.get('action') ?? undefined;
     const tenantId = ctx.query.get('tenantId') ?? undefined;
@@ -19,7 +19,7 @@ export function registerAuditRoutes(router: { get: Function }): void {
   });
 
   // GET /api/v1/audit/export
-  router.get('/api/v1/audit/export', (ctx: RouteContext, res: ServerResponse) => {
+  router.get('/api/v1/audit/export', async (ctx: RouteContext, res: ServerResponse) => {
     const format = ctx.query.get('format') ?? 'json';
     const limitStr = ctx.query.get('limit');
     const limit = limitStr ? Math.min(Number(limitStr), 10_000) : undefined;

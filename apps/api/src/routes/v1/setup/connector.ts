@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http';
-import type { RouteContext } from '../../../http/router.js';
+import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { onboardingStore } from '../../../modules/onboarding/onboarding-store.js';
 import type { ConnectorData, ConnectorType } from '../../../modules/onboarding/types.js';
@@ -14,8 +14,8 @@ const VALID_TYPES: ConnectorType[] = [
   'webhook',
 ];
 
-export function registerSetupConnectorRoute(router: { post: Function }): void {
-  router.post('/api/v1/setup/connector', (ctx: RouteContext, res: ServerResponse) => {
+export function registerSetupConnectorRoute(router: Router): void {
+  router.post('/api/v1/setup/connector', async (ctx: RouteContext, res: ServerResponse) => {
     const body = (ctx.body as any) ?? {};
     const { sessionId, type, name, baseUrl } = body;
 
