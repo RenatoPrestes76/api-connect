@@ -1,7 +1,6 @@
 import { api } from './api-client';
 import type {
   GovernancePolicy,
-  GovernanceOverview,
   AuditLog,
   ComplianceStatusResult,
   ComplianceEvidence,
@@ -44,7 +43,7 @@ export const governanceService = {
     const q = qs.toString() ? `?${qs}` : '';
     return api.get(`/api/v1/audit/logs${q}`);
   },
-  exportAudit: (format: 'json' | 'csv' | 'pdf'): Promise<unknown> =>
+  exportAudit: (format: 'json' | 'csv' | 'pdf'): Promise<{ total: number; data?: string }> =>
     api.get(`/api/v1/audit/export?format=${format}`),
 
   // Compliance

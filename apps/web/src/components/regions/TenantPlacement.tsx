@@ -24,9 +24,7 @@ export function TenantPlacement({ placements, regions }: Props) {
 
   const tenantsByRegion: Record<string, string[]> = {};
   for (const p of placements) {
-    const key = p.primaryRegion;
-    if (!tenantsByRegion[key]) tenantsByRegion[key] = [];
-    tenantsByRegion[key]!.push(p.tenantId.replace('tenant-', ''));
+    (tenantsByRegion[p.primaryRegion] ??= []).push(p.tenantId.replace('tenant-', ''));
   }
 
   return (

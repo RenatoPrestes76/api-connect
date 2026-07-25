@@ -30,10 +30,9 @@ export default function DrPage() {
   const [triggering, setTriggering] = useState(false);
   const [backupType, setBackupType] = useState<'full' | 'incremental' | 'snapshot'>('incremental');
 
-  const d = data as any;
-  const config: DrConfig | null = d?.config ?? null;
-  const backups: Backup[] = d?.backups ?? [];
-  const tests: DrTest[] = d?.tests ?? [];
+  const config: DrConfig | null = data?.config ?? null;
+  const backups: Backup[] = data?.backups ?? [];
+  const tests: DrTest[] = data?.tests ?? [];
 
   const handleTrigger = async () => {
     setTriggering(true);

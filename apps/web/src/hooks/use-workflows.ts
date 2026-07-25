@@ -15,7 +15,7 @@ import {
   runWorkflow,
   fetchWorkflowVersions,
 } from '@/services/workflow.service';
-import type { Workflow, WorkflowVersion, TriggerType, WorkflowGraph } from '@/types/workflow';
+import type { Workflow, TriggerType, WorkflowGraph } from '@/types/workflow';
 
 const KEYS = {
   all: ['workflows'] as const,

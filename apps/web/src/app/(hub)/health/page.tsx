@@ -1,5 +1,5 @@
 'use client';
-import { Activity, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { PageHeader } from '@/components/common/page-header';
 import { PageLoading } from '@/components/common/loading-state';
 import { ErrorState } from '@/components/common/error-boundary';

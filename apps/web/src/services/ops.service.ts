@@ -1,17 +1,25 @@
 import { api } from './api-client';
+import type {
+  DrDashboard,
+  FeatureFlag,
+  HealthReport,
+  OpsDashboard,
+  QueuesResponse,
+  SlosResponse,
+} from '@/types/ops';
 
 const BASE = '/api/v1/ops';
 
 // ─── Health ──────────────────────────────────────────────────────────────────
-export const getHealth = () => api.get(`${BASE}/health`);
+export const getHealth = () => api.get<HealthReport>(`${BASE}/health`);
 export const getReadiness = () => api.get(`${BASE}/ready`);
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
-export const getOpsDashboard = () => api.get(`${BASE}/dashboard`);
+export const getOpsDashboard = () => api.get<OpsDashboard>(`${BASE}/dashboard`);
 
 // ─── Queues ──────────────────────────────────────────────────────────────────
 export const getQueues = (priority?: string) =>
-  api.get(`${BASE}/queues${priority ? `?priority=${priority}` : ''}`);
+  api.get<QueuesResponse>(`${BASE}/queues${priority ? `?priority=${priority}` : ''}`);
 
 export const enqueueJob = (data: {
   type: string;
@@ -23,7 +31,7 @@ export const enqueueJob = (data: {
 export const retryDlqJob = (jobId: string) => api.post(`${BASE}/queues/dlq/retry`, { jobId });
 
 // ─── Feature Flags ────────────────────────────────────────────────────────────
-export const listFeatureFlags = () => api.get(`${BASE}/feature-flags`);
+export const listFeatureFlags = () => api.get<{ flags: FeatureFlag[] }>(`${BASE}/feature-flags`);
 export const getFeatureFlag = (id: string) => api.get(`${BASE}/feature-flags/${id}`);
 export const createFeatureFlag = (data: Record<string, unknown>) =>
   api.post(`${BASE}/feature-flags`, data);
@@ -34,11 +42,11 @@ export const evaluateFeatureFlag = (id: string, context: Record<string, unknown>
 export const deleteFeatureFlag = (id: string) => api.delete(`${BASE}/feature-flags/${id}`);
 
 // ─── SLO ─────────────────────────────────────────────────────────────────────
-export const getSlos = () => api.get(`${BASE}/slo`);
+export const getSlos = () => api.get<SlosResponse>(`${BASE}/slo`);
 export const getSlo = (id: string) => api.get(`${BASE}/slo/${id}`);
 
 // ─── DR ──────────────────────────────────────────────────────────────────────
-export const getDr = () => api.get(`${BASE}/dr`);
+export const getDr = () => api.get<DrDashboard>(`${BASE}/dr`);
 export const getDrBackups = () => api.get(`${BASE}/dr/backups`);
 export const triggerBackup = (type: string) => api.post(`${BASE}/dr/backup/trigger`, { type });
 export const runDrTest = (data: Record<string, unknown>) => api.post(`${BASE}/dr/test`, data);

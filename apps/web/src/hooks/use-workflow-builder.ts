@@ -17,7 +17,6 @@ export const useValidateGraph = () =>
 // ─── Simulate ─────────────────────────────────────────────────────────────────
 
 export const useSimulateWorkflow = () => {
-  const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input?: Record<string, unknown> }) =>
       wb.simulateWorkflow(id, input),

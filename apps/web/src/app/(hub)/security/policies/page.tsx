@@ -21,7 +21,7 @@ export default function PoliciesPage() {
   const [riskScore, setRiskScore] = useState('10');
   const [hour, setHour] = useState(String(new Date().getHours()));
 
-  const policies = (data as any)?.policies ?? [];
+  const policies = data?.policies ?? [];
 
   const handleEvaluate = () => {
     evaluate.mutate({
@@ -30,7 +30,7 @@ export default function PoliciesPage() {
     });
   };
 
-  const result = evaluate.data as any;
+  const result = evaluate.data;
 
   return (
     <div className="p-6 space-y-6">
@@ -67,7 +67,7 @@ export default function PoliciesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800">
-                  {policies.map((p: any) => (
+                  {policies.map((p) => (
                     <tr key={p.id}>
                       <td className="px-4 py-3">
                         <div className="font-medium text-zinc-900 dark:text-zinc-100">{p.name}</div>

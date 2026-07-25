@@ -9,7 +9,7 @@ interface SyncProgressProps {
   className?: string;
 }
 
-export function SyncProgress({ synced, skipped, failed, result, className }: SyncProgressProps) {
+export function SyncProgress({ synced, skipped, failed, className }: SyncProgressProps) {
   const total = synced + skipped + failed;
   if (total === 0) return <span className="text-xs text-slate-400">No records</span>;
 

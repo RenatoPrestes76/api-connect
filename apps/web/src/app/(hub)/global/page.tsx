@@ -5,7 +5,6 @@ import {
   useGlobalOverview,
   useRegions,
   useReplication,
-  useTriggerFailover,
   useMigrateTenant,
   useSyncRegions,
 } from '@/hooks/use-regions';
@@ -24,7 +23,6 @@ export default function GlobalPage() {
   const overview = useGlobalOverview();
   const regionsQ = useRegions();
   const replication = useReplication();
-  const failover = useTriggerFailover();
   const migrate = useMigrateTenant();
   const sync = useSyncRegions();
 

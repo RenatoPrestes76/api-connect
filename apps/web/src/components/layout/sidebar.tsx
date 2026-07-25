@@ -64,9 +64,7 @@ import {
   Activity as ActivityIcon,
   Telescope,
   BrainCircuit,
-  Zap as ZapIcon,
   Radio,
-  GitMerge,
   BookOpen,
   ShieldCheck as ShieldCheckIcon,
 } from 'lucide-react';

@@ -1,6 +1,6 @@
 'use client';
 
-import type { ClusterNode, ReplicationStatus } from '@/types/ha';
+import type { ClusterNode, ReplicationState, ReplicationStatus } from '@/types/ha';
 
 const REP_STATUS_CLASSES: Record<ReplicationStatus, string> = {
   in_sync: 'text-emerald-600 dark:text-emerald-400',
@@ -23,8 +23,11 @@ interface Props {
 }
 
 export function ReplicationMonitor({ nodes }: Props) {
-  const replicas = nodes.filter((n) => n.role !== 'leader' && n.replication);
-  const maxLag = Math.max(1, ...replicas.map((n) => n.replication!.lagMs));
+  const replicas = nodes.filter(
+    (n): n is ClusterNode & { replication: ReplicationState } =>
+      n.role !== 'leader' && n.replication !== undefined
+  );
+  const maxLag = Math.max(1, ...replicas.map((n) => n.replication.lagMs));
 
   return (
     <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
@@ -34,7 +37,7 @@ export function ReplicationMonitor({ nodes }: Props) {
       </div>
       <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
         {replicas.map((n) => {
-          const rep = n.replication!;
+          const rep = n.replication;
           const barWidth = Math.min(100, (rep.lagMs / maxLag) * 100);
           return (
             <div key={n.id} className="px-4 py-3 space-y-2">

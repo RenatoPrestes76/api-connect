@@ -1,5 +1,5 @@
 'use client';
-import { CreditCard, Zap, FileText, Key, ExternalLink } from 'lucide-react';
+import { CreditCard, Zap, Key, ExternalLink } from 'lucide-react';
 import { useSubscription, useUsage, useLicense, useCustomerPortal } from '@/hooks/use-billing';
 import { UsageMeter } from '@/components/billing/usage-meter';
 

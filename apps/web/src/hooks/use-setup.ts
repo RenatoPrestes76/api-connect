@@ -45,8 +45,8 @@ export function useSetupWizard() {
       const data = await setupService.startSetup();
       setState((s) => ({ ...s, sessionId: data.sessionId, loading: false }));
       return data;
-    } catch (e: any) {
-      setError(e?.message ?? 'Erro ao iniciar sessão');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao iniciar sessão');
       return null;
     }
   }, []);
@@ -58,8 +58,8 @@ export function useSetupWizard() {
       try {
         await setupService.submitCompany(state.sessionId, data);
         advance('admin', { company: data });
-      } catch (e: any) {
-        setError(e?.message ?? 'Erro ao salvar dados da empresa');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Erro ao salvar dados da empresa');
       }
     },
     [state.sessionId]
@@ -72,8 +72,8 @@ export function useSetupWizard() {
       try {
         await setupService.submitAdmin(state.sessionId, data);
         advance('database', { admin: data });
-      } catch (e: any) {
-        setError(e?.message ?? 'Erro ao salvar administrador');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Erro ao salvar administrador');
       }
     },
     [state.sessionId]
@@ -86,8 +86,8 @@ export function useSetupWizard() {
       try {
         await setupService.submitDatabase(state.sessionId, data);
         advance('connector', { database: data });
-      } catch (e: any) {
-        setError(e?.message ?? 'Erro ao salvar banco de dados');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Erro ao salvar banco de dados');
       }
     },
     [state.sessionId]
@@ -100,8 +100,8 @@ export function useSetupWizard() {
       try {
         await setupService.submitConnector(state.sessionId, data);
         advance('agent', { connector: data });
-      } catch (e: any) {
-        setError(e?.message ?? 'Erro ao salvar connector');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Erro ao salvar connector');
       }
     },
     [state.sessionId]
@@ -113,8 +113,8 @@ export function useSetupWizard() {
       setLoading(true);
       try {
         advance('secrets', { agent: data });
-      } catch (e: any) {
-        setError(e?.message ?? 'Erro ao salvar agent');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Erro ao salvar agent');
       }
     },
     [state.sessionId]
@@ -127,8 +127,8 @@ export function useSetupWizard() {
       try {
         await setupService.submitSecrets(state.sessionId, data);
         advance('provision', { secrets: data });
-      } catch (e: any) {
-        setError(e?.message ?? 'Erro ao salvar secrets');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Erro ao salvar secrets');
       }
     },
     [state.sessionId]
@@ -147,8 +147,8 @@ export function useSetupWizard() {
         error: null,
       }));
       return result;
-    } catch (e: any) {
-      setError(e?.message ?? 'Erro no provisionamento');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro no provisionamento');
       return null;
     }
   }, [state.sessionId, state.agent]);
@@ -160,8 +160,8 @@ export function useSetupWizard() {
       const result: FinishResponse = await setupService.finishSetup(state.sessionId);
       advance('finish', { finishResult: result });
       return result;
-    } catch (e: any) {
-      setError(e?.message ?? 'Erro ao finalizar setup');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao finalizar setup');
       return null;
     }
   }, [state.sessionId]);

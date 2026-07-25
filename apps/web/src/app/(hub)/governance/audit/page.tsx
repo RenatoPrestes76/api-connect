@@ -21,7 +21,7 @@ export default function GovernanceAuditPage() {
   async function handleExport(format: 'json' | 'csv' | 'pdf') {
     setExporting(true);
     try {
-      const result = (await governanceService.exportAudit(format)) as any;
+      const result = await governanceService.exportAudit(format);
       if (format === 'csv' && result.data) {
         const blob = new Blob([result.data], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);

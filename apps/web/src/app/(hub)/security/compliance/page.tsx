@@ -22,12 +22,12 @@ export default function CompliancePage() {
   const { data: complianceData, isLoading } = useCompliance();
   const { data: consentData } = useConsent();
 
-  const controls = (complianceData as any)?.controls ?? [];
-  const summary = (complianceData as any)?.summary ?? [];
-  const consentRecords = (consentData as any)?.records ?? [];
+  const controls = complianceData?.controls ?? [];
+  const summary = complianceData?.summary ?? [];
+  const consentRecords = consentData?.records ?? [];
 
   const byFramework = FRAMEWORK_ORDER.reduce<Record<string, typeof controls>>((acc, fw) => {
-    acc[fw] = controls.filter((c: any) => c.framework === fw);
+    acc[fw] = controls.filter((c) => c.framework === fw);
     return acc;
   }, {});
 
@@ -45,7 +45,7 @@ export default function CompliancePage() {
       {/* Framework summary */}
       {!isLoading && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {summary.map((fw: any) => (
+          {summary.map((fw) => (
             <div
               key={fw.framework}
               className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4"
@@ -84,7 +84,7 @@ export default function CompliancePage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800">
-                  {byFramework[fw]?.map((c: any) => (
+                  {byFramework[fw]?.map((c) => (
                     <tr key={c.id}>
                       <td className="px-4 py-3">
                         <div className="font-medium text-zinc-900 dark:text-zinc-100 text-xs">
@@ -131,7 +131,7 @@ export default function CompliancePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800">
-              {consentRecords.map((r: any) => (
+              {consentRecords.map((r) => (
                 <tr key={r.id}>
                   <td className="px-4 py-3 text-xs text-zinc-700 dark:text-zinc-300">{r.userId}</td>
                   <td className="px-4 py-3 text-xs text-zinc-600 dark:text-zinc-400">

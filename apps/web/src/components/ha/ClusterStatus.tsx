@@ -43,7 +43,7 @@ interface Props {
 }
 
 export function ClusterStatus({ data }: Props) {
-  const { clusterHealth, leaderNode, avgRtoSeconds, avgRpoMinutes, replication, lastBackup } = data;
+  const { clusterHealth, leaderNode, avgRtoSeconds, replication, lastBackup } = data;
 
   const lastBackupAgo = lastBackup
     ? `${Math.round((Date.now() - new Date(lastBackup.createdAt).getTime()) / 60_000)}m ago`

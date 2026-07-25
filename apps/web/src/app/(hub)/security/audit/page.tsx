@@ -5,8 +5,8 @@ import { useAuditEntries, useVerifyAuditChain } from '@/hooks/use-security';
 export default function AuditPage() {
   const { data, isLoading } = useAuditEntries();
   const verify = useVerifyAuditChain();
-  const entries = (data as any)?.entries ?? [];
-  const verifyResult = verify.data as any;
+  const entries = data?.entries ?? [];
+  const verifyResult = verify.data;
 
   const handleVerify = () => verify.mutate();
 
@@ -47,7 +47,7 @@ export default function AuditPage() {
       <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
         <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
           <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-            Events ({(data as any)?.total ?? 0})
+            Events ({data?.total ?? 0})
           </h2>
         </div>
         {isLoading ? (
@@ -70,7 +70,7 @@ export default function AuditPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800">
-                {entries.map((entry: any) => (
+                {entries.map((entry) => (
                   <tr key={entry.id}>
                     <td className="px-4 py-2 text-xs text-zinc-400 font-mono">{entry.sequence}</td>
                     <td className="px-4 py-2">

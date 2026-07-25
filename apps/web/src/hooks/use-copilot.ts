@@ -20,7 +20,10 @@ export const useConversations = () =>
 export const useConversation = (id: string | null) =>
   useQuery({
     queryKey: ['copilot', 'conversations', id],
-    queryFn: () => copilot.fetchConversation(id!),
+    queryFn: () => {
+      if (!id) throw new Error('useConversation requires an id');
+      return copilot.fetchConversation(id);
+    },
     enabled: Boolean(id),
   });
 

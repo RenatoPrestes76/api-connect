@@ -31,7 +31,7 @@ interface Props {
   isPending?: boolean;
 }
 
-const TENANTS = ['tenant-enterprise', 'tenant-professional', 'tenant-community'];
+const TENANTS = ['tenant-enterprise', 'tenant-professional', 'tenant-community'] as const;
 const TYPES: BackupType[] = ['full', 'incremental', 'snapshot'];
 
 export function BackupManager({
@@ -41,7 +41,7 @@ export function BackupManager({
   onRestore,
   isPending,
 }: Props) {
-  const [selectedTenant, setSelectedTenant] = useState(TENANTS[0]!);
+  const [selectedTenant, setSelectedTenant] = useState<(typeof TENANTS)[number]>(TENANTS[0]);
   const [selectedType, setSelectedType] = useState<BackupType>('full');
 
   const totalGB = (totalSizeBytes / 1e9).toFixed(1);
@@ -59,7 +59,7 @@ export function BackupManager({
           <div className="flex items-center gap-2">
             <select
               value={selectedTenant}
-              onChange={(e) => setSelectedTenant(e.target.value)}
+              onChange={(e) => setSelectedTenant(e.target.value as (typeof TENANTS)[number])}
               className="text-xs border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1.5 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
             >
               {TENANTS.map((t) => (

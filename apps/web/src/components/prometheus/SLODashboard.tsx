@@ -8,12 +8,6 @@ const STATUS_COLOR: Record<string, string> = {
   breached: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
 };
 
-const UPTIME_COLOR = (current: number, target: number) => {
-  if (current >= target) return 'bg-emerald-500';
-  if (current >= target - 0.05) return 'bg-amber-500';
-  return 'bg-red-500';
-};
-
 interface Props {
   targets: SLOTarget[];
 }

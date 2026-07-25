@@ -44,7 +44,7 @@ export default function HeliosGovernancePage() {
         ].map(([v, label]) => (
           <button
             key={v}
-            onClick={() => setTab(v as any)}
+            onClick={() => setTab(v as 'governance' | 'security' | 'marketplace')}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === v ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
           >
             {label}

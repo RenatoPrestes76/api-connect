@@ -36,7 +36,7 @@ export function StepDatabase({ loading, onNext, onBack }: Props) {
     setForm((f) => ({ ...f, [k]: v }));
 
   const selectType = (type: DatabaseType) => {
-    const def = DB_TYPES.find((d) => d.value === type)!;
+    const def = DB_TYPES.find((d) => d.value === type) ?? DB_TYPES[0];
     setForm((f) => ({ ...f, type, port: String(def.defaultPort) }));
     setTestState('idle');
   };

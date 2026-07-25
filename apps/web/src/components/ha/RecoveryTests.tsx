@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function RecoveryTests({ tests, rtoByTenant, rpoByTenant, onRunTest, isPending }: Props) {
-  const [selectedTenant, setSelectedTenant] = useState(TENANTS[0]!);
+  const [selectedTenant, setSelectedTenant] = useState(TENANTS[0] ?? '');
 
   return (
     <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">

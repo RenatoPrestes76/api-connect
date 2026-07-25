@@ -119,7 +119,7 @@ export default function MetricsPage() {
         <div className="rounded-xl border border-border bg-card p-5 space-y-2">
           <div className="text-xs text-muted-foreground">
             Showing {samples.length} samples — 5-minute buckets over 24 hours. Last sample:{' '}
-            {new Date(samples[samples.length - 1]!.ts).toLocaleTimeString()}
+            {new Date(samples[samples.length - 1].ts).toLocaleTimeString()}
           </div>
         </div>
       )}

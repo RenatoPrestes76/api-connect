@@ -27,10 +27,9 @@ export default function QueuesPage() {
   const [newJobPriority, setNewJobPriority] = useState<JobPriority>('normal');
   const [enqueuing, setEnqueuing] = useState(false);
 
-  const d = data as any;
-  const jobs: Job[] = d?.jobs ?? [];
-  const dlq: Job[] = d?.dlq ?? [];
-  const stats = d?.stats;
+  const jobs: Job[] = data?.jobs ?? [];
+  const dlq: Job[] = data?.dlq ?? [];
+  const stats = data?.stats;
 
   const handleEnqueue = async () => {
     if (!newJobType.trim()) return;

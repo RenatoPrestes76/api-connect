@@ -70,6 +70,13 @@ export interface OperationsMetric {
   timestamp: string;
 }
 
+export type OperationsMetricsResult =
+  | { tenantId: string; tenantName: string; total: number; metrics: OperationsMetric[] }
+  | {
+      total: number;
+      tenants: Record<string, { tenantName: string; total: number; metrics: OperationsMetric[] }>;
+    };
+
 export interface SlaRecord {
   id: string;
   tenantId: string;

@@ -18,9 +18,8 @@ const STATUS_COLORS: Record<SloStatus, string> = {
 
 export default function SloPage() {
   const { data, isLoading } = useSlos();
-  const d = data as any;
-  const slos: SloDefinition[] = d?.slos ?? [];
-  const summary = d?.summary;
+  const slos: SloDefinition[] = data?.slos ?? [];
+  const summary = data?.summary;
 
   return (
     <div className="p-6 space-y-6">

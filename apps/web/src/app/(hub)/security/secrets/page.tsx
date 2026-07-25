@@ -5,7 +5,7 @@ import { SecretRow } from '@/components/security/secret-row';
 
 export default function SecretsPage() {
   const { data, isLoading } = useSecrets();
-  const secrets = (data as any)?.secrets ?? [];
+  const secrets = data?.secrets ?? [];
 
   return (
     <div className="p-6 space-y-6">
@@ -43,7 +43,7 @@ export default function SecretsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800">
-                {secrets.map((s: any) => (
+                {secrets.map((s) => (
                   <SecretRow key={s.id} secret={s} />
                 ))}
               </tbody>

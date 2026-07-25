@@ -22,11 +22,6 @@ const PLAN_BADGE: Record<PlanSlug, string> = {
   enterprise: 'bg-violet-600 text-white',
 };
 
-function formatPrice(cents: number): string {
-  if (cents === 0) return 'Free';
-  return `$${(cents / 100).toFixed(0)}`;
-}
-
 export function PlanCard({ plan, currentSlug, billingCycle, onSelect, loading }: PlanCardProps) {
   const isCurrent = currentSlug === plan.slug;
   const price = billingCycle === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice;

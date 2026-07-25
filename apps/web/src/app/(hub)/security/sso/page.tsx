@@ -21,8 +21,8 @@ export default function SsoPage() {
   const { data: ssoData, isLoading: ssoLoading } = useSsoProviders();
   const { data: mfaData } = useMfaStatus();
 
-  const providers = (ssoData as any)?.providers ?? [];
-  const mfa = mfaData as any;
+  const providers = ssoData?.providers ?? [];
+  const mfa = mfaData;
 
   return (
     <div className="p-6 space-y-6">
@@ -87,7 +87,7 @@ export default function SsoPage() {
           </div>
         ) : (
           <div className="divide-y divide-zinc-50 dark:divide-zinc-800">
-            {providers.map((p: any) => (
+            {providers.map((p) => (
               <div key={p.id} className="px-4 py-4 flex items-center gap-4">
                 <span className="text-2xl">{SLUG_ICONS[p.slug] ?? '🔑'}</span>
                 <div className="flex-1 min-w-0">

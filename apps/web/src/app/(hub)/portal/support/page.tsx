@@ -4,7 +4,7 @@ import { useSupportTickets, useCreateTicket, useUpdateTicketStatus } from '@/hoo
 import { SupportTicketRow } from '@/components/portal/support-ticket-row';
 import { PageLoading } from '@/components/common/loading-state';
 import { ErrorState } from '@/components/common/error-boundary';
-import type { SupportStatus } from '@/types/portal';
+import type { SupportCategory, SupportSeverity, SupportStatus } from '@/types/portal';
 
 const STATUS_TABS: { value: SupportStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'Todos' },
@@ -17,7 +17,12 @@ const STATUS_TABS: { value: SupportStatus | 'all'; label: string }[] = [
 export default function SupportPage() {
   const [tab, setTab] = useState<SupportStatus | 'all'>('all');
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    title: string;
+    description: string;
+    severity: SupportSeverity;
+    category: SupportCategory;
+  }>({
     title: '',
     description: '',
     severity: 'P3',
@@ -82,7 +87,7 @@ export default function SupportPage() {
             <select
               className="flex-1 rounded bg-slate-900 px-3 py-2 text-sm text-slate-200 border border-slate-700"
               value={form.severity}
-              onChange={(e) => setForm({ ...form, severity: e.target.value })}
+              onChange={(e) => setForm({ ...form, severity: e.target.value as SupportSeverity })}
             >
               {['P1', 'P2', 'P3', 'P4'].map((s) => (
                 <option key={s}>{s}</option>
@@ -91,7 +96,7 @@ export default function SupportPage() {
             <select
               className="flex-1 rounded bg-slate-900 px-3 py-2 text-sm text-slate-200 border border-slate-700"
               value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              onChange={(e) => setForm({ ...form, category: e.target.value as SupportCategory })}
             >
               {['billing', 'technical', 'security', 'integration', 'other'].map((c) => (
                 <option key={c}>{c}</option>
@@ -101,7 +106,7 @@ export default function SupportPage() {
           <div className="flex gap-2">
             <button
               onClick={() => {
-                createTicket.mutate(form as any, { onSuccess: () => setShowForm(false) });
+                createTicket.mutate(form, { onSuccess: () => setShowForm(false) });
               }}
               className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
             >

@@ -10,7 +10,6 @@ import {
   useCreateBackup,
   useRestore,
   useRunRecoveryTest,
-  useTriggerFailover,
 } from '@/hooks/use-ha';
 import { ClusterStatus } from '@/components/ha/ClusterStatus';
 import { NodeList } from '@/components/ha/NodeList';
@@ -33,7 +32,6 @@ export default function InfrastructurePage() {
   const createBackup = useCreateBackup();
   const restore = useRestore();
   const runTest = useRunRecoveryTest();
-  const doFailover = useTriggerFailover();
 
   const allNodes = nodes.data?.nodes ?? [];
   const haEvents: HaEvent[] = []; // populated via a dedicated /ha/events endpoint if extended

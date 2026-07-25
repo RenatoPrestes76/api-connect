@@ -1,4 +1,4 @@
-import type { WorkflowGraph, Workflow } from './workflow';
+import type { WorkflowGraph } from './workflow';
 
 // ─── Plan ─────────────────────────────────────────────────────────────────────
 

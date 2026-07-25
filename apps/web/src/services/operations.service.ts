@@ -4,7 +4,7 @@ import type {
   TenantHealth,
   OperationsAlert,
   OperationsEvent,
-  OperationsMetric,
+  OperationsMetricsResult,
   SlaRecord,
   ActionResult,
   AlertSeverity,
@@ -50,7 +50,7 @@ export const operationsService = {
     return api.get(`/api/v1/operations/events${qs}`);
   },
 
-  getMetrics(tenantId?: string): Promise<any> {
+  getMetrics(tenantId?: string): Promise<OperationsMetricsResult> {
     const qs = tenantId ? `?tenantId=${tenantId}` : '';
     return api.get(`/api/v1/operations/metrics${qs}`);
   },

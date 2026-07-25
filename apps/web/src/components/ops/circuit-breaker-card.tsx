@@ -19,7 +19,8 @@ const STATE_STYLES: Record<CircuitState, { badge: string; border: string; label:
 };
 
 interface Props {
-  circuit: CircuitBreakerMetrics;
+  circuit: Pick<CircuitBreakerMetrics, 'name' | 'state' | 'failures' | 'totalRequests'> &
+    Partial<Pick<CircuitBreakerMetrics, 'rejectedRequests' | 'lastFailureTime'>>;
   onReset?: (name: string) => void;
 }
 

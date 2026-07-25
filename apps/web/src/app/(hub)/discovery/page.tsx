@@ -1,13 +1,12 @@
 'use client';
 import { useState } from 'react';
-import { Search, ChevronDown, ChevronRight } from 'lucide-react';
+import { Search, ChevronRight } from 'lucide-react';
 import { PageHeader } from '@/components/common/page-header';
 import { PageLoading } from '@/components/common/loading-state';
 import { ErrorState } from '@/components/common/error-boundary';
 import { EmptyState } from '@/components/common/empty-state';
 import { DiscoveryCard } from '@/components/discovery/confidence-bar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import {
   useDiscoveryRuns,

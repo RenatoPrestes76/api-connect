@@ -155,6 +155,64 @@ export interface ConsentRecord {
   version: string;
 }
 
+export interface SecretsResponse {
+  secrets: SecretMetadata[];
+  total: number;
+}
+
+export interface SsoProvidersResponse {
+  providers: SSOProvider[];
+  total: number;
+}
+
+export interface PoliciesResponse {
+  policies: Policy[];
+  total: number;
+}
+
+export interface AuditEntriesResponse {
+  entries: AuditEntry[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface ChainVerificationResult {
+  valid: boolean;
+  invalidAt: number | null;
+  total: number;
+}
+
+export interface RiskEventsResponse {
+  events: RiskEvent[];
+  total: number;
+}
+
+export interface CertificatesResponse {
+  certificates: Certificate[];
+  expiringSoon: number;
+  total: number;
+}
+
+export interface ComplianceFrameworkSummary {
+  framework: string;
+  total: number;
+  compliant: number;
+  partial: number;
+  nonCompliant: number;
+}
+
+export interface ComplianceResponse {
+  controls: ComplianceControl[];
+  summary: ComplianceFrameworkSummary[];
+  total: number;
+}
+
+export interface ConsentResponse {
+  records: ConsentRecord[];
+  total: number;
+}
+
 export interface SecurityDashboard {
   eventsToday: number;
   failedAuthLast24h: number;

@@ -3,12 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Trash2, MessageSquare } from 'lucide-react';
 import { MessageBubble, TypingIndicator } from './message-bubble';
 import { SuggestionsPanel } from './suggestions-panel';
-import {
-  useSendMessage,
-  useConversation,
-  useConversations,
-  useDeleteConversation,
-} from '@/hooks/use-copilot';
+import { useSendMessage, useConversation, useDeleteConversation } from '@/hooks/use-copilot';
 import type { CopilotContext, CopilotMessage } from '@/types/copilot';
 import { cn } from '@/lib/utils';
 

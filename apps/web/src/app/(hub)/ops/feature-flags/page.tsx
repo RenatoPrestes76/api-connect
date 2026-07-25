@@ -15,7 +15,7 @@ export default function FeatureFlagsPage() {
     Record<string, { enabled: boolean; variant: string; reason: string }>
   >({});
 
-  const flags: FeatureFlag[] = (data as any)?.flags ?? [];
+  const flags: FeatureFlag[] = data?.flags ?? [];
   const enabledCount = flags.filter((f) => f.enabled).length;
 
   const handleToggle = async (id: string, enabled: boolean) => {

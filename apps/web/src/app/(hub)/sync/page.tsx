@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Play, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { PageHeader } from '@/components/common/page-header';
 import { PageLoading } from '@/components/common/loading-state';
 import { ErrorState } from '@/components/common/error-boundary';
@@ -9,7 +9,6 @@ import { DataTable, Pagination, type Column } from '@/components/common/data-tab
 import { StatusBadge } from '@/components/common/status-badge';
 import { Button } from '@/components/ui/button';
 import { useSyncHistory } from '@/hooks/use-sync';
-import { runSync } from '@/services/sync.service';
 import { formatDateTime, formatDuration, formatNumber } from '@/lib/utils';
 import type { SyncRecord } from '@/types/index';
 
@@ -70,21 +69,10 @@ const columns: Column<SyncRecord>[] = [
 
 export default function SyncPage() {
   const [page, setPage] = useState(1);
-  const [running, setRunning] = useState(false);
   const { data, isLoading, error, refetch } = useSyncHistory({
     limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE,
   });
-
-  const handleRunSync = async () => {
-    setRunning(true);
-    try {
-      await runSync({ connectorId: '' }); // connector selection is out of scope for this demo
-      void refetch();
-    } finally {
-      setRunning(false);
-    }
-  };
 
   if (isLoading) return <PageLoading />;
   if (error)

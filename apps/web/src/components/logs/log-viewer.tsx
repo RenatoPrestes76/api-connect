@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { Download, WrapText, Trash2 } from 'lucide-react';
+import { Download, WrapText } from 'lucide-react';
 import { cn, formatDateTime } from '@/lib/utils';
 import { LOG_LEVEL_COLORS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';

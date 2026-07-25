@@ -30,8 +30,7 @@ interface Props {
 export function RegionMap({ regions }: Props) {
   const byContinent: Record<string, Region[]> = {};
   for (const r of regions) {
-    if (!byContinent[r.continent]) byContinent[r.continent] = [];
-    byContinent[r.continent]!.push(r);
+    (byContinent[r.continent] ??= []).push(r);
   }
 
   return (

@@ -28,7 +28,7 @@ export function UsageMeter({ label, value, limit, unit = '' }: UsageMeterProps) 
         <span className="text-slate-300">{label}</span>
         <span className="text-slate-400 font-mono text-xs">
           {value.toLocaleString()}
-          {unit} {isUnlimited ? '' : `/ ${limit!.toLocaleString()}${unit}`}
+          {unit} {limit === null ? '' : `/ ${limit.toLocaleString()}${unit}`}
           {isUnlimited && <span className="text-emerald-400 ml-1">unlimited</span>}
         </span>
       </div>

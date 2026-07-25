@@ -14,13 +14,7 @@ import {
 } from 'lucide-react';
 import { ChatPanel } from '@/components/copilot/chat-panel';
 import { SearchBar } from '@/components/copilot/search-bar';
-import {
-  useConversations,
-  useDeleteConversation,
-  useDiagnose,
-  useGenerate,
-  useExplain,
-} from '@/hooks/use-copilot';
+import { useDiagnose, useGenerate, useExplain } from '@/hooks/use-copilot';
 import { useCopilotAudit } from '@/hooks/use-copilot';
 import { cn } from '@/lib/utils';
 import type {
@@ -394,44 +388,6 @@ function AuditTab() {
           <p className="text-sm font-medium truncate">{log.prompt}</p>
           <p className="text-xs text-muted-foreground truncate">{log.responsePreview}</p>
         </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── History sidebar ─────────────────────────────────────────────────────────
-
-function ConversationSidebar({
-  activeId,
-  onSelect,
-}: {
-  activeId?: string;
-  onSelect: (id: string) => void;
-}) {
-  const { data } = useConversations();
-  const items = data?.items ?? [];
-
-  if (items.length === 0) return null;
-
-  return (
-    <div className="space-y-0.5">
-      <p className="px-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-        Histórico
-      </p>
-      {items.slice(0, 8).map((conv) => (
-        <button
-          key={conv.id}
-          onClick={() => onSelect(conv.id)}
-          className={cn(
-            'w-full rounded-lg px-3 py-2.5 text-left transition-colors',
-            conv.id === activeId
-              ? 'bg-indigo-500/10 text-indigo-600'
-              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-          )}
-        >
-          <p className="text-xs font-medium truncate">{conv.title}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{conv.messageCount} msgs</p>
-        </button>
       ))}
     </div>
   );

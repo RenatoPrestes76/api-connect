@@ -4,7 +4,6 @@ import { useOpsDashboard, useHealth } from '@/hooks/use-ops';
 import { SloGauge } from '@/components/ops/slo-gauge';
 import { CircuitBreakerCard } from '@/components/ops/circuit-breaker-card';
 import { QueueStatusCard } from '@/components/ops/queue-status-card';
-import type { SloDefinition } from '@/types/ops';
 
 function KpiTile({
   label,
@@ -29,15 +28,8 @@ function KpiTile({
 export default function OpsPage() {
   const { data: dashboard, isLoading } = useOpsDashboard();
   const { data: health } = useHealth();
-  const d = dashboard as any;
-  const h = health as any;
-
-  const statusColor =
-    h?.status === 'healthy'
-      ? 'text-green-600'
-      : h?.status === 'degraded'
-        ? 'text-amber-500'
-        : 'text-red-600';
+  const d = dashboard;
+  const h = health;
 
   return (
     <div className="p-6 space-y-6">
@@ -89,7 +81,7 @@ export default function OpsPage() {
             value={d?.kpis.openCircuits.value ?? 0}
             sub={`of ${d?.kpis.openCircuits.total} circuit breakers`}
             color={
-              d?.kpis.openCircuits.value > 0
+              (d?.kpis.openCircuits.value ?? 0) > 0
                 ? 'text-red-600 dark:text-red-400'
                 : 'text-green-600 dark:text-green-400'
             }
@@ -97,7 +89,11 @@ export default function OpsPage() {
           <KpiTile
             label="Queue Depth"
             value={d?.kpis.queueDepth.value ?? 0}
-            sub={d?.kpis.queueDepth.dlq > 0 ? `${d.kpis.queueDepth.dlq} in DLQ` : 'No DLQ items'}
+            sub={
+              (d?.kpis.queueDepth.dlq ?? 0) > 0
+                ? `${d?.kpis.queueDepth.dlq} in DLQ`
+                : 'No DLQ items'
+            }
           />
           <KpiTile
             label="Feature Flags"
@@ -117,7 +113,7 @@ export default function OpsPage() {
               Health Checks
             </h3>
             <div className="space-y-2">
-              {h.checks.map((check: any) => (
+              {h.checks.map((check) => (
                 <div key={check.name} className="flex items-center justify-between text-sm">
                   <span className="text-zinc-700 dark:text-zinc-300">{check.name}</span>
                   <div className="flex items-center gap-2">
@@ -150,7 +146,7 @@ export default function OpsPage() {
             </h2>
           </div>
           <div className="divide-y divide-zinc-50 dark:divide-zinc-800 px-4">
-            {d.slos.map((slo: SloDefinition) => (
+            {d.slos.map((slo) => (
               <div key={slo.id} className="py-2.5">
                 <SloGauge slo={slo} compact />
               </div>
@@ -166,7 +162,7 @@ export default function OpsPage() {
             Circuit Breakers
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {d.circuitBreakers.map((c: any) => (
+            {d.circuitBreakers.map((c) => (
               <CircuitBreakerCard key={c.name} circuit={c} />
             ))}
           </div>

@@ -26,7 +26,11 @@ function formatValue(value: number, unit: string): string {
 }
 
 interface Props {
-  slo: SloDefinition;
+  slo: Pick<
+    SloDefinition,
+    'id' | 'name' | 'target' | 'current' | 'unit' | 'status' | 'errorBudgetPercent'
+  > &
+    Partial<Pick<SloDefinition, 'description' | 'windowDays'>>;
   compact?: boolean;
 }
 

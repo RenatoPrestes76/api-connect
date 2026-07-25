@@ -2,13 +2,6 @@
 
 import type { OperationsOverview } from '@/types/operations';
 
-const statusColor: Record<string, string> = {
-  healthy: 'text-emerald-600 dark:text-emerald-400',
-  warning: 'text-amber-600 dark:text-amber-400',
-  critical: 'text-red-600 dark:text-red-400',
-  offline: 'text-slate-500 dark:text-slate-400',
-};
-
 interface KpiCardProps {
   label: string;
   value: string | number;

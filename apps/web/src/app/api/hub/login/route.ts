@@ -13,7 +13,7 @@ const DEMO_USERS: Record<string, { password: string; role: string; name: string 
   'viewer@example.com': { password: 'viewer123', role: 'READ_ONLY', name: 'Read Only' },
 };
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<NextResponse> {
   let body: { email?: string; password?: string };
   try {
     body = (await req.json()) as { email?: string; password?: string };

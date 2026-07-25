@@ -60,9 +60,9 @@ export default function SecurityDashboardPage() {
     );
   }
 
-  const d = dashboard as any;
-  const topRisk = (riskData as any)?.events?.filter((e: any) => !e.resolved).slice(0, 5) ?? [];
-  const certs = (certData as any)?.certificates ?? [];
+  const d = dashboard;
+  const topRisk = riskData?.events?.filter((e) => !e.resolved).slice(0, 5) ?? [];
+  const certs = certData?.certificates ?? [];
 
   return (
     <div className="p-6 space-y-6">
@@ -76,13 +76,13 @@ export default function SecurityDashboardPage() {
       </div>
 
       {/* Critical alerts */}
-      {d?.criticalAlerts?.length > 0 && (
+      {d?.criticalAlerts && d.criticalAlerts.length > 0 && (
         <div className="rounded-lg border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/10 p-4">
           <div className="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">
             Critical Alerts
           </div>
           <ul className="space-y-1">
-            {d.criticalAlerts.map((alert: string, i: number) => (
+            {d.criticalAlerts.map((alert, i) => (
               <li
                 key={i}
                 className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2"
@@ -129,7 +129,7 @@ export default function SecurityDashboardPage() {
             </h2>
           </div>
           <div className="p-4 grid grid-cols-2 gap-3">
-            {Object.entries(d?.compliance ?? {}).map(([fw, status]: [string, any]) => (
+            {Object.entries(d?.compliance ?? {}).map(([fw, status]) => (
               <div
                 key={fw}
                 className="flex items-center justify-between py-2 border-b border-zinc-50 dark:border-zinc-800 last:border-0"
@@ -153,7 +153,7 @@ export default function SecurityDashboardPage() {
             </h2>
           </div>
           <div className="p-4 grid grid-cols-1 gap-3">
-            {certs.slice(0, 4).map((cert: any) => (
+            {certs.slice(0, 4).map((cert) => (
               <CertCard key={cert.id} cert={cert} />
             ))}
           </div>
@@ -178,7 +178,7 @@ export default function SecurityDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {topRisk.map((event: any) => (
+                {topRisk.map((event) => (
                   <tr
                     key={event.id}
                     className="border-b border-zinc-50 dark:border-zinc-800 last:border-0"

@@ -5,7 +5,6 @@ import {
   useCostReport,
   useRunbooks,
   useExecuteRunbook,
-  useQueryCopilot,
 } from '@/hooks/use-prometheus';
 import { ExecutiveCopilot } from '@/components/prometheus/ExecutiveCopilot';
 import { CapacityPlanning } from '@/components/prometheus/CapacityPlanning';
@@ -18,7 +17,6 @@ export default function PrometheusAIOpsPage() {
   const costs = useCostReport();
   const runbooks = useRunbooks();
   const execRunbook = useExecuteRunbook();
-  const copilot = useQueryCopilot();
 
   return (
     <div className="p-6 space-y-5 max-w-screen-2xl mx-auto">

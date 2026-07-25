@@ -74,6 +74,60 @@ export interface FinishResponse {
   summary: FinishSummary;
 }
 
+export interface CompanyStepResponse {
+  sessionId: string;
+  currentStep: SetupStep;
+  company: { name: string; domain: string; plan: SetupPlan; timezone: string; locale: string };
+  workspace: { name: string; environment: WorkspaceEnvironment };
+}
+
+export interface AdminStepResponse {
+  sessionId: string;
+  currentStep: SetupStep;
+  admin: { name: string; email: string; mfaEnabled: boolean };
+}
+
+export interface DatabaseStepResponse {
+  sessionId: string;
+  currentStep: SetupStep;
+  database: { type: DatabaseType; host: string; database: string; ssl: boolean };
+  connectionResult: { success: boolean; latencyMs: number };
+}
+
+export interface ConnectorStepResponse {
+  sessionId: string;
+  currentStep: SetupStep;
+  connector: { type: ConnectorType; name: string; baseUrl?: string };
+}
+
+export interface SecretsStepResponse {
+  sessionId: string;
+  currentStep: SetupStep;
+  secrets: { provider: SecretsProvider };
+}
+
+export interface SetupStatusResponse {
+  sessionId: string;
+  currentStep: SetupStep;
+  status: SessionStatus;
+  stepsCompleted: {
+    company: boolean;
+    admin: boolean;
+    database: boolean;
+    connector: boolean;
+    secrets: boolean;
+    provision: boolean;
+  };
+  provisionTasks: ProvisionTask[];
+  validationChecks: ValidationCheck[];
+  tenantId: string | null;
+  workspaceId: string | null;
+  agentId: string | null;
+  startedAt: string;
+  updatedAt: string;
+  logsCount: number;
+}
+
 // ─── Form data shapes ─────────────────────────────────────────────────────────
 
 export interface CompanyFormData {

@@ -1,7 +1,7 @@
 'use client';
 import { use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Database, Clock, Zap, AlertCircle } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/common/page-header';
 import { PageLoading } from '@/components/common/loading-state';
 import { ErrorState } from '@/components/common/error-boundary';
@@ -9,7 +9,7 @@ import { StatusBadge } from '@/components/common/status-badge';
 import { ConnectorActions } from '@/components/connectors/connector-actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useConnector, useInvalidateConnectors } from '@/hooks/use-connectors';
-import { formatRelative, formatDateTime, formatNumber } from '@/lib/utils';
+import { formatRelative, formatNumber } from '@/lib/utils';
 
 interface Props {
   params: Promise<{ id: string }>;

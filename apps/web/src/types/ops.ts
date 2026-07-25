@@ -27,6 +27,12 @@ export interface QueueStats {
   total: number;
 }
 
+export interface QueuesResponse {
+  jobs: Job[];
+  dlq: Job[];
+  stats: QueueStats;
+}
+
 // ─── Feature Flags ────────────────────────────────────────────────────────────
 export type FlagOperator = 'eq' | 'neq' | 'in' | 'notIn' | 'contains';
 
@@ -91,6 +97,11 @@ export interface SloSummary {
   total: number;
 }
 
+export interface SlosResponse {
+  slos: SloDefinition[];
+  summary: SloSummary;
+}
+
 // ─── DR ──────────────────────────────────────────────────────────────────────
 export interface DrConfig {
   rto: number;
@@ -123,6 +134,12 @@ export interface DrTest {
   executedAt: string;
 }
 
+export interface DrDashboard {
+  config: DrConfig | null;
+  backups: Backup[];
+  tests: DrTest[];
+}
+
 // ─── Circuit Breakers ─────────────────────────────────────────────────────────
 export type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 
@@ -136,6 +153,23 @@ export interface CircuitBreakerMetrics {
   lastFailureTime: string | null;
   lastStateChange: string;
   openedAt: string | null;
+}
+
+// ─── Health ──────────────────────────────────────────────────────────────────
+export interface HealthCheckResult {
+  name: string;
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  responseTime: number;
+  message?: string;
+  lastChecked: string;
+}
+
+export interface HealthReport {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  version: string;
+  uptime: number;
+  checks: HealthCheckResult[];
+  timestamp: string;
 }
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────

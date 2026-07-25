@@ -71,7 +71,7 @@ export function useSSE(url: string, options: UseSSEOptions = {}) {
       esRef.current = null;
       setConnected(false);
     };
-  }, [url]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [url]);
 
   return { events, connected, lastEvent };
 }

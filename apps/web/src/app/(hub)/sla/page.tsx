@@ -1,6 +1,6 @@
 'use client';
 import { formatDistanceToNow } from 'date-fns';
-import { Shield, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { PageHeader } from '@/components/common/page-header';
 import { PageLoading } from '@/components/common/loading-state';
 import { ErrorState } from '@/components/common/error-boundary';

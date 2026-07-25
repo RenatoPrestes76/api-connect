@@ -8,7 +8,6 @@ import { DataTable, type Column } from '@/components/common/data-table';
 import { StatusBadge } from '@/components/common/status-badge';
 import { Button } from '@/components/ui/button';
 import { useDatabases } from '@/hooks/use-databases';
-import { formatNumber } from '@/lib/utils';
 import type { DatabaseConnection } from '@/types/index';
 
 const columns: Column<DatabaseConnection>[] = [

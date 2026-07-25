@@ -9,13 +9,22 @@ import type {
   SecretsFormData,
   ProvisionResponse,
   FinishResponse,
+  CompanyStepResponse,
+  AdminStepResponse,
+  DatabaseStepResponse,
+  ConnectorStepResponse,
+  SecretsStepResponse,
+  SetupStatusResponse,
 } from '@/types/setup';
 
 const BASE = '/api/v1/setup';
 
 export const startSetup = (): Promise<StartResponse> => api.post(`${BASE}/start`);
 
-export const submitCompany = (sessionId: string, data: CompanyFormData): Promise<any> =>
+export const submitCompany = (
+  sessionId: string,
+  data: CompanyFormData
+): Promise<CompanyStepResponse> =>
   api.post(`${BASE}/company`, {
     sessionId,
     name: data.name,
@@ -30,7 +39,7 @@ export const submitCompany = (sessionId: string, data: CompanyFormData): Promise
     },
   });
 
-export const submitAdmin = (sessionId: string, data: AdminFormData): Promise<any> =>
+export const submitAdmin = (sessionId: string, data: AdminFormData): Promise<AdminStepResponse> =>
   api.post(`${BASE}/admin`, {
     sessionId,
     name: data.name,
@@ -40,7 +49,10 @@ export const submitAdmin = (sessionId: string, data: AdminFormData): Promise<any
     mfaEnabled: data.mfaEnabled,
   });
 
-export const submitDatabase = (sessionId: string, data: DatabaseFormData): Promise<any> =>
+export const submitDatabase = (
+  sessionId: string,
+  data: DatabaseFormData
+): Promise<DatabaseStepResponse> =>
   api.post(`${BASE}/database`, {
     sessionId,
     type: data.type,
@@ -51,7 +63,10 @@ export const submitDatabase = (sessionId: string, data: DatabaseFormData): Promi
     ssl: data.ssl,
   });
 
-export const submitConnector = (sessionId: string, data: ConnectorFormData): Promise<any> =>
+export const submitConnector = (
+  sessionId: string,
+  data: ConnectorFormData
+): Promise<ConnectorStepResponse> =>
   api.post(`${BASE}/connector`, {
     sessionId,
     type: data.type,
@@ -59,7 +74,10 @@ export const submitConnector = (sessionId: string, data: ConnectorFormData): Pro
     baseUrl: data.baseUrl || undefined,
   });
 
-export const submitSecrets = (sessionId: string, data: SecretsFormData): Promise<any> =>
+export const submitSecrets = (
+  sessionId: string,
+  data: SecretsFormData
+): Promise<SecretsStepResponse> =>
   api.post(`${BASE}/secrets`, { sessionId, provider: data.provider });
 
 export const runProvision = (sessionId: string, agent: AgentFormData): Promise<ProvisionResponse> =>
@@ -69,7 +87,7 @@ export const runProvision = (sessionId: string, agent: AgentFormData): Promise<P
     agentType: agent.type,
   });
 
-export const getSetupStatus = (sessionId: string): Promise<any> =>
+export const getSetupStatus = (sessionId: string): Promise<SetupStatusResponse> =>
   api.get(`${BASE}/status?sessionId=${sessionId}`);
 
 export const finishSetup = (sessionId: string): Promise<FinishResponse> =>

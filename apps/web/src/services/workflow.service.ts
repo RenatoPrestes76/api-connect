@@ -42,8 +42,8 @@ export function updateWorkflow(
   return api.put<Workflow>(`${BASE}/workflows/${id}`, body);
 }
 
-export function deleteWorkflow(id: string): Promise<void> {
-  return api.delete<void>(`${BASE}/workflows/${id}`);
+export async function deleteWorkflow(id: string): Promise<void> {
+  await api.delete(`${BASE}/workflows/${id}`);
 }
 
 export function activateWorkflow(id: string): Promise<Workflow> {
