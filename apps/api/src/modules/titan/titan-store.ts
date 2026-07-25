@@ -77,11 +77,11 @@ function uid(prefix = 'id'): string {
 }
 
 class TitanStore {
-  private jobQueues: Map<JobPriority, Job[]> = new Map([
-    ['high', []],
-    ['normal', []],
-    ['low', []],
-  ]);
+  private jobQueues: Record<JobPriority, Job[]> = {
+    high: [],
+    normal: [],
+    low: [],
+  };
   private dlq: Job[] = [];
   private jobIndex = new Map<string, Job>();
   private idempotencyIndex = new Map<string, string>();
@@ -238,7 +238,7 @@ class TitanStore {
         failedAt: null,
         error: null,
       };
-      this.jobQueues.get(t.priority)!.push(job);
+      this.jobQueues[t.priority].push(job);
       this.jobIndex.set(job.id, job);
     }
 
@@ -391,21 +391,17 @@ class TitanStore {
   // ─── Queue API ─────────────────────────────────────────────────────────────
   getQueueStats(): { high: number; normal: number; low: number; dlq: number; total: number } {
     return {
-      high: this.jobQueues.get('high')!.length,
-      normal: this.jobQueues.get('normal')!.length,
-      low: this.jobQueues.get('low')!.length,
+      high: this.jobQueues.high.length,
+      normal: this.jobQueues.normal.length,
+      low: this.jobQueues.low.length,
       dlq: this.dlq.length,
       total: this.jobIndex.size,
     };
   }
 
   listJobs(priority?: JobPriority): Job[] {
-    if (priority) return [...(this.jobQueues.get(priority) ?? [])];
-    return [
-      ...this.jobQueues.get('high')!,
-      ...this.jobQueues.get('normal')!,
-      ...this.jobQueues.get('low')!,
-    ];
+    if (priority) return [...this.jobQueues[priority]];
+    return [...this.jobQueues.high, ...this.jobQueues.normal, ...this.jobQueues.low];
   }
 
   listDlq(): Job[] {
@@ -441,7 +437,7 @@ class TitanStore {
       failedAt: null,
       error: null,
     };
-    this.jobQueues.get(priority)!.push(job);
+    this.jobQueues[priority].push(job);
     this.jobIndex.set(job.id, job);
     if (data.idempotencyKey) this.idempotencyIndex.set(data.idempotencyKey, job.id);
     return job;
@@ -451,12 +447,12 @@ class TitanStore {
     const idx = this.dlq.findIndex((j) => j.id === jobId);
     if (idx === -1) return null;
     const [job] = this.dlq.splice(idx, 1);
-    job!.status = 'pending';
-    job!.attempts = 0;
-    job!.error = null;
-    job!.failedAt = null;
-    this.jobQueues.get(job!.priority)!.push(job!);
-    return job!;
+    job.status = 'pending';
+    job.attempts = 0;
+    job.error = null;
+    job.failedAt = null;
+    this.jobQueues[job.priority].push(job);
+    return job;
   }
 
   // ─── Feature Flags ─────────────────────────────────────────────────────────

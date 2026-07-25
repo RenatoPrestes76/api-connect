@@ -87,18 +87,19 @@ function seedAlertRules(): AlertRule[] {
       ['slack', 'webhook'],
     ],
   ];
+  const triggeredCounts = [12, 3, 7, 5, 2, 8, 1, 15, 4, 0];
   return rules.map(([name, description, condition, severity, channels], i) => ({
     id: randomUUID(),
-    name: name!,
-    description: description!,
-    condition: condition!,
-    severity: severity!,
-    channels: channels!,
+    name,
+    description,
+    condition,
+    severity,
+    channels,
     cooldownMs: 300_000,
     active: i < 8,
     createdAt: daysAgo(30 - i),
     updatedAt: daysAgo(10 - i),
-    triggeredCount: [12, 3, 7, 5, 2, 8, 1, 15, 4, 0][i]!,
+    triggeredCount: triggeredCounts[i] ?? 0,
     lastTriggeredAt: i < 7 ? minutesAgo(15 * (i + 1)) : undefined,
   }));
 }
@@ -116,27 +117,26 @@ function seedAlerts(rules: AlertRule[]): Alert[] {
     'Success rate dropped to 91.2% (threshold: 95%)',
     'Memory usage at 87% on prod-worker-01',
   ];
+  const severities: AlertSeverity[] = [
+    'INFO',
+    'WARNING',
+    'ERROR',
+    'CRITICAL',
+    'WARNING',
+    'ERROR',
+    'WARNING',
+    'CRITICAL',
+    'WARNING',
+    'WARNING',
+  ];
   return messages.map((message, i) => ({
     id: randomUUID(),
-    ruleId: rules[i % rules.length]!.id,
-    ruleName: rules[i % rules.length]!.name,
-    severity: (
-      [
-        'INFO',
-        'WARNING',
-        'ERROR',
-        'CRITICAL',
-        'WARNING',
-        'ERROR',
-        'WARNING',
-        'CRITICAL',
-        'WARNING',
-        'WARNING',
-      ] as AlertSeverity[]
-    )[i]!,
+    ruleId: rules[i % rules.length].id,
+    ruleName: rules[i % rules.length].name,
+    severity: severities[i],
     message,
-    channels: rules[i % rules.length]!.channels,
-    deliveredTo: rules[i % rules.length]!.channels,
+    channels: rules[i % rules.length].channels,
+    deliveredTo: rules[i % rules.length].channels,
     timestamp: minutesAgo((i + 1) * 12),
     acknowledged: i > 5,
     acknowledgedAt: i > 5 ? minutesAgo((i - 5) * 8) : undefined,
@@ -308,17 +308,17 @@ function seedAuditLogs(): AuditLog[] {
   ];
   const logs: AuditLog[] = [];
   for (let i = 0; i < 200; i++) {
-    const [action, resourceType, resourceName] = actions[i % actions.length]!;
-    const actor = actors[i % actors.length]!;
-    const failed = action!.includes('failed') || i % 17 === 0;
+    const [action, resourceType, resourceName] = actions[i % actions.length];
+    const actor = actors[i % actors.length];
+    const failed = action.includes('failed') || i % 17 === 0;
     logs.push({
       id: randomUUID(),
       timestamp: minutesAgo(i * 3 + 1),
       actor,
-      action: action!,
-      resourceType: resourceType!,
+      action,
+      resourceType,
       resourceId: randomUUID(),
-      resourceName: resourceName!,
+      resourceName,
       ip: actor.includes('@') ? `10.0.${i % 4}.${i % 255}` : undefined,
       outcome: failed ? 'failure' : 'success',
     });
@@ -401,7 +401,7 @@ function seedSLAEvents(slas: SLADefinition[]): SLAEvent[] {
   const events: SLAEvent[] = [];
   const workflowNames = ['ERP Product Sync', 'Customer Onboarding Alert', 'Daily Atlas Report'];
   for (let i = 0; i < 30; i++) {
-    const sla = slas[i % slas.length]!;
+    const sla = slas[i % slas.length];
     const dur = sla.maxDurationMs * (0.5 + Math.random() * 1.2);
     const breached = dur > sla.maxDurationMs;
     const warn = !breached && dur > sla.warnThresholdMs;
@@ -411,7 +411,7 @@ function seedSLAEvents(slas: SLADefinition[]): SLAEvent[] {
       slaId: sla.id,
       slaName: sla.name,
       executionId: randomUUID(),
-      workflowName: workflowNames[i % workflowNames.length]!,
+      workflowName: workflowNames[i % workflowNames.length],
       actualDurationMs: Math.round(dur),
       limitMs: sla.maxDurationMs,
       breached,

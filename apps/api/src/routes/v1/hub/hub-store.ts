@@ -138,7 +138,7 @@ class HubStore {
   private _seed(): void {
     // Agents
     const agentA: AgentSummary = {
-      id: AGENT_IDS[0]!,
+      id: AGENT_IDS[0],
       hostname: 'prod-worker-01',
       version: '2.4.1',
       os: 'Linux x86_64',
@@ -150,7 +150,7 @@ class HubStore {
       errorCount: 3,
     };
     const agentB: AgentSummary = {
-      id: AGENT_IDS[1]!,
+      id: AGENT_IDS[1],
       hostname: 'staging-worker-02',
       version: '2.4.0',
       os: 'Linux x86_64',
@@ -167,7 +167,7 @@ class HubStore {
     // Connectors
     const conns: ConnectorInstance[] = [
       {
-        id: CONN_IDS[0]!,
+        id: CONN_IDS[0],
         name: 'ERP-Prod',
         version: '1.3.0',
         driver: 'postgresql',
@@ -181,7 +181,7 @@ class HubStore {
         agentId: AGENT_IDS[0],
       },
       {
-        id: CONN_IDS[1]!,
+        id: CONN_IDS[1],
         name: 'CRM-Prod',
         version: '1.2.4',
         driver: 'mysql',
@@ -195,7 +195,7 @@ class HubStore {
         agentId: AGENT_IDS[0],
       },
       {
-        id: CONN_IDS[2]!,
+        id: CONN_IDS[2],
         name: 'ERP-Staging',
         version: '1.3.0',
         driver: 'postgresql',
@@ -214,7 +214,7 @@ class HubStore {
     // Databases
     const dbs: DatabaseConnection[] = [
       {
-        id: DB_IDS[0]!,
+        id: DB_IDS[0],
         name: 'ERP Production',
         driver: 'postgresql',
         host: 'db.prod.internal',
@@ -229,7 +229,7 @@ class HubStore {
         schema: 'public',
       },
       {
-        id: DB_IDS[1]!,
+        id: DB_IDS[1],
         name: 'CRM Production',
         driver: 'mysql',
         host: 'crm-db.prod.internal',
@@ -259,9 +259,9 @@ class HubStore {
     ];
     for (let i = 0; i < 40; i++) {
       const connIdx = i % 3;
-      const cid = CONN_IDS[connIdx]!;
-      const cname = ['ERP-Prod', 'CRM-Prod', 'ERP-Staging'][connIdx]!;
-      const result = results[i % results.length]!;
+      const cid = CONN_IDS[connIdx];
+      const cname = ['ERP-Prod', 'CRM-Prod', 'ERP-Staging'][connIdx];
+      const result = results[i % results.length];
       const dur = result === 'FAILED' ? undefined : 800 + Math.floor(Math.random() * 2200);
       const started = new Date(Date.now() - (i * 18 + 2) * 60_000).toISOString();
       const finished = dur ? new Date(Date.parse(started) + dur).toISOString() : undefined;
@@ -269,7 +269,7 @@ class HubStore {
         id: randomUUID(),
         connectorId: cid,
         connector: cname,
-        agentId: AGENT_IDS[connIdx % 2]!,
+        agentId: AGENT_IDS[connIdx % 2],
         startedAt: started,
         finishedAt: finished,
         durationMs: dur,
@@ -294,7 +294,7 @@ class HubStore {
       { level: 'fatal' as LogLevel, msg: 'Database connection refused', conn: 'ERP-Staging' },
     ];
     for (let i = 0; i < 100; i++) {
-      const m = messages[i % messages.length]!;
+      const m = messages[i % messages.length];
       this.logs.push({
         id: randomUUID(),
         timestamp: new Date(Date.now() - i * 90_000).toISOString(),
