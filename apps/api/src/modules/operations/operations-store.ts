@@ -485,11 +485,11 @@ function seedSla(): SlaRecord[] {
     tenantIds.map((tenantId, i) => ({
       id: genId('sla'),
       tenantId,
-      tenantName: names[tenantId]!,
-      availability: avail[i]!,
+      tenantName: names[tenantId],
+      availability: avail[i],
       period,
-      target: targets[tenantId]!,
-      met: avail[i]! >= targets[tenantId]!,
+      target: targets[tenantId],
+      met: avail[i] >= targets[tenantId],
       createdAt: nowIso(),
     }))
   );

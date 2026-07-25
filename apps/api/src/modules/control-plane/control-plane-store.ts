@@ -735,8 +735,11 @@ export class ControlPlaneStore {
     });
     this.organizations.forEach((o) => (o.createdAt = daysAgo(150)));
 
-    const envFor = (orgId: string, kind: Environment['kind']): Environment =>
-      this.environments.find((e) => e.organizationId === orgId && e.kind === kind)!;
+    const envFor = (orgId: string, kind: Environment['kind']): Environment => {
+      const env = this.environments.find((e) => e.organizationId === orgId && e.kind === kind);
+      if (!env) throw new Error(`Seed environment not found for org ${orgId} kind ${kind}`);
+      return env;
+    };
 
     // Runtimes
     const mkRuntime = (
@@ -802,7 +805,7 @@ export class ControlPlaneStore {
         slug,
         name,
         description,
-        version: versions[versions.length - 1]!,
+        version: versions[versions.length - 1],
         publisherId: 'seltriva-core',
         status: 'PUBLISHED',
         category,
@@ -866,10 +869,12 @@ export class ControlPlaneStore {
     // Installations + deployments
     const mssqlLatest = this.connectorVersions.find(
       (v) => v.pluginId === cMssql.id && v.version === '1.2.0'
-    )!;
+    );
+    if (!mssqlLatest) throw new Error('Seed connector version mssql@1.2.0 not found');
     const postgresLatest = this.connectorVersions.find(
       (v) => v.pluginId === cPostgres.id && v.version === '1.3.0'
-    )!;
+    );
+    if (!postgresLatest) throw new Error('Seed connector version postgres@1.3.0 not found');
 
     this.createDeployment({
       organizationId: orgAcme.id,
@@ -902,7 +907,8 @@ export class ControlPlaneStore {
 
     const mssqlV1 = this.connectorVersions.find(
       (v) => v.pluginId === cMssql.id && v.version === '1.0.0'
-    )!;
+    );
+    if (!mssqlV1) throw new Error('Seed connector version mssql@1.0.0 not found');
     this.deployments.push({
       id: randomUUID(),
       organizationId: orgTech.id,

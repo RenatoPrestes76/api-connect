@@ -17,6 +17,12 @@ function now(): string {
   return new Date().toISOString();
 }
 
+function getPlan(slug: PlanSlug): Plan {
+  const plan = PLANS.find((p) => p.slug === slug);
+  if (!plan) throw new Error(`Unknown plan slug "${slug}"`);
+  return plan;
+}
+
 function monthStr(offset = 0): string {
   const d = new Date();
   d.setMonth(d.getMonth() + offset);
@@ -85,7 +91,7 @@ class BillingStore {
 
   changePlan(tenantId: string, newPlanSlug: PlanSlug, billingCycle: BillingCycle): Subscription {
     const sub = this.getSubscription(tenantId);
-    const plan = PLANS.find((p) => p.slug === newPlanSlug)!;
+    const plan = getPlan(newPlanSlug);
 
     if (sub) {
       const updated: Subscription = {
@@ -172,7 +178,7 @@ class BillingStore {
     };
 
     for (const sub of active) {
-      const plan = PLANS.find((p) => p.slug === sub.planSlug)!;
+      const plan = getPlan(sub.planSlug);
       const monthly =
         sub.billingCycle === 'yearly' ? Math.round(plan.yearlyPrice / 12) : plan.monthlyPrice;
       mrr += monthly;
@@ -182,7 +188,7 @@ class BillingStore {
     const totalAiCredits = this.usageRecords.reduce((sum, u) => sum + u.aiCreditsUsed, 0);
 
     const topCustomers = active.map((sub) => {
-      const plan = PLANS.find((p) => p.slug === sub.planSlug)!;
+      const plan = getPlan(sub.planSlug);
       const spend =
         sub.billingCycle === 'yearly' ? Math.round(plan.yearlyPrice / 12) : plan.monthlyPrice;
       return { tenantId: sub.tenantId, planSlug: sub.planSlug, spend };
@@ -191,7 +197,8 @@ class BillingStore {
     const now30 = new Date();
     now30.setDate(now30.getDate() + 30);
     const expiring = [...this.licenses.values()].filter(
-      (l) => l.expiresAt && new Date(l.expiresAt) < now30 && l.status === 'active'
+      (l): l is License & { expiresAt: string } =>
+        Boolean(l.expiresAt) && new Date(l.expiresAt as string) < now30 && l.status === 'active'
     );
 
     const overdue = this.invoices.filter((i) => i.status === 'open');
@@ -210,7 +217,7 @@ class BillingStore {
       expiringLicenses: expiring.map((l) => ({
         tenantId: l.tenantId,
         licenseId: l.id,
-        expiresAt: l.expiresAt!,
+        expiresAt: l.expiresAt,
       })),
       overdueInvoices: overdue,
     };
@@ -224,7 +231,7 @@ class BillingStore {
     planSlug: PlanSlug,
     billingCycle: BillingCycle
   ): Invoice {
-    const plan = PLANS.find((p) => p.slug === planSlug)!;
+    const plan = getPlan(planSlug);
     const subtotal = billingCycle === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice;
     const tax = Math.round(subtotal * 0.1);
     const inv: Invoice = {
@@ -276,7 +283,7 @@ class BillingStore {
     planSlug: PlanSlug,
     billingCycle: BillingCycle
   ): Subscription {
-    const plan = PLANS.find((p) => p.slug === planSlug)!;
+    const plan = getPlan(planSlug);
     const subId = `sub-${tenantId}-${Date.now()}`;
     const sub: Subscription = {
       id: subId,

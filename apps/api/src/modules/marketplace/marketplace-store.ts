@@ -20,7 +20,8 @@ class MarketplaceStore {
     const now = new Date();
 
     // seltriva-erp — installed (latest)
-    const erpConn = getConnector('seltriva-erp')!;
+    const erpConn = getConnector('seltriva-erp');
+    if (!erpConn) throw new Error('Seed connector "seltriva-erp" not found in catalog');
     const erpInst: ConnectorInstallation = {
       id: randomUUID(),
       connectorId: 'seltriva-erp',
@@ -36,7 +37,8 @@ class MarketplaceStore {
     this.installations.set(erpInst.id, erpInst);
 
     // postgresql — installed (latest)
-    const pgConn = getConnector('postgresql')!;
+    const pgConn = getConnector('postgresql');
+    if (!pgConn) throw new Error('Seed connector "postgresql" not found in catalog');
     const pgInst: ConnectorInstallation = {
       id: randomUUID(),
       connectorId: 'postgresql',
@@ -52,7 +54,8 @@ class MarketplaceStore {
     this.installations.set(pgInst.id, pgInst);
 
     // mercado-livre — installed on OLD version → update-available
-    const mlConn = getConnector('mercado-livre')!;
+    const mlConn = getConnector('mercado-livre');
+    if (!mlConn) throw new Error('Seed connector "mercado-livre" not found in catalog');
     // versions array is newest-first; find an old version string (different from manifest.version)
     const mlOldVersion =
       mlConn.versions.find((v) => v.version !== mlConn.manifest.version)?.version ?? '0.0.1';
@@ -139,7 +142,8 @@ class MarketplaceStore {
   // ─── Mutations ───────────────────────────────────────────────────────────
 
   install(connectorId: string, version: string, actor: string): ConnectorInstallation {
-    const conn = getConnector(connectorId)!;
+    const conn = getConnector(connectorId);
+    if (!conn) throw new Error(`Connector "${connectorId}" not found in catalog`);
     const now = new Date().toISOString();
     const inst: ConnectorInstallation = {
       id: randomUUID(),
@@ -162,15 +166,18 @@ class MarketplaceStore {
   }
 
   uninstall(id: string, actor: string): ConnectorInstallation {
-    const inst = this.installations.get(id)!;
+    const inst = this.installations.get(id);
+    if (!inst) throw new Error(`Installation "${id}" not found`);
     this.installations.delete(id);
     this._log('uninstall', inst.connectorId, inst.connectorName, inst.version, actor);
     return inst;
   }
 
   update(id: string, toVersion: string, actor: string): ConnectorInstallation {
-    const inst = this.installations.get(id)!;
-    const conn = getConnector(inst.connectorId)!;
+    const inst = this.installations.get(id);
+    if (!inst) throw new Error(`Installation "${id}" not found`);
+    const conn = getConnector(inst.connectorId);
+    if (!conn) throw new Error(`Connector "${inst.connectorId}" not found in catalog`);
     const updated: ConnectorInstallation = {
       ...inst,
       version: toVersion,
@@ -186,7 +193,8 @@ class MarketplaceStore {
   }
 
   setEnabled(id: string, enabled: boolean, actor: string): ConnectorInstallation {
-    const inst = this.installations.get(id)!;
+    const inst = this.installations.get(id);
+    if (!inst) throw new Error(`Installation "${id}" not found`);
     const updated: ConnectorInstallation = {
       ...inst,
       enabled,
