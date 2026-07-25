@@ -22,6 +22,17 @@ export const PERMISSION_CATALOG: Array<{
   { resource: 'invites', action: 'read', description: 'View pending invites' },
   { resource: 'invites', action: 'write', description: 'Invite new members' },
   { resource: 'audit', action: 'read', description: 'Read the organization audit log' },
+  { resource: 'api-keys', action: 'read', description: 'View API keys' },
+  {
+    resource: 'api-keys',
+    action: 'manage',
+    description: 'Create, revoke, and regenerate API keys',
+  },
+  { resource: 'rate-limits', action: 'read', description: 'View rate limit rules' },
+  { resource: 'rate-limits', action: 'manage', description: 'Configure rate limit rules' },
+  { resource: 'gateway-settings', action: 'read', description: 'View gateway settings' },
+  { resource: 'gateway-settings', action: 'manage', description: 'Configure gateway settings' },
+  { resource: 'api-logs', action: 'read', description: 'Read the centralized API request log' },
 ];
 
 export function permissionKey(
@@ -43,14 +54,32 @@ export const ROLE_PERMISSIONS: Record<OrgRole, PortalPermissionKey[]> = {
     'environments.write',
     'org-users.read',
     'invites.read',
+    'api-keys.read',
+    'api-keys.manage',
+    'rate-limits.read',
+    'gateway-settings.read',
+    'api-logs.read',
   ],
-  OPERATOR: ['organization.read', 'environments.read', 'environments.write', 'org-users.read'],
+  OPERATOR: [
+    'organization.read',
+    'environments.read',
+    'environments.write',
+    'org-users.read',
+    'api-keys.read',
+    'rate-limits.read',
+    'gateway-settings.read',
+    'api-logs.read',
+  ],
   VIEWER: [
     'organization.read',
     'environments.read',
     'org-users.read',
     'invites.read',
     'audit.read',
+    'api-keys.read',
+    'rate-limits.read',
+    'gateway-settings.read',
+    'api-logs.read',
   ],
 };
 

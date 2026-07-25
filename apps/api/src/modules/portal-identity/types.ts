@@ -15,7 +15,11 @@ export type PortalPermissionResource =
   | 'environments'
   | 'org-users'
   | 'invites'
-  | 'audit';
+  | 'audit'
+  | 'api-keys'
+  | 'rate-limits'
+  | 'gateway-settings'
+  | 'api-logs';
 export type PortalPermissionAction = 'read' | 'write' | 'delete' | 'manage';
 
 /** `${resource}.${action}` — e.g. "organization.write". */
@@ -135,7 +139,14 @@ export type OrgAuditAction =
   | 'LOGIN'
   | 'LOGIN_FAILED'
   | 'ENVIRONMENT_CREATED'
-  | 'ENVIRONMENT_DELETED';
+  | 'ENVIRONMENT_DELETED'
+  // Sprint 46.5 — API Gateway Foundation
+  | 'API_KEY_CREATED'
+  | 'API_KEY_REVOKED'
+  | 'API_KEY_REGENERATED'
+  | 'RATE_LIMIT_RULE_UPDATED'
+  | 'RATE_LIMIT_RULE_DELETED'
+  | 'GATEWAY_SETTINGS_UPDATED';
 
 export interface OrgAuditEntry {
   id: string;

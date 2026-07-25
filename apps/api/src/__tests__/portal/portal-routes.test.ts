@@ -152,91 +152,9 @@ describe('PUT /api/v1/portal/support/:id/status', () => {
 });
 
 // ─── API Keys ─────────────────────────────────────────────────────────────────
-describe('GET /api/v1/portal/api-keys', () => {
-  it('returns API keys for enterprise tenant', async () => {
-    const { status, body } = await get<any>(srv.baseUrl, '/api/v1/portal/api-keys', ENT);
-    expect(status).toBe(200);
-    expect(body.total).toBeGreaterThanOrEqual(3);
-    expect(body.keys.every((k: any) => !k.keyHash)).toBe(true);
-  });
-});
-
-describe('POST /api/v1/portal/api-keys', () => {
-  it('creates a new API key and returns full key once', async () => {
-    const { status, body } = await post<any>(
-      srv.baseUrl,
-      '/api/v1/portal/api-keys',
-      {
-        name: 'Test Key',
-        scopes: ['read:workflows'],
-      },
-      ENT
-    );
-    expect(status).toBe(201);
-    expect(body.key).toBeTruthy();
-    expect(body.key.length).toBeGreaterThan(8);
-    expect(body.active).toBe(true);
-  });
-
-  it('returns 400 when name missing', async () => {
-    const { status, body } = await post<any>(srv.baseUrl, '/api/v1/portal/api-keys', {
-      scopes: ['read:workflows'],
-    });
-    expect(status).toBe(400);
-    expect(body.error.code).toBe('MISSING_NAME');
-  });
-
-  it('returns 400 when scopes is empty', async () => {
-    const { status, body } = await post<any>(srv.baseUrl, '/api/v1/portal/api-keys', {
-      name: 'Key',
-      scopes: [],
-    });
-    expect(status).toBe(400);
-    expect(body.error.code).toBe('MISSING_SCOPES');
-  });
-});
-
-describe('POST /api/v1/portal/api-keys/:id/revoke', () => {
-  it('revokes an active key', async () => {
-    const { body: created } = await post<any>(
-      srv.baseUrl,
-      '/api/v1/portal/api-keys',
-      {
-        name: 'Key to revoke',
-        scopes: ['read:workflows'],
-      },
-      ENT
-    );
-    const { status, body } = await post<any>(
-      srv.baseUrl,
-      `/api/v1/portal/api-keys/${created.id}/revoke`
-    );
-    expect(status).toBe(200);
-    expect(body.revoked).toBe(true);
-  });
-
-  it('returns 404 for unknown key', async () => {
-    const { status } = await post<any>(srv.baseUrl, '/api/v1/portal/api-keys/no-such-key/revoke');
-    expect(status).toBe(404);
-  });
-});
-
-describe('DELETE /api/v1/portal/api-keys/:id', () => {
-  it('deletes a key', async () => {
-    const { body: created } = await post<any>(
-      srv.baseUrl,
-      '/api/v1/portal/api-keys',
-      {
-        name: 'Key to delete',
-        scopes: ['read:connectors'],
-      },
-      ENT
-    );
-    const { status, body } = await del<any>(srv.baseUrl, `/api/v1/portal/api-keys/${created.id}`);
-    expect(status).toBe(200);
-    expect(body.deleted).toBe(true);
-  });
-});
+// Sprint 46.5 moved /api/v1/portal/api-keys onto the real, org/session-scoped
+// gateway module at /api/v1/portal/gateway/api-keys — see
+// __tests__/gateway/gateway-routes.test.ts for full coverage.
 
 // ─── Connectors ───────────────────────────────────────────────────────────────
 describe('GET /api/v1/portal/connectors', () => {
@@ -284,7 +202,6 @@ describe('Tenant enforcement — no hardcoded tenant fallback', () => {
   const NO_TENANT_ROUTES = [
     '/api/v1/portal/dashboard',
     '/api/v1/portal/support',
-    '/api/v1/portal/api-keys',
     '/api/v1/portal/connectors',
   ];
 

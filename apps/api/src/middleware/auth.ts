@@ -53,6 +53,10 @@ function verifyJWT(token: string): JWTPayload | null {
 const PUBLIC_PATHS = new Set([
   '/health',
   '/api/v1/health',
+  '/live',
+  '/api/v1/live',
+  '/ready',
+  '/api/v1/ready',
   '/api/v1/activate',
   '/api/v1/provision',
   '/api/v1/heartbeat',

@@ -77,6 +77,22 @@ function matchRoute(route: Route, method: string, pathname: string): Record<stri
 
 const MAX_BODY_BYTES = 1024 * 1024; // 1MB
 
+/** Prototype-pollution guard — strips dangerous keys from parsed JSON bodies. */
+const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+function sanitize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sanitize);
+  if (value && typeof value === 'object') {
+    const clean: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(value)) {
+      if (DANGEROUS_KEYS.has(key)) continue;
+      clean[key] = sanitize(val);
+    }
+    return clean;
+  }
+  return value;
+}
+
 export class PayloadTooLargeError extends Error {}
 
 export async function parseBody(req: IncomingMessage): Promise<unknown> {
@@ -99,7 +115,7 @@ export async function parseBody(req: IncomingMessage): Promise<unknown> {
         return;
       }
       try {
-        resolve(JSON.parse(raw));
+        resolve(sanitize(JSON.parse(raw)));
       } catch {
         resolve(raw);
       }
@@ -153,7 +169,7 @@ export class Router {
 
     // Handle CORS preflight
     if (method === 'OPTIONS') {
-      res.writeHead(204, corsHeaders());
+      res.writeHead(204, corsHeaders(req.headers['origin']));
       res.end();
       return;
     }
@@ -228,12 +244,30 @@ export class Router {
 
 // ─── Response Helpers ───────────────────────────────────────────────────────
 
-export function corsHeaders(): Record<string, string> {
+/**
+ * Sprint 46.5 — CORS is configurable via CORS_ALLOWED_ORIGINS (comma-
+ * separated). Unset (the default, and every environment before this
+ * sprint) keeps the original open '*' behavior — this is purely additive,
+ * nothing that already depends on wildcard CORS breaks.
+ */
+function allowedOrigin(requestOrigin?: string): string {
+  const configured = process.env['CORS_ALLOWED_ORIGINS'];
+  if (!configured) return '*';
+  const allowlist = configured
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+  if (requestOrigin && allowlist.includes(requestOrigin)) return requestOrigin;
+  return allowlist[0] ?? '*';
+}
+
+export function corsHeaders(requestOrigin?: string): Record<string, string> {
   return {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': allowedOrigin(requestOrigin),
     'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Request-ID,X-Api-Key',
     'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
   };
 }
 

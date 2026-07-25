@@ -3,8 +3,6 @@ import type {
   SupportSeverity,
   SupportStatus,
   SupportCategory,
-  ApiKey,
-  ApiKeyWithSecret,
   OnboardingProgress,
   OnboardingStep,
   PortalDashboard,
@@ -44,7 +42,6 @@ function pct(completed: OnboardingStep[]): number {
 
 export class PortalStore {
   private tickets: Map<string, SupportTicket> = new Map();
-  private apiKeys: Map<string, ApiKey> = new Map();
   private onboarding: Map<string, OnboardingProgress> = new Map();
   private connectors: Map<string, PortalConnector> = new Map();
 
@@ -127,59 +124,6 @@ export class PortalStore {
       },
     ];
     for (const t of tickets) this.tickets.set(t.id, t);
-
-    // ─── API Keys ─────────────────────────────────────────────────────────────
-    const keys: ApiKey[] = [
-      {
-        id: 'key-001',
-        tenantId: 'tenant-enterprise',
-        name: 'Production Integration',
-        prefix: 'atl_prod',
-        scopes: ['read:workflows', 'write:workflows', 'read:connectors', 'write:events'],
-        createdAt: isoNow(-90),
-        lastUsedAt: isoNow(-1),
-        expiresAt: isoNow(275),
-        active: true,
-        createdBy: 'admin@enterprise.com',
-      },
-      {
-        id: 'key-002',
-        tenantId: 'tenant-enterprise',
-        name: 'CI/CD Pipeline',
-        prefix: 'atl_ci0d',
-        scopes: ['read:workflows', 'write:deployments'],
-        createdAt: isoNow(-60),
-        lastUsedAt: isoNow(-2),
-        expiresAt: null,
-        active: true,
-        createdBy: 'devops@enterprise.com',
-      },
-      {
-        id: 'key-003',
-        tenantId: 'tenant-enterprise',
-        name: 'Legacy Integration (Deprecated)',
-        prefix: 'atl_leg7',
-        scopes: ['read:connectors'],
-        createdAt: isoNow(-180),
-        lastUsedAt: isoNow(-45),
-        expiresAt: isoNow(-15),
-        active: false,
-        createdBy: 'admin@enterprise.com',
-      },
-      {
-        id: 'key-004',
-        tenantId: 'tenant-professional',
-        name: 'Dev Environment',
-        prefix: 'atl_dev8',
-        scopes: ['read:workflows', 'read:connectors'],
-        createdAt: isoNow(-30),
-        lastUsedAt: isoNow(-5),
-        expiresAt: isoNow(335),
-        active: true,
-        createdBy: 'developer@professional.com',
-      },
-    ];
-    for (const k of keys) this.apiKeys.set(k.id, k);
 
     // ─── Onboarding ───────────────────────────────────────────────────────────
     const onboarding: OnboardingProgress[] = [
@@ -311,51 +255,6 @@ export class PortalStore {
     ticket.updatedAt = new Date().toISOString();
     if (status === 'resolved') ticket.resolvedAt = new Date().toISOString();
     return { ...ticket };
-  }
-
-  // ─── API Keys ──────────────────────────────────────────────────────────────
-  listApiKeys(tenantId?: string): ApiKey[] {
-    const all = Array.from(this.apiKeys.values());
-    return tenantId ? all.filter((k) => k.tenantId === tenantId) : all;
-  }
-
-  getApiKey(id: string): ApiKey | undefined {
-    return this.apiKeys.get(id);
-  }
-
-  createApiKey(data: {
-    tenantId: string;
-    name: string;
-    scopes: string[];
-    expiresAt?: string;
-    createdBy: string;
-  }): ApiKeyWithSecret {
-    const rawKey = `atl_${Math.random().toString(36).slice(2, 10)}${Math.random().toString(36).slice(2, 10)}`;
-    const key: ApiKey = {
-      id: uid('key'),
-      tenantId: data.tenantId,
-      name: data.name,
-      prefix: rawKey.slice(0, 8),
-      scopes: data.scopes,
-      createdAt: new Date().toISOString(),
-      lastUsedAt: null,
-      expiresAt: data.expiresAt ?? null,
-      active: true,
-      createdBy: data.createdBy,
-    };
-    this.apiKeys.set(key.id, key);
-    return { ...key, key: rawKey };
-  }
-
-  revokeApiKey(id: string): boolean {
-    const key = this.apiKeys.get(id);
-    if (!key) return false;
-    key.active = false;
-    return true;
-  }
-
-  deleteApiKey(id: string): boolean {
-    return this.apiKeys.delete(id);
   }
 
   // ─── Onboarding ───────────────────────────────────────────────────────────

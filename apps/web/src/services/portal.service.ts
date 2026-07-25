@@ -1,11 +1,11 @@
 import { api } from '@/services/api-client';
+import { portalFetch } from '@/lib/portal-fetch';
 import type {
   PortalDashboard,
   SupportTicket,
   SupportSeverity,
   SupportCategory,
   SupportStatus,
-  ApiKey,
   PortalConnector,
   PortalUser,
   OnboardingStep,
@@ -17,7 +17,7 @@ import type {
   OrgAuditEntry,
 } from '@/types/portal';
 
-interface PortalSessionUser {
+export interface PortalSessionUser {
   id: string;
   organizationId: string;
   name: string;
@@ -27,33 +27,6 @@ interface PortalSessionUser {
 
 const h = (tenantId?: string): Record<string, string> | undefined =>
   tenantId ? { 'x-tenant-id': tenantId } : undefined;
-
-interface PortalApiError {
-  error: { code: string; message: string };
-}
-
-/**
- * Calls the same-origin Next proxy under /api/portal/* (see
- * app/api/portal/**) rather than apps/api directly — that's what forwards
- * the httpOnly portal_session cookie as a Bearer token server-side.
- */
-async function portalFetch<T>(
-  path: string,
-  init?: { method?: string; body?: unknown }
-): Promise<T> {
-  const res = await fetch(`/api/portal${path}`, {
-    method: init?.method ?? 'GET',
-    headers: init?.body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
-    body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
-  });
-  const data = (await res.json().catch(() => null)) as T | PortalApiError | null;
-  if (!res.ok) {
-    const message =
-      (data as PortalApiError | null)?.error?.message ?? `Request failed (${res.status})`;
-    throw new Error(message);
-  }
-  return data as T;
-}
 
 export const portalService = {
   getDashboard: (tenantId?: string) =>
@@ -89,18 +62,6 @@ export const portalService = {
 
   updateTicketStatus: (id: string, status: SupportStatus) =>
     api.put<SupportTicket>(`/api/v1/portal/support/${id}/status`, { status }),
-
-  // API Keys
-  listApiKeys: (tenantId?: string) =>
-    api.get<{ total: number; keys: ApiKey[] }>('/api/v1/portal/api-keys', undefined, h(tenantId)),
-
-  createApiKey: (data: { name: string; scopes: string[]; expiresAt?: string }, tenantId?: string) =>
-    api.post<ApiKey>('/api/v1/portal/api-keys', data, undefined, h(tenantId)),
-
-  revokeApiKey: (id: string) =>
-    api.post<{ revoked: boolean }>(`/api/v1/portal/api-keys/${id}/revoke`),
-
-  deleteApiKey: (id: string) => api.delete<{ deleted: boolean }>(`/api/v1/portal/api-keys/${id}`),
 
   // Connectors
   listConnectors: (tenantId?: string) =>

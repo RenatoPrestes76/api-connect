@@ -8,6 +8,7 @@ import { Router, apiError } from './http/router.js';
 import { MissingTenantError } from './http/tenant.js';
 import { authMiddleware } from './middleware/auth.js';
 import { securityHeaders } from './middleware/security-headers.js';
+import { gatewayMiddleware } from './middleware/gateway.js';
 import { createAgentAuthMiddleware } from './middleware/agent-auth.js';
 import { registerAtlasRoutes } from './routes/v1/atlas/index.js';
 import type { AtlasInfrastructureDeps } from './routes/v1/atlas/index.js';
@@ -38,6 +39,7 @@ import { registerFleetRoutes } from './routes/v1/fleet/index.js';
 import { registerChaosRoutes } from './routes/v1/chaos/index.js';
 import { wsHub } from './modules/fleet-ops/websocket-hub.js';
 import { healthHandler } from './routes/health.js';
+import { liveHandler, readyHandler } from './routes/live-ready.js';
 import {
   listOrganizations,
   getOrganization,
@@ -129,6 +131,7 @@ export function createApiServer(
   router.use(requestLogger);
   router.use(securityHeaders);
   router.use(authMiddleware);
+  router.use(gatewayMiddleware);
   if (atlasDeps) {
     router.use(createAgentAuthMiddleware(atlasDeps.accessTokenRepo));
   }
@@ -136,6 +139,10 @@ export function createApiServer(
   // Health
   router.get('/health', healthHandler);
   router.get('/api/v1/health', healthHandler);
+  router.get('/live', liveHandler);
+  router.get('/api/v1/live', liveHandler);
+  router.get('/ready', readyHandler);
+  router.get('/api/v1/ready', readyHandler);
 
   // Organizations
   router.get('/api/v1/organizations', listOrganizations);

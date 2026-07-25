@@ -48,30 +48,6 @@ export function useUpdateTicketStatus() {
   });
 }
 
-export function useApiKeys(tenantId?: string) {
-  return useQuery({
-    queryKey: ['portal', 'api-keys', tenantId],
-    queryFn: () => portalService.listApiKeys(tenantId),
-  });
-}
-
-export function useCreateApiKey(tenantId?: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: { name: string; scopes: string[]; expiresAt?: string }) =>
-      portalService.createApiKey(data, tenantId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['portal', 'api-keys'] }),
-  });
-}
-
-export function useRevokeApiKey() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => portalService.revokeApiKey(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['portal', 'api-keys'] }),
-  });
-}
-
 export function usePortalConnectors(tenantId?: string) {
   return useQuery({
     queryKey: ['portal', 'connectors', tenantId],

@@ -1,48 +1,40 @@
 /**
  * Portal auth guards for the tenant self-service organization surface.
  * Composable route wrappers, not a global middleware — mirrors
- * middleware/admin-auth.ts exactly, scoped to portal-identity instead of
+ * middleware/admin-auth.ts, scoped to portal-identity instead of
  * admin-identity.
  *
- * Chain: valida JWT → valida sessão (usuário ainda ativo) → valida
- * permissões (apenas em requirePortalPermission) → permite acesso.
+ * Sprint 46.5: accepts EITHER a user session (Bearer JWT) OR a service API
+ * key (X-Api-Key) — see modules/gateway/resolve-identity.ts — so every
+ * existing portal route works for service-to-service calls without any
+ * per-route change.
  */
 import type { RouteContext, RouteHandler } from '../http/router.js';
 import { apiError } from '../http/router.js';
-import { verifyPortalSessionToken } from '../modules/portal-identity/jwt.js';
-import { portalIdentityStore } from '../modules/portal-identity/portal-identity-store.js';
-import { ROLE_PERMISSIONS } from '../modules/portal-identity/permissions.js';
+import { resolvePortalIdentity } from '../modules/gateway/resolve-identity.js';
 import type { PortalPermissionKey } from '../modules/portal-identity/types.js';
 
-function extractBearerToken(ctx: RouteContext): string | null {
-  const header = ctx.headers['authorization'];
-  const value = Array.isArray(header) ? header[0] : header;
-  if (!value?.startsWith('Bearer ')) return null;
-  return value.slice(7);
+/** Resolves and stashes identity onto ctx if not already resolved (e.g. by
+ * the global gateway rate-limit/logging middleware) — avoids verifying the
+ * same token/API key twice per request. */
+export async function ensurePortalIdentity(ctx: RouteContext): Promise<boolean> {
+  if (ctx.portalOrganizationId) return true;
+  const identity = await resolvePortalIdentity(ctx);
+  if (!identity) return false;
+  ctx.portalUserId = identity.actorId;
+  ctx.portalOrganizationId = identity.organizationId;
+  ctx.portalRole = identity.role;
+  ctx.portalEmail = identity.actorLabel;
+  ctx.portalPermissions = identity.permissions;
+  return true;
 }
 
 export function requirePortalAuth(handler: RouteHandler): RouteHandler {
   return async (ctx, res) => {
-    const token = extractBearerToken(ctx);
-    if (!token) {
-      return apiError(res, 'Missing portal session token', 401, 'UNAUTHENTICATED');
+    const ok = await ensurePortalIdentity(ctx);
+    if (!ok) {
+      return apiError(res, 'Missing or invalid portal credentials', 401, 'UNAUTHENTICATED');
     }
-    const payload = await verifyPortalSessionToken(token);
-    if (!payload) {
-      return apiError(res, 'Invalid or expired portal session', 401, 'INVALID_SESSION');
-    }
-
-    const user = portalIdentityStore.findUserById(payload.sub);
-    if (!user || user.status !== 'active') {
-      return apiError(res, 'Portal session is no longer valid', 401, 'SESSION_REVOKED');
-    }
-
-    ctx.portalUserId = user.id;
-    ctx.portalOrganizationId = user.organizationId;
-    ctx.portalRole = user.role;
-    ctx.portalEmail = user.email;
-    ctx.portalPermissions = ROLE_PERMISSIONS[user.role];
-
     return handler(ctx, res);
   };
 }

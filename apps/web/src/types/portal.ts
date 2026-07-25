@@ -17,20 +17,6 @@ export interface SupportTicket {
   slaTargetHours: number;
 }
 
-export interface ApiKey {
-  id: string;
-  tenantId: string;
-  name: string;
-  prefix: string;
-  scopes: string[];
-  createdAt: string;
-  lastUsedAt: string | null;
-  expiresAt: string | null;
-  active: boolean;
-  createdBy: string;
-  key?: string;
-}
-
 export type OnboardingStep =
   | 'cadastro'
   | 'provisionamento'
