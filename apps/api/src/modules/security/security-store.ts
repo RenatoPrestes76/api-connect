@@ -5,13 +5,11 @@ import {
   generateBackupCodes,
   appendEntry,
   vaultAdapter,
-  type EncryptedEnvelope,
 } from '@seltriva/aegis';
 import type {
   Secret,
   SecretMetadata,
   MfaRecord,
-  TrustedDevice,
   SSOProvider,
   Policy,
   AuditEntry,

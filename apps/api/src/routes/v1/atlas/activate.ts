@@ -12,7 +12,6 @@
  *  4. Consume (mark used) the activation token — it can never be reused.
  *  5. Return the runtime credentials.
  */
-import { randomBytes } from 'node:crypto';
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';

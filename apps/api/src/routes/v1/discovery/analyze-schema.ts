@@ -11,6 +11,10 @@ import type {
   DatabaseIntelligenceReport,
   EntityClassification,
   IntegrationSuggestion,
+  EntityType,
+  ConfidenceScore,
+  AlternativeEntity,
+  FieldRole,
 } from '@seltriva/database-intelligence';
 import type { RouteHandler } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
@@ -43,7 +47,16 @@ function flattenEntities(
   return result.sort((a, b) => b.confidence - a.confidence);
 }
 
-function serializeClassification(cls: EntityClassification) {
+function serializeClassification(cls: EntityClassification): {
+  table: string;
+  entity: EntityType;
+  confidence: ConfidenceScore;
+  isAuxiliary: boolean;
+  isJunctionTable: boolean;
+  estimatedRows: number | null;
+  alternatives: readonly AlternativeEntity[];
+  fieldRoles: Record<string, { role: FieldRole; confidence: ConfidenceScore }>;
+} {
   return {
     table: `${cls.tableSchema}.${cls.tableName}`,
     entity: cls.entity,
@@ -61,7 +74,13 @@ function serializeClassification(cls: EntityClassification) {
   };
 }
 
-function serializeSuggestion(s: IntegrationSuggestion) {
+function serializeSuggestion(s: IntegrationSuggestion): {
+  priority: 1 | 2 | 3;
+  entity: EntityType;
+  table: string;
+  reason: string;
+  fieldMapping: Record<string, FieldRole>;
+} {
   return {
     priority: s.priority,
     entity: s.entity,

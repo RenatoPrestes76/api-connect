@@ -1,5 +1,6 @@
 import { fleetOpsStore } from './fleet-ops-store.js';
 import { controlPlaneStore } from '../control-plane/control-plane-store.js';
+import type { Runtime } from '../control-plane/types.js';
 import type { AutoscalePolicy, ScalingEvent, ScalingActionType } from './types.js';
 
 const TICK_MS = 10_000;
@@ -99,7 +100,7 @@ class Autoscaler {
     return list.slice(0, limit);
   }
 
-  private poolRuntimes(policy: AutoscalePolicy) {
+  private poolRuntimes(policy: AutoscalePolicy): Runtime[] {
     return controlPlaneStore.listRuntimes({
       organizationId: policy.organizationId,
       environmentId: policy.environmentId,

@@ -99,7 +99,7 @@ class TitanStore {
     this.seed();
   }
 
-  private seed() {
+  private seed(): void {
     this.seedCircuits();
     this.seedFlags();
     this.seedQueues();
@@ -107,7 +107,7 @@ class TitanStore {
     this.seedDr();
   }
 
-  private seedCircuits() {
+  private seedCircuits(): void {
     const services = [
       { name: 'api-gateway', threshold: 10 },
       { name: 'database', threshold: 5 },
@@ -120,7 +120,7 @@ class TitanStore {
     }
   }
 
-  private seedFlags() {
+  private seedFlags(): void {
     const now = '2026-07-01T00:00:00Z';
     const flags: FeatureFlag[] = [
       {
@@ -208,7 +208,7 @@ class TitanStore {
     for (const flag of flags) this.flags.set(flag.id, flag);
   }
 
-  private seedQueues() {
+  private seedQueues(): void {
     const types: Array<{ type: string; priority: JobPriority; tenant: string }> = [
       { type: 'workflow_execute', priority: 'high', tenant: 'tenant-enterprise' },
       { type: 'workflow_execute', priority: 'high', tenant: 'tenant-professional' },
@@ -264,7 +264,7 @@ class TitanStore {
     }
   }
 
-  private seedSlos() {
+  private seedSlos(): void {
     const slos: SloDefinition[] = [
       {
         id: 'slo-001',
@@ -330,7 +330,7 @@ class TitanStore {
     for (const slo of slos) this.slos.set(slo.id, slo);
   }
 
-  private seedDr() {
+  private seedDr(): void {
     this.drConfig = {
       rto: 15,
       rpo: 5,
@@ -389,7 +389,7 @@ class TitanStore {
   }
 
   // ─── Queue API ─────────────────────────────────────────────────────────────
-  getQueueStats() {
+  getQueueStats(): { high: number; normal: number; low: number; dlq: number; total: number } {
     return {
       high: this.jobQueues.get('high')!.length,
       normal: this.jobQueues.get('normal')!.length,

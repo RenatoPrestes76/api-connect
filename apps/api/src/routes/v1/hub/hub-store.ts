@@ -113,7 +113,7 @@ export interface HubSettings {
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
 
-function minutesAgo(n: number) {
+function minutesAgo(n: number): string {
   return new Date(Date.now() - n * 60_000).toISOString();
 }
 
@@ -135,7 +135,7 @@ class HubStore {
     this.settings = this._defaultSettings();
   }
 
-  private _seed() {
+  private _seed(): void {
     // Agents
     const agentA: AgentSummary = {
       id: AGENT_IDS[0]!,

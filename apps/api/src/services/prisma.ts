@@ -16,7 +16,8 @@ const { PrismaClient } = (() => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _prisma: any = null;
 
-function getPrismaClient() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getPrismaClient(): any {
   if (!PrismaClient) return null;
   if (_prisma) return _prisma;
   const globalForPrisma = globalThis as unknown as { prisma: unknown };

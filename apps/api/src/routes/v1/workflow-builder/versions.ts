@@ -3,7 +3,6 @@ import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { wbStore } from '../../../modules/workflow-builder/wb-store.js';
 import { orchestratorStore } from '../../../modules/orchestrator/orchestrator-store.js';
-import type { WorkflowGraph as OrchestratorGraph } from '../../../modules/orchestrator/types.js';
 import type { WorkflowGraph } from '@seltriva/workflow-builder';
 
 export async function listWorkflowVersions(ctx: RouteContext, res: ServerResponse): Promise<void> {

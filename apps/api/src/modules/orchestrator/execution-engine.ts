@@ -44,7 +44,10 @@ async function runTransform(
   return output;
 }
 
-async function runValidate(node: WorkflowNode, ctx: ExecContext): Promise<Record<string, unknown>> {
+async function runValidate(
+  node: WorkflowNode,
+  _ctx: ExecContext
+): Promise<Record<string, unknown>> {
   const cfg = node.config as { schema?: string; failOnError?: boolean };
   const valid = true; // In production: invoke JSON Schema validator
   if (!valid && cfg.failOnError)

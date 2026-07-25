@@ -19,7 +19,6 @@ import type {
   CapacityPlan,
   CostReport,
   TenantCostBreakdown,
-  WorkflowCost,
   Runbook,
   RunbookStep,
   CopilotResponse,

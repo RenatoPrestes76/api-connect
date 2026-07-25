@@ -389,7 +389,7 @@ class BillingStore {
 
     // ── Licenses ───────────────────────────────────────────────────────────────
 
-    const seedLicense = (tenantId: string, planSlug: PlanSlug, expiresAt: string | null) => {
+    const seedLicense = (tenantId: string, planSlug: PlanSlug, expiresAt: string | null): void => {
       const id = `lic-${tenantId}`;
       const key = generateLicenseKey(tenantId, planSlug);
       const sig = generateSignature(key, tenantId, planSlug);

@@ -30,7 +30,21 @@ const SORT_FIELDS = new Set([
   'name',
 ]);
 
-function agentToView(agent: AtlasAgent) {
+function agentToView(agent: AtlasAgent): {
+  agentId: string;
+  companyId: string;
+  name: string;
+  hostname: string;
+  machineId: string;
+  connectorType: string;
+  version: string;
+  status: string;
+  healthStatus: HealthStatus;
+  lastHeartbeat: string | null;
+  lastSynchronization: string | null;
+  createdAt: string;
+  updatedAt: string;
+} {
   const snap = agent.toSnapshot();
   return {
     agentId: snap.id,

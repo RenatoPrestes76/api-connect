@@ -9,7 +9,6 @@
 import type { DatabaseSchema, Table, Column } from '@seltriva/database-sdk';
 import type {
   DatabaseInput,
-  SchemaInput,
   TableInput,
   ColumnInput,
   PrimaryKeyInput,

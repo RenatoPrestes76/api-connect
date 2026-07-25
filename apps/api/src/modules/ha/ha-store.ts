@@ -5,14 +5,12 @@ import type {
   FailoverEvent,
   BackupRecord,
   BackupStatus,
-  BackupType,
   HaEvent,
   HaEventType,
   NodeRole,
   NodeStatus,
   RecoveryTest,
   ReplicationState,
-  ReplicationStatus,
   ClusterHealth,
 } from './types.js';
 

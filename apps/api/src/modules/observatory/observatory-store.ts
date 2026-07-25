@@ -7,7 +7,6 @@ import type {
   AlertRule,
   Alert,
   Incident,
-  IncidentEvent,
   AuditLog,
   SLADefinition,
   SLAEvent,
@@ -21,13 +20,13 @@ import type {
 
 // ─── Seed helpers ─────────────────────────────────────────────────────────────
 
-function minutesAgo(n: number) {
+function minutesAgo(n: number): string {
   return new Date(Date.now() - n * 60_000).toISOString();
 }
-function hoursAgo(n: number) {
+function hoursAgo(n: number): string {
   return new Date(Date.now() - n * 3_600_000).toISOString();
 }
-function daysAgo(n: number) {
+function daysAgo(n: number): string {
   return new Date(Date.now() - n * 86_400_000).toISOString();
 }
 

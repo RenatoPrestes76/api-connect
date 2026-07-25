@@ -2,7 +2,7 @@
  * HTTP server factory — wires router, middleware, and all routes.
  */
 import { createServer } from 'node:http';
-import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { IncomingMessage, ServerResponse, Server } from 'node:http';
 import { WebSocketServer } from 'ws';
 import { Router, apiError } from './http/router.js';
 import { MissingTenantError } from './http/tenant.js';
@@ -125,7 +125,7 @@ export interface ApiServerDeps {
 export function createApiServer(
   atlasDeps?: AtlasInfrastructureDeps,
   adminDeps?: AdminInfrastructureDeps
-) {
+): Server {
   const router = new Router();
 
   // Middleware

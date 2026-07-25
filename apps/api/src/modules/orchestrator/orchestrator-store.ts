@@ -291,7 +291,7 @@ class OrchestratorStore {
     this._seed();
   }
 
-  private _seed() {
+  private _seed(): void {
     const wfIds = [randomUUID(), randomUUID(), randomUUID()];
 
     // ── Workflow 1: ERP Product Sync ──────────────────────────────────────────

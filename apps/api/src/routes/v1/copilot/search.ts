@@ -221,7 +221,7 @@ export async function search(ctx: RouteContext, res: ServerResponse): Promise<vo
       const parsed = jsonMatch ? (JSON.parse(jsonMatch[0]) as { rankedIds?: string[] }) : null;
       if (parsed?.rankedIds && Array.isArray(parsed.rankedIds)) {
         const ranked = parsed.rankedIds
-          .map((id, i) => candidates.find((c) => c.id === id))
+          .map((id) => candidates.find((c) => c.id === id))
           .filter((c): c is SearchResult => Boolean(c))
           .map((c, i) => ({ ...c, relevance: 1 - i * 0.05 }))
           .slice(0, limit);

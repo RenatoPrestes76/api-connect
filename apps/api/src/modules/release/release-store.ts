@@ -6,7 +6,7 @@ import {
   generateSBOM,
   CHANGELOG,
 } from '@seltriva/release';
-import type { ChecklistStatus, SBOM } from '@seltriva/release';
+import type { ChecklistStatus, ChecklistItem, SBOM } from '@seltriva/release';
 
 export class ReleaseStore {
   readonly checklist = new ReleaseChecklistRunner();
@@ -81,7 +81,7 @@ export class ReleaseStore {
     id: string,
     status: ChecklistStatus,
     opts: { notes?: string; checkedBy?: string } = {}
-  ) {
+  ): ChecklistItem | null {
     return this.checklist.mark(id, status, opts);
   }
 }

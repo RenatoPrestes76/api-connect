@@ -5,8 +5,6 @@ import type {
   AuditLog,
   AuditAction,
   AuditResult,
-  AuditExportFormat,
-  AuditExportResult,
   ComplianceControl,
   ComplianceEvidence,
   ComplianceFramework,
@@ -192,7 +190,6 @@ function seedAuditLogs(): AuditLog[] {
     signature: sign(`${id}|${actor}|${action}|${resource}|${createdAt}`),
     createdAt,
   });
-  const now = nowIso();
   return [
     log(
       'al-001',

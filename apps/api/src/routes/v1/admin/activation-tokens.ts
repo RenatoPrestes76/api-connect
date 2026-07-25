@@ -86,7 +86,16 @@ function tokenToView(token: {
   usedAt: Date | null;
   createdAt: Date;
   createdBy: string | null;
-}) {
+}): {
+  id: string;
+  token: string;
+  companyId: string;
+  environment: string;
+  expiresAt: string;
+  usedAt: string | null;
+  createdAt: string;
+  createdBy: string | null;
+} {
   return {
     id: token.id,
     token: token.token,

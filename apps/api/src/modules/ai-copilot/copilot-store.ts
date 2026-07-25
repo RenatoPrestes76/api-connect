@@ -96,8 +96,8 @@ class CopilotStore {
     return entry;
   }
 
-  private _seed() {
-    const minsAgo = (n: number) => new Date(Date.now() - n * 60_000).toISOString();
+  private _seed(): void {
+    const minsAgo = (n: number): string => new Date(Date.now() - n * 60_000).toISOString();
 
     const conv1Id = randomUUID();
     const conv2Id = randomUUID();

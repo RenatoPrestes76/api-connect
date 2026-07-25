@@ -5,7 +5,7 @@ import type { TimelineEvent, TimelineEventType } from '../../../modules/observat
 
 // In-memory timeline events (built from audit + execution history for demo)
 const TIMELINE: TimelineEvent[] = (() => {
-  function minsAgo(n: number) {
+  function minsAgo(n: number): string {
     return new Date(Date.now() - n * 60_000).toISOString();
   }
   const wfId = 'wf-erp-product-sync';

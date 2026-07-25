@@ -1,10 +1,7 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
-import {
-  marketplaceStore,
-  CONNECTOR_CATALOG,
-} from '../../../modules/marketplace/marketplace-store.js';
+import { marketplaceStore } from '../../../modules/marketplace/marketplace-store.js';
 import { getConnector } from '@seltriva/connector-registry';
 import { verifySignature } from '../../../modules/marketplace/security.js';
 

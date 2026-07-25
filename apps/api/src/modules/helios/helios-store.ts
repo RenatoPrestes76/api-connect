@@ -556,7 +556,7 @@ export class HeliosStore {
   }
 
   private _seedCatalog(): CatalogEntry[] {
-    const schema = (props: Record<string, string>) => ({
+    const schema = (props: Record<string, string>): Record<string, unknown> => ({
       type: 'object',
       properties: Object.fromEntries(Object.entries(props).map(([k, v]) => [k, { type: v }])),
       required: Object.keys(props),
@@ -839,7 +839,7 @@ export class HeliosStore {
   }
 
   private _seedSchemas(): SchemaVersion[] {
-    const mkSchema = (props: string[]) => ({
+    const mkSchema = (props: string[]): Record<string, unknown> => ({
       type: 'object',
       properties: Object.fromEntries(props.map((p) => [p, { type: 'string' }])),
       required: props,

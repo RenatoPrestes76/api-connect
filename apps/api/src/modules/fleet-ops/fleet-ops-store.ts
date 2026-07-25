@@ -22,7 +22,6 @@ import { deliverNotification } from './notification-engine.js';
 
 const HIGH_CPU_THRESHOLD = 85;
 const HIGH_MEM_THRESHOLD = 85;
-const TOKEN_EXPIRING_WINDOW_DAYS = 30;
 const SCHEDULED_JOB_TICK_MS = 5_000;
 
 /** Zero-Downtime Deployment task sequence per strategy (Sprint 47 / ATLAS FORTRESS). */
