@@ -4,7 +4,7 @@
   "description": "Atlas Control Plane — global administrative portal",
   "private": true,
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev -p 3006",
