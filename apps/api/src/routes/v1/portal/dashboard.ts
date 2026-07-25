@@ -3,10 +3,18 @@ import type { RouteContext } from '../../../http/router.js';
 import { json } from '../../../http/router.js';
 import { requireTenantId } from '../../../http/tenant.js';
 import { portalStore } from '../../../modules/portal/portal-store.js';
+import { portalIdentityStore } from '../../../modules/portal-identity/portal-identity-store.js';
 
 export function registerPortalDashboardRoutes(router: { get: Function; post: Function }): void {
   router.get('/api/v1/portal/dashboard', (ctx: RouteContext, res: ServerResponse) => {
-    json(res, portalStore.getDashboard(requireTenantId(ctx)));
+    const tenantId = requireTenantId(ctx);
+    json(res, {
+      ...portalStore.getDashboard(tenantId),
+      // Sprint 46.4 — organization/environments/users summary cards. `tenantId`
+      // here doubles as the organizationId once the caller is a real,
+      // logged-in portal session (see usePortalSession on the frontend).
+      organizationSummary: portalIdentityStore.getDashboardSummary(tenantId),
+    });
   });
 
   router.post(

@@ -1,57 +1,74 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
-import { requireTenantId } from '../../../http/tenant.js';
-import { portalStore } from '../../../modules/portal/portal-store.js';
-import type { UserRole } from '@seltriva/release';
+import { portalIdentityStore } from '../../../modules/portal-identity/portal-identity-store.js';
+import { requirePortalPermission } from '../../../middleware/portal-auth.js';
+import type { OrgRole } from '../../../modules/portal-identity/types.js';
 
-const VALID_ROLES: UserRole[] = ['owner', 'admin', 'developer', 'viewer'];
+const VALID_ROLES: OrgRole[] = ['OWNER', 'ADMINISTRATOR', 'DEVELOPER', 'OPERATOR', 'VIEWER'];
+
+interface UpdateRoleBody {
+  role?: OrgRole;
+}
 
 export function registerPortalUsersRoutes(router: {
   get: Function;
-  post: Function;
   put: Function;
   delete: Function;
 }): void {
-  router.get('/api/v1/portal/users', (ctx: RouteContext, res: ServerResponse) => {
-    const users = portalStore.listUsers(requireTenantId(ctx));
-    json(res, { total: users.length, users });
-  });
+  router.get(
+    '/api/v1/portal/users',
+    requirePortalPermission('org-users.read')(async (ctx: RouteContext, res: ServerResponse) => {
+      const users = portalIdentityStore
+        .listUsers(ctx.portalOrganizationId as string)
+        .map((u) => portalIdentityStore.toDTO(u));
+      json(res, { total: users.length, users });
+    })
+  );
 
-  router.get('/api/v1/portal/users/:id', (ctx: RouteContext, res: ServerResponse) => {
-    const user = portalStore.getUser(ctx.params['id']!);
-    if (!user) return apiError(res, 'User not found', 404, 'NOT_FOUND');
-    json(res, user);
-  });
+  router.put(
+    '/api/v1/portal/users/:id/role',
+    requirePortalPermission('org-users.manage')(async (ctx: RouteContext, res: ServerResponse) => {
+      const body = (ctx.body ?? {}) as UpdateRoleBody;
+      if (!body.role || !VALID_ROLES.includes(body.role)) {
+        return apiError(res, `role must be one of: ${VALID_ROLES.join(', ')}`, 400, 'INVALID_ROLE');
+      }
 
-  router.post('/api/v1/portal/users/invite', (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
-    const { email, name, role } = body;
+      const organizationId = ctx.portalOrganizationId as string;
+      const id = ctx.params['id'] as string;
+      const user = portalIdentityStore.updateUserRole(organizationId, id, body.role);
+      if (!user) return apiError(res, 'User not found', 404, 'NOT_FOUND');
 
-    if (!email || !name) {
-      return apiError(res, '"email" and "name" are required', 400, 'MISSING_FIELDS');
-    }
-    if (!VALID_ROLES.includes(role)) {
-      return apiError(res, `role must be one of: ${VALID_ROLES.join(', ')}`, 400, 'INVALID_ROLE');
-    }
+      portalIdentityStore.recordAudit({
+        organizationId,
+        action: 'USER_ROLE_CHANGED',
+        actorId: ctx.portalUserId,
+        actorEmail: ctx.portalEmail ?? 'unknown',
+        target: id,
+        metadata: { role: body.role },
+      });
 
-    const user = portalStore.inviteUser({ tenantId: requireTenantId(ctx), email, name, role });
-    json(res, user, 201);
-  });
+      json(res, portalIdentityStore.toDTO(user));
+    })
+  );
 
-  router.put('/api/v1/portal/users/:id/role', (ctx: RouteContext, res: ServerResponse) => {
-    const { role } = (ctx.body as any) ?? {};
-    if (!VALID_ROLES.includes(role)) {
-      return apiError(res, `role must be one of: ${VALID_ROLES.join(', ')}`, 400, 'INVALID_ROLE');
-    }
-    const user = portalStore.updateUserRole(ctx.params['id']!, role);
-    if (!user) return apiError(res, 'User not found', 404, 'NOT_FOUND');
-    json(res, user);
-  });
+  router.delete(
+    '/api/v1/portal/users/:id',
+    requirePortalPermission('org-users.manage')(async (ctx: RouteContext, res: ServerResponse) => {
+      const organizationId = ctx.portalOrganizationId as string;
+      const id = ctx.params['id'] as string;
+      const ok = portalIdentityStore.removeUser(organizationId, id);
+      if (!ok) return apiError(res, 'User not found', 404, 'NOT_FOUND');
 
-  router.delete('/api/v1/portal/users/:id', (ctx: RouteContext, res: ServerResponse) => {
-    const deleted = portalStore.removeUser(ctx.params['id']!);
-    if (!deleted) return apiError(res, 'User not found', 404, 'NOT_FOUND');
-    json(res, { deleted: true });
-  });
+      portalIdentityStore.recordAudit({
+        organizationId,
+        action: 'USER_REMOVED',
+        actorId: ctx.portalUserId,
+        actorEmail: ctx.portalEmail ?? 'unknown',
+        target: id,
+      });
+
+      json(res, { deleted: true });
+    })
+  );
 }

@@ -67,6 +67,7 @@ import {
   Radio,
   BookOpen,
   ShieldCheck as ShieldCheckIcon,
+  Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -103,6 +104,9 @@ const ICONS: Record<string, typeof LayoutDashboard> = {
   '/portal/api-keys': Key,
   '/portal/users': UserCog,
   '/portal/connectors': Wifi,
+  '/portal/environments': Layers,
+  '/portal/organization': Building2,
+  '/portal/audit': ScrollText,
   '/release': Rocket,
   '/release/checklist': ListTodo,
   '/release/changelog': History,
@@ -196,10 +200,13 @@ const GROUPS = [
     label: 'Customer Portal',
     items: [
       '/portal',
+      '/portal/organization',
+      '/portal/environments',
+      '/portal/users',
       '/portal/support',
       '/portal/api-keys',
-      '/portal/users',
       '/portal/connectors',
+      '/portal/audit',
     ],
   },
   {
@@ -271,6 +278,9 @@ const LABELS: Record<string, string> = {
   '/portal/api-keys': 'Chaves de API',
   '/portal/users': 'Usuários',
   '/portal/connectors': 'Conectores',
+  '/portal/environments': 'Ambientes',
+  '/portal/organization': 'Organização',
+  '/portal/audit': 'Auditoria',
   '/release': 'Go-Live Center',
   '/release/checklist': 'Checklist GA',
   '/release/changelog': 'Changelog',

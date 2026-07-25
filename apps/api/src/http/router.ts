@@ -26,6 +26,12 @@ export interface RouteContext {
   adminEmail?: string;
   adminRole?: string;
   adminPermissions?: string[];
+  /** Set by portal-auth middleware for tenant self-service portal routes */
+  portalUserId?: string;
+  portalOrganizationId?: string;
+  portalRole?: string;
+  portalEmail?: string;
+  portalPermissions?: string[];
 }
 
 export type RouteHandler = (ctx: RouteContext, res: ServerResponse) => Promise<void>;

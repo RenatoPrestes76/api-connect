@@ -62,6 +62,14 @@ export interface PortalDashboard {
   openTickets: number;
   healthScore: number;
   onboarding: OnboardingProgress;
+  /** Sprint 46.4 — organization/environments/users summary cards. */
+  organizationSummary: {
+    organizations: number;
+    users: number;
+    environments: number;
+    apisRegistered: number;
+    connectors: number;
+  };
 }
 
 export type ConnectorHealth = 'healthy' | 'degraded' | 'error' | 'unknown';
@@ -79,16 +87,78 @@ export interface PortalConnector {
   installedAt: string;
 }
 
-export type UserRole = 'owner' | 'admin' | 'developer' | 'viewer';
+// ─── Organization identity (Sprint 46.4) ───────────────────────────────────
+//
+// Deliberately a separate role enum from `UserRole` in @seltriva/release
+// (which only has 4 roles, no Operator) — see the Sprint 46.4 plan for why
+// this isn't a shared-package change.
+
+export type OrgRole = 'OWNER' | 'ADMINISTRATOR' | 'DEVELOPER' | 'OPERATOR' | 'VIEWER';
+
+export type OrganizationStatus = 'active' | 'suspended' | 'deleted';
+export type OrganizationPlan = 'community' | 'professional' | 'enterprise';
+
+export interface Organization {
+  id: string;
+  name: string;
+  razaoSocial: string;
+  cnpj: string;
+  internalCode: string;
+  status: OrganizationStatus;
+  plan: OrganizationPlan;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type EnvironmentKind = 'production' | 'staging' | 'development';
+export type EnvironmentStatus = 'active' | 'inactive';
+
+export interface Environment {
+  id: string;
+  organizationId: string;
+  name: string;
+  kind: EnvironmentKind;
+  status: EnvironmentStatus;
+  region: string;
+  timezone: string;
+  createdAt: string;
+}
+
+export type OrgUserStatus = 'invited' | 'active' | 'suspended';
+
+export interface OrgInvite {
+  id: string;
+  organizationId: string;
+  email: string;
+  name: string;
+  role: OrgRole;
+  expiresAt: string;
+  acceptedAt?: string;
+  invitedBy: string;
+  createdAt: string;
+}
+
+export interface OrgAuditEntry {
+  id: string;
+  organizationId: string;
+  action: string;
+  actorId?: string;
+  actorEmail: string;
+  target?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
 
 export interface PortalUser {
   id: string;
-  tenantId: string;
+  organizationId: string;
   email: string;
   name: string;
-  role: UserRole;
-  mfaEnabled: boolean;
-  lastLoginAt: string | null;
+  role: OrgRole;
+  status: OrgUserStatus;
   invitedAt: string;
-  status: 'active' | 'invited' | 'suspended';
+  joinedAt?: string;
+  lastLoginAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }

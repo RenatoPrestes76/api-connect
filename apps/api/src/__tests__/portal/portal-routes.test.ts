@@ -271,77 +271,10 @@ describe('PUT /api/v1/portal/connectors/:id/health', () => {
 });
 
 // ─── Users ────────────────────────────────────────────────────────────────────
-describe('GET /api/v1/portal/users', () => {
-  it('returns users for enterprise tenant', async () => {
-    const { status, body } = await get<any>(srv.baseUrl, '/api/v1/portal/users', ENT);
-    expect(status).toBe(200);
-    expect(body.total).toBeGreaterThanOrEqual(4);
-    expect(body.users.some((u: any) => u.role === 'owner')).toBe(true);
-  });
-});
-
-describe('POST /api/v1/portal/users/invite', () => {
-  it('invites a new user', async () => {
-    const { status, body } = await post<any>(
-      srv.baseUrl,
-      '/api/v1/portal/users/invite',
-      {
-        email: 'newuser@enterprise.com',
-        name: 'New User',
-        role: 'developer',
-      },
-      ENT
-    );
-    expect(status).toBe(201);
-    expect(body.status).toBe('invited');
-    expect(body.email).toBe('newuser@enterprise.com');
-  });
-
-  it('returns 400 for invalid role', async () => {
-    const { status, body } = await post<any>(srv.baseUrl, '/api/v1/portal/users/invite', {
-      email: 'x@y.com',
-      name: 'X',
-      role: 'superadmin',
-    });
-    expect(status).toBe(400);
-    expect(body.error.code).toBe('INVALID_ROLE');
-  });
-});
-
-describe('PUT /api/v1/portal/users/:id/role', () => {
-  it('updates user role', async () => {
-    const { status, body } = await put<any>(srv.baseUrl, '/api/v1/portal/users/usr-003/role', {
-      role: 'admin',
-    });
-    expect(status).toBe(200);
-    expect(body.role).toBe('admin');
-  });
-
-  it('returns 404 for unknown user', async () => {
-    const { status } = await put<any>(srv.baseUrl, '/api/v1/portal/users/no-such/role', {
-      role: 'viewer',
-    });
-    expect(status).toBe(404);
-  });
-});
-
-describe('DELETE /api/v1/portal/users/:id', () => {
-  it('removes an invited user', async () => {
-    const { body: invited } = await post<any>(
-      srv.baseUrl,
-      '/api/v1/portal/users/invite',
-      {
-        email: 'temp@test.com',
-        name: 'Temp',
-        role: 'viewer',
-      },
-      ENT
-    );
-    const { status, body } = await del<any>(srv.baseUrl, `/api/v1/portal/users/${invited.id}`);
-    expect(status).toBe(200);
-    expect(body.deleted).toBe(true);
-  });
-});
+// Sprint 46.4 moved /api/v1/portal/users (and the invite flow) onto the real,
+// session-based portal-identity system — see
+// __tests__/portal-identity/portal-identity-routes.test.ts for full coverage.
+// These routes no longer accept the tenant-header trust model tested below.
 
 // ─── Tenant enforcement (Sprint 00.1) ──────────────────────────────────────────
 // No route may fall back to a default tenant — every request below omits
@@ -353,7 +286,6 @@ describe('Tenant enforcement — no hardcoded tenant fallback', () => {
     '/api/v1/portal/support',
     '/api/v1/portal/api-keys',
     '/api/v1/portal/connectors',
-    '/api/v1/portal/users',
   ];
 
   for (const path of NO_TENANT_ROUTES) {

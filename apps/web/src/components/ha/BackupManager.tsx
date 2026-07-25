@@ -89,7 +89,7 @@ export function BackupManager({
           </div>
         )}
       </div>
-      <div className="divide-y divide-zinc-100 dark:divide-zinc-800 max-h-[320px] overflow-y-auto">
+      <div className="divide-y divide-zinc-100 dark:divide-zinc-800 max-h-80 overflow-y-auto">
         {backups.map((b) => (
           <div key={b.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
             <div className="min-w-0">

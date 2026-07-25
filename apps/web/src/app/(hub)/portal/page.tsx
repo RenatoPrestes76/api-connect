@@ -1,5 +1,9 @@
 'use client';
-import { usePortalDashboard, useCompleteOnboardingStep } from '@/hooks/use-portal';
+import {
+  usePortalDashboard,
+  useCompleteOnboardingStep,
+  usePortalSession,
+} from '@/hooks/use-portal';
 import { OnboardingStepper } from '@/components/portal/onboarding-stepper';
 import { PageLoading } from '@/components/common/loading-state';
 import { ErrorState } from '@/components/common/error-boundary';
@@ -16,7 +20,8 @@ function KpiCard({ label, value, sub }: { label: string; value: string | number;
 }
 
 export default function PortalPage() {
-  const { data: dash, isLoading, error } = usePortalDashboard();
+  const { data: session } = usePortalSession();
+  const { data: dash, isLoading, error } = usePortalDashboard(session?.user.organizationId);
   const completeStep = useCompleteOnboardingStep();
 
   if (isLoading) return <PageLoading />;
@@ -52,6 +57,17 @@ export default function PortalPage() {
         <KpiCard label="Workflows Ativos" value={dash.workflowsActive} sub="em execução" />
         <KpiCard label="Conectores" value={dash.connectorsInstalled} sub="instalados" />
         <KpiCard label="API Calls Hoje" value={dash.apiCallsToday.toLocaleString('pt-BR')} />
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-sm font-medium text-slate-300">Organização</h2>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+          <KpiCard label="Organizations" value={dash.organizationSummary.organizations} />
+          <KpiCard label="Usuários" value={dash.organizationSummary.users} />
+          <KpiCard label="Ambientes" value={dash.organizationSummary.environments} />
+          <KpiCard label="APIs cadastradas" value={dash.organizationSummary.apisRegistered} />
+          <KpiCard label="Conectores" value={dash.organizationSummary.connectors} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

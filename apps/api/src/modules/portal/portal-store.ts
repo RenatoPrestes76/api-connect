@@ -10,8 +10,6 @@ import type {
   PortalDashboard,
   PortalConnector,
   ConnectorHealth,
-  PortalUser,
-  UserRole,
 } from '@seltriva/release';
 
 function uid(prefix: string): string {
@@ -49,7 +47,6 @@ export class PortalStore {
   private apiKeys: Map<string, ApiKey> = new Map();
   private onboarding: Map<string, OnboardingProgress> = new Map();
   private connectors: Map<string, PortalConnector> = new Map();
-  private users: Map<string, PortalUser> = new Map();
 
   constructor() {
     this.seed();
@@ -272,66 +269,6 @@ export class PortalStore {
       },
     ];
     for (const c of connectors) this.connectors.set(c.id, c);
-
-    // ─── Users ────────────────────────────────────────────────────────────────
-    const users: PortalUser[] = [
-      {
-        id: 'usr-001',
-        tenantId: 'tenant-enterprise',
-        email: 'admin@enterprise.com',
-        name: 'Enterprise Admin',
-        role: 'owner',
-        mfaEnabled: true,
-        lastLoginAt: isoNow(-0.1),
-        invitedAt: isoNow(-90),
-        status: 'active',
-      },
-      {
-        id: 'usr-002',
-        tenantId: 'tenant-enterprise',
-        email: 'devops@enterprise.com',
-        name: 'DevOps Engineer',
-        role: 'admin',
-        mfaEnabled: true,
-        lastLoginAt: isoNow(-1),
-        invitedAt: isoNow(-88),
-        status: 'active',
-      },
-      {
-        id: 'usr-003',
-        tenantId: 'tenant-enterprise',
-        email: 'analyst@enterprise.com',
-        name: 'Business Analyst',
-        role: 'developer',
-        mfaEnabled: false,
-        lastLoginAt: isoNow(-3),
-        invitedAt: isoNow(-60),
-        status: 'active',
-      },
-      {
-        id: 'usr-004',
-        tenantId: 'tenant-enterprise',
-        email: 'viewer@enterprise.com',
-        name: 'Executive Viewer',
-        role: 'viewer',
-        mfaEnabled: false,
-        lastLoginAt: null,
-        invitedAt: isoNow(-2),
-        status: 'invited',
-      },
-      {
-        id: 'usr-005',
-        tenantId: 'tenant-professional',
-        email: 'developer@professional.com',
-        name: 'Pro Developer',
-        role: 'owner',
-        mfaEnabled: false,
-        lastLoginAt: isoNow(-0.5),
-        invitedAt: isoNow(-30),
-        status: 'active',
-      },
-    ];
-    for (const u of users) this.users.set(u.id, u);
   }
 
   // ─── Support Tickets ───────────────────────────────────────────────────────
@@ -456,40 +393,6 @@ export class PortalStore {
     c.health = health;
     c.lastSyncAt = health !== 'error' ? new Date().toISOString() : c.lastSyncAt;
     return { ...c };
-  }
-
-  // ─── Users ────────────────────────────────────────────────────────────────
-  listUsers(tenantId?: string): PortalUser[] {
-    const all = Array.from(this.users.values());
-    return tenantId ? all.filter((u) => u.tenantId === tenantId) : all;
-  }
-
-  getUser(id: string): PortalUser | undefined {
-    return this.users.get(id);
-  }
-
-  inviteUser(data: { tenantId: string; email: string; name: string; role: UserRole }): PortalUser {
-    const user: PortalUser = {
-      id: uid('usr'),
-      ...data,
-      mfaEnabled: false,
-      lastLoginAt: null,
-      invitedAt: new Date().toISOString(),
-      status: 'invited',
-    };
-    this.users.set(user.id, user);
-    return user;
-  }
-
-  updateUserRole(id: string, role: UserRole): PortalUser | null {
-    const user = this.users.get(id);
-    if (!user) return null;
-    user.role = role;
-    return { ...user };
-  }
-
-  removeUser(id: string): boolean {
-    return this.users.delete(id);
   }
 
   // ─── Dashboard ────────────────────────────────────────────────────────────

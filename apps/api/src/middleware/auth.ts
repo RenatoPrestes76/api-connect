@@ -72,6 +72,9 @@ const PUBLIC_PATH_PREFIXES = [
   '/admin/control-plane/',
   '/admin/fleet',
   '/admin/chaos',
+  // Tenant self-service portal has its own dedicated auth scheme — see
+  // middleware/portal-auth.ts — gated per-route, not by Supabase auth.
+  '/api/v1/portal/',
 ];
 
 export const authMiddleware: Middleware = async (

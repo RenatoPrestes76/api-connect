@@ -5,7 +5,9 @@ import type {
   SupportSeverity,
   SupportCategory,
   SupportStatus,
-  UserRole,
+  OrgRole,
+  Organization,
+  EnvironmentKind,
   OnboardingStep,
 } from '@/types/portal';
 
@@ -78,19 +80,157 @@ export function usePortalConnectors(tenantId?: string) {
   });
 }
 
-export function usePortalUsers(tenantId?: string) {
+export function usePortalUsers() {
   return useQuery({
-    queryKey: ['portal', 'users', tenantId],
-    queryFn: () => portalService.listUsers(tenantId),
+    queryKey: ['portal', 'users'],
+    queryFn: () => portalService.listUsers(),
   });
 }
 
-export function useInviteUser(tenantId?: string) {
+export function useInviteUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { email: string; name: string; role: UserRole }) =>
-      portalService.inviteUser(data, tenantId),
+    mutationFn: (data: { email: string; name: string; role: OrgRole }) =>
+      portalService.inviteUser(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['portal', 'users'] });
+      qc.invalidateQueries({ queryKey: ['portal', 'invites'] });
+    },
+  });
+}
+
+export function useUpdateUserRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, role }: { id: string; role: OrgRole }) =>
+      portalService.updateUserRole(id, role),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['portal', 'users'] }),
+  });
+}
+
+export function useRemoveUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => portalService.removeUser(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['portal', 'users'] }),
+  });
+}
+
+// ─── Organization identity (Sprint 46.4) ─────────────────────────────────────
+
+export function usePortalSession() {
+  return useQuery({
+    queryKey: ['portal', 'session'],
+    queryFn: () => portalService.me(),
+    retry: false,
+  });
+}
+
+export function useLogin() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { email: string; password: string }) => portalService.login(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['portal', 'session'] }),
+  });
+}
+
+export function useRegister() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      name: string;
+      razaoSocial: string;
+      cnpj: string;
+      internalCode: string;
+      plan?: Organization['plan'];
+      owner: { name: string; email: string; password: string };
+    }) => portalService.register(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['portal', 'session'] }),
+  });
+}
+
+export function useLogout() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => portalService.logout(),
+    onSuccess: () => qc.clear(),
+  });
+}
+
+export function useOrganization() {
+  return useQuery({
+    queryKey: ['portal', 'organization'],
+    queryFn: () => portalService.getOrganization(),
+  });
+}
+
+export function useUpdateOrganization() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (
+      patch: Partial<
+        Pick<Organization, 'name' | 'razaoSocial' | 'cnpj' | 'internalCode' | 'status' | 'plan'>
+      >
+    ) => portalService.updateOrganization(patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['portal', 'organization'] }),
+  });
+}
+
+export function useEnvironments() {
+  return useQuery({
+    queryKey: ['portal', 'environments'],
+    queryFn: () => portalService.listEnvironments(),
+  });
+}
+
+export function useCreateEnvironment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      name: string;
+      kind: EnvironmentKind;
+      region?: string;
+      timezone?: string;
+    }) => portalService.createEnvironment(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['portal', 'environments'] }),
+  });
+}
+
+export function useDeleteEnvironment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => portalService.deleteEnvironment(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['portal', 'environments'] }),
+  });
+}
+
+export function useInvites() {
+  return useQuery({
+    queryKey: ['portal', 'invites'],
+    queryFn: () => portalService.listInvites(),
+  });
+}
+
+export function useInvite(token: string | null) {
+  return useQuery({
+    queryKey: ['portal', 'invite', token],
+    queryFn: () => portalService.getInvite(token as string),
+    enabled: Boolean(token),
+    retry: false,
+  });
+}
+
+export function useAcceptInvite() {
+  return useMutation({
+    mutationFn: ({ token, password }: { token: string; password: string }) =>
+      portalService.acceptInvite(token, password),
+  });
+}
+
+export function useAuditLog(limit?: number) {
+  return useQuery({
+    queryKey: ['portal', 'audit-log', limit],
+    queryFn: () => portalService.getAuditLog(limit),
   });
 }
 
