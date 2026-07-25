@@ -15,13 +15,13 @@ import type {
 import { SYSTEM_ROLES, ROLE_PERMISSIONS, buildPermissionRecords } from './permissions.js';
 import { REFRESH_TOKEN_TTL_SECONDS } from './jwt.js';
 
-const SEED_ADMIN_EMAIL = 'admin@atlasconnect.com.br';
+const SEED_ADMIN_EMAIL = process.env['SEED_ADMIN_EMAIL'] ?? 'admin@atlasconnect.com.br';
 /**
  * Temporary bootstrap password — the seeded SUPER_ADMIN is created with
  * mustChangePassword=true, so this value can never be used past first login.
- * Do not reuse this value in production.
+ * Do not reuse this value in production; override via SEED_ADMIN_PASSWORD.
  */
-const SEED_ADMIN_TEMP_PASSWORD = 'TrocarNoPrimeiroLogin!';
+const SEED_ADMIN_TEMP_PASSWORD = process.env['SEED_ADMIN_PASSWORD'] ?? 'root102030';
 
 let _instance: AdminIdentityStore | null = null;
 

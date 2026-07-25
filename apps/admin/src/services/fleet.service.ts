@@ -42,7 +42,10 @@ const ACTION_PATH: Record<RuntimeCommandType, string> = {
   ENABLE: 'enable',
 };
 
-export async function issueRuntimeCommand(runtimeId: string, type: RuntimeCommandType) {
+export async function issueRuntimeCommand(
+  runtimeId: string,
+  type: RuntimeCommandType
+): Promise<{ success: boolean }> {
   return fleetPost(`/runtime/${runtimeId}/${ACTION_PATH[type]}`);
 }
 
@@ -52,7 +55,7 @@ export async function installConnector(
   connectorId: string,
   organizationId: string,
   version: string
-) {
+): Promise<{ success: boolean }> {
   return fleetPost(`/connectors/${connectorId}/install`, { organizationId, version });
 }
 
@@ -60,11 +63,14 @@ export async function updateConnector(
   connectorId: string,
   organizationId: string,
   version: string
-) {
+): Promise<{ success: boolean }> {
   return fleetPost(`/connectors/${connectorId}/update`, { organizationId, version });
 }
 
-export async function restartConnector(connectorId: string, organizationId: string) {
+export async function restartConnector(
+  connectorId: string,
+  organizationId: string
+): Promise<{ success: boolean }> {
   return fleetPost(`/connectors/${connectorId}/restart`, { organizationId });
 }
 
@@ -72,7 +78,10 @@ export async function removeConnector(connectorId: string, organizationId: strin
   await fleetDelete(`/connectors/${connectorId}?organizationId=${organizationId}`);
 }
 
-export async function getConnectorLogs(connectorId: string, organizationId: string) {
+export async function getConnectorLogs(
+  connectorId: string,
+  organizationId: string
+): Promise<Array<{ id: string; action: string; message: string; createdAt: string }>> {
   const data = await fleetGet<{
     logs: Array<{ id: string; action: string; message: string; createdAt: string }>;
   }>(`/connectors/${connectorId}/logs?organizationId=${organizationId}`);

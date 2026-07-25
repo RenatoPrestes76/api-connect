@@ -1,11 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+  type UseMutationResult,
+} from '@tanstack/react-query';
 import * as jobsService from '@/services/deployment-jobs.service';
 
 const KEY = 'deployment-jobs';
 
 export function useDeploymentJobs(
   filters: { organizationId?: string; status?: string; mode?: string } = {}
-) {
+): UseQueryResult<Awaited<ReturnType<typeof jobsService.listDeploymentJobs>>> {
   return useQuery({
     queryKey: [KEY, filters],
     queryFn: () => jobsService.listDeploymentJobs(filters),
@@ -13,7 +19,9 @@ export function useDeploymentJobs(
   });
 }
 
-export function useDeploymentTasks(jobId: string | undefined) {
+export function useDeploymentTasks(
+  jobId: string | undefined
+): UseQueryResult<Awaited<ReturnType<typeof jobsService.getDeploymentTasks>>> {
   return useQuery({
     queryKey: [KEY, jobId, 'tasks'],
     queryFn: () => jobsService.getDeploymentTasks(jobId as string),
@@ -21,7 +29,11 @@ export function useDeploymentTasks(jobId: string | undefined) {
   });
 }
 
-export function useCreateDeploymentJob() {
+export function useCreateDeploymentJob(): UseMutationResult<
+  Awaited<ReturnType<typeof jobsService.createDeploymentJob>>,
+  Error,
+  Parameters<typeof jobsService.createDeploymentJob>[0]
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: jobsService.createDeploymentJob,
@@ -29,7 +41,11 @@ export function useCreateDeploymentJob() {
   });
 }
 
-export function useApproveDeploymentJob() {
+export function useApproveDeploymentJob(): UseMutationResult<
+  Awaited<ReturnType<typeof jobsService.approveDeploymentJob>>,
+  Error,
+  Parameters<typeof jobsService.approveDeploymentJob>[0]
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: jobsService.approveDeploymentJob,
@@ -37,7 +53,11 @@ export function useApproveDeploymentJob() {
   });
 }
 
-export function useRejectDeploymentJob() {
+export function useRejectDeploymentJob(): UseMutationResult<
+  Awaited<ReturnType<typeof jobsService.rejectDeploymentJob>>,
+  Error,
+  Parameters<typeof jobsService.rejectDeploymentJob>[0]
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: jobsService.rejectDeploymentJob,
@@ -45,7 +65,11 @@ export function useRejectDeploymentJob() {
   });
 }
 
-export function useRollbackDeploymentJob() {
+export function useRollbackDeploymentJob(): UseMutationResult<
+  Awaited<ReturnType<typeof jobsService.rollbackDeploymentJob>>,
+  Error,
+  Parameters<typeof jobsService.rollbackDeploymentJob>[0]
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: jobsService.rollbackDeploymentJob,

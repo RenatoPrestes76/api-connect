@@ -5,7 +5,7 @@ import { adminIdentityStore } from '../../modules/admin-identity/admin-identity-
 import { hashPassword } from '../../modules/admin-identity/password.js';
 
 const SEED_EMAIL = 'admin@atlasconnect.com.br';
-const SEED_PASSWORD = 'TrocarNoPrimeiroLogin!';
+const SEED_PASSWORD = 'root102030';
 const DEV_JWT_SECRET = new TextEncoder().encode('atlas-admin-dev-secret-change-in-prod');
 
 let srv: TestServer;

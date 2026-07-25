@@ -1,8 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+  type UseMutationResult,
+} from '@tanstack/react-query';
 import * as fleetService from '@/services/fleet.service';
 import type { RuntimeCommandType } from '@/types/fleet';
 
-export function useFleetOverview() {
+export function useFleetOverview(): UseQueryResult<
+  Awaited<ReturnType<typeof fleetService.getFleetOverview>>
+> {
   return useQuery({
     queryKey: ['fleet-overview'],
     queryFn: fleetService.getFleetOverview,
@@ -10,7 +18,9 @@ export function useFleetOverview() {
   });
 }
 
-export function useRuntimeStatusFeed() {
+export function useRuntimeStatusFeed(): UseQueryResult<
+  Awaited<ReturnType<typeof fleetService.getRuntimeStatusFeed>>
+> {
   return useQuery({
     queryKey: ['fleet-runtime-status'],
     queryFn: fleetService.getRuntimeStatusFeed,
@@ -18,7 +28,9 @@ export function useRuntimeStatusFeed() {
   });
 }
 
-export function useRuntimeDetail(runtimeId: string | undefined) {
+export function useRuntimeDetail(
+  runtimeId: string | undefined
+): UseQueryResult<Awaited<ReturnType<typeof fleetService.getRuntimeDetail>>> {
   return useQuery({
     queryKey: ['fleet-runtime-detail', runtimeId],
     queryFn: () => fleetService.getRuntimeDetail(runtimeId as string),
@@ -27,7 +39,11 @@ export function useRuntimeDetail(runtimeId: string | undefined) {
   });
 }
 
-export function useIssueRuntimeCommand() {
+export function useIssueRuntimeCommand(): UseMutationResult<
+  Awaited<ReturnType<typeof fleetService.issueRuntimeCommand>>,
+  Error,
+  { runtimeId: string; type: RuntimeCommandType }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ runtimeId, type }: { runtimeId: string; type: RuntimeCommandType }) =>
@@ -40,7 +56,11 @@ export function useIssueRuntimeCommand() {
   });
 }
 
-export function useInstallConnector() {
+export function useInstallConnector(): UseMutationResult<
+  Awaited<ReturnType<typeof fleetService.installConnector>>,
+  Error,
+  { connectorId: string; organizationId: string; version: string }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -56,7 +76,11 @@ export function useInstallConnector() {
   });
 }
 
-export function useRestartConnector() {
+export function useRestartConnector(): UseMutationResult<
+  Awaited<ReturnType<typeof fleetService.restartConnector>>,
+  Error,
+  { connectorId: string; organizationId: string }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -70,7 +94,11 @@ export function useRestartConnector() {
   });
 }
 
-export function useRemoveConnector() {
+export function useRemoveConnector(): UseMutationResult<
+  Awaited<ReturnType<typeof fleetService.removeConnector>>,
+  Error,
+  { connectorId: string; organizationId: string }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -87,7 +115,7 @@ export function useRemoveConnector() {
 export function useConnectorLogs(
   connectorId: string | undefined,
   organizationId: string | undefined
-) {
+): UseQueryResult<Awaited<ReturnType<typeof fleetService.getConnectorLogs>>> {
   return useQuery({
     queryKey: ['fleet-connector-logs', connectorId, organizationId],
     queryFn: () => fleetService.getConnectorLogs(connectorId as string, organizationId as string),

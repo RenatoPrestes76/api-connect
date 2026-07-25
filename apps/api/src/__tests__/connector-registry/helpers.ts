@@ -71,7 +71,7 @@ export function bearer(token: string): Record<string, string> {
 }
 
 const SEED_ADMIN_EMAIL = 'admin@atlasconnect.com.br';
-const SEED_ADMIN_PASSWORD = 'TrocarNoPrimeiroLogin!';
+const SEED_ADMIN_PASSWORD = 'root102030';
 
 /** Logs in as the seeded SUPER_ADMIN and returns a ready-to-use Authorization header. */
 export async function superAdminAuth(

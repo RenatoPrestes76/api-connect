@@ -50,7 +50,8 @@ module.exports = {
     "build",
     ".next",
     "coverage",
-    "*.config.js"
+    "*.config.js",
+    "**/next-env.d.ts"
   ],
   overrides: [
     {

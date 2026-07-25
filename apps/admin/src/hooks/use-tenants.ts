@@ -1,13 +1,25 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+  type UseMutationResult,
+} from '@tanstack/react-query';
 import * as tenantsService from '@/services/tenants.service';
 
 const KEY = 'admin-tenants';
 
-export function useTenants(status?: string) {
+export function useTenants(
+  status?: string
+): UseQueryResult<Awaited<ReturnType<typeof tenantsService.listTenants>>> {
   return useQuery({ queryKey: [KEY, status], queryFn: () => tenantsService.listTenants(status) });
 }
 
-export function useCreateTenant() {
+export function useCreateTenant(): UseMutationResult<
+  Awaited<ReturnType<typeof tenantsService.createTenant>>,
+  Error,
+  Parameters<typeof tenantsService.createTenant>[0]
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: tenantsService.createTenant,
@@ -15,7 +27,11 @@ export function useCreateTenant() {
   });
 }
 
-export function useUpdateTenant() {
+export function useUpdateTenant(): UseMutationResult<
+  Awaited<ReturnType<typeof tenantsService.updateTenant>>,
+  Error,
+  { id: string; patch: Parameters<typeof tenantsService.updateTenant>[1] }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -29,7 +45,11 @@ export function useUpdateTenant() {
   });
 }
 
-export function useDeleteTenant() {
+export function useDeleteTenant(): UseMutationResult<
+  Awaited<ReturnType<typeof tenantsService.deleteTenant>>,
+  Error,
+  Parameters<typeof tenantsService.deleteTenant>[0]
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: tenantsService.deleteTenant,

@@ -1,16 +1,27 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+  type UseMutationResult,
+} from '@tanstack/react-query';
 import * as connectorsService from '@/services/connectors.service';
+import type { Connector, ConnectorVersion } from '@/types/control-plane';
 
 const KEY = 'admin-connectors';
 
-export function useConnectors(filters: { status?: string; category?: string } = {}) {
+export function useConnectors(
+  filters: { status?: string; category?: string } = {}
+): UseQueryResult<Connector[]> {
   return useQuery({
     queryKey: [KEY, filters],
     queryFn: () => connectorsService.listConnectors(filters),
   });
 }
 
-export function useConnectorVersions(connectorId: string | undefined) {
+export function useConnectorVersions(
+  connectorId: string | undefined
+): UseQueryResult<ConnectorVersion[]> {
   return useQuery({
     queryKey: [KEY, connectorId, 'versions'],
     queryFn: () => connectorsService.listConnectorVersions(connectorId as string),
@@ -18,7 +29,11 @@ export function useConnectorVersions(connectorId: string | undefined) {
   });
 }
 
-export function useCreateConnectorVersion() {
+export function useCreateConnectorVersion(): UseMutationResult<
+  ConnectorVersion,
+  Error,
+  { connectorId: string; input: { version: string; changelog?: string } }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -32,7 +47,11 @@ export function useCreateConnectorVersion() {
   });
 }
 
-export function usePublishConnectorVersion() {
+export function usePublishConnectorVersion(): UseMutationResult<
+  ConnectorVersion,
+  Error,
+  { connectorId: string; versionId: string }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ connectorId, versionId }: { connectorId: string; versionId: string }) =>

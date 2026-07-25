@@ -45,8 +45,12 @@ function groupByDay(entries: AuditEntry[]): Array<[string, AuditEntry[]]> {
   const groups = new Map<string, AuditEntry[]>();
   for (const entry of entries) {
     const day = new Date(entry.createdAt).toLocaleDateString('pt-BR');
-    if (!groups.has(day)) groups.set(day, []);
-    groups.get(day)!.push(entry);
+    const existing = groups.get(day);
+    if (existing) {
+      existing.push(entry);
+    } else {
+      groups.set(day, [entry]);
+    }
   }
   return [...groups.entries()];
 }

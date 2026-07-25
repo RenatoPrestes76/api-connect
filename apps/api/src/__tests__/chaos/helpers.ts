@@ -61,7 +61,7 @@ export function bearer(token: string): Record<string, string> {
 }
 
 const SEED_EMAIL = 'admin@atlasconnect.com.br';
-const SEED_PASSWORD = 'TrocarNoPrimeiroLogin!';
+const SEED_PASSWORD = 'root102030';
 
 export async function superAdminAuth(
   baseUrl: string,

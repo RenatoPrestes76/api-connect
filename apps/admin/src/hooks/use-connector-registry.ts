@@ -1,11 +1,21 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+  type UseMutationResult,
+} from '@tanstack/react-query';
 import * as connectorRegistryService from '@/services/connector-registry.service';
 import type {
   RegistryConnector,
+  RegistryConnectorVersion,
+  RegistryConnectorParameter,
+  RegistryConnectorTemplate,
   ConnectorCategory,
   ConnectorStatus,
   ConnectorVersionStatus,
   ParameterType,
+  ConfigValidationIssue,
 } from '@/types/connector-registry';
 
 const KEY = 'connector-registry';
@@ -13,14 +23,14 @@ const KEY = 'connector-registry';
 export function useRegistryConnectors(filters?: {
   category?: ConnectorCategory;
   status?: ConnectorStatus;
-}) {
+}): UseQueryResult<RegistryConnector[]> {
   return useQuery({
     queryKey: [KEY, 'connectors', filters],
     queryFn: () => connectorRegistryService.listConnectors(filters),
   });
 }
 
-export function useRegistryConnector(id: string | null) {
+export function useRegistryConnector(id: string | null): UseQueryResult<RegistryConnector> {
   return useQuery({
     queryKey: [KEY, 'connector', id],
     queryFn: () => connectorRegistryService.getConnector(id as string),
@@ -28,7 +38,11 @@ export function useRegistryConnector(id: string | null) {
   });
 }
 
-export function useCreateRegistryConnector() {
+export function useCreateRegistryConnector(): UseMutationResult<
+  RegistryConnector,
+  Error,
+  Parameters<typeof connectorRegistryService.createConnector>[0]
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: connectorRegistryService.createConnector,
@@ -36,7 +50,19 @@ export function useCreateRegistryConnector() {
   });
 }
 
-export function useUpdateRegistryConnector() {
+export function useUpdateRegistryConnector(): UseMutationResult<
+  RegistryConnector,
+  Error,
+  {
+    id: string;
+    patch: Partial<
+      Pick<
+        RegistryConnector,
+        'name' | 'vendor' | 'description' | 'icon' | 'category' | 'minRuntimeVersion'
+      >
+    >;
+  }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -55,7 +81,11 @@ export function useUpdateRegistryConnector() {
   });
 }
 
-export function useSetRegistryConnectorActive() {
+export function useSetRegistryConnectorActive(): UseMutationResult<
+  RegistryConnector,
+  Error,
+  { id: string; active: boolean }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, active }: { id: string; active: boolean }) =>
@@ -66,7 +96,7 @@ export function useSetRegistryConnectorActive() {
   });
 }
 
-export function useDeleteRegistryConnector() {
+export function useDeleteRegistryConnector(): UseMutationResult<void, Error, string> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: connectorRegistryService.deleteConnector,
@@ -74,7 +104,11 @@ export function useDeleteRegistryConnector() {
   });
 }
 
-export function useValidateConnectorConfig() {
+export function useValidateConnectorConfig(): UseMutationResult<
+  { valid: boolean; issues: ConfigValidationIssue[] },
+  Error,
+  { id: string; values: Record<string, string | number | boolean> }
+> {
   return useMutation({
     mutationFn: ({
       id,
@@ -88,7 +122,9 @@ export function useValidateConnectorConfig() {
 
 // ─── Versions ───────────────────────────────────────────────────────────────
 
-export function useRegistryVersions(connectorId: string | null) {
+export function useRegistryVersions(
+  connectorId: string | null
+): UseQueryResult<RegistryConnectorVersion[]> {
   return useQuery({
     queryKey: [KEY, 'versions', connectorId],
     queryFn: () => connectorRegistryService.listVersions(connectorId as string),
@@ -96,7 +132,20 @@ export function useRegistryVersions(connectorId: string | null) {
   });
 }
 
-export function usePublishRegistryVersion() {
+export function usePublishRegistryVersion(): UseMutationResult<
+  RegistryConnectorVersion,
+  Error,
+  {
+    connectorId: string;
+    input: {
+      version: string;
+      changelog: string;
+      status: ConnectorVersionStatus;
+      minRuntimeVersion: string;
+      dependencies?: string[];
+    };
+  }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -122,7 +171,9 @@ export function usePublishRegistryVersion() {
 
 // ─── Parameters ─────────────────────────────────────────────────────────────
 
-export function useRegistryParameters(connectorId: string | null) {
+export function useRegistryParameters(
+  connectorId: string | null
+): UseQueryResult<RegistryConnectorParameter[]> {
   return useQuery({
     queryKey: [KEY, 'parameters', connectorId],
     queryFn: () => connectorRegistryService.listParameters(connectorId as string),
@@ -130,7 +181,25 @@ export function useRegistryParameters(connectorId: string | null) {
   });
 }
 
-export function useCreateRegistryParameter() {
+export function useCreateRegistryParameter(): UseMutationResult<
+  RegistryConnectorParameter,
+  Error,
+  {
+    connectorId: string;
+    input: {
+      key: string;
+      label: string;
+      type: ParameterType;
+      required?: boolean;
+      defaultValue?: string | number | boolean;
+      validationPattern?: string;
+      options?: string[];
+      sensitive?: boolean;
+      description?: string;
+      order?: number;
+    };
+  }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -156,7 +225,11 @@ export function useCreateRegistryParameter() {
   });
 }
 
-export function useDeleteRegistryParameter() {
+export function useDeleteRegistryParameter(): UseMutationResult<
+  void,
+  Error,
+  { connectorId: string; parameterId: string }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ connectorId, parameterId }: { connectorId: string; parameterId: string }) =>
@@ -168,7 +241,9 @@ export function useDeleteRegistryParameter() {
 
 // ─── Templates ──────────────────────────────────────────────────────────────
 
-export function useRegistryTemplates(connectorId: string | null) {
+export function useRegistryTemplates(
+  connectorId: string | null
+): UseQueryResult<RegistryConnectorTemplate[]> {
   return useQuery({
     queryKey: [KEY, 'templates', connectorId],
     queryFn: () => connectorRegistryService.listTemplates(connectorId as string),
@@ -176,7 +251,18 @@ export function useRegistryTemplates(connectorId: string | null) {
   });
 }
 
-export function useCreateRegistryTemplate() {
+export function useCreateRegistryTemplate(): UseMutationResult<
+  RegistryConnectorTemplate,
+  Error,
+  {
+    connectorId: string;
+    input: {
+      name: string;
+      description?: string;
+      values: Record<string, string | number | boolean>;
+    };
+  }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -195,7 +281,11 @@ export function useCreateRegistryTemplate() {
   });
 }
 
-export function useDeleteRegistryTemplate() {
+export function useDeleteRegistryTemplate(): UseMutationResult<
+  void,
+  Error,
+  { connectorId: string; templateId: string }
+> {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ connectorId, templateId }: { connectorId: string; templateId: string }) =>
