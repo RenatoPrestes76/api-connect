@@ -87,3 +87,5 @@ temp/
 
 # Local runtime data (e.g. disaster-recovery backup snapshots)
 .data/
+.vercel
+.env*
