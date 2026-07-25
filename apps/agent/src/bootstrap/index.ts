@@ -34,7 +34,7 @@
  *     Emit agent.ready event.
  */
 
-import type { AgentResult, AgentId, AgentConfig } from '../configuration/index';
+import type { AgentResult, AgentConfig } from '../configuration/index';
 import type { AgentContext, Disposable } from '../runtime/index';
 
 // ─── Agent Builder ────────────────────────────────────────────────────────

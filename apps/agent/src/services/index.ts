@@ -139,7 +139,7 @@ export interface CloudBridgeService {
 
 export type CloudCommandServiceHandler = (
   payload: Record<string, unknown>
-) => Promise<AgentResult<Record<string, unknown> | void>>;
+) => Promise<AgentResult<Record<string, unknown>>>;
 
 export type CloudBridgeState =
   | 'connecting'

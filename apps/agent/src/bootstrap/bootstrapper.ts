@@ -391,7 +391,7 @@ export class AgentBootstrapperImpl implements AgentBuilder {
     const instance = new AgentInstanceImpl(agentCtx, config, Date.now() - bootstrapStart);
 
     // Wire up signal handlers
-    const shutdown = () => void instance.shutdown('signal');
+    const shutdown = (): void => void instance.shutdown('signal');
     process.once('SIGTERM', shutdown);
     process.once('SIGINT', shutdown);
 
@@ -435,11 +435,13 @@ export class AgentBootstrapperImpl implements AgentBuilder {
     };
 
     // Apply environment variable overrides
-    if (process.env[AGENT_ID_ENV_VAR]) {
-      (merged.agent as { id: string }).id = process.env[AGENT_ID_ENV_VAR]!;
+    const agentIdOverride = process.env[AGENT_ID_ENV_VAR];
+    if (agentIdOverride) {
+      (merged.agent as { id: string }).id = agentIdOverride;
     }
-    if (process.env[AGENT_DATA_DIR_ENV_VAR]) {
-      (merged.agent as { data_dir: string }).data_dir = process.env[AGENT_DATA_DIR_ENV_VAR]!;
+    const dataDirOverride = process.env[AGENT_DATA_DIR_ENV_VAR];
+    if (dataDirOverride) {
+      (merged.agent as { data_dir: string }).data_dir = dataDirOverride;
     }
 
     console.log(`[Phase 1] Config loaded from ${configPath}`);
