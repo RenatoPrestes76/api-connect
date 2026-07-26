@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import type { AddressInfo } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { Router } from '../../http/router.js';
 import { registerHaRoutes } from '../../routes/v1/ha/index.js';
 
@@ -38,7 +38,7 @@ async function request<T>(
   const resp = await fetch(`${baseUrl}${path}`, init);
   let body: T;
   try {
-    body = await resp.json();
+    body = (await resp.json()) as T;
   } catch {
     body = null as T;
   }

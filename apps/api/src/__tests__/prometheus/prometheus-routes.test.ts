@@ -9,8 +9,9 @@ afterAll(async () => {
   await srv.close();
 });
 
-const G = (path: string, orgId?: string) => get(srv.baseUrl, path, orgId);
-const P = (path: string, data?: unknown, orgId?: string) => post(srv.baseUrl, path, data, orgId);
+const G = <T = any>(path: string, orgId?: string) => get<T>(srv.baseUrl, path, orgId);
+const P = <T = any>(path: string, data?: unknown, orgId?: string) =>
+  post<T>(srv.baseUrl, path, data, orgId);
 
 // ─── Telemetry ───────────────────────────────────────────────────────────────
 
