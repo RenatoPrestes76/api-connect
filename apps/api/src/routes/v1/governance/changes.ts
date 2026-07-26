@@ -112,7 +112,8 @@ export function registerChangesRoutes(router: Router): void {
     }
 
     const updated = governanceStore.approveChange(id, approverName, notes);
-    json(res, updated!);
+    if (!updated) return apiError(res, `Change "${id}" not found`, 404, 'NOT_FOUND');
+    json(res, updated);
   });
 
   // POST /api/v1/changes/:id/reject
@@ -130,6 +131,7 @@ export function registerChangesRoutes(router: Router): void {
     if (!change) return apiError(res, `Change "${id}" not found`, 404, 'NOT_FOUND');
 
     const updated = governanceStore.rejectChange(id, rejectorName, reason);
-    json(res, updated!);
+    if (!updated) return apiError(res, `Change "${id}" not found`, 404, 'NOT_FOUND');
+    json(res, updated);
   });
 }

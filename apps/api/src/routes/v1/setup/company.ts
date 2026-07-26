@@ -59,8 +59,9 @@ export function registerSetupCompanyRoute(router: Router): void {
       workspace: ws,
       currentStep: 'admin',
     });
+    if (!updated) return apiError(res, 'Session not found', 404, 'NOT_FOUND');
     onboardingStore.addLog(sessionId, 'step.company.completed', { name, domain, plan });
 
-    json(res, { sessionId, currentStep: updated!.currentStep, company, workspace: ws });
+    json(res, { sessionId, currentStep: updated.currentStep, company, workspace: ws });
   });
 }

@@ -64,7 +64,7 @@ export async function createIncident(ctx: RouteContext, res: ServerResponse): Pr
     ],
   };
   // fix self-reference after creation
-  incident.events[0]!.incidentId = incident.id;
+  incident.events[0].incidentId = incident.id;
   observatoryStore.incidents.push(incident);
   eventBus.emit_event('IncidentOpened', {
     incidentId: incident.id,

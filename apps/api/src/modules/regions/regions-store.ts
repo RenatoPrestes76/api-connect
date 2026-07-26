@@ -424,8 +424,8 @@ export class RegionsStore {
   updateTenantPlacement(tenantId: string, updates: Partial<TenantRegion>): TenantRegion | null {
     const idx = this.tenantRegions.findIndex((t) => t.tenantId === tenantId);
     if (idx === -1) return null;
-    this.tenantRegions[idx] = { ...this.tenantRegions[idx]!, ...updates };
-    return { ...this.tenantRegions[idx]! };
+    this.tenantRegions[idx] = { ...this.tenantRegions[idx], ...updates };
+    return { ...this.tenantRegions[idx] };
   }
 
   getTenantsPerRegion(): Record<string, number> {

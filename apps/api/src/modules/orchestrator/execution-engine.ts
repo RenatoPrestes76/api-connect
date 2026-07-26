@@ -221,8 +221,8 @@ export async function executeWorkflow(
 
   try {
     while (queue.length > 0) {
-      const nodeId = queue.shift()!;
-      if (visited.has(nodeId)) continue;
+      const nodeId = queue.shift();
+      if (nodeId === undefined || visited.has(nodeId)) continue;
       visited.add(nodeId);
 
       const node = nodeMap.get(nodeId);

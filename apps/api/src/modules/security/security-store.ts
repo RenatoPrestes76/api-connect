@@ -213,7 +213,7 @@ class SecurityStore {
     };
 
     for (const seed of seeds) {
-      const encryptedValue = encrypt(plaintexts[seed.id]!);
+      const encryptedValue = encrypt(plaintexts[seed.id]);
       this.secrets.set(seed.id, { ...seed, encryptedValue });
     }
   }
@@ -678,7 +678,7 @@ class SecurityStore {
       },
     ];
     for (let i = 0; i < events.length; i++) {
-      const ev = events[i]!;
+      const ev = events[i];
       const full: AuditEvent = { id: `evt-seed-${String(i + 1).padStart(3, '0')}`, ...ev };
       this.auditChain.push(appendEntry(this.auditChain, full));
     }

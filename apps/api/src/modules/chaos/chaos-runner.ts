@@ -128,9 +128,10 @@ class ChaosRunner {
 
     return {
       passed,
-      summary: passed
-        ? `Automatic failover succeeded: ${before.hostname} -> ${after!.hostname}`
-        : 'Automatic failover did not produce a healthy new leader',
+      summary:
+        passed && after
+          ? `Automatic failover succeeded: ${before.hostname} -> ${after.hostname}`
+          : 'Automatic failover did not produce a healthy new leader',
       details: { failedNode: before.id, newLeader: after?.id ?? null, election },
     };
   }

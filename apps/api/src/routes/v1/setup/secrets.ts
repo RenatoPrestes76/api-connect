@@ -30,8 +30,9 @@ export function registerSetupSecretsRoute(router: Router): void {
       secrets,
       currentStep: 'provision',
     });
+    if (!updated) return apiError(res, 'Session not found', 404, 'NOT_FOUND');
     onboardingStore.addLog(sessionId, 'step.secrets.completed', { provider });
 
-    json(res, { sessionId, currentStep: updated!.currentStep, secrets });
+    json(res, { sessionId, currentStep: updated.currentStep, secrets });
   });
 }

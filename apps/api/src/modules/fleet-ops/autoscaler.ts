@@ -161,7 +161,7 @@ class Autoscaler {
       }
     } else if (avgCpuPct < policy.targetCpuPct / 2 && avgMemPct < policy.targetMemPct / 2) {
       if (instancesBefore > policy.minInstances) {
-        const candidate = runtimes[runtimes.length - 1]!;
+        const candidate = runtimes[runtimes.length - 1];
         controlPlaneStore.retireRuntime(candidate.id);
         action = 'SCALE_DOWN';
         instancesAfter = instancesBefore - 1;

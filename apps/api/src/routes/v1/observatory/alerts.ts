@@ -56,9 +56,9 @@ export async function updateAlertRule(ctx: RouteContext, res: ServerResponse): P
   }
   const body = ctx.body as Partial<AlertRule>;
   const updated = {
-    ...observatoryStore.alertRules[idx]!,
+    ...observatoryStore.alertRules[idx],
     ...body,
-    id: ctx.params!.id,
+    id: ctx.params.id,
     updatedAt: new Date().toISOString(),
   };
   observatoryStore.alertRules[idx] = updated;

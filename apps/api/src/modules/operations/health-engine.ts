@@ -23,7 +23,8 @@ export class HealthEngine {
   }
 
   private buildTenantHealth(tenantId: string): TenantHealth {
-    const tenant = operationsStore.getTenant(tenantId)!;
+    const tenant = operationsStore.getTenant(tenantId);
+    if (!tenant) throw new Error(`Tenant "${tenantId}" not found`);
     const checks = operationsStore.getHealthChecks(tenantId);
     const overallStatus = computeOverallStatus(checks);
     const openAlerts = operationsStore.getAlerts(tenantId, { resolved: false });

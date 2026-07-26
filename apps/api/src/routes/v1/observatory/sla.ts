@@ -53,7 +53,7 @@ export async function updateSLA(ctx: RouteContext, res: ServerResponse): Promise
     return;
   }
   const body = ctx.body as Partial<SLADefinition>;
-  const updated = { ...observatoryStore.slaDefinitions[idx]!, ...body, id: ctx.params!.id };
+  const updated = { ...observatoryStore.slaDefinitions[idx], ...body, id: ctx.params.id };
   observatoryStore.slaDefinitions[idx] = updated;
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(updated));

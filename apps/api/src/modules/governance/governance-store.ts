@@ -1174,7 +1174,7 @@ export class GovernanceStore {
   approveChange(id: string, approverName: string, notes?: string): ChangeRequest | null {
     const idx = this.changes.findIndex((c) => c.id === id);
     if (idx === -1) return null;
-    const chg = this.changes[idx]!;
+    const chg = this.changes[idx];
     if (chg.status !== 'pending') return chg; // return as-is, caller checks status
     this.changes[idx] = {
       ...chg,
@@ -1193,13 +1193,13 @@ export class GovernanceStore {
       ipAddress: '127.0.0.1',
       details: { changeId: id, title: chg.title, notes },
     });
-    return { ...this.changes[idx]! };
+    return { ...this.changes[idx] };
   }
 
   rejectChange(id: string, rejectorName: string, reason: string): ChangeRequest | null {
     const idx = this.changes.findIndex((c) => c.id === id);
     if (idx === -1) return null;
-    const chg = this.changes[idx]!;
+    const chg = this.changes[idx];
     this.changes[idx] = {
       ...chg,
       status: 'rejected',
@@ -1217,7 +1217,7 @@ export class GovernanceStore {
       ipAddress: '127.0.0.1',
       details: { changeId: id, reason },
     });
-    return { ...this.changes[idx]! };
+    return { ...this.changes[idx] };
   }
 
   // ── Overview ───────────────────────────────────────────────────────────────

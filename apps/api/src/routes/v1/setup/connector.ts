@@ -34,8 +34,9 @@ export function registerSetupConnectorRoute(router: Router): void {
       connector,
       currentStep: 'secrets',
     });
+    if (!updated) return apiError(res, 'Session not found', 404, 'NOT_FOUND');
     onboardingStore.addLog(sessionId, 'step.connector.completed', { type, name });
 
-    json(res, { sessionId, currentStep: updated!.currentStep, connector });
+    json(res, { sessionId, currentStep: updated.currentStep, connector });
   });
 }

@@ -39,7 +39,7 @@ export function enqueue(
 export function dequeue(): QueueJob | undefined {
   const idx = orchestratorStore.queue.findIndex((j) => j.status === 'QUEUED');
   if (idx === -1) return undefined;
-  const job = orchestratorStore.queue[idx]!;
+  const job = orchestratorStore.queue[idx];
   job.status = 'PROCESSING';
   job.attempts += 1;
   return job;

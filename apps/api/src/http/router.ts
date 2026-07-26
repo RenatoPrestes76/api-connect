@@ -222,7 +222,7 @@ export class Router {
 
     const runChain = async (index: number): Promise<void> => {
       if (index < chain.length) {
-        const mw = chain[index]!;
+        const mw = chain[index];
         await mw(ctx, req, res, () => runChain(index + 1));
       } else {
         await handler(ctx, res);

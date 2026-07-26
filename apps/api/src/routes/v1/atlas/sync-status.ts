@@ -13,7 +13,11 @@ export function createSyncStatusHandler(
   syncRepo: SyncRecordRepository
 ) {
   return async (ctx: RouteContext, res: ServerResponse): Promise<void> => {
-    const agentId = ctx.agentId!;
+    const agentId = ctx.agentId;
+    if (!agentId) {
+      apiError(res, 'Unauthorized', 401, 'UNAUTHORIZED');
+      return;
+    }
     const body = (ctx.body ?? {}) as Record<string, unknown>;
     const finishedAt = new Date();
 

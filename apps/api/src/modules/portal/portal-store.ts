@@ -271,7 +271,7 @@ export class PortalStore {
     const idx = ONBOARDING_ORDER.indexOf(step);
     const nextIdx = idx + 1;
     if (nextIdx < ONBOARDING_ORDER.length) {
-      progress.currentStep = ONBOARDING_ORDER[nextIdx]!;
+      progress.currentStep = ONBOARDING_ORDER[nextIdx];
     }
     progress.percentComplete = pct(progress.completedSteps);
     if (progress.percentComplete === 100 && !progress.completedAt) {

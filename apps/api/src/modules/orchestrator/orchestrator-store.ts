@@ -222,7 +222,7 @@ function seedSteps(nodes: WorkflowGraph['nodes'], success: boolean): ExecutionSt
   const allNodes = nodes;
 
   for (let i = 0; i < allNodes.length; i++) {
-    const node = allNodes[i]!;
+    const node = allNodes[i];
     const isLast = i === allNodes.length - 1;
     const failed = !success && isLast;
     const startMs = 50 + i * 80;
@@ -297,7 +297,7 @@ class OrchestratorStore {
     // ── Workflow 1: ERP Product Sync ──────────────────────────────────────────
     const g1 = erpProductSyncGraph();
     const wf1: Workflow = {
-      id: wfIds[0]!,
+      id: wfIds[0],
       name: 'ERP Product Sync',
       description:
         'Listens for product changes in the ERP and replicates them to Seltriva Connect.',
@@ -339,7 +339,7 @@ class OrchestratorStore {
     // ── Workflow 2: Customer Onboarding Alert ─────────────────────────────────
     const g2 = customerOnboardingGraph();
     const wf2: Workflow = {
-      id: wfIds[1]!,
+      id: wfIds[1],
       name: 'Customer Onboarding Alert',
       description:
         'Receives webhook when a new customer is created; validates and sends welcome email.',
@@ -372,7 +372,7 @@ class OrchestratorStore {
     // ── Workflow 3: Daily Report ──────────────────────────────────────────────
     const g3 = dailyReportGraph();
     const wf3: Workflow = {
-      id: wfIds[2]!,
+      id: wfIds[2],
       name: 'Daily Atlas Report',
       description: 'Runs every morning at 08:00 and emails a summary dashboard to admins.',
       active: false,

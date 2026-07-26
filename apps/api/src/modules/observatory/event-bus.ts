@@ -43,7 +43,7 @@ export function startDemoEvents(): void {
     // Occasionally emit workflow events
     if (Math.random() < 0.4) {
       const events: SystemEventType[] = ['WorkflowStarted', 'WorkflowFinished', 'MetricSampled'];
-      const type = events[Math.floor(Math.random() * events.length)]!;
+      const type = events[Math.floor(Math.random() * events.length)];
       eventBus.emit_event(type, { synthetic: true, ts: new Date().toISOString() });
     }
   }, 8_000);

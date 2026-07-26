@@ -23,8 +23,8 @@ export async function handleStripeWebhook(ctx: RouteContext, res: ServerResponse
     return;
   }
 
-  const { type, data } = body;
-  const obj = data.object!;
+  const { type } = body;
+  const obj = body.data.object;
 
   switch (type) {
     case 'customer.subscription.created':

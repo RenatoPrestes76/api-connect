@@ -25,7 +25,8 @@ export class FailoverEngine {
 
     const startTs = Date.now();
     haStore.updateNode(fromNodeId, { status: 'offline' });
-    const newLeader = haStore.promoteNodeToLeader(toNodeId)!;
+    const newLeader = haStore.promoteNodeToLeader(toNodeId);
+    if (!newLeader) throw new Error(`Failed to promote node ${toNodeId} to leader`);
     const durationMs = Date.now() - startTs + 500 + Math.floor(Math.random() * 200);
     const rtoSeconds = Math.max(1, Math.ceil(durationMs / 1000));
 

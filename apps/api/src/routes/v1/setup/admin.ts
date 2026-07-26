@@ -26,8 +26,9 @@ export function registerSetupAdminRoute(router: Router): void {
     };
 
     const updated = onboardingStore.updateSession(sessionId, { admin, currentStep: 'database' });
+    if (!updated) return apiError(res, 'Session not found', 404, 'NOT_FOUND');
     onboardingStore.addLog(sessionId, 'step.admin.completed', { name, email });
 
-    json(res, { sessionId, currentStep: updated!.currentStep, admin });
+    json(res, { sessionId, currentStep: updated.currentStep, admin });
   });
 }

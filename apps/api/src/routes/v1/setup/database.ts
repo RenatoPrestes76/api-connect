@@ -43,12 +43,13 @@ export function registerSetupDatabaseRoute(router: Router): void {
       database: db,
       currentStep: 'connector',
     });
+    if (!updated) return apiError(res, 'Session not found', 404, 'NOT_FOUND');
     onboardingStore.addLog(sessionId, 'step.database.completed', { type, host });
 
     const latencyMs = Math.floor(Math.random() * 25) + 5;
     json(res, {
       sessionId,
-      currentStep: updated!.currentStep,
+      currentStep: updated.currentStep,
       database: db,
       connectionResult: { success: true, latencyMs },
     });

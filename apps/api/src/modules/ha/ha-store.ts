@@ -423,8 +423,8 @@ export class HaStore {
   updateNode(id: string, updates: Partial<ClusterNode>): ClusterNode | null {
     const idx = this.nodes.findIndex((n) => n.id === id);
     if (idx === -1) return null;
-    this.nodes[idx] = { ...this.nodes[idx]!, ...updates };
-    return this.nodes[idx]!;
+    this.nodes[idx] = { ...this.nodes[idx], ...updates };
+    return this.nodes[idx];
   }
 
   addNode(data: Omit<ClusterNode, 'id' | 'createdAt'>): ClusterNode {
