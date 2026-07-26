@@ -10,6 +10,15 @@ import { MissingTenantError } from './tenant.js';
 export interface RouteContext {
   params: Record<string, string>;
   query: URLSearchParams;
+  /**
+   * Parsed JSON request body, untyped by design — no schema validation layer
+   * exists yet for POST/PATCH routes. ~30 route handlers cast this to `any`
+   * to destructure expected fields directly; that's a deliberate, narrow
+   * escape hatch for unvalidated external input, not general-purpose `any`
+   * usage, and should be replaced with real per-route validation (e.g. zod)
+   * in a dedicated pass rather than papered over with `Record<string, unknown>`
+   * casts that only push the untyped-ness one level down.
+   */
   body: unknown;
   rawUrl: string;
   pathname: string;
