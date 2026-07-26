@@ -1,14 +1,15 @@
 import { DRIVER_REGISTRY } from '../erp-connectivity/drivers.js';
 import type { DbType } from '../erp-connectivity/types.js';
+import type { ConnectorAction } from './types.js';
 
 export interface QueryPlanInput {
-  action: string;
+  action: ConnectorAction;
   payload: Record<string, unknown>;
   dbType: DbType;
 }
 
 export interface QueryPlan {
-  action: string;
+  action: ConnectorAction;
   payload: Record<string, unknown>;
   dbType: DbType;
   driverVersion: string;

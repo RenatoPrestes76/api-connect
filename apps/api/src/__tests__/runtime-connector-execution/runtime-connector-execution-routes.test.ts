@@ -471,3 +471,143 @@ describe('Audit trail', () => {
     ).toBe(true);
   });
 });
+
+// ─── Sprint 46.10 — PRICE_MARKDOWN: the first real command end-to-end ────────
+
+describe('PRICE_MARKDOWN — primeiro comando real (Sprint 46.10)', () => {
+  it('rejects a PRICE_MARKDOWN request with an invalid payload (missing productId/newPrice)', async () => {
+    const { runtimeId, profileId } = await setUpRuntimeAndProfile();
+    const { status, body } = await post<PlanBody>(
+      srv.baseUrl,
+      '/runtime/connectors/execute',
+      {
+        runtimeId,
+        organizationId: SEED_ORG_ID,
+        connectorId: activeConnectorId,
+        profileId,
+        action: 'PRICE_MARKDOWN',
+        payload: { productId: '12345' }, // missing newPrice
+      },
+      auth
+    );
+    expect(status).toBe(422);
+    expect(body.plan.status).toBe('REJECTED');
+    expect(body.plan.validation['payloadValid']).toBe(false);
+  });
+
+  it('rejects a PRICE_MARKDOWN request with a non-positive newPrice', async () => {
+    const { runtimeId, profileId } = await setUpRuntimeAndProfile();
+    const { body } = await post<PlanBody>(
+      srv.baseUrl,
+      '/runtime/connectors/execute',
+      {
+        runtimeId,
+        organizationId: SEED_ORG_ID,
+        connectorId: activeConnectorId,
+        profileId,
+        action: 'PRICE_MARKDOWN',
+        payload: { productId: '12345', newPrice: -1 },
+      },
+      auth
+    );
+    expect(body.plan.status).toBe('REJECTED');
+    expect(body.plan.validation['payloadValid']).toBe(false);
+  });
+
+  it('runs the full Seltriva → Atlas → Runtime → ERP → Atlas cycle for a valid PRICE_MARKDOWN', async () => {
+    const { runtimeId, keyPair, profileId } = await setUpRuntimeAndProfile();
+
+    // Seltriva → Atlas Control Plane: solicitação de ação.
+    const created = await post<PlanBody>(
+      srv.baseUrl,
+      '/runtime/connectors/execute',
+      {
+        runtimeId,
+        organizationId: SEED_ORG_ID,
+        connectorId: activeConnectorId,
+        profileId,
+        action: 'PRICE_MARKDOWN',
+        payload: { productId: '12345', newPrice: 9.9 },
+      },
+      auth
+    );
+    expect(created.status).toBe(201);
+    expect(created.body.plan.status).toBe('QUEUED');
+    expect(created.body.plan.validation['payloadValid']).toBe(true);
+    const executionId = created.body.plan.id;
+
+    // Atlas Control Plane → Atlas Runtime: comando autorizado, entregue via
+    // a mesma sessão JWT reutilizada da Sprint 46.7.
+    const accessToken = await obtainRuntimeAccessToken(
+      srv.baseUrl,
+      runtimeId,
+      keyPair.privateKeyPem
+    );
+    const claimed = await get<{ plans: Array<{ id: string; action: string; payload: unknown }> }>(
+      srv.baseUrl,
+      '/runtime/connectors/jobs',
+      bearer(accessToken)
+    );
+    const claimedPlan = claimed.body.plans.find((p) => p.id === executionId);
+    expect(claimedPlan?.action).toBe('PRICE_MARKDOWN');
+    expect(claimedPlan?.payload).toEqual({ productId: '12345', newPrice: 9.9 });
+
+    // Atlas Runtime → ERP do cliente → Atlas Control Plane: resultado.
+    const reported = await post<PlanBody>(
+      srv.baseUrl,
+      '/runtime/connectors/result',
+      {
+        executionId,
+        runtimeId,
+        success: true,
+        rowCount: 1,
+        erpReference: 'ABC123',
+        data: { productId: '12345', newPrice: 9.9 },
+      },
+      bearer(accessToken)
+    );
+    expect(reported.body.plan.status).toBe('SUCCESS');
+    expect(reported.body.plan['erpReference']).toBe('ABC123');
+
+    // Atlas Control Plane → Seltriva: auditoria completa do ciclo.
+    const finalView = await get<PlanBody>(
+      srv.baseUrl,
+      `/runtime/connectors/executions/${executionId}`,
+      auth
+    );
+    expect(finalView.body.plan.status).toBe('SUCCESS');
+    expect(finalView.body.plan['erpReference']).toBe('ABC123');
+
+    const log = adminIdentityStore.getAuditLog({ limit: 500 });
+    expect(
+      log.some(
+        (e) =>
+          e.action === 'EXECUTION_PLANNED' &&
+          e.target === executionId &&
+          (e.metadata as Record<string, unknown> | undefined)?.['connectorAction'] ===
+            'PRICE_MARKDOWN'
+      )
+    ).toBe(true);
+    expect(
+      log.some((e) => e.action === 'EXECUTION_RESULT_REPORTED' && e.target === executionId)
+    ).toBe(true);
+  });
+
+  it('does not impose payload validation on other (non-PRICE_MARKDOWN) actions', async () => {
+    const { runtimeId, profileId } = await setUpRuntimeAndProfile();
+    const { body } = await post<PlanBody>(
+      srv.baseUrl,
+      '/runtime/connectors/execute',
+      {
+        runtimeId,
+        organizationId: SEED_ORG_ID,
+        connectorId: activeConnectorId,
+        profileId,
+        action: 'READ_PRODUCTS',
+      },
+      auth
+    );
+    expect(body.plan.status).toBe('QUEUED');
+    expect(body.plan.validation['payloadValid']).toBe(true);
+  });
+});

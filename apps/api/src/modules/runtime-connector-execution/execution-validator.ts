@@ -3,9 +3,36 @@ import { isSupportedDbType } from '../erp-connectivity/drivers.js';
 import type { RuntimeRegistrationRecord } from '../runtime-registration/types.js';
 import type { ConnectorRecord } from '../connectors/types.js';
 import type { ConnectionProfileRecord } from '../erp-connectivity/types.js';
-import type { ExecutionValidationChecks, ExecutionValidationResult } from './types.js';
+import type {
+  ConnectorAction,
+  ExecutionValidationChecks,
+  ExecutionValidationResult,
+} from './types.js';
 
 const INVALID_PROFILE_STATUSES = new Set(['DISABLED', 'DOWN', 'CIRCUIT_OPEN']);
+
+/**
+ * Per-action payload shape checks. Only known actions with a real payload
+ * contract are validated here; anything else (including unrecognized
+ * actions) passes through untouched — new actions never require touching
+ * this function, matching ConnectorAction's own open-string design.
+ */
+export function validateActionPayload(
+  action: ConnectorAction,
+  payload: Record<string, unknown>
+): boolean {
+  if (action === 'PRICE_MARKDOWN') {
+    const { productId, newPrice } = payload as { productId?: unknown; newPrice?: unknown };
+    return (
+      typeof productId === 'string' &&
+      productId.length > 0 &&
+      typeof newPrice === 'number' &&
+      Number.isFinite(newPrice) &&
+      newPrice > 0
+    );
+  }
+  return true;
+}
 
 /**
  * Pre-flight checks required before an Execution Plan is dispatched to a
@@ -17,14 +44,17 @@ export function validateExecution(input: {
   runtime: RuntimeRegistrationRecord;
   connector: ConnectorRecord;
   profile: ConnectionProfileRecord;
+  action: ConnectorAction;
+  payload: Record<string, unknown>;
 }): ExecutionValidationResult {
-  const { runtime, connector, profile } = input;
+  const { runtime, connector, profile, action, payload } = input;
 
   const runtimeAuthorized = runtime.status !== 'BLOCKED' && runtime.status !== 'REVOKED';
   const connectorActive = connector.status === 'active';
   const profileValid = !INVALID_PROFILE_STATUSES.has(profile.status);
   const driverCompatible = isSupportedDbType(profile.dbType);
   const minVersionOk = isVersionAtLeast(runtime.version, connector.minRuntimeVersion);
+  const payloadValid = validateActionPayload(action, payload);
 
   const checks: ExecutionValidationChecks = {
     runtimeAuthorized,
@@ -32,6 +62,7 @@ export function validateExecution(input: {
     profileValid,
     driverCompatible,
     minVersionOk,
+    payloadValid,
   };
 
   const ok = Object.values(checks).every(Boolean);

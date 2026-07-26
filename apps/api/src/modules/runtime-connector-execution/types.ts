@@ -36,6 +36,27 @@ export type AtlasStandardResponseStatus =
   | 'TIMEOUT'
   | 'UNAUTHORIZED';
 
+// ─── Connector actions ───────────────────────────────────────────────────────
+// Known actions are listed for discoverability/payload-validation defaults,
+// but the type stays open (string & {}) so new actions never require
+// touching this file — mirrors job-orchestration's KnownJobCommand pattern.
+
+export type KnownConnectorAction =
+  | 'READ_PRODUCTS'
+  | 'SYNC_STOCK'
+  | 'SYNC_PRICES'
+  | 'PRICE_MARKDOWN'
+  | 'CUSTOM';
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type ConnectorAction = KnownConnectorAction | (string & {});
+
+/** Sprint 46.10's first real use case: a price reduction to push into the ERP. */
+export interface PriceMarkdownPayload {
+  productId: string;
+  newPrice: number;
+}
+
 // ─── Validation ──────────────────────────────────────────────────────────────
 
 export interface ExecutionValidationChecks {
@@ -44,6 +65,7 @@ export interface ExecutionValidationChecks {
   profileValid: boolean;
   driverCompatible: boolean;
   minVersionOk: boolean;
+  payloadValid: boolean;
 }
 
 export interface ExecutionValidationResult {
@@ -72,8 +94,8 @@ export interface ExecutionPlanRecord {
   organizationId: string;
   connectorId: string;
   profileId: string;
-  /** The Connector Action requested — e.g. "READ_PRODUCTS". */
-  action: string;
+  /** The Connector Action requested — e.g. "READ_PRODUCTS" or "PRICE_MARKDOWN". */
+  action: ConnectorAction;
   createdBy: string;
   payload: Record<string, unknown>;
   dbType: string;
@@ -87,6 +109,8 @@ export interface ExecutionPlanRecord {
   circuitState: ExecutionCircuitState;
   resultData: Record<string, unknown> | null;
   resultError: string | null;
+  /** The ERP's own confirmation/transaction identifier for this execution, when it produced one. */
+  erpReference: string | null;
   createdAt: string;
   scheduledAt: string;
   claimedAt: string | null;
@@ -99,7 +123,7 @@ export interface ExecutionPlanDTO {
   organizationId: string;
   connectorId: string;
   profileId: string;
-  action: string;
+  action: ConnectorAction;
   createdBy: string;
   payload: Record<string, unknown>;
   dbType: string;
@@ -113,6 +137,7 @@ export interface ExecutionPlanDTO {
   circuitState: ExecutionCircuitState;
   resultData: Record<string, unknown> | null;
   resultError: string | null;
+  erpReference: string | null;
   createdAt: string;
   scheduledAt: string;
   claimedAt: string | null;
@@ -126,7 +151,7 @@ export interface CreateExecutionInput {
   organizationId: string;
   connectorId: string;
   profileId: string;
-  action: string;
+  action: ConnectorAction;
   createdBy: string;
   payload?: Record<string, unknown>;
   timeoutMs?: number;
@@ -157,6 +182,8 @@ export interface ReportExecutionResultInput {
   executionTimeMs?: number;
   latencyMs?: number;
   data?: Record<string, unknown>;
+  /** The ERP's own confirmation/transaction identifier for this execution (e.g. PRICE_MARKDOWN's ERP transaction id). */
+  erpReference?: string;
   error?: string;
 }
 

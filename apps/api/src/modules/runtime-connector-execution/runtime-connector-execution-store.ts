@@ -60,7 +60,13 @@ export class RuntimeConnectorExecutionStore {
       payload: input.payload ?? {},
       dbType: profile.dbType,
     });
-    const validation = validateExecution({ runtime, connector, profile });
+    const validation = validateExecution({
+      runtime,
+      connector,
+      profile,
+      action: plannedQuery.action,
+      payload: plannedQuery.payload,
+    });
 
     const now = new Date().toISOString();
     const plan: ExecutionPlanRecord = {
@@ -90,6 +96,7 @@ export class RuntimeConnectorExecutionStore {
       circuitState: 'CLOSED',
       resultData: null,
       resultError: validation.ok ? null : `Validation failed: ${validation.failureReason}`,
+      erpReference: null,
       createdAt: now,
       scheduledAt: now,
       claimedAt: null,
@@ -135,6 +142,7 @@ export class RuntimeConnectorExecutionStore {
       circuitState: plan.circuitState,
       resultData: plan.resultData,
       resultError: plan.resultError,
+      erpReference: plan.erpReference,
       createdAt: plan.createdAt,
       scheduledAt: plan.scheduledAt,
       claimedAt: plan.claimedAt,
@@ -238,6 +246,8 @@ export class RuntimeConnectorExecutionStore {
     const outcome = normalizeResult(input);
     if (input.executionTimeMs !== undefined) plan.metrics.executionTimeMs = input.executionTimeMs;
     if (input.latencyMs !== undefined) plan.metrics.latencyMs = input.latencyMs;
+
+    if (input.erpReference !== undefined) plan.erpReference = input.erpReference;
 
     if (outcome === 'SUCCESS' || outcome === 'PARTIAL' || outcome === 'EMPTY') {
       plan.attempts += 1;
