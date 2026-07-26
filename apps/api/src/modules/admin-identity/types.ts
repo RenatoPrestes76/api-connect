@@ -32,7 +32,8 @@ export type PermissionResource =
   | 'connector-management'
   | 'job-orchestration'
   | 'message-delivery'
-  | 'erp-connectivity';
+  | 'erp-connectivity'
+  | 'runtime-connector-execution';
 
 export type PermissionAction =
   | 'read'
@@ -193,7 +194,11 @@ export type AdminAuditAction =
   | 'CONNECTION_AUTH_FAILED'
   | 'CONNECTION_RECONNECTED'
   | 'CONNECTION_STATUS_CHANGED'
-  | 'CONNECTION_PROFILE_DELETED';
+  | 'CONNECTION_PROFILE_DELETED'
+  // Runtime Connector Execution Engine (runtime-connector-execution module)
+  | 'EXECUTION_PLANNED'
+  | 'EXECUTION_REJECTED'
+  | 'EXECUTION_RESULT_REPORTED';
 
 export interface AdminAuditEntry {
   id: string;

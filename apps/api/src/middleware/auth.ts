@@ -84,7 +84,9 @@ const PUBLIC_PATH_PREFIXES = [
   // Sprint 46.3 — Atlas Runtime Registration & Provisioning Engine. Register
   // is public (activation-key gated); heartbeat verifies a request
   // signature against the Runtime's registered public key inline in its
-  // own handler, not via this generic Supabase-style middleware.
+  // own handler, not via this generic Supabase-style middleware. Also
+  // covers the Runtime Connector Execution Engine's /runtime/connectors/*
+  // (mixes staff-gated requirePermission with requireRuntimeAuth JWT).
   '/runtime/',
   // Sprint 46.4 — Connector Lifecycle Management Engine. Staff-gated via
   // requirePermission('connector-management.*') inline in each handler,

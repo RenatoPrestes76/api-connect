@@ -113,6 +113,16 @@ export const PERMISSION_CATALOG: Array<{
     action: 'write',
     description: 'Create, update, and delete ERP connection profiles',
   },
+  {
+    resource: 'runtime-connector-execution',
+    action: 'read',
+    description: 'View connector execution plans and their results',
+  },
+  {
+    resource: 'runtime-connector-execution',
+    action: 'write',
+    description: 'Request connector executions against a Runtime',
+  },
 ];
 
 export function permissionKey(
@@ -167,6 +177,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'message-delivery.write',
     'erp-connectivity.read',
     'erp-connectivity.write',
+    'runtime-connector-execution.read',
+    'runtime-connector-execution.write',
   ],
   SUPORTE: [
     'companies.read',
@@ -180,6 +192,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'job-orchestration.read',
     'message-delivery.read',
     'erp-connectivity.read',
+    'runtime-connector-execution.read',
   ],
   CUSTOMER_SUCCESS: [
     'companies.read',
@@ -207,6 +220,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'message-delivery.write',
     'erp-connectivity.read',
     'erp-connectivity.write',
+    'runtime-connector-execution.read',
+    'runtime-connector-execution.write',
   ],
   AUDITOR: [
     'companies.read',
@@ -219,6 +234,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'job-orchestration.read',
     'message-delivery.read',
     'erp-connectivity.read',
+    'runtime-connector-execution.read',
   ],
 };
 
