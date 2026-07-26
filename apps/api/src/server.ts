@@ -41,6 +41,7 @@ import { registerConnectorRegistryRoutes } from './routes/v1/connector-registry/
 import { registerRuntimeRegistrationRoutes } from './routes/v1/runtime-registration/index.js';
 import { registerConnectorManagementRoutes } from './routes/v1/connector-management/index.js';
 import { registerJobOrchestrationRoutes } from './routes/v1/job-orchestration/index.js';
+import { registerMessageDeliveryRoutes } from './routes/v1/message-delivery/index.js';
 import { wsHub } from './modules/fleet-ops/websocket-hub.js';
 import { healthHandler } from './routes/health.js';
 import { liveHandler, readyHandler } from './routes/live-ready.js';
@@ -260,6 +261,9 @@ export function createApiServer(
 
   // REMOTE COMMAND & JOB ORCHESTRATION — Sprint 46.5
   registerJobOrchestrationRoutes(router);
+
+  // RELIABLE MESSAGE DELIVERY & EXECUTION ENGINE
+  registerMessageDeliveryRoutes(router);
 
   const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
     withErrorBoundary(req, res, () => router.dispatch(req, res));

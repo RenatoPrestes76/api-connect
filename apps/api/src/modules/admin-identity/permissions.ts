@@ -93,6 +93,16 @@ export const PERMISSION_CATALOG: Array<{
     action: 'write',
     description: 'Create and cancel remote command jobs',
   },
+  {
+    resource: 'message-delivery',
+    action: 'read',
+    description: 'View message delivery status, pending queues, and the dead-letter queue',
+  },
+  {
+    resource: 'message-delivery',
+    action: 'write',
+    description: 'Send messages and reprocess dead-lettered messages',
+  },
 ];
 
 export function permissionKey(
@@ -143,6 +153,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'connector-management.write',
     'job-orchestration.read',
     'job-orchestration.write',
+    'message-delivery.read',
+    'message-delivery.write',
   ],
   SUPORTE: [
     'companies.read',
@@ -154,6 +166,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'runtime-registration.read',
     'connector-management.read',
     'job-orchestration.read',
+    'message-delivery.read',
   ],
   CUSTOMER_SUCCESS: [
     'companies.read',
@@ -177,6 +190,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'connector-management.write',
     'job-orchestration.read',
     'job-orchestration.write',
+    'message-delivery.read',
+    'message-delivery.write',
   ],
   AUDITOR: [
     'companies.read',
@@ -187,6 +202,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'runtime-registration.read',
     'connector-management.read',
     'job-orchestration.read',
+    'message-delivery.read',
   ],
 };
 

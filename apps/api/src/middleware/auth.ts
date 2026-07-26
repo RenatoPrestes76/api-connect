@@ -95,6 +95,11 @@ const PUBLIC_PATH_PREFIXES = [
   // /jobs/result (signature-verified inline); /runtime/jobs is already
   // covered by the '/runtime/' prefix above.
   '/jobs',
+  // Reliable Message Delivery & Execution Engine. /messages* mixes
+  // staff-gated routes (requirePermission inline) with Runtime-facing
+  // /messages/ack and the runtime-poll mode of /messages/pending
+  // (signature-verified inline, same scheme as /runtime/jobs).
+  '/messages',
 ];
 
 export const authMiddleware: Middleware = async (

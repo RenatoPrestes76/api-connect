@@ -30,7 +30,8 @@ export type PermissionResource =
   | 'connector-registry'
   | 'runtime-registration'
   | 'connector-management'
-  | 'job-orchestration';
+  | 'job-orchestration'
+  | 'message-delivery';
 
 export type PermissionAction =
   | 'read'
@@ -175,7 +176,11 @@ export type AdminAuditAction =
   // Sprint 46.5 — Remote Command & Job Orchestration Engine
   | 'JOB_CREATED'
   | 'JOB_CANCELLED'
-  | 'JOB_RESULT_REPORTED';
+  | 'JOB_RESULT_REPORTED'
+  // Reliable Message Delivery & Execution Engine (message-delivery module)
+  | 'MESSAGE_ENQUEUED'
+  | 'MESSAGE_ACKNOWLEDGED'
+  | 'MESSAGE_REPROCESSED';
 
 export interface AdminAuditEntry {
   id: string;
