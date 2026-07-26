@@ -73,6 +73,16 @@ export const PERMISSION_CATALOG: Array<{
     action: 'delete',
     description: "Revoke a Runtime's certificate",
   },
+  {
+    resource: 'connector-management',
+    action: 'read',
+    description: 'View connector installations on Runtimes',
+  },
+  {
+    resource: 'connector-management',
+    action: 'write',
+    description: 'Assign, update, and roll back connectors on Runtimes',
+  },
 ];
 
 export function permissionKey(
@@ -119,6 +129,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'runtime-registration.read',
     'runtime-registration.write',
     'runtime-registration.delete',
+    'connector-management.read',
+    'connector-management.write',
   ],
   SUPORTE: [
     'companies.read',
@@ -128,6 +140,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'dashboard.view',
     'connector-registry.read',
     'runtime-registration.read',
+    'connector-management.read',
   ],
   CUSTOMER_SUCCESS: [
     'companies.read',
@@ -147,6 +160,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'runtime-registration.read',
     'runtime-registration.write',
     'runtime-registration.delete',
+    'connector-management.read',
+    'connector-management.write',
   ],
   AUDITOR: [
     'companies.read',
@@ -155,6 +170,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'dashboard.view',
     'connector-registry.read',
     'runtime-registration.read',
+    'connector-management.read',
   ],
 };
 

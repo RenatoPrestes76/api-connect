@@ -12,6 +12,7 @@ import type {
   ConfigValidationIssue,
 } from './types.js';
 import { encryptSecretValue } from './secret-crypto.js';
+import { computeChecksum, signPackage } from './package-integrity.js';
 
 const URL_PATTERN = /^https?:\/\/.+/i;
 
@@ -270,6 +271,12 @@ export class ConnectorsStore {
     const connector = this.getConnector(connectorId);
     if (!connector) return null;
     const now = new Date().toISOString();
+    const checksum = computeChecksum({
+      connectorId,
+      version: input.version,
+      changelog: input.changelog,
+      dependencies: input.dependencies,
+    });
     const record: ConnectorVersionRecord = {
       id: randomUUID(),
       connectorId,
@@ -278,6 +285,8 @@ export class ConnectorsStore {
       status: input.status,
       minRuntimeVersion: input.minRuntimeVersion,
       dependencies: input.dependencies,
+      checksum,
+      packageSignature: signPackage({ connectorId, version: input.version, checksum }),
       publishedAt: now,
       createdAt: now,
     };

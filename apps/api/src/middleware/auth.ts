@@ -86,6 +86,10 @@ const PUBLIC_PATH_PREFIXES = [
   // signature against the Runtime's registered public key inline in its
   // own handler, not via this generic Supabase-style middleware.
   '/runtime/',
+  // Sprint 46.4 — Connector Lifecycle Management Engine. Staff-gated via
+  // requirePermission('connector-management.*') inline in each handler,
+  // not by this generic Supabase-style middleware.
+  '/connectors',
 ];
 
 export const authMiddleware: Middleware = async (

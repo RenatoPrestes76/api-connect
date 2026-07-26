@@ -48,6 +48,16 @@ export interface ConnectorVersionRecord {
   minRuntimeVersion: string;
   /** Other connector identifiers (or arbitrary package names) this version depends on. */
   dependencies: string[];
+  /**
+   * SHA-256 of the package contents (Sprint 46.4 — Connector Lifecycle
+   * Management). This backend never handles real package bytes; the
+   * checksum is computed over the version's own descriptive fields as a
+   * stand-in, giving Runtimes a real, verifiable value to compare against
+   * what they actually downloaded.
+   */
+  checksum: string;
+  /** HS256 JWT binding checksum+connectorId+version — proves the package was published through this registry, not tampered with or forged. */
+  packageSignature: string;
   publishedAt: string;
   createdAt: string;
 }

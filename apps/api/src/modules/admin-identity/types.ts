@@ -28,7 +28,8 @@ export type PermissionResource =
   | 'erp-integration'
   | 'projects'
   | 'connector-registry'
-  | 'runtime-registration';
+  | 'runtime-registration'
+  | 'connector-management';
 
 export type PermissionAction =
   | 'read'
@@ -163,7 +164,13 @@ export type AdminAuditAction =
   | 'RUNTIME_BLOCKED'
   | 'RUNTIME_REACTIVATED'
   | 'RUNTIME_CERTIFICATE_REVOKED'
-  | 'RUNTIME_ACTIVATION_KEY_ISSUED';
+  | 'RUNTIME_ACTIVATION_KEY_ISSUED'
+  // Sprint 46.4 — Connector Lifecycle Management Engine
+  | 'CONNECTOR_ASSIGNED'
+  | 'CONNECTOR_UPDATE_REQUESTED'
+  | 'CONNECTOR_UPDATE_REJECTED'
+  | 'CONNECTOR_INSTALLATION_OUTCOME_REPORTED'
+  | 'CONNECTOR_ROLLED_BACK';
 
 export interface AdminAuditEntry {
   id: string;
