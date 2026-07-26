@@ -10,14 +10,12 @@
       "cache": false,
       "persistent": true
     },
-    "lint": {
-      "outputs": ["node_modules/.cache/.eslintcache"]
-    },
+    "lint": {},
     "type-check": {
-      "dependsOn": ["^build"],
-      "outputs": ["node_modules/.tsbuildinfo"]
+      "dependsOn": ["^build"]
     },
-    "test": {
+    "test": {},
+    "test:coverage": {
       "outputs": ["coverage/**"]
     },
     "test:watch": {

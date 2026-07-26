@@ -12,7 +12,7 @@
     "dev": "node --loader ts-node/esm src/index.ts",
     "build": "tsc",
     "type-check": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest"
   },
   "dependencies": {

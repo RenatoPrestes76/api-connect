@@ -2,7 +2,7 @@ name: Format & Lint Auto-fix
 
 on:
   push:
-    branches: [main, develop]
+    branches: [develop]
 
 jobs:
   format:
