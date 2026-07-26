@@ -1,0 +1,149 @@
+import type { ServerResponse } from 'node:http';
+import type { RouteContext } from '../../../http/router.js';
+import { json, apiError } from '../../../http/router.js';
+import { runtimeRegistrationStore } from '../../../modules/runtime-registration/runtime-registration-store.js';
+import { registrationRateLimiter } from '../../../modules/runtime-registration/rate-limiter.js';
+import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
+import { portalIdentityStore } from '../../../modules/portal-identity/portal-identity-store.js';
+import { connectorsStore } from '../../../modules/connectors/connectors-store.js';
+import type { RegisterRuntimeInput } from '../../../modules/runtime-registration/types.js';
+
+/** Minimum Runtime software version the Control Plane will provision — semver-lite, string comparison of dotted segments. */
+const MIN_RUNTIME_VERSION = '1.0.0';
+
+function isVersionAtLeast(version: string, minVersion: string): boolean {
+  const a = version.split('.').map((n) => parseInt(n, 10) || 0);
+  const b = minVersion.split('.').map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const av = a[i] ?? 0;
+    const bv = b[i] ?? 0;
+    if (av > bv) return true;
+    if (av < bv) return false;
+  }
+  return true;
+}
+
+function clientIp(ctx: RouteContext): string {
+  const header = ctx.headers['x-forwarded-for'];
+  const value = Array.isArray(header) ? header[0] : header;
+  return value?.split(',')[0]?.trim() ?? 'unknown';
+}
+
+const ERROR_STATUS: Record<string, { status: number; code: string; message: string }> = {
+  ORGANIZATION_NOT_FOUND: {
+    status: 404,
+    code: 'ORGANIZATION_NOT_FOUND',
+    message: 'Organization not found for the given organizationCode',
+  },
+  ACTIVATION_KEY_INVALID: {
+    status: 401,
+    code: 'ACTIVATION_KEY_INVALID',
+    message: 'Invalid activation key',
+  },
+  ACTIVATION_KEY_EXPIRED: {
+    status: 401,
+    code: 'ACTIVATION_KEY_EXPIRED',
+    message: 'Activation key has expired',
+  },
+  ACTIVATION_KEY_ALREADY_USED: {
+    status: 409,
+    code: 'ACTIVATION_KEY_ALREADY_USED',
+    message: 'Activation key has already been used (single-use)',
+  },
+  FINGERPRINT_DUPLICATE: {
+    status: 409,
+    code: 'FINGERPRINT_DUPLICATE',
+    message: 'A Runtime with this machine fingerprint is already registered',
+  },
+};
+
+export async function registerRuntimeHandler(
+  ctx: RouteContext,
+  res: ServerResponse
+): Promise<void> {
+  const ip = clientIp(ctx);
+  if (registrationRateLimiter.isLocked(ip)) {
+    apiError(res, 'Too many registration attempts — try again later', 429, 'RATE_LIMITED');
+    return;
+  }
+
+  const body = ctx.body as Partial<RegisterRuntimeInput> | undefined;
+  const required: Array<keyof RegisterRuntimeInput> = [
+    'organizationCode',
+    'activationKey',
+    'runtimeVersion',
+    'fingerprint',
+    'publicKey',
+    'hostname',
+    'os',
+  ];
+  const missing = required.filter((k) => !body?.[k]);
+  if (missing.length > 0) {
+    registrationRateLimiter.recordFailure(ip);
+    apiError(res, `Missing required fields: ${missing.join(', ')}`, 422, 'VALIDATION_ERROR');
+    return;
+  }
+  const input = body as RegisterRuntimeInput;
+
+  if (!isVersionAtLeast(input.runtimeVersion, MIN_RUNTIME_VERSION)) {
+    registrationRateLimiter.recordFailure(ip);
+    apiError(
+      res,
+      `Runtime version ${input.runtimeVersion} is below the minimum supported version ${MIN_RUNTIME_VERSION}`,
+      422,
+      'UNSUPPORTED_RUNTIME_VERSION'
+    );
+    return;
+  }
+
+  const result = await runtimeRegistrationStore.registerRuntime(input);
+
+  if (!result.ok) {
+    registrationRateLimiter.recordFailure(ip);
+    const mapped = ERROR_STATUS[result.error];
+    apiError(res, mapped.message, mapped.status, mapped.code);
+    return;
+  }
+
+  registrationRateLimiter.recordSuccess(ip);
+
+  const { runtime, certificate } = result;
+  adminIdentityStore.recordAudit({
+    action: 'RUNTIME_REGISTERED',
+    actorEmail: 'runtime-installer@system',
+    target: runtime.id,
+    ip,
+    metadata: { organizationId: runtime.organizationId, hostname: runtime.hostname },
+  });
+
+  const environments = portalIdentityStore
+    .listEnvironments(runtime.organizationId)
+    .map((e) => ({ id: e.id, name: e.name, kind: e.kind }));
+  const connectorsEnabled = connectorsStore
+    .listConnectors({ status: 'active' })
+    .map((c) => c.identifier);
+
+  json(
+    res,
+    {
+      data: {
+        runtimeId: runtime.id,
+        certificate,
+        organizationId: runtime.organizationId,
+        pollingInterval: 60_000,
+        heartbeatInterval: 30_000,
+        connectorsEnabled,
+        environments,
+        policies: {
+          minRuntimeVersion: MIN_RUNTIME_VERSION,
+          maxHeartbeatGapMs: 5 * 60_000,
+        },
+        limits: {
+          maxSyncBatchSize: 500,
+          maxConcurrentSyncs: 3,
+        },
+      },
+    },
+    201
+  );
+}

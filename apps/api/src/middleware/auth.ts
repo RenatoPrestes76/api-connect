@@ -77,9 +77,15 @@ const PUBLIC_PATH_PREFIXES = [
   '/admin/fleet',
   '/admin/chaos',
   '/admin/connector-registry/',
+  '/admin/runtime-registration/',
   // Tenant self-service portal has its own dedicated auth scheme — see
   // middleware/portal-auth.ts — gated per-route, not by Supabase auth.
   '/api/v1/portal/',
+  // Sprint 46.3 — Atlas Runtime Registration & Provisioning Engine. Register
+  // is public (activation-key gated); heartbeat verifies a request
+  // signature against the Runtime's registered public key inline in its
+  // own handler, not via this generic Supabase-style middleware.
+  '/runtime/',
 ];
 
 export const authMiddleware: Middleware = async (

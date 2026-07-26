@@ -27,7 +27,8 @@ export type PermissionResource =
   | 'dashboard'
   | 'erp-integration'
   | 'projects'
-  | 'connector-registry';
+  | 'connector-registry'
+  | 'runtime-registration';
 
 export type PermissionAction =
   | 'read'
@@ -155,7 +156,14 @@ export type AdminAuditAction =
   | 'CONNECTOR_PARAMETER_UPDATED'
   | 'CONNECTOR_PARAMETER_DELETED'
   | 'CONNECTOR_TEMPLATE_CREATED'
-  | 'CONNECTOR_TEMPLATE_DELETED';
+  | 'CONNECTOR_TEMPLATE_DELETED'
+  // Sprint 46.3 — Atlas Runtime Registration & Provisioning Engine
+  | 'RUNTIME_REGISTERED'
+  | 'RUNTIME_ACTIVATED'
+  | 'RUNTIME_BLOCKED'
+  | 'RUNTIME_REACTIVATED'
+  | 'RUNTIME_CERTIFICATE_REVOKED'
+  | 'RUNTIME_ACTIVATION_KEY_ISSUED';
 
 export interface AdminAuditEntry {
   id: string;

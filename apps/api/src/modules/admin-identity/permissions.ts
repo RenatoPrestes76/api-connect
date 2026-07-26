@@ -58,6 +58,21 @@ export const PERMISSION_CATALOG: Array<{
     action: 'delete',
     description: 'Delete connectors, parameters, and templates',
   },
+  {
+    resource: 'runtime-registration',
+    action: 'read',
+    description: 'View registered Atlas Runtimes and activation keys',
+  },
+  {
+    resource: 'runtime-registration',
+    action: 'write',
+    description: 'Issue activation keys, block/reactivate Runtimes',
+  },
+  {
+    resource: 'runtime-registration',
+    action: 'delete',
+    description: "Revoke a Runtime's certificate",
+  },
 ];
 
 export function permissionKey(
@@ -101,6 +116,9 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'connector-registry.read',
     'connector-registry.write',
     'connector-registry.delete',
+    'runtime-registration.read',
+    'runtime-registration.write',
+    'runtime-registration.delete',
   ],
   SUPORTE: [
     'companies.read',
@@ -109,6 +127,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'audit.read',
     'dashboard.view',
     'connector-registry.read',
+    'runtime-registration.read',
   ],
   CUSTOMER_SUCCESS: [
     'companies.read',
@@ -125,6 +144,9 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'runtime.token',
     'dashboard.view',
     'connector-registry.read',
+    'runtime-registration.read',
+    'runtime-registration.write',
+    'runtime-registration.delete',
   ],
   AUDITOR: [
     'companies.read',
@@ -132,6 +154,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'audit.read',
     'dashboard.view',
     'connector-registry.read',
+    'runtime-registration.read',
   ],
 };
 

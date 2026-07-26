@@ -97,6 +97,13 @@ export class PortalIdentityStore {
     return this.organizations.find((o) => o.id === id && o.status !== 'deleted');
   }
 
+  /** Used by Sprint 46.3's Runtime registration flow to resolve organizationCode -> organizationId. */
+  findOrganizationByCode(internalCode: string): OrganizationRecord | undefined {
+    return this.organizations.find(
+      (o) => o.internalCode === internalCode && o.status !== 'deleted'
+    );
+  }
+
   createOrganization(input: {
     name: string;
     razaoSocial: string;

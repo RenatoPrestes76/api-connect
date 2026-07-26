@@ -38,6 +38,7 @@ import { registerControlPlaneRoutes } from './routes/v1/control-plane/index.js';
 import { registerFleetRoutes } from './routes/v1/fleet/index.js';
 import { registerChaosRoutes } from './routes/v1/chaos/index.js';
 import { registerConnectorRegistryRoutes } from './routes/v1/connector-registry/index.js';
+import { registerRuntimeRegistrationRoutes } from './routes/v1/runtime-registration/index.js';
 import { wsHub } from './modules/fleet-ops/websocket-hub.js';
 import { healthHandler } from './routes/health.js';
 import { liveHandler, readyHandler } from './routes/live-ready.js';
@@ -248,6 +249,9 @@ export function createApiServer(
 
   // CONNECTOR REGISTRY — Sprint 46.6
   registerConnectorRegistryRoutes(router);
+
+  // ATLAS RUNTIME REGISTRATION & PROVISIONING — Sprint 46.3
+  registerRuntimeRegistrationRoutes(router);
 
   const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
     withErrorBoundary(req, res, () => router.dispatch(req, res));
