@@ -167,6 +167,11 @@ export type AdminAuditAction =
   | 'RUNTIME_REACTIVATED'
   | 'RUNTIME_CERTIFICATE_REVOKED'
   | 'RUNTIME_ACTIVATION_KEY_ISSUED'
+  // Runtime Registration & Agent Management — JWT session auth + config
+  | 'RUNTIME_LOGIN'
+  | 'RUNTIME_LOGOUT'
+  | 'RUNTIME_TOKEN_ROTATED'
+  | 'RUNTIME_CONFIG_UPDATED'
   // Sprint 46.4 — Connector Lifecycle Management Engine
   | 'CONNECTOR_ASSIGNED'
   | 'CONNECTOR_UPDATE_REQUESTED'

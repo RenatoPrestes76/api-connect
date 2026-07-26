@@ -41,6 +41,9 @@ export interface RouteContext {
   portalRole?: string;
   portalEmail?: string;
   portalPermissions?: string[];
+  /** Set by runtime-auth middleware (JWT session) for Runtime self-service routes */
+  runtimeId?: string;
+  runtimeOrganizationId?: string;
 }
 
 export type RouteHandler = (ctx: RouteContext, res: ServerResponse) => Promise<void>;

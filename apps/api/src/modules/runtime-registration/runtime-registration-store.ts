@@ -1,7 +1,8 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { portalIdentityStore } from '../portal-identity/portal-identity-store.js';
 import { hashFingerprint } from './fingerprint.js';
 import { issueCertificate } from './certificate.js';
+import { needsUpdate } from './version-control.js';
 import type {
   RuntimeRegistrationRecord,
   RuntimeCertificateRecord,
@@ -9,7 +10,20 @@ import type {
   RuntimeStatus,
   RegisterRuntimeInput,
   RuntimeRegistrationDTO,
+  RuntimeSessionRecord,
+  RuntimeConfigRecord,
+  RuntimeConfigPatch,
 } from './types.js';
+
+const DEFAULT_RUNTIME_CONFIG: Omit<RuntimeConfigRecord, 'runtimeId' | 'updatedAt'> = {
+  pollingIntervalMs: 60_000,
+  heartbeatIntervalMs: 30_000,
+  logLevel: 'info',
+  compressionEnabled: true,
+  retryPolicy: { maxAttempts: 3, backoffMs: 2_000 },
+  connectionTimeoutMs: 10_000,
+  databaseTimeoutMs: 15_000,
+};
 
 const ACTIVATION_KEY_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -30,6 +44,8 @@ export class RuntimeRegistrationStore {
   private runtimes: RuntimeRegistrationRecord[] = [];
   private certificates: RuntimeCertificateRecord[] = [];
   private activationKeys: ActivationKeyRecord[] = [];
+  private sessions: RuntimeSessionRecord[] = [];
+  private configs: RuntimeConfigRecord[] = [];
 
   private constructor() {
     this.seedDemoActivationKey();
@@ -141,12 +157,20 @@ export class RuntimeRegistrationStore {
       publicKey: input.publicKey,
       lastHeartbeat: null,
       lastHeartbeatSignature: null,
+      lastMemoryMb: null,
+      lastCpuPercent: null,
+      lastUptimeSeconds: null,
       registeredAt: now.toISOString(),
       activatedAt: null,
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
     };
     this.runtimes.push(runtime);
+    this.configs.push({
+      runtimeId: runtime.id,
+      ...DEFAULT_RUNTIME_CONFIG,
+      updatedAt: now.toISOString(),
+    });
 
     const issued = await issueCertificate(runtime.id, input.publicKey);
     this.certificates.push({
@@ -175,7 +199,14 @@ export class RuntimeRegistrationStore {
 
   recordHeartbeat(
     id: string,
-    data: { version: string; status?: string; signature: string }
+    data: {
+      version: string;
+      status?: string;
+      signature: string;
+      memory?: number;
+      cpu?: number;
+      uptimeSeconds?: number;
+    }
   ): RuntimeRegistrationRecord | null {
     const runtime = this.getRuntime(id);
     if (!runtime) return null;
@@ -185,6 +216,9 @@ export class RuntimeRegistrationStore {
     runtime.lastHeartbeat = now;
     runtime.lastHeartbeatSignature = data.signature;
     runtime.version = data.version;
+    if (data.memory !== undefined) runtime.lastMemoryMb = data.memory;
+    if (data.cpu !== undefined) runtime.lastCpuPercent = data.cpu;
+    if (data.uptimeSeconds !== undefined) runtime.lastUptimeSeconds = data.uptimeSeconds;
     runtime.updatedAt = now;
     if (runtime.status === 'REGISTERED' || runtime.status === 'PENDING') {
       runtime.status = 'ACTIVE';
@@ -198,6 +232,7 @@ export class RuntimeRegistrationStore {
     if (!runtime) return null;
     runtime.status = 'BLOCKED';
     runtime.updatedAt = new Date().toISOString();
+    this.revokeAllRuntimeSessions(id);
     return runtime;
   }
 
@@ -228,8 +263,91 @@ export class RuntimeRegistrationStore {
     if (runtime) {
       runtime.status = 'REVOKED';
       runtime.updatedAt = new Date().toISOString();
+      this.revokeAllRuntimeSessions(runtimeId);
     }
     return cert;
+  }
+
+  // ─── Runtime sessions (JWT auth) ─────────────────────────────────────────
+
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  createRuntimeSession(
+    runtimeId: string,
+    refreshToken: string,
+    ttlSeconds: number
+  ): RuntimeSessionRecord {
+    const now = new Date();
+    const session: RuntimeSessionRecord = {
+      id: randomUUID(),
+      runtimeId,
+      refreshTokenHash: this.hashToken(refreshToken),
+      expiresAt: new Date(now.getTime() + ttlSeconds * 1000).toISOString(),
+      createdAt: now.toISOString(),
+      revokedAt: null,
+    };
+    this.sessions.push(session);
+    return session;
+  }
+
+  /** Returns the active (non-revoked, non-expired) session for a refresh token, if any. */
+  findActiveRuntimeSession(refreshToken: string): RuntimeSessionRecord | undefined {
+    const hash = this.hashToken(refreshToken);
+    const session = this.sessions.find((s) => s.refreshTokenHash === hash);
+    if (!session) return undefined;
+    if (session.revokedAt) return undefined;
+    if (new Date(session.expiresAt).getTime() < Date.now()) return undefined;
+    return session;
+  }
+
+  revokeRuntimeSession(sessionId: string): void {
+    const session = this.sessions.find((s) => s.id === sessionId);
+    if (session && !session.revokedAt) session.revokedAt = new Date().toISOString();
+  }
+
+  revokeRuntimeSessionByRefreshToken(refreshToken: string): boolean {
+    const hash = this.hashToken(refreshToken);
+    const session = this.sessions.find((s) => s.refreshTokenHash === hash && !s.revokedAt);
+    if (!session) return false;
+    session.revokedAt = new Date().toISOString();
+    return true;
+  }
+
+  /** Kills every active session for a Runtime — called on block/revoke so a JWT issued before that action stops working immediately rather than lingering until its own expiry. */
+  revokeAllRuntimeSessions(runtimeId: string): void {
+    const now = new Date().toISOString();
+    for (const s of this.sessions) {
+      if (s.runtimeId === runtimeId && !s.revokedAt) s.revokedAt = now;
+    }
+  }
+
+  // ─── Runtime configuration (persisted, updatable) ────────────────────────
+
+  getRuntimeConfig(runtimeId: string): RuntimeConfigRecord | undefined {
+    return this.configs.find((c) => c.runtimeId === runtimeId);
+  }
+
+  updateRuntimeConfig(runtimeId: string, patch: RuntimeConfigPatch): RuntimeConfigRecord | null {
+    const config = this.getRuntimeConfig(runtimeId);
+    if (!config) return null;
+    if (patch.pollingIntervalMs !== undefined) config.pollingIntervalMs = patch.pollingIntervalMs;
+    if (patch.heartbeatIntervalMs !== undefined) {
+      config.heartbeatIntervalMs = patch.heartbeatIntervalMs;
+    }
+    if (patch.logLevel !== undefined) config.logLevel = patch.logLevel;
+    if (patch.compressionEnabled !== undefined)
+      config.compressionEnabled = patch.compressionEnabled;
+    if (patch.retryPolicy) {
+      config.retryPolicy = { ...config.retryPolicy, ...patch.retryPolicy };
+    }
+    if (patch.connectionTimeoutMs !== undefined) {
+      config.connectionTimeoutMs = patch.connectionTimeoutMs;
+    }
+    if (patch.databaseTimeoutMs !== undefined) config.databaseTimeoutMs = patch.databaseTimeoutMs;
+    config.updatedAt = new Date().toISOString();
+    return config;
   }
 
   // ─── DTO ─────────────────────────────────────────────────────────────────
@@ -244,8 +362,12 @@ export class RuntimeRegistrationStore {
       version: runtime.version,
       status: runtime.status,
       lastHeartbeat: runtime.lastHeartbeat,
+      lastMemoryMb: runtime.lastMemoryMb,
+      lastCpuPercent: runtime.lastCpuPercent,
+      lastUptimeSeconds: runtime.lastUptimeSeconds,
       registeredAt: runtime.registeredAt,
       activatedAt: runtime.activatedAt,
+      needsUpdate: needsUpdate(runtime.version),
     };
   }
 }

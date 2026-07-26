@@ -42,3 +42,12 @@ export function canonicalHeartbeatPayload(input: {
     timestamp: input.timestamp,
   });
 }
+
+/**
+ * Canonical string a Runtime must sign to prove its identity when exchanging
+ * for a JWT session (POST /runtime/auth/token) — a lighter-weight proof than
+ * heartbeat's, since it commits to nothing but who's asking and when.
+ */
+export function canonicalAuthTokenPayload(input: { runtimeId: string; timestamp: string }): string {
+  return JSON.stringify({ runtimeId: input.runtimeId, timestamp: input.timestamp });
+}

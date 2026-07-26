@@ -5,7 +5,10 @@ import { requirePermission } from '../../../middleware/admin-auth.js';
 import { runtimeRegistrationStore } from '../../../modules/runtime-registration/runtime-registration-store.js';
 import { portalIdentityStore } from '../../../modules/portal-identity/portal-identity-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
-import type { RuntimeStatus } from '../../../modules/runtime-registration/types.js';
+import type {
+  RuntimeConfigPatch,
+  RuntimeStatus,
+} from '../../../modules/runtime-registration/types.js';
 
 export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
   // ─── GET /admin/runtime-registration/runtimes ──────────────────────────
@@ -140,6 +143,46 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
       async (_ctx: RouteContext, res: ServerResponse) => {
         const keys = runtimeRegistrationStore.listActivationKeys();
         json(res, { total: keys.length, activationKeys: keys });
+      }
+    )
+  );
+
+  // ─── GET /admin/runtime-registration/runtimes/:id/config ───────────────
+  router.get(
+    '/admin/runtime-registration/runtimes/:id/config',
+    requirePermission('runtime-registration.read')(
+      async (ctx: RouteContext, res: ServerResponse) => {
+        const runtimeId = ctx.params['id'] as string;
+        if (!runtimeRegistrationStore.getRuntime(runtimeId)) {
+          return apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
+        }
+        const config = runtimeRegistrationStore.getRuntimeConfig(runtimeId);
+        if (!config) return apiError(res, 'Runtime config not found', 404, 'NOT_FOUND');
+        json(res, { config });
+      }
+    )
+  );
+
+  // ─── PATCH /admin/runtime-registration/runtimes/:id/config ─────────────
+  router.patch(
+    '/admin/runtime-registration/runtimes/:id/config',
+    requirePermission('runtime-registration.write')(
+      async (ctx: RouteContext, res: ServerResponse) => {
+        const runtimeId = ctx.params['id'] as string;
+        if (!runtimeRegistrationStore.getRuntime(runtimeId)) {
+          return apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
+        }
+        const patch = (ctx.body as RuntimeConfigPatch | undefined) ?? {};
+        const config = runtimeRegistrationStore.updateRuntimeConfig(runtimeId, patch);
+        if (!config) return apiError(res, 'Runtime config not found', 404, 'NOT_FOUND');
+
+        adminIdentityStore.recordAudit({
+          action: 'RUNTIME_CONFIG_UPDATED',
+          actorEmail: ctx.adminEmail ?? 'unknown',
+          target: runtimeId,
+          metadata: { patch },
+        });
+        json(res, { config });
       }
     )
   );

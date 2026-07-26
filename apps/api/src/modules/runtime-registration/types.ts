@@ -20,6 +20,9 @@ export interface RuntimeRegistrationRecord {
   lastHeartbeat: string | null;
   /** Signature of the most recently accepted heartbeat — rejects verbatim replays within the timestamp tolerance window. Not exposed via any DTO. */
   lastHeartbeatSignature: string | null;
+  lastMemoryMb: number | null;
+  lastCpuPercent: number | null;
+  lastUptimeSeconds: number | null;
   registeredAt: string;
   activatedAt: string | null;
   createdAt: string;
@@ -35,8 +38,13 @@ export interface RuntimeRegistrationDTO {
   version: string;
   status: RuntimeStatus;
   lastHeartbeat: string | null;
+  lastMemoryMb: number | null;
+  lastCpuPercent: number | null;
+  lastUptimeSeconds: number | null;
   registeredAt: string;
   activatedAt: string | null;
+  /** True when `version` is below the recommended (not minimum-required) Runtime version. */
+  needsUpdate: boolean;
 }
 
 // ─── Certificates ───────────────────────────────────────────────────────────
@@ -50,6 +58,54 @@ export interface RuntimeCertificateRecord {
   expiresAt: string;
   revoked: boolean;
   revokedAt: string | null;
+}
+
+// ─── Runtime sessions (JWT auth — refresh tokens) ──────────────────────────
+// A second, parallel auth mode alongside the Ed25519 per-request signing
+// above: a Runtime exchanges a signed proof-of-identity for a short-lived
+// access token + rotating refresh token, mirroring admin-identity's session
+// model. Existing signature-verified endpoints (heartbeat, job/message
+// polling) are untouched — this is additive, for self-service endpoints
+// that don't want to sign every request individually.
+
+export interface RuntimeSessionRecord {
+  id: string;
+  runtimeId: string;
+  refreshTokenHash: string;
+  expiresAt: string;
+  createdAt: string;
+  revokedAt: string | null;
+}
+
+// ─── Runtime configuration (persisted, updatable) ──────────────────────────
+
+export type RuntimeLogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+export interface RuntimeRetryPolicyConfig {
+  maxAttempts: number;
+  backoffMs: number;
+}
+
+export interface RuntimeConfigRecord {
+  runtimeId: string;
+  pollingIntervalMs: number;
+  heartbeatIntervalMs: number;
+  logLevel: RuntimeLogLevel;
+  compressionEnabled: boolean;
+  retryPolicy: RuntimeRetryPolicyConfig;
+  connectionTimeoutMs: number;
+  databaseTimeoutMs: number;
+  updatedAt: string;
+}
+
+export interface RuntimeConfigPatch {
+  pollingIntervalMs?: number;
+  heartbeatIntervalMs?: number;
+  logLevel?: RuntimeLogLevel;
+  compressionEnabled?: boolean;
+  retryPolicy?: Partial<RuntimeRetryPolicyConfig>;
+  connectionTimeoutMs?: number;
+  databaseTimeoutMs?: number;
 }
 
 // ─── Activation keys (single-use) ───────────────────────────────────────────
@@ -85,6 +141,11 @@ export interface RuntimeConfigDTO {
   organizationId: string;
   pollingInterval: number;
   heartbeatInterval: number;
+  logLevel: RuntimeLogLevel;
+  compressionEnabled: boolean;
+  retryPolicy: RuntimeRetryPolicyConfig;
+  connectionTimeoutMs: number;
+  databaseTimeoutMs: number;
   connectorsEnabled: string[];
   environments: Array<{ id: string; name: string; kind: string }>;
   policies: {
@@ -102,6 +163,7 @@ export interface HeartbeatInput {
   version: string;
   memory: number;
   cpu: number;
+  uptimeSeconds?: number;
   status?: string;
   timestamp: string;
   signature: string;

@@ -7,21 +7,10 @@ import { adminIdentityStore } from '../../../modules/admin-identity/admin-identi
 import { portalIdentityStore } from '../../../modules/portal-identity/portal-identity-store.js';
 import { connectorsStore } from '../../../modules/connectors/connectors-store.js';
 import type { RegisterRuntimeInput } from '../../../modules/runtime-registration/types.js';
-
-/** Minimum Runtime software version the Control Plane will provision — semver-lite, string comparison of dotted segments. */
-const MIN_RUNTIME_VERSION = '1.0.0';
-
-function isVersionAtLeast(version: string, minVersion: string): boolean {
-  const a = version.split('.').map((n) => parseInt(n, 10) || 0);
-  const b = minVersion.split('.').map((n) => parseInt(n, 10) || 0);
-  for (let i = 0; i < Math.max(a.length, b.length); i++) {
-    const av = a[i] ?? 0;
-    const bv = b[i] ?? 0;
-    if (av > bv) return true;
-    if (av < bv) return false;
-  }
-  return true;
-}
+import {
+  MIN_RUNTIME_VERSION,
+  isVersionAtLeast,
+} from '../../../modules/runtime-registration/version-control.js';
 
 function clientIp(ctx: RouteContext): string {
   const header = ctx.headers['x-forwarded-for'];
@@ -122,6 +111,7 @@ export async function registerRuntimeHandler(
   const connectorsEnabled = connectorsStore
     .listConnectors({ status: 'active' })
     .map((c) => c.identifier);
+  const config = runtimeRegistrationStore.getRuntimeConfig(runtime.id);
 
   json(
     res,
@@ -130,8 +120,13 @@ export async function registerRuntimeHandler(
         runtimeId: runtime.id,
         certificate,
         organizationId: runtime.organizationId,
-        pollingInterval: 60_000,
-        heartbeatInterval: 30_000,
+        pollingInterval: config?.pollingIntervalMs ?? 60_000,
+        heartbeatInterval: config?.heartbeatIntervalMs ?? 30_000,
+        logLevel: config?.logLevel ?? 'info',
+        compressionEnabled: config?.compressionEnabled ?? true,
+        retryPolicy: config?.retryPolicy ?? { maxAttempts: 3, backoffMs: 2_000 },
+        connectionTimeoutMs: config?.connectionTimeoutMs ?? 10_000,
+        databaseTimeoutMs: config?.databaseTimeoutMs ?? 15_000,
         connectorsEnabled,
         environments,
         policies: {

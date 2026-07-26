@@ -5,7 +5,10 @@ import { Router } from '../../http/router.js';
 import { authMiddleware } from '../../middleware/auth.js';
 import { registerAdminIdentityRoutes } from '../../routes/v1/admin-identity/index.js';
 import { registerRuntimeRegistrationRoutes } from '../../routes/v1/runtime-registration/index.js';
-import { canonicalHeartbeatPayload } from '../../modules/runtime-registration/signature.js';
+import {
+  canonicalHeartbeatPayload,
+  canonicalAuthTokenPayload,
+} from '../../modules/runtime-registration/signature.js';
 
 export interface TestServer {
   baseUrl: string;
@@ -63,6 +66,12 @@ export const del = <T = any>(
   payload?: unknown,
   headers?: Record<string, string>
 ) => request<T>(baseUrl, 'DELETE', path, payload, headers);
+export const patch = <T = any>(
+  baseUrl: string,
+  path: string,
+  payload?: unknown,
+  headers?: Record<string, string>
+) => request<T>(baseUrl, 'PATCH', path, payload, headers);
 
 export function bearer(token: string): Record<string, string> {
   return { Authorization: `Bearer ${token}` };
@@ -112,6 +121,14 @@ export function signHeartbeat(
   }
 ): string {
   const payload = canonicalHeartbeatPayload(input);
+  return sign(null, Buffer.from(payload), privateKeyPem).toString('base64');
+}
+
+export function signAuthToken(
+  privateKeyPem: string,
+  input: { runtimeId: string; timestamp: string }
+): string {
+  const payload = canonicalAuthTokenPayload(input);
   return sign(null, Buffer.from(payload), privateKeyPem).toString('base64');
 }
 

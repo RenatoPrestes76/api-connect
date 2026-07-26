@@ -4,11 +4,13 @@ import {
   get,
   post,
   del,
+  patch,
   bearer,
   superAdminAuth,
   registerDemoRuntime,
   generateRuntimeKeyPair,
   signHeartbeat,
+  signAuthToken,
   type TestServer,
 } from './helpers.js';
 import { adminIdentityStore } from '../../modules/admin-identity/admin-identity-store.js';
@@ -25,6 +27,17 @@ beforeAll(async () => {
   srv = await startTestServer();
   auth = await superAdminAuth(srv.baseUrl);
 });
+
+/** Issues a fresh activation key and registers a Runtime with it — the repeated setup shared by the new auth/config/audit tests below. */
+async function issueAndRegister() {
+  const issued = await post<{ activationKey: { code: string } }>(
+    srv.baseUrl,
+    '/admin/runtime-registration/activation-keys',
+    { organizationCode: 'ORG-0001' },
+    auth
+  );
+  return registerDemoRuntime(srv.baseUrl, { activationKey: issued.body.activationKey.code });
+}
 
 afterAll(async () => {
   await srv.close();
@@ -473,5 +486,209 @@ describe('Audit trail', () => {
     const log = adminIdentityStore.getAuditLog({ limit: 500 });
     expect(log.some((e) => e.action === 'RUNTIME_REGISTERED' && e.target === runtimeId)).toBe(true);
     expect(log.some((e) => e.action === 'RUNTIME_ACTIVATED' && e.target === runtimeId)).toBe(true);
+  });
+});
+
+// ─── Runtime JWT session auth ────────────────────────────────────────────────
+
+describe('POST /runtime/auth/token, /refresh, /revoke', () => {
+  it('issues a session via signed proof-of-identity, rotates it on refresh, and revokes it on logout', async () => {
+    const reg = await issueAndRegister();
+    const runtimeId = reg.body.data!.runtimeId;
+
+    const timestamp = new Date().toISOString();
+    const signature = signAuthToken(reg.keyPair.privateKeyPem, { runtimeId, timestamp });
+    const issuedToken = await post<{
+      accessToken: string;
+      refreshToken: string;
+      expiresIn: number;
+    }>(srv.baseUrl, '/runtime/auth/token', { runtimeId, timestamp, signature });
+    expect(issuedToken.status).toBe(200);
+    expect(issuedToken.body.accessToken).toBeTruthy();
+    expect(issuedToken.body.refreshToken).toBeTruthy();
+
+    // The access token authenticates the self-service config endpoint.
+    const configViaJwt = await get<{ config: { runtimeId: string } }>(
+      srv.baseUrl,
+      '/runtime/config',
+      { Authorization: `Bearer ${issuedToken.body.accessToken}` }
+    );
+    expect(configViaJwt.status).toBe(200);
+    expect(configViaJwt.body.config.runtimeId).toBe(runtimeId);
+
+    // Refresh rotates: old refresh token stops working, a new one is issued.
+    const refreshed = await post<{ accessToken: string; refreshToken: string }>(
+      srv.baseUrl,
+      '/runtime/auth/refresh',
+      { refreshToken: issuedToken.body.refreshToken }
+    );
+    expect(refreshed.status).toBe(200);
+    expect(refreshed.body.refreshToken).not.toBe(issuedToken.body.refreshToken);
+
+    const reusedOld = await post<ErrorBody>(srv.baseUrl, '/runtime/auth/refresh', {
+      refreshToken: issuedToken.body.refreshToken,
+    });
+    expect(reusedOld.status).toBe(401);
+    expect(reusedOld.body.error.code).toBe('INVALID_REFRESH_TOKEN');
+
+    // Revoke (logout) the new refresh token — it stops working too.
+    const revoked = await post<{ revoked: boolean }>(srv.baseUrl, '/runtime/auth/revoke', {
+      refreshToken: refreshed.body.refreshToken,
+    });
+    expect(revoked.body.revoked).toBe(true);
+
+    const refreshAfterRevoke = await post<ErrorBody>(srv.baseUrl, '/runtime/auth/refresh', {
+      refreshToken: refreshed.body.refreshToken,
+    });
+    expect(refreshAfterRevoke.status).toBe(401);
+  });
+
+  it('rejects a token request signed by the wrong Runtime key', async () => {
+    const reg = await issueAndRegister();
+    const other = await issueAndRegister();
+    const timestamp = new Date().toISOString();
+    const badSignature = signAuthToken(other.keyPair.privateKeyPem, {
+      runtimeId: reg.body.data!.runtimeId,
+      timestamp,
+    });
+    const { status, body } = await post<ErrorBody>(srv.baseUrl, '/runtime/auth/token', {
+      runtimeId: reg.body.data!.runtimeId,
+      timestamp,
+      signature: badSignature,
+    });
+    expect(status).toBe(401);
+    expect(body.error.code).toBe('INVALID_SIGNATURE');
+  });
+
+  it('a blocked Runtime cannot obtain a new session, and blocking revokes its existing sessions', async () => {
+    const reg = await issueAndRegister();
+    const runtimeId = reg.body.data!.runtimeId;
+
+    const timestamp = new Date().toISOString();
+    const signature = signAuthToken(reg.keyPair.privateKeyPem, { runtimeId, timestamp });
+    const issuedToken = await post<{ accessToken: string; refreshToken: string }>(
+      srv.baseUrl,
+      '/runtime/auth/token',
+      { runtimeId, timestamp, signature }
+    );
+
+    await post(
+      srv.baseUrl,
+      `/admin/runtime-registration/runtimes/${runtimeId}/block`,
+      undefined,
+      auth
+    );
+
+    // The refresh token issued before blocking must stop working immediately.
+    const refreshAfterBlock = await post<ErrorBody>(srv.baseUrl, '/runtime/auth/refresh', {
+      refreshToken: issuedToken.body.refreshToken,
+    });
+    expect(refreshAfterBlock.status).toBe(401);
+
+    const newTimestamp = new Date().toISOString();
+    const newSignature = signAuthToken(reg.keyPair.privateKeyPem, {
+      runtimeId,
+      timestamp: newTimestamp,
+    });
+    const blockedAttempt = await post<ErrorBody>(srv.baseUrl, '/runtime/auth/token', {
+      runtimeId,
+      timestamp: newTimestamp,
+      signature: newSignature,
+    });
+    expect(blockedAttempt.status).toBe(403);
+    expect(blockedAttempt.body.error.code).toBe('RUNTIME_NOT_ACTIVE');
+  });
+});
+
+// ─── Heartbeat metrics persistence ───────────────────────────────────────────
+
+describe('Heartbeat persists memory/CPU/uptime', () => {
+  it('stores the latest reported memory, CPU, and uptime on the Runtime record', async () => {
+    const reg = await issueAndRegister();
+    const runtimeId = reg.body.data!.runtimeId;
+    const timestamp = new Date().toISOString();
+    const payloadFields = { runtimeId, version: '1.2.0', memory: 777, cpu: 33.3, timestamp };
+    const signature = signHeartbeat(reg.keyPair.privateKeyPem, payloadFields);
+    await post(srv.baseUrl, '/runtime/heartbeat', { ...payloadFields, signature });
+
+    const { body } = await get<{ runtime: { lastMemoryMb: number; lastCpuPercent: number } }>(
+      srv.baseUrl,
+      `/admin/runtime-registration/runtimes/${runtimeId}`,
+      auth
+    );
+    expect(body.runtime.lastMemoryMb).toBe(777);
+    expect(body.runtime.lastCpuPercent).toBe(33.3);
+  });
+});
+
+// ─── Runtime configuration ────────────────────────────────────────────────────
+
+describe('Runtime configuration', () => {
+  it('admin can read and update a Runtime config, and the update is audited', async () => {
+    const reg = await issueAndRegister();
+    const runtimeId = reg.body.data!.runtimeId;
+
+    const initial = await get<{ config: { pollingIntervalMs: number; logLevel: string } }>(
+      srv.baseUrl,
+      `/admin/runtime-registration/runtimes/${runtimeId}/config`,
+      auth
+    );
+    expect(initial.status).toBe(200);
+    expect(initial.body.config.pollingIntervalMs).toBe(60_000);
+    expect(initial.body.config.logLevel).toBe('info');
+
+    const updated = await patch<{ config: { pollingIntervalMs: number; logLevel: string } }>(
+      srv.baseUrl,
+      `/admin/runtime-registration/runtimes/${runtimeId}/config`,
+      { pollingIntervalMs: 15_000, logLevel: 'debug' },
+      auth
+    );
+    expect(updated.status).toBe(200);
+    expect(updated.body.config.pollingIntervalMs).toBe(15_000);
+    expect(updated.body.config.logLevel).toBe('debug');
+
+    const log = adminIdentityStore.getAuditLog({ limit: 500 });
+    expect(log.some((e) => e.action === 'RUNTIME_CONFIG_UPDATED' && e.target === runtimeId)).toBe(
+      true
+    );
+  });
+
+  it('is included in the /runtime/register response', async () => {
+    const reg = await issueAndRegister();
+    const data = reg.body.data as unknown as {
+      pollingInterval: number;
+      logLevel: string;
+      retryPolicy: { maxAttempts: number };
+    };
+    expect(data.pollingInterval).toBe(60_000);
+    expect(data.logLevel).toBe('info');
+    expect(data.retryPolicy.maxAttempts).toBe(3);
+  });
+});
+
+// ─── Audit trail (JWT session actions) ───────────────────────────────────────
+
+describe('Audit trail — Runtime JWT sessions', () => {
+  it('records RUNTIME_LOGIN, RUNTIME_TOKEN_ROTATED, and RUNTIME_LOGOUT entries', async () => {
+    const reg = await issueAndRegister();
+    const runtimeId = reg.body.data!.runtimeId;
+    const timestamp = new Date().toISOString();
+    const signature = signAuthToken(reg.keyPair.privateKeyPem, { runtimeId, timestamp });
+    const issuedToken = await post<{ refreshToken: string }>(srv.baseUrl, '/runtime/auth/token', {
+      runtimeId,
+      timestamp,
+      signature,
+    });
+    const refreshed = await post<{ refreshToken: string }>(srv.baseUrl, '/runtime/auth/refresh', {
+      refreshToken: issuedToken.body.refreshToken,
+    });
+    await post(srv.baseUrl, '/runtime/auth/revoke', { refreshToken: refreshed.body.refreshToken });
+
+    const log = adminIdentityStore.getAuditLog({ limit: 500 });
+    expect(log.some((e) => e.action === 'RUNTIME_LOGIN' && e.target === runtimeId)).toBe(true);
+    expect(log.some((e) => e.action === 'RUNTIME_TOKEN_ROTATED' && e.target === runtimeId)).toBe(
+      true
+    );
+    expect(log.some((e) => e.action === 'RUNTIME_LOGOUT' && e.target === runtimeId)).toBe(true);
   });
 });
