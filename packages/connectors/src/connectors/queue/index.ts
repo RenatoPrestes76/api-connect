@@ -3,7 +3,7 @@
  * Message Queue Connector interfaces — RabbitMQ, Kafka, Redis Streams
  */
 
-import type { Connector, ConnectorConfig, ConnectorResult } from '../../core/index';
+import type { Connector, ConnectorConfig, ConnectorResult } from '../../core/index.js';
 
 // ─── Base Queue Connector ─────────────────────────────────────────────────
 

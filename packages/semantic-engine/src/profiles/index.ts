@@ -24,8 +24,8 @@ import type {
   CBLFieldKind,
   CBLDomainKind,
   SemanticResult,
-} from '../business-language/index';
-import type { ConfidenceValue } from '../confidence-engine/index';
+} from '../business-language/index.js';
+import type { ConfidenceValue } from '../confidence-engine/index.js';
 
 // ─── ERP Profile ──────────────────────────────────────────────────────────
 

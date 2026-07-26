@@ -7,15 +7,15 @@
  * Includes probabilistic rename detection (field disappeared + similar field appeared).
  */
 
-import type { EntityId, FieldId, ChangeSeverity, ConfidenceScore } from '../models/index';
-import type { SIEResult } from '../core/index';
+import type { EntityId, FieldId, ChangeSeverity, ConfidenceScore } from '../models/index.js';
+import type { SIEResult } from '../core/index.js';
 import type {
   CanonicalSchema,
   CanonicalEntity,
   CanonicalField,
   CanonicalType,
   CanonicalRelationship,
-} from '../canonical/index';
+} from '../canonical/index.js';
 
 // ─── Schema Comparator ────────────────────────────────────────────────────
 

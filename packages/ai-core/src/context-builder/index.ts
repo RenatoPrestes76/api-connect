@@ -14,8 +14,8 @@
  * Context is always bounded by a token budget to keep LLM costs predictable.
  */
 
-import type { AIResult, AgentId, AITaskType, AIModelId } from '../providers/index';
-import type { MemoryEntry } from '../memory/index';
+import type { AIResult, AgentId, AITaskType, AIModelId } from '../providers/index.js';
+import type { MemoryEntry } from '../memory/index.js';
 
 // ─── Context Builder ──────────────────────────────────────────────────────
 

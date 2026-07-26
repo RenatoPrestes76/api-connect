@@ -3,7 +3,7 @@
  * SIE base interfaces — result wrapper, source descriptor, parse and normalization contexts
  */
 
-import type { SchemaSourceType, SchemaCategory } from '../models/index';
+import type { SchemaSourceType, SchemaCategory } from '../models/index.js';
 
 // ─── Result Wrapper ───────────────────────────────────────────────────────
 

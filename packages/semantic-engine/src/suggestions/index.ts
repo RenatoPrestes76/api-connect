@@ -17,9 +17,12 @@ import type {
   CBLFieldKind,
   CBLDomainKind,
   SemanticResult,
-} from '../business-language/index';
-import type { ConfidenceValue, ConfidenceTier } from '../confidence-engine/index';
-import type { EntitySemanticCandidate, FieldSemanticCandidate } from '../semantic-analyzer/index';
+} from '../business-language/index.js';
+import type { ConfidenceValue, ConfidenceTier } from '../confidence-engine/index.js';
+import type {
+  EntitySemanticCandidate,
+  FieldSemanticCandidate,
+} from '../semantic-analyzer/index.js';
 
 // ─── Suggestion Engine ────────────────────────────────────────────────────
 

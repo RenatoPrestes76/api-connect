@@ -21,7 +21,7 @@ import type {
   SpanContext,
   Priority,
   Disposable,
-} from '../kernel/index';
+} from '../kernel/index.js';
 
 // ─── Event Bus ────────────────────────────────────────────────────────────
 

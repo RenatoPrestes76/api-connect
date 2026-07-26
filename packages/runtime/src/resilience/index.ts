@@ -15,7 +15,7 @@
  *   pipeline = timeout(5s) → circuit-breaker → retry(3) → bulkhead(10)
  */
 
-import type { RuntimeResult, ModuleId, Priority, TimeRange } from '../kernel/index';
+import type { RuntimeResult, ModuleId, Priority, TimeRange } from '../kernel/index.js';
 
 // ─── Resilience Factory ───────────────────────────────────────────────────
 

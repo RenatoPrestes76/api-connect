@@ -6,8 +6,13 @@
  * Roles aggregate permissions. Policies evaluate whether permissions apply.
  */
 
-import type { PermissionId, Permission, PermissionCategory, PermissionAction } from '../rbac/index';
-import type { ResourceType, GovernanceResult } from '../policies/index';
+import type {
+  PermissionId,
+  Permission,
+  PermissionCategory,
+  PermissionAction,
+} from '../rbac/index.js';
+import type { ResourceType, GovernanceResult } from '../policies/index.js';
 
 // ─── Permission Set ──────────────────────────────────────────────────────────
 

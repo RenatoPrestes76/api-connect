@@ -3,7 +3,7 @@
  * API Connector interfaces — REST, SOAP, GraphQL, gRPC, Webhook
  */
 
-import type { Connector, ConnectorConfig, ConnectorResult } from '../../core/index';
+import type { Connector, ConnectorConfig, ConnectorResult } from '../../core/index.js';
 
 // ─── Base API Connector ───────────────────────────────────────────────────
 

@@ -13,8 +13,8 @@
  * adds an AI reasoning layer for complex ambiguous cases.
  */
 
-import type { AIResult, AIConfidenceValue } from '../providers/index';
-import type { AIRecommendation } from '../recommendations/index';
+import type { AIResult, AIConfidenceValue } from '../providers/index.js';
+import type { AIRecommendation } from '../recommendations/index.js';
 
 // ─── Mapping Analysis Engine ──────────────────────────────────────────────
 

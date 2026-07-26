@@ -12,7 +12,14 @@
  * The runtime itself is instrumented through these interfaces.
  */
 
-import type { ModuleId, TraceId, SpanId, LogLevel, TimeRange, Disposable } from '../kernel/index';
+import type {
+  ModuleId,
+  TraceId,
+  SpanId,
+  LogLevel,
+  TimeRange,
+  Disposable,
+} from '../kernel/index.js';
 
 // ─── Telemetry Provider ───────────────────────────────────────────────────
 

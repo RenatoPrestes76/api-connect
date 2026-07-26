@@ -3,7 +3,7 @@
  * Connector Factory — creates and configures connector instances
  */
 
-import type { Connector, ConnectorConfig, ConnectorType, ConnectorResult } from '../core/index';
+import type { Connector, ConnectorConfig, ConnectorType, ConnectorResult } from '../core/index.js';
 
 // ─── Connector Factory ────────────────────────────────────────────────────
 

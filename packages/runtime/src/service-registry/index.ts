@@ -15,7 +15,7 @@
  * service consumers from concrete implementations.
  */
 
-import type { RuntimeResult, ServiceId, ModuleId, Token, Disposable } from '../kernel/index';
+import type { RuntimeResult, ServiceId, ModuleId, Token, Disposable } from '../kernel/index.js';
 
 // ─── Service Registry ─────────────────────────────────────────────────────
 

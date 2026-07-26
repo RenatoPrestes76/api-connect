@@ -23,13 +23,13 @@ import type {
   AgentId,
   AIConfidenceValue,
   SessionId,
-} from '../providers/index';
+} from '../providers/index.js';
 import type {
   AIRecommendation,
   RecommendationKind,
   RecommendationPriority,
-} from '../recommendations/index';
-import type { Explanation } from '../explainability/index';
+} from '../recommendations/index.js';
+import type { Explanation } from '../explainability/index.js';
 
 // ─── Decision Engine ──────────────────────────────────────────────────────
 

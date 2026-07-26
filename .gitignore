@@ -77,7 +77,6 @@ Thumbs.db
 .LSOverride
 
 # Docker
-.dockerignore
 docker-compose.override.yml
 
 # Temp files
@@ -89,3 +88,5 @@ temp/
 .data/
 .vercel
 .env*
+!.env.example
+!**/.env.example

@@ -8,10 +8,10 @@
  * and suggests field mappings for consumers impacted by the change.
  */
 
-import type { VersionId, SchemaId, ChangeSeverity, ConfidenceScore } from '../models/index';
-import type { SIEResult } from '../core/index';
-import type { CanonicalSchema, CanonicalField } from '../canonical/index';
-import type { SchemaDiff, BreakingChange } from '../comparator/index';
+import type { VersionId, SchemaId, ChangeSeverity, ConfidenceScore } from '../models/index.js';
+import type { SIEResult } from '../core/index.js';
+import type { CanonicalSchema, CanonicalField } from '../canonical/index.js';
+import type { SchemaDiff, BreakingChange } from '../comparator/index.js';
 
 // ─── Change Detection Engine ──────────────────────────────────────────────
 

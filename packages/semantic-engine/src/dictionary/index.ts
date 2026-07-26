@@ -16,7 +16,7 @@ import type {
   CBLEntityKind,
   CBLFieldKind,
   CBLDomainKind,
-} from '../business-language/index';
+} from '../business-language/index.js';
 
 // ─── Business Dictionary ──────────────────────────────────────────────────
 

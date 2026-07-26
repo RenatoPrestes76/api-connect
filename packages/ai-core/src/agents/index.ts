@@ -22,11 +22,11 @@
  * DI: all agents declare dependencies as interfaces — no concrete imports.
  */
 
-import type { AIResult, AgentId, AITaskType, AIProviderId, SessionId } from '../providers/index';
-import type { AIContext } from '../context-builder/index';
-import type { AIRecommendation } from '../recommendations/index';
-import type { ReasoningChain } from '../reasoning/index';
-import type { Explanation } from '../explainability/index';
+import type { AIResult, AgentId, AITaskType, AIProviderId, SessionId } from '../providers/index.js';
+import type { AIContext } from '../context-builder/index.js';
+import type { AIRecommendation } from '../recommendations/index.js';
+import type { ReasoningChain } from '../reasoning/index.js';
+import type { Explanation } from '../explainability/index.js';
 
 // ─── Agent IDs ────────────────────────────────────────────────────────────
 

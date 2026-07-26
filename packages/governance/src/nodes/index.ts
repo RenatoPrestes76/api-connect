@@ -3,8 +3,8 @@
  * Node governance: node registration, health policies, drain/evict lifecycle.
  */
 
-import type { ClusterId } from '../clusters/index';
-import type { GovernanceResult } from '../policies/index';
+import type { ClusterId } from '../clusters/index.js';
+import type { GovernanceResult } from '../policies/index.js';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };

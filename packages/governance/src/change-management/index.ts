@@ -11,8 +11,8 @@
  *   - Automated:  triggered by pipeline, minimal human review
  */
 
-import type { ApprovalRequestId } from '../approval/index';
-import type { GovernanceResult } from '../policies/index';
+import type { ApprovalRequestId } from '../approval/index.js';
+import type { GovernanceResult } from '../policies/index.js';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };

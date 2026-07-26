@@ -22,7 +22,7 @@ import type {
   CBLFieldTerm,
   CBLEntityKind,
   CBLFieldKind,
-} from '../business-language/index';
+} from '../business-language/index.js';
 
 // ─── Confidence Score ─────────────────────────────────────────────────────
 

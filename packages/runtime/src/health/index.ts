@@ -11,7 +11,7 @@
  * The platform aggregates individual checks into a composite health report.
  */
 
-import type { RuntimeResult, ModuleId, Severity, TimeRange, Disposable } from '../kernel/index';
+import type { RuntimeResult, ModuleId, Severity, TimeRange, Disposable } from '../kernel/index.js';
 
 // ─── Health Monitor ───────────────────────────────────────────────────────
 

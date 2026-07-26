@@ -9,8 +9,8 @@
  * to avoid a circular package dependency. Callers pass the metadata in.
  */
 
-import type { SchemaSourceType, SchemaCategory, SqlDialect } from '../models/index';
-import type { SchemaSource, RawSchema, ParseContext, SIEResult } from '../core/index';
+import type { SchemaSourceType, SchemaCategory, SqlDialect } from '../models/index.js';
+import type { SchemaSource, RawSchema, ParseContext, SIEResult } from '../core/index.js';
 
 // ─── Base Adapter ─────────────────────────────────────────────────────────
 
@@ -64,10 +64,10 @@ export interface DatabaseSchemaAdapter extends ConnectorSchemaAdapter<DatabaseMe
   adaptTable(
     table: TableMetadataInput,
     dialect: SqlDialect
-  ): SIEResult<import('../core/index').RawEntity>;
+  ): SIEResult<import('../core/index.js').RawEntity>;
 
   /** Adapt a column to a RawField */
-  adaptColumn(column: ColumnMetadataInput): SIEResult<import('../core/index').RawField>;
+  adaptColumn(column: ColumnMetadataInput): SIEResult<import('../core/index.js').RawField>;
 }
 
 export interface DatabaseMetadataInput {
@@ -135,7 +135,7 @@ export interface ApiSchemaAdapter extends ConnectorSchemaAdapter<ApiMetadataInpu
   readonly category: 'api';
 
   /** Adapt a single endpoint to a RawEntity */
-  adaptEndpoint(endpoint: EndpointMetadataInput): SIEResult<import('../core/index').RawEntity>;
+  adaptEndpoint(endpoint: EndpointMetadataInput): SIEResult<import('../core/index.js').RawEntity>;
 }
 
 export interface ApiMetadataInput {

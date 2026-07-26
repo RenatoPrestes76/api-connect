@@ -10,7 +10,7 @@
  *   Access checked via RBACContext (bound to org/workspace/environment)
  */
 
-import type { PolicyId, GovernanceResult } from '../policies/index';
+import type { PolicyId, GovernanceResult } from '../policies/index.js';
 
 // ─── Branded Types ────────────────────────────────────────────────────────
 

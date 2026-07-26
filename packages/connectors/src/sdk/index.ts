@@ -9,9 +9,9 @@ import type {
   ConnectorResult,
   ConnectorDescriptor,
   ConnectorType,
-} from '../core/index';
-import type { CapabilitySet } from '../capabilities/index';
-import type { ConnectorConfigSchema } from '../registry/index';
+} from '../core/index.js';
+import type { CapabilitySet } from '../capabilities/index.js';
+import type { ConnectorConfigSchema } from '../registry/index.js';
 
 // ─── Connector Plugin ─────────────────────────────────────────────────────
 

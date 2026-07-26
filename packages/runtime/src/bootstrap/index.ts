@@ -41,8 +41,8 @@ import type {
   PlatformMetadata,
   RuntimeEnvironment,
   Disposable,
-} from '../kernel/index';
-import type { ServiceRegistry, ContainerBuilder } from '../service-registry/index';
+} from '../kernel/index.js';
+import type { ServiceRegistry, ContainerBuilder } from '../service-registry/index.js';
 
 // ─── Platform Builder ─────────────────────────────────────────────────────
 

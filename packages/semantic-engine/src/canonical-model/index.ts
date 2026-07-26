@@ -18,7 +18,7 @@ import type {
   CBLFieldKind,
   CBLDomainKind,
   SemanticResult,
-} from '../business-language/index';
+} from '../business-language/index.js';
 
 // ─── Canonical Business Model ─────────────────────────────────────────────
 

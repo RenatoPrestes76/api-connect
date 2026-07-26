@@ -21,7 +21,7 @@ import type {
   AgentId,
   AITaskType,
   confidenceTier,
-} from '../providers/index';
+} from '../providers/index.js';
 
 // ─── Reasoning Engine ─────────────────────────────────────────────────────
 

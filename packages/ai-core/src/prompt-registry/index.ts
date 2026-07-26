@@ -13,7 +13,7 @@
  * this registry at runtime. This allows prompt engineering without code changes.
  */
 
-import type { PromptId, AgentId, AITaskType, AIResult } from '../providers/index';
+import type { PromptId, AgentId, AITaskType, AIResult } from '../providers/index.js';
 
 // ─── Prompt Registry ──────────────────────────────────────────────────────
 

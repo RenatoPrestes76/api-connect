@@ -19,7 +19,7 @@ import type {
   ModuleId,
   Priority,
   Disposable,
-} from '../kernel/index';
+} from '../kernel/index.js';
 
 // ─── Worker Pool Manager ──────────────────────────────────────────────────
 

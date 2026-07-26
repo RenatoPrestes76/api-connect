@@ -14,7 +14,7 @@
  *   - Assessment procedures
  */
 
-import type { GovernanceResult, PolicyId } from '../policies/index';
+import type { GovernanceResult, PolicyId } from '../policies/index.js';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };

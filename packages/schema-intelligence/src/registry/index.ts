@@ -8,10 +8,10 @@
  *    used by the similarity engine and learning layer to classify unknown schemas.
  */
 
-import type { SchemaId, PatternId, SchemaCategory, ConfidenceScore } from '../models/index';
-import type { SIEResult } from '../core/index';
-import type { CanonicalSchema, CanonicalEntity } from '../canonical/index';
-import type { SchemaVersionSummary } from '../versioning/index';
+import type { SchemaId, PatternId, SchemaCategory, ConfidenceScore } from '../models/index.js';
+import type { SIEResult } from '../core/index.js';
+import type { CanonicalSchema, CanonicalEntity } from '../canonical/index.js';
+import type { SchemaVersionSummary } from '../versioning/index.js';
 
 // ─── Schema Registry ──────────────────────────────────────────────────────
 

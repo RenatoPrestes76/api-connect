@@ -8,8 +8,8 @@
  * Concrete recovery procedures are defined and executed by operators.
  */
 
-import type { GovernanceResult } from '../policies/index';
-import type { BackupJobId } from '../backup/index';
+import type { GovernanceResult } from '../policies/index.js';
+import type { BackupJobId } from '../backup/index.js';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };

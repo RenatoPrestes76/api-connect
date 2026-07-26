@@ -22,7 +22,7 @@ import type {
   ModuleDescriptor,
   RuntimeContext,
   Disposable,
-} from '../kernel/index';
+} from '../kernel/index.js';
 
 // ─── Lifecycle State ──────────────────────────────────────────────────────
 

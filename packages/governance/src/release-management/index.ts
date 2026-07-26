@@ -8,8 +8,8 @@
  * Each release must pass all gates before promotion.
  */
 
-import type { GovernanceResult } from '../policies/index';
-import type { ChangeRequestId } from '../change-management/index';
+import type { GovernanceResult } from '../policies/index.js';
+import type { ChangeRequestId } from '../change-management/index.js';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };

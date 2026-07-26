@@ -25,7 +25,7 @@ export type {
   DIContainer,
   DIRegistrationOptions,
   ServiceLocator,
-} from './interfaces/index';
+} from './interfaces/index.js';
 
 // ─── Event Bus (EDA) ────────────────────────────────────────────────────────
 export type {
@@ -39,7 +39,7 @@ export type {
   EventReplayer,
   EventReplayStatus,
   EventStore,
-} from './events/index';
+} from './events/index.js';
 
 // ─── Command Bus (CQRS) ─────────────────────────────────────────────────────
 export type {
@@ -56,7 +56,7 @@ export type {
   Query,
   QueryHandler,
   QueryBus,
-} from './commands/index';
+} from './commands/index.js';
 
 // ─── Drivers ────────────────────────────────────────────────────────────────
 export type {
@@ -83,7 +83,7 @@ export type {
   AuthDriver,
   AuthToken,
   AuthClaims,
-} from './drivers/index';
+} from './drivers/index.js';
 
 // ─── Plugins ────────────────────────────────────────────────────────────────
 export type {
@@ -97,7 +97,7 @@ export type {
   PluginHookSystem,
   PluginLifecycleEvent,
   PluginLifecycleObserver,
-} from './plugins/index';
+} from './plugins/index.js';
 
 // ─── Configuration ──────────────────────────────────────────────────────────
 export type {
@@ -110,7 +110,7 @@ export type {
   RemoteConfigurationProvider,
   SecretProvider,
   ConfigurationLoader,
-} from './configuration/index';
+} from './configuration/index.js';
 
 // ─── Discovery ──────────────────────────────────────────────────────────────
 export type {
@@ -126,7 +126,7 @@ export type {
   DiscoveryValidationResult,
   DriverDiscovery,
   DriverDescriptor,
-} from './discovery/index';
+} from './discovery/index.js';
 
 // ─── Mapping ────────────────────────────────────────────────────────────────
 export type {
@@ -144,7 +144,7 @@ export type {
   FieldMappingRegistry,
   FieldMapping,
   FieldMappingTable,
-} from './mapping/index';
+} from './mapping/index.js';
 
 // ─── Sync ───────────────────────────────────────────────────────────────────
 export type {
@@ -164,7 +164,7 @@ export type {
   FieldChange,
   SyncScheduler,
   SyncJob,
-} from './sync/index';
+} from './sync/index.js';
 
 // ─── Registry ───────────────────────────────────────────────────────────────
 export type {
@@ -182,7 +182,7 @@ export type {
   NotificationProviderRegistry,
   NotificationProviderEntry,
   RegistryManager,
-} from './registry/index';
+} from './registry/index.js';
 
 // ─── Abstractions (Design Patterns) ─────────────────────────────────────────
 export type {
@@ -198,7 +198,7 @@ export type {
   Proxy,
   ProxyInterceptor,
   ProxyContext,
-} from './abstractions/index';
+} from './abstractions/index.js';
 
 // ─── Services (Middleware, Interceptors, Logger) ─────────────────────────────
 export type {
@@ -214,7 +214,7 @@ export type {
   HealthCheckResult,
   HealthCheckRegistry,
   Logger,
-} from './services/index';
+} from './services/index.js';
 
 // ─── Factories ──────────────────────────────────────────────────────────────
 export type {
@@ -226,7 +226,7 @@ export type {
   EventHandlerFactory,
   RepositoryFactory,
   AbstractFactory,
-} from './factories/index';
+} from './factories/index.js';
 
 // ─── Decorators ─────────────────────────────────────────────────────────────
 export type {
@@ -245,7 +245,7 @@ export type {
   DriverDecoratorMetadata,
   PluginDecoratorOptions,
   MetadataKey,
-} from './decorators/index';
+} from './decorators/index.js';
 
 // ─── Constants (re-exported as values, not types) ───────────────────────────
 export {
@@ -257,9 +257,9 @@ export {
   SYNC_MODES,
   MAPPING_TYPES,
   REGISTRY_SCOPES,
-} from './constants/index';
+} from './constants/index.js';
 
-export { METADATA_KEYS } from './decorators/index';
+export { METADATA_KEYS } from './decorators/index.js';
 
 // ─── Exceptions ─────────────────────────────────────────────────────────────
 export type {
@@ -274,4 +274,4 @@ export type {
   DriverException,
   MappingException,
   SyncException,
-} from './exceptions/index';
+} from './exceptions/index.js';

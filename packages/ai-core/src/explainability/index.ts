@@ -20,8 +20,8 @@ import type {
   RecommendationId,
   AgentId,
   AITaskType,
-} from '../providers/index';
-import type { ReasoningChain, Evidence } from '../reasoning/index';
+} from '../providers/index.js';
+import type { ReasoningChain, Evidence } from '../reasoning/index.js';
 
 // ─── Explainability Engine ────────────────────────────────────────────────
 

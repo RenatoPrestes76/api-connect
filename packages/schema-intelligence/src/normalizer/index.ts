@@ -7,20 +7,20 @@
  * Rules are applied in order and are independently replaceable.
  */
 
-import type { NamingConvention, FieldRole, CanonicalDataKind } from '../models/index';
+import type { NamingConvention, FieldRole, CanonicalDataKind } from '../models/index.js';
 import type {
   RawSchema,
   RawEntity,
   RawField,
   NormalizationContext,
   SIEResult,
-} from '../core/index';
+} from '../core/index.js';
 import type {
   CanonicalSchema,
   CanonicalEntity,
   CanonicalField,
   CanonicalType,
-} from '../canonical/index';
+} from '../canonical/index.js';
 
 // ─── Schema Normalizer ────────────────────────────────────────────────────
 
@@ -105,7 +105,7 @@ export interface NormalizationWarning {
  */
 export interface EntityNormalizer {
   normalize(raw: RawEntity, context: NormalizationContext): SIEResult<CanonicalEntity>;
-  normalizeKind(rawKind: string): import('../models/index').EntityKind;
+  normalizeKind(rawKind: string): import('../models/index.js').EntityKind;
   normalizeName(name: string, convention: NamingConvention): string;
 }
 

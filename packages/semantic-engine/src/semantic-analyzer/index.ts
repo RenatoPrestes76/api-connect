@@ -21,8 +21,8 @@ import type {
   CBLFieldKind,
   CBLDomainKind,
   SemanticResult,
-} from '../business-language/index';
-import type { ConfidenceValue, ConfidenceSignal } from '../confidence-engine/index';
+} from '../business-language/index.js';
+import type { ConfidenceValue, ConfidenceSignal } from '../confidence-engine/index.js';
 
 // ─── Semantic Analyzer (top-level) ───────────────────────────────────────
 

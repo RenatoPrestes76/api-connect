@@ -6,8 +6,13 @@
  * The normalizer then converts RawSchema → CanonicalSchema.
  */
 
-import type { SchemaSourceType, SqlDialect, OpenApiVersion, GraphQLVersion } from '../models/index';
-import type { SchemaSource, ParseContext, RawSchema, SIEResult } from '../core/index';
+import type {
+  SchemaSourceType,
+  SqlDialect,
+  OpenApiVersion,
+  GraphQLVersion,
+} from '../models/index.js';
+import type { SchemaSource, ParseContext, RawSchema, SIEResult } from '../core/index.js';
 
 // ─── Base Parser ──────────────────────────────────────────────────────────
 

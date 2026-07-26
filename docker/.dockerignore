@@ -1,0 +1,11 @@
+.dockerignore
+node_modules
+pnpm-lock.yaml
+.git
+.gitignore
+.DS_Store
+*.md
+dist
+.next
+.turbo
+coverage

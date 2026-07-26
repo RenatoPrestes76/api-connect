@@ -11,7 +11,13 @@
  *   - Distributed operation coordination
  */
 
-import type { RuntimeResult, ModuleId, CorrelationId, Priority, Disposable } from '../kernel/index';
+import type {
+  RuntimeResult,
+  ModuleId,
+  CorrelationId,
+  Priority,
+  Disposable,
+} from '../kernel/index.js';
 
 // ─── Orchestrator ─────────────────────────────────────────────────────────
 

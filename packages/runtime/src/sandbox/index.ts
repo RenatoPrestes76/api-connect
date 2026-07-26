@@ -16,7 +16,7 @@
  *   native    — unrestricted (only for core runtime modules)
  */
 
-import type { RuntimeResult, SandboxId, PluginId, ModuleId, Severity } from '../kernel/index';
+import type { RuntimeResult, SandboxId, PluginId, ModuleId, Severity } from '../kernel/index.js';
 
 // ─── Sandbox Manager ──────────────────────────────────────────────────────
 

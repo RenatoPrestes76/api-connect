@@ -1,5 +1,5 @@
-export { Button, buttonVariants } from './components/Button';
-export type { ButtonProps } from './components/Button';
+export { Button, buttonVariants } from './components/Button.js';
+export type { ButtonProps } from './components/Button.js';
 
 export {
   Card,
@@ -8,10 +8,10 @@ export {
   CardDescription,
   CardContent,
   CardFooter,
-} from './components/Card';
+} from './components/Card.js';
 
-export { Input } from './components/Input';
-export type { InputProps } from './components/Input';
+export { Input } from './components/Input.js';
+export type { InputProps } from './components/Input.js';
 
-export { cn } from './utils';
-export * from './hooks';
+export { cn } from './utils/index.js';
+export * from './hooks/index.js';

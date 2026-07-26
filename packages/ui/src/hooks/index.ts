@@ -2,4 +2,4 @@
  * UI Hooks
  */
 
-export * from './use-local-storage';
+export * from './use-local-storage.js';

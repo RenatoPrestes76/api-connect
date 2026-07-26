@@ -7,9 +7,9 @@
  * They compose through the TransformationPipeline.
  */
 
-import type { CanonicalDataKind, NamingConvention, FieldRole } from '../models/index';
-import type { SIEResult } from '../core/index';
-import type { CanonicalType, CanonicalField, CanonicalEntity } from '../canonical/index';
+import type { CanonicalDataKind, NamingConvention, FieldRole } from '../models/index.js';
+import type { SIEResult } from '../core/index.js';
+import type { CanonicalType, CanonicalField, CanonicalEntity } from '../canonical/index.js';
 
 // ─── Type Transformer ─────────────────────────────────────────────────────
 

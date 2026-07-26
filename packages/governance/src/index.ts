@@ -10,28 +10,28 @@
  *   import * as Governance from '@seltriva/governance'
  */
 
-export * from './policies/index';
+export * from './policies/index.js';
 export { PolicyEngineImpl, GovernancePolicyError, createPolicyEngine } from './policies/engine.js';
-export * from './rbac/index';
-export * from './permissions/index';
-export * from './organizations/index';
-export * from './workspaces/index';
-export * from './environments/index';
-export * from './clusters/index';
-export * from './nodes/index';
-export * from './approval/index';
-export * from './change-management/index';
-export * from './audit/index';
-export * from './compliance/index';
-export * from './configuration/index';
-export * from './feature-management/index';
-export * from './package-registry/index';
-export * from './release-management/index';
-export * from './backup/index';
-export * from './recovery/index';
-export * from './version-catalog/index';
-export * from './secret-management/index';
-export * from './tenant-isolation/index';
+export * from './rbac/index.js';
+export * from './permissions/index.js';
+export * from './organizations/index.js';
+export * from './workspaces/index.js';
+export * from './environments/index.js';
+export * from './clusters/index.js';
+export * from './nodes/index.js';
+export * from './approval/index.js';
+export * from './change-management/index.js';
+export * from './audit/index.js';
+export * from './compliance/index.js';
+export * from './configuration/index.js';
+export * from './feature-management/index.js';
+export * from './package-registry/index.js';
+export * from './release-management/index.js';
+export * from './backup/index.js';
+export * from './recovery/index.js';
+export * from './version-catalog/index.js';
+export * from './secret-management/index.js';
+export * from './tenant-isolation/index.js';
 
 // ─── Governance Version ──────────────────────────────────────────────────────
 

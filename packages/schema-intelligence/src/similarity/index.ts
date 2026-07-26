@@ -11,10 +11,10 @@
  * Does NOT use sample data or business semantics.
  */
 
-import type { SchemaId, EntityId, SimilarityScore, ConfidenceScore } from '../models/index';
-import type { SIEResult } from '../core/index';
-import type { CanonicalSchema, CanonicalEntity, CanonicalField } from '../canonical/index';
-import type { EntityFingerprint, FieldFingerprint } from '../fingerprint/index';
+import type { SchemaId, EntityId, SimilarityScore, ConfidenceScore } from '../models/index.js';
+import type { SIEResult } from '../core/index.js';
+import type { CanonicalSchema, CanonicalEntity, CanonicalField } from '../canonical/index.js';
+import type { EntityFingerprint, FieldFingerprint } from '../fingerprint/index.js';
 
 // ─── Similarity Engine ────────────────────────────────────────────────────
 

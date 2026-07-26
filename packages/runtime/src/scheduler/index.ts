@@ -19,7 +19,7 @@ import type {
   Priority,
   TimeRange,
   Disposable,
-} from '../kernel/index';
+} from '../kernel/index.js';
 
 // ─── Scheduler ────────────────────────────────────────────────────────────
 

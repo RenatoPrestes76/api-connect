@@ -13,14 +13,14 @@
  * - Versioning (change detection — has the checksum changed?)
  */
 
-import type { SchemaId, EntityId, FieldId, FingerprintId } from '../models/index';
-import type { SIEResult } from '../core/index';
+import type { SchemaId, EntityId, FieldId, FingerprintId } from '../models/index.js';
+import type { SIEResult } from '../core/index.js';
 import type {
   CanonicalSchema,
   CanonicalEntity,
   CanonicalField,
   CanonicalType,
-} from '../canonical/index';
+} from '../canonical/index.js';
 
 // ─── Fingerprint Engine ───────────────────────────────────────────────────
 

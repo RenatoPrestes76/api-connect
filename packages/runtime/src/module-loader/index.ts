@@ -14,9 +14,9 @@
  *   - Remote URL (dynamic loading)
  */
 
-import type { RuntimeResult, ModuleId, Disposable } from '../kernel/index';
-import type { ModuleDescriptor } from '../kernel/index';
-import type { LifecycleModule } from '../lifecycle/index';
+import type { RuntimeResult, ModuleId, Disposable } from '../kernel/index.js';
+import type { ModuleDescriptor } from '../kernel/index.js';
+import type { LifecycleModule } from '../lifecycle/index.js';
 
 // ─── Module Loader ────────────────────────────────────────────────────────
 

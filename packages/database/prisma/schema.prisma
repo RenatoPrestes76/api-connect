@@ -18,7 +18,15 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // node:24-alpine (the apps/api Docker base) ships OpenSSL 3.x
+  // (libssl.so.3), not the 1.1.x Prisma's default musl target auto-detects
+  // for. Without this, `prisma generate` produces a query engine binary
+  // that fails to load at runtime with "Error loading shared library
+  // libssl.so.1.1: No such file or directory" — confirmed by an actual
+  // container boot against a real Postgres, not just `prisma generate`
+  // succeeding at build time.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 // ─── ENUMS ────────────────────────────────────────────────────────────────────

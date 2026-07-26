@@ -45,9 +45,9 @@ export type {
   AIProviderSelector,
   ProviderRequirements,
   AITaskType,
-} from './providers/index';
+} from './providers/index.js';
 
-export { PROVIDER_IDS, MODEL_IDS, confidenceTier } from './providers/index';
+export { PROVIDER_IDS, MODEL_IDS, confidenceTier } from './providers/index.js';
 
 // ─── Prompt Registry ──────────────────────────────────────────────────────
 export type {
@@ -68,9 +68,9 @@ export type {
   PromptLoader,
   PromptRenderer,
   PromptVariableValidation,
-} from './prompt-registry/index';
+} from './prompt-registry/index.js';
 
-export { PROMPT_IDS } from './prompt-registry/index';
+export { PROMPT_IDS } from './prompt-registry/index.js';
 
 // ─── Memory ───────────────────────────────────────────────────────────────
 export type {
@@ -101,7 +101,7 @@ export type {
   MemoryStats,
   MemoryStore,
   EmbeddingMemoryStore,
-} from './memory/index';
+} from './memory/index.js';
 
 // ─── Reasoning ────────────────────────────────────────────────────────────
 export type {
@@ -122,7 +122,7 @@ export type {
   ReasoningStore,
   ReasoningEvaluator,
   ReasoningEvaluation,
-} from './reasoning/index';
+} from './reasoning/index.js';
 
 // ─── Explainability ───────────────────────────────────────────────────────
 export type {
@@ -141,7 +141,7 @@ export type {
   ExplanationFormatter,
   ExplainabilityValidator,
   ExplainabilityValidationResult,
-} from './explainability/index';
+} from './explainability/index.js';
 
 // ─── Recommendations ──────────────────────────────────────────────────────
 export type {
@@ -163,7 +163,7 @@ export type {
   RecommendationFilter,
   RecommendationStore,
   RecommendationReport,
-} from './recommendations/index';
+} from './recommendations/index.js';
 
 // ─── Context Builder ──────────────────────────────────────────────────────
 export type {
@@ -181,9 +181,9 @@ export type {
   ContextEnricher,
   ContextSerializer,
   ContextCache,
-} from './context-builder/index';
+} from './context-builder/index.js';
 
-export { DEFAULT_TOKEN_BUDGETS } from './context-builder/index';
+export { DEFAULT_TOKEN_BUDGETS } from './context-builder/index.js';
 
 // ─── Agents ───────────────────────────────────────────────────────────────
 export type {
@@ -209,9 +209,9 @@ export type {
   AgentPipelineStep,
   AgentPipelineResult,
   BuiltInAgentId,
-} from './agents/index';
+} from './agents/index.js';
 
-export { AGENT_IDS } from './agents/index';
+export { AGENT_IDS } from './agents/index.js';
 
 // ─── Decision Engine ──────────────────────────────────────────────────────
 export type {
@@ -234,9 +234,9 @@ export type {
   DecisionStore,
   DecisionNotifier,
   DecisionReport,
-} from './decision-engine/index';
+} from './decision-engine/index.js';
 
-export { DECISION_RULE_IDS, DEFAULT_DECISION_THRESHOLDS } from './decision-engine/index';
+export { DECISION_RULE_IDS, DEFAULT_DECISION_THRESHOLDS } from './decision-engine/index.js';
 
 // ─── Feedback ─────────────────────────────────────────────────────────────
 export type {
@@ -253,7 +253,7 @@ export type {
   FeedbackAggregate,
   DateRange,
   FeedbackStore,
-} from './feedback/index';
+} from './feedback/index.js';
 
 // ─── Learning ─────────────────────────────────────────────────────────────
 export type {
@@ -277,7 +277,7 @@ export type {
   AILearningPatternQuery,
   AILearningStats,
   AILearningStore,
-} from './learning/index';
+} from './learning/index.js';
 
 // ─── Validation ───────────────────────────────────────────────────────────
 export type {
@@ -298,7 +298,7 @@ export type {
   IntegrationValidationResult,
   TransformationValidationInput,
   TransformationValidationResult,
-} from './validation/index';
+} from './validation/index.js';
 
 // ─── Security ─────────────────────────────────────────────────────────────
 export type {
@@ -322,9 +322,9 @@ export type {
   SecurityPolicy,
   SecurityPolicyValidation,
   SecurityPolicyViolation,
-} from './security/index';
+} from './security/index.js';
 
-export { SENSITIVE_FIELD_KINDS } from './security/index';
+export { SENSITIVE_FIELD_KINDS } from './security/index.js';
 
 // ─── Performance ──────────────────────────────────────────────────────────
 export type {
@@ -343,9 +343,9 @@ export type {
   SyncPerformanceAnalysis,
   Bottleneck,
   PerformanceOptimization,
-} from './performance/index';
+} from './performance/index.js';
 
-export { DEFAULT_SLOS } from './performance/index';
+export { DEFAULT_SLOS } from './performance/index.js';
 
 // ─── ERP Recognition ──────────────────────────────────────────────────────
 export type {
@@ -365,9 +365,9 @@ export type {
   ERPStructuralSignature,
   ERPModuleFingerprint,
   ERPFingerprintRegistry,
-} from './erp-recognition/index';
+} from './erp-recognition/index.js';
 
-export { ERP_MODULE_IDS } from './erp-recognition/index';
+export { ERP_MODULE_IDS } from './erp-recognition/index.js';
 
 // ─── Schema Analysis ──────────────────────────────────────────────────────
 export type {
@@ -392,7 +392,7 @@ export type {
   SchemaChangeReport,
   SchemaChangeImpact,
   SchemaAnalysisIssue,
-} from './schema-analysis/index';
+} from './schema-analysis/index.js';
 
 // ─── Mapping Analysis ─────────────────────────────────────────────────────
 export type {
@@ -419,7 +419,7 @@ export type {
   MappingIssue,
   MappingDriftInput,
   MappingDriftReport,
-} from './mapping-analysis/index';
+} from './mapping-analysis/index.js';
 
 // ─── Sync Analysis ────────────────────────────────────────────────────────
 export type {
@@ -449,4 +449,4 @@ export type {
   SyncPatternAnalysisInput,
   SyncPatternAnalysisResult,
   SyncPattern,
-} from './sync-analysis/index';
+} from './sync-analysis/index.js';

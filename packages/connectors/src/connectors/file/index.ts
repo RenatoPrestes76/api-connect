@@ -3,7 +3,7 @@
  * File Connector interfaces — CSV, Excel, XML, JSON, TXT, ODS
  */
 
-import type { Connector, ConnectorConfig, ConnectorResult } from '../../core/index';
+import type { Connector, ConnectorConfig, ConnectorResult } from '../../core/index.js';
 
 // ─── Base File Connector ──────────────────────────────────────────────────
 

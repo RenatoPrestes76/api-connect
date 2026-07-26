@@ -20,9 +20,9 @@ import type {
   AgentId,
   AITaskType,
   SessionId,
-} from '../providers/index';
-import type { AIRecommendation } from '../recommendations/index';
-import type { DecisionRecord } from '../decision-engine/index';
+} from '../providers/index.js';
+import type { AIRecommendation } from '../recommendations/index.js';
+import type { DecisionRecord } from '../decision-engine/index.js';
 
 // ─── Feedback System ──────────────────────────────────────────────────────
 

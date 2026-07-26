@@ -7,10 +7,10 @@
  * The system supports branching (parallel evolution) and tagging.
  */
 
-import type { SchemaId, VersionId } from '../models/index';
-import type { SIEResult } from '../core/index';
-import type { CanonicalSchema, SchemaPatch } from '../canonical/index';
-import type { SchemaDiff } from '../comparator/index';
+import type { SchemaId, VersionId } from '../models/index.js';
+import type { SIEResult } from '../core/index.js';
+import type { CanonicalSchema, SchemaPatch } from '../canonical/index.js';
+import type { SchemaDiff } from '../comparator/index.js';
 
 // ─── Schema Version ───────────────────────────────────────────────────────
 

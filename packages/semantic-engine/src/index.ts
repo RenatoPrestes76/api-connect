@@ -25,7 +25,7 @@ export type {
   CBLDomainKind,
   CBLConcept,
   CBLRegistry,
-} from './business-language/index';
+} from './business-language/index.js';
 
 export {
   CBL_ENTITY_DOMAINS,
@@ -34,7 +34,7 @@ export {
   cblRelTerm,
   parseCBLEntityTerm,
   parseCBLFieldTerm,
-} from './business-language/index';
+} from './business-language/index.js';
 
 // ─── 2. Canonical Model — CBM output types ────────────────────────────────
 export type {
@@ -53,7 +53,7 @@ export type {
   CBMSnapshot,
   CBMSnapshotStore,
   CBMDiff,
-} from './canonical-model/index';
+} from './canonical-model/index.js';
 
 // ─── 3. Confidence Engine — scoring ───────────────────────────────────────
 export type {
@@ -73,13 +73,13 @@ export type {
   ConfidenceAggregator,
   EntityConfidenceReport,
   FieldConfidenceScore,
-} from './confidence-engine/index';
+} from './confidence-engine/index.js';
 
 export {
   SIGNAL_IDS,
   DEFAULT_CONFIDENCE_WEIGHTS,
   DEFAULT_CONFIDENCE_THRESHOLDS,
-} from './confidence-engine/index';
+} from './confidence-engine/index.js';
 
 // ─── 4. Dictionary — business definitions ────────────────────────────────
 export type {
@@ -97,7 +97,7 @@ export type {
   FieldDefinitionBuilder,
   DictionarySearchResult,
   DictionaryExporter,
-} from './dictionary/index';
+} from './dictionary/index.js';
 
 // ─── 5. Knowledge Graph — business concept relationships ──────────────────
 export type {
@@ -118,7 +118,7 @@ export type {
   GraphStatistics,
   KnowledgeGraphAnalyzer,
   GraphCluster,
-} from './knowledge-graph/index';
+} from './knowledge-graph/index.js';
 
 // ─── 6. Semantic Analyzer — analysis strategies ──────────────────────────
 export type {
@@ -142,7 +142,7 @@ export type {
   StructureAnalyzer,
   RelationshipAnalyzer,
   ContextAnalyzer,
-} from './semantic-analyzer/index';
+} from './semantic-analyzer/index.js';
 
 // ─── 7. Suggestions — packaged proposals ─────────────────────────────────
 export type {
@@ -166,7 +166,7 @@ export type {
   SuggestionFormatter,
   FormattedSuggestion,
   FormattedBundle,
-} from './suggestions/index';
+} from './suggestions/index.js';
 
 // ─── 8. Mapping Engine — orchestration ───────────────────────────────────
 export type {
@@ -188,7 +188,7 @@ export type {
   BatchMappingEngine,
   BatchMappingResult,
   BatchProgress,
-} from './mapping-engine/index';
+} from './mapping-engine/index.js';
 
 // ─── 9. Validation — human approval workflow ──────────────────────────────
 export type {
@@ -208,7 +208,7 @@ export type {
   ValidationStatistics,
   ValidationStatisticsProvider,
   ValidationNotifier,
-} from './validation/index';
+} from './validation/index.js';
 
 // ─── 10. Learning — semantic pattern learning ─────────────────────────────
 export type {
@@ -233,7 +233,7 @@ export type {
   PatternFilter,
   LearningMemoryStats,
   PatternExtractor,
-} from './learning/index';
+} from './learning/index.js';
 
 // ─── 11. Profiles — ERP semantic profiles ────────────────────────────────
 export type {
@@ -248,9 +248,9 @@ export type {
   ProfileLearner,
   ProfileConfidenceBooster,
   ProfileSerializer,
-} from './profiles/index';
+} from './profiles/index.js';
 
-export { KNOWN_ERP_PROFILES } from './profiles/index';
+export { KNOWN_ERP_PROFILES } from './profiles/index.js';
 
 // ─── 12. Rules — business rule engine ────────────────────────────────────
 export type {
@@ -266,9 +266,9 @@ export type {
   MappingConstraint,
   MappingConstraintKind,
   BusinessRuleRegistry,
-} from './rules/index';
+} from './rules/index.js';
 
-export { MAPPING_RULE_IDS } from './rules/index';
+export { MAPPING_RULE_IDS } from './rules/index.js';
 
 // ─── 13. Registry — confirmed mappings store ─────────────────────────────
 export type {
@@ -283,4 +283,4 @@ export type {
   RegistryStatsProvider,
   RegistryEvent,
   RegistryObserver,
-} from './registry/index';
+} from './registry/index.js';

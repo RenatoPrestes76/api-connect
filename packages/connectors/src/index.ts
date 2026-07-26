@@ -94,11 +94,11 @@ export type {
   ValidationReport,
   AuthResult,
   HealthReport,
-} from './core/index';
+} from './core/index.js';
 
 // ─── Capabilities ─────────────────────────────────────────────────────────
 
-export { CAPABILITIES } from './capabilities/index';
+export { CAPABILITIES } from './capabilities/index.js';
 export type {
   Capability,
   CapabilityDescriptor,
@@ -107,7 +107,7 @@ export type {
   CapabilitySetBuilder,
   CapabilityNegotiator,
   CapabilityNegotiationReport,
-} from './capabilities/index';
+} from './capabilities/index.js';
 
 // ─── Metadata ─────────────────────────────────────────────────────────────
 
@@ -140,7 +140,7 @@ export type {
   MetadataDiff,
   EntityDiff,
   FieldDiff,
-} from './metadata/index';
+} from './metadata/index.js';
 
 // ─── Discovery ────────────────────────────────────────────────────────────
 
@@ -158,7 +158,7 @@ export type {
   FileDiscoveryEngine,
   CloudDiscoveryEngine,
   QueueDiscoveryEngine,
-} from './discovery/index';
+} from './discovery/index.js';
 
 // ─── Health ───────────────────────────────────────────────────────────────
 
@@ -179,7 +179,7 @@ export type {
   HealthWarning,
   HealthWarningCode,
   ConnectorHealthRegistry,
-} from './health/index';
+} from './health/index.js';
 
 // ─── Registry ─────────────────────────────────────────────────────────────
 
@@ -193,7 +193,7 @@ export type {
   ConnectorConfigProperty,
   ConnectorInstanceRegistry,
   ConnectorRegistryManager,
-} from './registry/index';
+} from './registry/index.js';
 
 // ─── Factory ──────────────────────────────────────────────────────────────
 
@@ -214,11 +214,11 @@ export type {
   ConnectorFactoryRegistry,
   RelationalDatabaseType,
   DocumentDatabaseType,
-} from './factory/index';
+} from './factory/index.js';
 
 // ─── SDK ──────────────────────────────────────────────────────────────────
 
-export { CONNECTOR_SDK_VERSION, getSdkVersionInfo } from './sdk/index';
+export { CONNECTOR_SDK_VERSION, getSdkVersionInfo } from './sdk/index.js';
 export type {
   ConnectorPlugin,
   PluginAuthor,
@@ -239,7 +239,7 @@ export type {
   CapabilityTestResult,
   AbstractConnectorContract,
   SdkVersionInfo,
-} from './sdk/index';
+} from './sdk/index.js';
 
 // ─── Database Connectors ──────────────────────────────────────────────────
 
@@ -294,7 +294,7 @@ export type {
   MongoChangeEvent,
   MongoWatchOptions,
   MongoWriteConcern,
-} from './connectors/database/index';
+} from './connectors/database/index.js';
 
 // ─── API Connectors ───────────────────────────────────────────────────────
 
@@ -344,7 +344,7 @@ export type {
   WebhookRegistration,
   WebhookEvent,
   WebhookEventHandler,
-} from './connectors/api/index';
+} from './connectors/api/index.js';
 
 // ─── File Connectors ──────────────────────────────────────────────────────
 
@@ -391,7 +391,7 @@ export type {
   ODSSheet,
   ODSSheetData,
   ODSConnectorConfig,
-} from './connectors/file/index';
+} from './connectors/file/index.js';
 
 // ─── Cloud Connectors ─────────────────────────────────────────────────────
 
@@ -436,7 +436,7 @@ export type {
   SupabaseStorageConnectorConfig,
   SupabaseSignedUploadUrl,
   SupabaseBucketConfig,
-} from './connectors/cloud/index';
+} from './connectors/cloud/index.js';
 
 // ─── Queue Connectors ─────────────────────────────────────────────────────
 
@@ -478,4 +478,4 @@ export type {
   XStreamEntry,
   XStreamInfo,
   XStreamGroupInfo,
-} from './connectors/queue/index';
+} from './connectors/queue/index.js';

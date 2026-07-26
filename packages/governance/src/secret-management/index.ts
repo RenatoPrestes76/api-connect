@@ -8,7 +8,7 @@
  * Access is subject to policy evaluation and full audit.
  */
 
-import type { GovernanceResult } from '../policies/index';
+import type { GovernanceResult } from '../policies/index.js';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };

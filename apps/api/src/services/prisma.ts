@@ -2,8 +2,19 @@
  * Prisma client singleton for the API service.
  * @prisma/client must be a direct dependency of apps/api.
  * The server boots without a live DB in dev — DB-backed routes fail gracefully.
+ *
+ * apps/api is an ESM package ("type": "module"), so there is no ambient
+ * `require` at runtime under plain `node` — it only appeared to work under
+ * tsx/vitest because those tools shim one in. Using `require` directly here
+ * silently threw and fell through to the `PrismaClient: null` fallback on
+ * every real (Docker/production) boot, so the DB could never actually
+ * connect even with a valid DATABASE_URL. createRequire gives us a real,
+ * working require bound to this module.
  */
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+
 const { PrismaClient } = (() => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires

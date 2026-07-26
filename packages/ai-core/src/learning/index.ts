@@ -19,9 +19,9 @@
  *   - Prompt performance signals (forwarded to prompt-registry)
  */
 
-import type { AIResult, AgentId, AITaskType } from '../providers/index';
-import type { FeedbackRecord, FeedbackAggregate } from '../feedback/index';
-import type { MemoryEntryInput } from '../memory/index';
+import type { AIResult, AgentId, AITaskType } from '../providers/index.js';
+import type { FeedbackRecord, FeedbackAggregate } from '../feedback/index.js';
+import type { MemoryEntryInput } from '../memory/index.js';
 
 // ─── AI Learning Engine ───────────────────────────────────────────────────
 

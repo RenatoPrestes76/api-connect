@@ -3,7 +3,7 @@
  * Database Connector interfaces — Relational and Document databases
  */
 
-import type { Connector, ConnectorConfig, ConnectorResult } from '../../core/index';
+import type { Connector, ConnectorConfig, ConnectorResult } from '../../core/index.js';
 
 // ─── Base Database Connector ──────────────────────────────────────────────
 

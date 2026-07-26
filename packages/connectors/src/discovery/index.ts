@@ -3,7 +3,7 @@
  * Discovery Engine — introspects any connected source and maps its structure
  */
 
-import type { DiscoveryOptions, DiscoveredItem } from '../core/index';
+import type { DiscoveryOptions, DiscoveredItem } from '../core/index.js';
 
 // ─── Discovery Engine ─────────────────────────────────────────────────────────
 

@@ -16,7 +16,7 @@
  *   - Environment-specific overrides
  */
 
-import type { RuntimeResult, RuntimeEnvironment, ModuleId, Disposable } from '../kernel/index';
+import type { RuntimeResult, RuntimeEnvironment, ModuleId, Disposable } from '../kernel/index.js';
 
 // ─── Configuration Provider ───────────────────────────────────────────────
 

@@ -20,10 +20,10 @@ import type {
   CBLFieldKind,
   CBLDomainKind,
   SemanticResult,
-} from '../business-language/index';
-import type { ConfidenceValue } from '../confidence-engine/index';
-import type { CBMEntity, CBMField } from '../canonical-model/index';
-import type { CanonicalBusinessModel } from '../canonical-model/index';
+} from '../business-language/index.js';
+import type { ConfidenceValue } from '../confidence-engine/index.js';
+import type { CBMEntity, CBMField } from '../canonical-model/index.js';
+import type { CanonicalBusinessModel } from '../canonical-model/index.js';
 
 // ─── Business Rule Engine ─────────────────────────────────────────────────
 

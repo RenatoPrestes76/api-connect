@@ -11,9 +11,9 @@
  * The ValidationAnalystAgent uses this module to power its analysis.
  */
 
-import type { AIResult, AgentId, AITaskType } from '../providers/index';
-import type { AIRecommendation } from '../recommendations/index';
-import type { Explanation } from '../explainability/index';
+import type { AIResult, AgentId, AITaskType } from '../providers/index.js';
+import type { AIRecommendation } from '../recommendations/index.js';
+import type { Explanation } from '../explainability/index.js';
 
 // ─── AI Validation Engine ─────────────────────────────────────────────────
 

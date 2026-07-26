@@ -19,8 +19,8 @@ import type {
   Cardinality,
   NamingConvention,
   SchemaCategory,
-} from '../models/index';
-import type { SchemaSource } from '../core/index';
+} from '../models/index.js';
+import type { SchemaSource } from '../core/index.js';
 
 // ─── Canonical Schema (root) ──────────────────────────────────────────────
 

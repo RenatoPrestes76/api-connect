@@ -40,9 +40,9 @@ export type {
   SpanId,
   PermissionId,
   SandboxId,
-} from './kernel/index';
+} from './kernel/index.js';
 
-export { PLATFORM_EVENTS } from './kernel/index';
+export { PLATFORM_EVENTS } from './kernel/index.js';
 
 // ─── Configuration ────────────────────────────────────────────────────────
 export type {
@@ -63,9 +63,9 @@ export type {
   SecretProvider,
   FeatureFlagProvider,
   FeatureFlag,
-} from './configuration/index';
+} from './configuration/index.js';
 
-export { CONFIG_NAMESPACES, CONFIG_KEYS } from './configuration/index';
+export { CONFIG_NAMESPACES, CONFIG_KEYS } from './configuration/index.js';
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────
 export type {
@@ -80,7 +80,7 @@ export type {
   LifecycleHookPhase,
   LifecycleObserver,
   LifecycleDependencyGraph,
-} from './lifecycle/index';
+} from './lifecycle/index.js';
 
 // ─── Permissions ──────────────────────────────────────────────────────────
 export type {
@@ -99,9 +99,9 @@ export type {
   PermissionRole,
   PermissionAuditEntry,
   PermissionAuditFilter,
-} from './permissions/index';
+} from './permissions/index.js';
 
-export { PERMISSION_IDS, BUILT_IN_ROLES } from './permissions/index';
+export { PERMISSION_IDS, BUILT_IN_ROLES } from './permissions/index.js';
 
 // ─── Telemetry ────────────────────────────────────────────────────────────
 export type {
@@ -127,9 +127,9 @@ export type {
   TelemetryExporter,
   ExportedSpan,
   MetricDataPoint,
-} from './telemetry/index';
+} from './telemetry/index.js';
 
-export { METRIC_NAMES } from './telemetry/index';
+export { METRIC_NAMES } from './telemetry/index.js';
 
 // ─── Event Bus ────────────────────────────────────────────────────────────
 export type {
@@ -148,9 +148,9 @@ export type {
   EventBusStats,
   EventStore,
   BuiltInEventTopic,
-} from './event-bus/index';
+} from './event-bus/index.js';
 
-export { EVENT_TOPICS } from './event-bus/index';
+export { EVENT_TOPICS } from './event-bus/index.js';
 
 // ─── Command Bus ──────────────────────────────────────────────────────────
 export type {
@@ -166,9 +166,9 @@ export type {
   CommandBusStats,
   CommandLog,
   CommandStore,
-} from './command-bus/index';
+} from './command-bus/index.js';
 
-export { COMMAND_TYPES } from './command-bus/index';
+export { COMMAND_TYPES } from './command-bus/index.js';
 
 // ─── Service Registry ─────────────────────────────────────────────────────
 export type {
@@ -180,9 +180,9 @@ export type {
   ContainerBuilder,
   ContainerModule,
   ServiceHealthIndicator,
-} from './service-registry/index';
+} from './service-registry/index.js';
 
-export { SERVICE_TOKENS } from './service-registry/index';
+export { SERVICE_TOKENS } from './service-registry/index.js';
 
 // ─── Health ───────────────────────────────────────────────────────────────
 export type {
@@ -198,9 +198,9 @@ export type {
   HealthEndpointResponse,
   DependencyHealthChecker,
   HealthStats,
-} from './health/index';
+} from './health/index.js';
 
-export { HEALTH_CHECK_IDS } from './health/index';
+export { HEALTH_CHECK_IDS } from './health/index.js';
 
 // ─── Resilience ───────────────────────────────────────────────────────────
 export type {
@@ -229,7 +229,7 @@ export type {
   ResiliencePipeline,
   ResilienceRegistry,
   ResilienceMetricsSnapshot,
-} from './resilience/index';
+} from './resilience/index.js';
 
 // ─── Sandbox ──────────────────────────────────────────────────────────────
 export type {
@@ -244,9 +244,9 @@ export type {
   SandboxViolationKind,
   SandboxStats,
   SandboxResourceReport,
-} from './sandbox/index';
+} from './sandbox/index.js';
 
-export { CAPABILITY_SETS } from './sandbox/index';
+export { CAPABILITY_SETS } from './sandbox/index.js';
 
 // ─── Plugin Manager ───────────────────────────────────────────────────────
 export type {
@@ -265,7 +265,7 @@ export type {
   PluginConflict,
   PluginCapabilityCheck,
   PluginManagerStats,
-} from './plugin-manager/index';
+} from './plugin-manager/index.js';
 
 // ─── Module Loader ────────────────────────────────────────────────────────
 export type {
@@ -283,7 +283,7 @@ export type {
   ModuleLoaderEventKind,
   ModuleLoaderEvent,
   ModuleLoaderEventHandler,
-} from './module-loader/index';
+} from './module-loader/index.js';
 
 // ─── Scheduler ────────────────────────────────────────────────────────────
 export type {
@@ -307,9 +307,9 @@ export type {
   JobExecutionEvent,
   JobExecutionEventHandler,
   JobStore,
-} from './scheduler/index';
+} from './scheduler/index.js';
 
-export { BUILT_IN_JOB_IDS } from './scheduler/index';
+export { BUILT_IN_JOB_IDS } from './scheduler/index.js';
 
 // ─── Worker Pool ──────────────────────────────────────────────────────────
 export type {
@@ -327,7 +327,7 @@ export type {
   WorkerPoolEventKind,
   WorkerPoolEvent,
   WorkerPoolEventHandler,
-} from './worker-pool/index';
+} from './worker-pool/index.js';
 
 // ─── Diagnostics ──────────────────────────────────────────────────────────
 export type {
@@ -353,7 +353,7 @@ export type {
   AuditFilter,
   MemoryProfile,
   DependencyGraphView,
-} from './diagnostics/index';
+} from './diagnostics/index.js';
 
 // ─── Orchestration ────────────────────────────────────────────────────────
 export type {
@@ -377,9 +377,9 @@ export type {
   OrchestrationEventHandler,
   SagaCoordinator,
   SagaState,
-} from './orchestration/index';
+} from './orchestration/index.js';
 
-export { WORKFLOW_IDS } from './orchestration/index';
+export { WORKFLOW_IDS } from './orchestration/index.js';
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────
 export type {
@@ -396,6 +396,6 @@ export type {
   BootstrapHook,
   BootstrapObserver,
   BuiltInBootstrapTaskId,
-} from './bootstrap/index';
+} from './bootstrap/index.js';
 
-export { BOOTSTRAP_PHASE_ORDER, BOOTSTRAP_TASK_IDS } from './bootstrap/index';
+export { BOOTSTRAP_PHASE_ORDER, BOOTSTRAP_TASK_IDS } from './bootstrap/index.js';

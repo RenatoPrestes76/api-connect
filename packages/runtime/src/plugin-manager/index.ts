@@ -15,9 +15,9 @@
  *   - Dynamic registration (programmatic)
  */
 
-import type { RuntimeResult, PluginId, ModuleId, Disposable } from '../kernel/index';
-import type { LifecycleState } from '../lifecycle/index';
-import type { SandboxLevel, SandboxCapability, ResourceQuota } from '../sandbox/index';
+import type { RuntimeResult, PluginId, ModuleId, Disposable } from '../kernel/index.js';
+import type { LifecycleState } from '../lifecycle/index.js';
+import type { SandboxLevel, SandboxCapability, ResourceQuota } from '../sandbox/index.js';
 
 // ─── Plugin Manager ───────────────────────────────────────────────────────
 

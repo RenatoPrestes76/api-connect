@@ -13,10 +13,10 @@
  * it is available through the internal diagnostics interface only.
  */
 
-import type { RuntimeResult, ModuleId, Severity, TimeRange } from '../kernel/index';
-import type { LifecycleState } from '../lifecycle/index';
-import type { HealthStatus } from '../health/index';
-import type { CircuitState } from '../resilience/index';
+import type { RuntimeResult, ModuleId, Severity, TimeRange } from '../kernel/index.js';
+import type { LifecycleState } from '../lifecycle/index.js';
+import type { HealthStatus } from '../health/index.js';
+import type { CircuitState } from '../resilience/index.js';
 
 // ─── Diagnostics Provider ─────────────────────────────────────────────────
 

@@ -3,7 +3,12 @@
  * Connector Registry — dynamic, type-safe connector registration. No switch. No if.
  */
 
-import type { Connector, ConnectorDescriptor, ConnectorType, ConnectorConfig } from '../core/index';
+import type {
+  Connector,
+  ConnectorDescriptor,
+  ConnectorType,
+  ConnectorConfig,
+} from '../core/index.js';
 
 // ─── Registry Entry ───────────────────────────────────────────────────────
 

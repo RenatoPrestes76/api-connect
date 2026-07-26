@@ -11,7 +11,7 @@
  *   Extensions: Plugins, Connectors, ERP Profiles
  */
 
-import type { GovernanceResult } from '../policies/index';
+import type { GovernanceResult } from '../policies/index.js';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };

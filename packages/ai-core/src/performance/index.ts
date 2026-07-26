@@ -10,7 +10,7 @@
  * ATHENA never modifies runtime behavior — it only recommends.
  */
 
-import type { AIResult, AgentId, AITaskType, AIProviderId } from '../providers/index';
+import type { AIResult, AgentId, AITaskType, AIProviderId } from '../providers/index.js';
 
 // ─── ATHENA Performance Monitor ───────────────────────────────────────────
 

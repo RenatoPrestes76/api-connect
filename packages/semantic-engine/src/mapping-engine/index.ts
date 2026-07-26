@@ -18,15 +18,15 @@ import type {
   CBLFieldKind,
   CBLDomainKind,
   SemanticResult,
-} from '../business-language/index';
-import type { ConfidenceValue } from '../confidence-engine/index';
+} from '../business-language/index.js';
+import type { ConfidenceValue } from '../confidence-engine/index.js';
 import type {
   CanonicalBusinessModel,
   CBMEntity,
   CBMField,
   MappingStatus,
-} from '../canonical-model/index';
-import type { SuggestionBundle, EntitySuggestion, FieldSuggestion } from '../suggestions/index';
+} from '../canonical-model/index.js';
+import type { SuggestionBundle, EntitySuggestion, FieldSuggestion } from '../suggestions/index.js';
 
 // ─── Mapping Engine ───────────────────────────────────────────────────────
 

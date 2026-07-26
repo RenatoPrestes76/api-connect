@@ -33,7 +33,7 @@ export type {
   SqlDialect,
   OpenApiVersion,
   GraphQLVersion,
-} from './models/index';
+} from './models/index.js';
 
 // ─── 2. Core — result wrapper, source descriptor, base interfaces ─────────
 export type {
@@ -56,7 +56,7 @@ export type {
   ComparisonSummary,
   SchemaVersionRef,
   SchemaTimelineSummary,
-} from './core/index';
+} from './core/index.js';
 
 // ─── 3. Canonical — universal schema model ───────────────────────────────
 export type {
@@ -83,7 +83,7 @@ export type {
   ModifyFieldOperation,
   AddRelationshipOperation,
   RemoveRelationshipOperation,
-} from './canonical/index';
+} from './canonical/index.js';
 
 // ─── 4. Parser — schema parsers ──────────────────────────────────────────
 export type {
@@ -127,7 +127,7 @@ export type {
   XsdImportResolver,
   SchemaParserRegistry,
   ParserDetectionRanking,
-} from './parser/index';
+} from './parser/index.js';
 
 // ─── 5. Normalizer — raw → canonical pipeline ────────────────────────────
 export type {
@@ -149,7 +149,7 @@ export type {
   InferredRelationshipCandidate,
   RelationshipInferenceBasis,
   TypeNormalizerRegistry,
-} from './normalizer/index';
+} from './normalizer/index.js';
 
 // ─── 6. Comparator — structural diff ─────────────────────────────────────
 export type {
@@ -175,7 +175,7 @@ export type {
   RenameDetector,
   RenameDetectionOptions,
   RenameWeights,
-} from './comparator/index';
+} from './comparator/index.js';
 
 // ─── 7. Detector — change detection engine ───────────────────────────────
 export type {
@@ -193,7 +193,7 @@ export type {
   BreakingChangeAdvisor,
   BreakingChangeAdvice,
   FieldEvolutionPattern,
-} from './detector/index';
+} from './detector/index.js';
 
 // ─── 8. Versioning — schema version history ──────────────────────────────
 export type {
@@ -209,7 +209,7 @@ export type {
   VersionTagger,
   SnapshotReconstructor,
   VersionComparator,
-} from './versioning/index';
+} from './versioning/index.js';
 
 // ─── 9. Registry — schema + ERP pattern registry ─────────────────────────
 export type {
@@ -227,7 +227,7 @@ export type {
   ERPFieldMatch,
   SchemaRegistryEvent,
   SchemaRegistryObserver,
-} from './registry/index';
+} from './registry/index.js';
 
 // ─── 10. Fingerprint — structural fingerprint engine ─────────────────────
 export type {
@@ -240,7 +240,7 @@ export type {
   FingerprintDelta,
   FingerprintStore,
   FingerprintAlgorithmRegistry,
-} from './fingerprint/index';
+} from './fingerprint/index.js';
 
 // ─── 11. Similarity — structural similarity engine ───────────────────────
 export type {
@@ -263,9 +263,9 @@ export type {
   SimilarityWeights,
   SimilarityStrategyRegistry,
   NameSimilarityScorer,
-} from './similarity/index';
+} from './similarity/index.js';
 
-export { DEFAULT_SIMILARITY_WEIGHTS } from './similarity/index';
+export { DEFAULT_SIMILARITY_WEIGHTS } from './similarity/index.js';
 
 // ─── 12. Learning — pattern learning layer ───────────────────────────────
 export type {
@@ -290,7 +290,7 @@ export type {
   SchemaEnrichmentResult,
   SchemaEnrichment,
   LearningStats,
-} from './learning/index';
+} from './learning/index.js';
 
 // ─── 13. Adapters — connector-to-SIE bridge ──────────────────────────────
 export type {
@@ -315,7 +315,7 @@ export type {
   CloudMetadataInput,
   CloudObjectMetadataInput,
   ConnectorAdapterRegistry,
-} from './adapters/index';
+} from './adapters/index.js';
 
 // ─── 14. Transformers — type mapping and naming conversion ────────────────
 export type {
@@ -334,7 +334,7 @@ export type {
   FieldRoleInferrerResult,
   FieldRoleHeuristic,
   TypeCompatibilityMatrix,
-} from './transformers/index';
+} from './transformers/index.js';
 
 // ─── 15. Validators — schema validation rules ────────────────────────────
 export type {
@@ -353,6 +353,6 @@ export type {
   RelationshipValidator,
   ConstraintValidator,
   ValidationRuleRegistry,
-} from './validators/index';
+} from './validators/index.js';
 
-export { BUILT_IN_RULE_IDS } from './validators/index';
+export { BUILT_IN_RULE_IDS } from './validators/index.js';

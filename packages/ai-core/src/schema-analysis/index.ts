@@ -13,8 +13,8 @@
  * ATHENA adds a reasoning layer on top.
  */
 
-import type { AIResult, AgentId, AIConfidenceValue } from '../providers/index';
-import type { AIRecommendation } from '../recommendations/index';
+import type { AIResult, AgentId, AIConfidenceValue } from '../providers/index.js';
+import type { AIRecommendation } from '../recommendations/index.js';
 
 // ─── Schema Analysis Engine ───────────────────────────────────────────────
 

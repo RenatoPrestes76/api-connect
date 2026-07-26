@@ -13,7 +13,7 @@
  *   This is critical for plugin sandbox safety.
  */
 
-import type { RuntimeResult, ModuleId, PluginId, PermissionId } from '../kernel/index';
+import type { RuntimeResult, ModuleId, PluginId, PermissionId } from '../kernel/index.js';
 
 // ─── Permission Model ───────��─────────────────────────────────────────────
 

@@ -20,9 +20,9 @@ import type {
   AIConfidenceTier,
   AITaskType,
   SessionId,
-} from '../providers/index';
-import type { Explanation } from '../explainability/index';
-import type { ReasoningChain } from '../reasoning/index';
+} from '../providers/index.js';
+import type { Explanation } from '../explainability/index.js';
+import type { ReasoningChain } from '../reasoning/index.js';
 
 // ─── Core Recommendation ──────────────────────────────────────────────────
 

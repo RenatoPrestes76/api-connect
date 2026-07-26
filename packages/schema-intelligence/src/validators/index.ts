@@ -12,13 +12,13 @@
  * - All enum fields reference declared enumerations
  */
 
-import type { SIEResult } from '../core/index';
+import type { SIEResult } from '../core/index.js';
 import type {
   CanonicalSchema,
   CanonicalEntity,
   CanonicalField,
   CanonicalRelationship,
-} from '../canonical/index';
+} from '../canonical/index.js';
 
 // ─── Schema Validator ─────────────────────────────────────────────────────
 

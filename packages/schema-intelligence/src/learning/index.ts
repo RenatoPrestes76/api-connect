@@ -12,9 +12,15 @@
  * - Relationship topologies (star schema, normalized, flat)
  */
 
-import type { SchemaId, PatternId, ConfidenceScore, FieldRole, EntityKind } from '../models/index';
-import type { SIEResult } from '../core/index';
-import type { CanonicalSchema, CanonicalEntity, CanonicalField } from '../canonical/index';
+import type {
+  SchemaId,
+  PatternId,
+  ConfidenceScore,
+  FieldRole,
+  EntityKind,
+} from '../models/index.js';
+import type { SIEResult } from '../core/index.js';
+import type { CanonicalSchema, CanonicalEntity, CanonicalField } from '../canonical/index.js';
 
 // ─── Schema Learner ───────────────────────────────────────────────────────
 

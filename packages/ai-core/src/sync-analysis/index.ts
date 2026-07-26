@@ -12,8 +12,8 @@
  * ATHENA recommends. It never triggers, schedules, or executes syncs.
  */
 
-import type { AIResult, AIConfidenceValue } from '../providers/index';
-import type { AIRecommendation } from '../recommendations/index';
+import type { AIResult, AIConfidenceValue } from '../providers/index.js';
+import type { AIRecommendation } from '../recommendations/index.js';
 
 // ─── Sync Analysis Engine ──────────────────────────────────────────────────
 

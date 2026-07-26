@@ -14,10 +14,14 @@
  * but are still recorded and can be revoked.
  */
 
-import type { SemanticResult } from '../business-language/index';
-import type { CBLEntityTerm, CBLFieldTerm } from '../business-language/index';
-import type { ConfidenceValue } from '../confidence-engine/index';
-import type { SemanticSuggestion, SuggestionBundle, RejectionFeedback } from '../suggestions/index';
+import type { SemanticResult } from '../business-language/index.js';
+import type { CBLEntityTerm, CBLFieldTerm } from '../business-language/index.js';
+import type { ConfidenceValue } from '../confidence-engine/index.js';
+import type {
+  SemanticSuggestion,
+  SuggestionBundle,
+  RejectionFeedback,
+} from '../suggestions/index.js';
 
 // ─── Validation Workflow ──────────────────────────────────────────────────
 

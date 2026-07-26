@@ -1,6 +1,10 @@
-FROM node:20-alpine AS base
-RUN apk add --no-cache libc6-compat
-RUN npm install -g pnpm
+FROM node:24-alpine AS base
+# openssl (not just the bundled libssl.so.3) is required for Prisma's runtime
+# engine-selection to correctly detect OpenSSL 3.x — without the CLI/dev
+# package, it fails detection and falls back to loading the wrong
+# (openssl-1.1.x) query engine binary, which then fails to load at all.
+RUN apk add --no-cache libc6-compat openssl
+RUN npm install -g pnpm@9.0.0
 WORKDIR /app
 
 # A single stage does the full workspace install + build. A separate

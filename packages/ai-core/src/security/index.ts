@@ -14,8 +14,8 @@
  * Business data values are NEVER inspected.
  */
 
-import type { AIResult, AgentId } from '../providers/index';
-import type { AIRecommendation } from '../recommendations/index';
+import type { AIResult, AgentId } from '../providers/index.js';
+import type { AIRecommendation } from '../recommendations/index.js';
 
 // ─── AI Security Engine ───────────────────────────────────────────────────
 

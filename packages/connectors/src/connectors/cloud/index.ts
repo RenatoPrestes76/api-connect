@@ -3,7 +3,7 @@
  * Cloud Storage Connector interfaces — S3, Azure Blob, GCS, Supabase Storage
  */
 
-import type { Connector, ConnectorConfig, ConnectorResult } from '../../core/index';
+import type { Connector, ConnectorConfig, ConnectorResult } from '../../core/index.js';
 
 // ─── Base Cloud Storage Connector ─────────────────────────────────────────
 

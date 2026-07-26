@@ -17,7 +17,7 @@
  *   - Reasoning chains and their outcomes
  */
 
-import type { AIResult, MemoryEntryId, AgentId, AITaskType } from '../providers/index';
+import type { AIResult, MemoryEntryId, AgentId, AITaskType } from '../providers/index.js';
 
 // ─── AI Memory ────────────────────────────────────────────────────────────
 

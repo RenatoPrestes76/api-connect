@@ -3,7 +3,7 @@
  * Workspace governance: isolation rules, environment promotion gates, access controls.
  */
 
-import type { PolicyId, GovernanceResult } from '../policies/index';
+import type { PolicyId, GovernanceResult } from '../policies/index.js';
 
 declare const brand: unique symbol;
 type Branded<T, B> = T & { readonly [brand]: B };

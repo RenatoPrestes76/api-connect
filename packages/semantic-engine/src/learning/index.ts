@@ -20,9 +20,9 @@ import type {
   CBLFieldKind,
   CBLDomainKind,
   SemanticResult,
-} from '../business-language/index';
-import type { ConfidenceValue } from '../confidence-engine/index';
-import type { SemanticMapping } from '../mapping-engine/index';
+} from '../business-language/index.js';
+import type { ConfidenceValue } from '../confidence-engine/index.js';
+import type { SemanticMapping } from '../mapping-engine/index.js';
 
 // ─── Semantic Learner ─────────────────────────────────────────────────────
 
