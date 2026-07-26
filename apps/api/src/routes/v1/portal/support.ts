@@ -15,6 +15,17 @@ const VALID_CATEGORIES: SupportCategory[] = [
 ];
 const VALID_STATUSES: SupportStatus[] = ['open', 'in_progress', 'resolved', 'closed'];
 
+interface CreateTicketBody {
+  title?: string;
+  description?: string;
+  severity?: string;
+  category?: string;
+}
+
+interface UpdateTicketStatusBody {
+  status?: string;
+}
+
 export function registerSupportRoutes(router: Router): void {
   router.get('/api/v1/portal/support', async (ctx: RouteContext, res: ServerResponse) => {
     const status = ctx.query.get('status') as SupportStatus | null;
@@ -29,13 +40,13 @@ export function registerSupportRoutes(router: Router): void {
   });
 
   router.post('/api/v1/portal/support', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as CreateTicketBody | undefined) ?? {};
     const { title, description, severity, category } = body;
 
     if (!title || !description) {
       return apiError(res, '"title" and "description" are required', 400, 'MISSING_FIELDS');
     }
-    if (!VALID_SEVERITIES.includes(severity)) {
+    if (!severity || !VALID_SEVERITIES.includes(severity as SupportSeverity)) {
       return apiError(
         res,
         `severity must be one of: ${VALID_SEVERITIES.join(', ')}`,
@@ -43,7 +54,7 @@ export function registerSupportRoutes(router: Router): void {
         'INVALID_SEVERITY'
       );
     }
-    if (!VALID_CATEGORIES.includes(category)) {
+    if (!category || !VALID_CATEGORIES.includes(category as SupportCategory)) {
       return apiError(
         res,
         `category must be one of: ${VALID_CATEGORIES.join(', ')}`,
@@ -56,8 +67,8 @@ export function registerSupportRoutes(router: Router): void {
       tenantId: requireTenantId(ctx),
       title,
       description,
-      severity,
-      category,
+      severity: severity as SupportSeverity,
+      category: category as SupportCategory,
     });
     json(res, ticket, 201);
   });
@@ -65,8 +76,8 @@ export function registerSupportRoutes(router: Router): void {
   router.put(
     '/api/v1/portal/support/:id/status',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const { status } = (ctx.body as any) ?? {};
-      if (!VALID_STATUSES.includes(status)) {
+      const { status } = (ctx.body as UpdateTicketStatusBody | undefined) ?? {};
+      if (!status || !VALID_STATUSES.includes(status as SupportStatus)) {
         return apiError(
           res,
           `status must be one of: ${VALID_STATUSES.join(', ')}`,
@@ -74,7 +85,7 @@ export function registerSupportRoutes(router: Router): void {
           'INVALID_STATUS'
         );
       }
-      const ticket = portalStore.updateTicketStatus(ctx.params['id'], status);
+      const ticket = portalStore.updateTicketStatus(ctx.params['id'], status as SupportStatus);
       if (!ticket) return apiError(res, 'Ticket not found', 404, 'NOT_FOUND');
       json(res, ticket);
     }

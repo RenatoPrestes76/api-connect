@@ -15,6 +15,18 @@ const VALID_CATEGORIES: RiskCategory[] = [
 const VALID_STATUSES: RiskStatus[] = ['open', 'mitigating', 'mitigated', 'accepted', 'transferred'];
 const VALID_SEVERITIES: RiskSeverity[] = ['critical', 'high', 'medium', 'low'];
 
+interface CreateRiskBody {
+  title?: string;
+  category?: RiskCategory;
+  description?: string;
+  probability?: number;
+  impact?: number;
+  owner?: string;
+  mitigationPlan?: string;
+  dueDate?: string;
+  tenantId?: string;
+}
+
 export function registerRiskRoutes(router: Router): void {
   // GET /api/v1/risk
   router.get('/api/v1/risk', async (ctx: RouteContext, res: ServerResponse) => {
@@ -43,7 +55,7 @@ export function registerRiskRoutes(router: Router): void {
 
   // POST /api/v1/risk
   router.post('/api/v1/risk', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as CreateRiskBody | undefined) ?? {};
     const {
       title,
       category,

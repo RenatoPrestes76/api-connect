@@ -26,6 +26,29 @@ const VALID_TYPES: ChangeType[] = [
 ];
 const VALID_PRIORITIES: ChangePriority[] = ['critical', 'high', 'medium', 'low'];
 
+interface CreateChangeBody {
+  title?: string;
+  description?: string;
+  type?: ChangeType;
+  priority?: ChangePriority;
+  requesterName?: string;
+  justification?: string;
+  rollbackPlan?: string;
+  scheduledAt?: string;
+  affectedSystems?: string[];
+  tenantId?: string;
+}
+
+interface ApproveChangeBody {
+  approverName?: string;
+  notes?: string;
+}
+
+interface RejectChangeBody {
+  rejectorName?: string;
+  reason?: string;
+}
+
 export function registerChangesRoutes(router: Router): void {
   // GET /api/v1/changes
   router.get('/api/v1/changes', async (ctx: RouteContext, res: ServerResponse) => {
@@ -51,7 +74,7 @@ export function registerChangesRoutes(router: Router): void {
 
   // POST /api/v1/changes
   router.post('/api/v1/changes', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as CreateChangeBody | undefined) ?? {};
     const {
       title,
       description,
@@ -97,7 +120,7 @@ export function registerChangesRoutes(router: Router): void {
     const id = ctx.params['id'];
     if (!id) return apiError(res, '"id" param required', 400, 'MISSING_FIELDS');
 
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as ApproveChangeBody | undefined) ?? {};
     const { approverName = 'Admin', notes } = body;
 
     const change = governanceStore.getChange(id);
@@ -121,7 +144,7 @@ export function registerChangesRoutes(router: Router): void {
     const id = ctx.params['id'];
     if (!id) return apiError(res, '"id" param required', 400, 'MISSING_FIELDS');
 
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as RejectChangeBody | undefined) ?? {};
     const { rejectorName = 'Admin', reason } = body;
 
     if (!reason)

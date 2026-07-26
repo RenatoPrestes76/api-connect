@@ -8,9 +8,13 @@ function genId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+interface SetupFinishBody {
+  sessionId?: string;
+}
+
 export function registerSetupFinishRoute(router: Router): void {
   router.post('/api/v1/setup/finish', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as SetupFinishBody | undefined) ?? {};
     const { sessionId } = body;
 
     if (!sessionId) return apiError(res, '"sessionId" is required', 400, 'MISSING_FIELDS');

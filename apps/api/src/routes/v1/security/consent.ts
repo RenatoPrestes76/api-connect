@@ -49,7 +49,7 @@ export function registerConsentRoutes(router: Router): void {
       const userId = ctx.query.get('userId');
       const purpose = ctx.query.get('purpose');
       if (!userId || !purpose) return apiError(res, 'userId and purpose required', 400);
-      const record = securityStore.revokeConsent(tenantId, userId, purpose as any);
+      const record = securityStore.revokeConsent(tenantId, userId, purpose as ConsentPurpose);
       if (!record) return apiError(res, 'Consent record not found', 404);
       json(res, { record });
     }

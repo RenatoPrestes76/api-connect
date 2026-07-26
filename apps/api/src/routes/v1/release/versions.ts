@@ -3,6 +3,10 @@ import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { releaseStore } from '../../../modules/release/release-store.js';
 
+interface CertifyVersionBody {
+  certifiedBy?: string;
+}
+
 export function registerVersionRoutes(router: Router): void {
   router.get('/api/v1/release/versions', async (_ctx: RouteContext, res: ServerResponse) => {
     const versions = releaseStore.versions.list();
@@ -30,7 +34,7 @@ export function registerVersionRoutes(router: Router): void {
   router.post(
     '/api/v1/release/versions/:version/certify',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const certifiedBy = (ctx.body as any)?.certifiedBy as string | undefined;
+      const certifiedBy = (ctx.body as CertifyVersionBody | undefined)?.certifiedBy;
       if (!certifiedBy) {
         return apiError(res, '"certifiedBy" is required', 400, 'MISSING_FIELD');
       }

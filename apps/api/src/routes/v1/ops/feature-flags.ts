@@ -9,6 +9,10 @@ function uid(): string {
   return `ff-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+interface EvaluateFlagBody {
+  context?: FlagEvaluationContext;
+}
+
 export function registerFeatureFlagsRoutes(router: Router): void {
   // GET /api/v1/ops/feature-flags — list all flags
   router.get('/api/v1/ops/feature-flags', async (_ctx: RouteContext, res: ServerResponse) => {
@@ -22,7 +26,7 @@ export function registerFeatureFlagsRoutes(router: Router): void {
       const id = ctx.params['id'];
       const flag = titanStore.getFlag(id) ?? titanStore.getFlagByKey(id);
       if (!flag) return apiError(res, 'Feature flag not found', 404, 'FLAG_NOT_FOUND');
-      const evalCtx = ((ctx.body as any)?.['context'] ?? {}) as FlagEvaluationContext;
+      const evalCtx = (ctx.body as EvaluateFlagBody | undefined)?.context ?? {};
       const result = evaluateFlag(flag, evalCtx);
       json(res, result);
     }

@@ -4,6 +4,12 @@ import { json, apiError } from '../../../http/router.js';
 import { haStore } from '../../../modules/ha/ha-store.js';
 import { failoverEngine } from '../../../modules/ha/failover-engine.js';
 
+interface TriggerFailoverBody {
+  fromNodeId?: string;
+  toNodeId?: string;
+  reason?: string;
+}
+
 export function registerHaFailoverRoutes(router: Router): void {
   router.get('/api/v1/ha/failovers', async (ctx: RouteContext, res: ServerResponse) => {
     const limit = Math.min(parseInt(ctx.query.get('limit') ?? '50', 10), 200);
@@ -12,7 +18,7 @@ export function registerHaFailoverRoutes(router: Router): void {
   });
 
   router.post('/api/v1/ha/failover', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as TriggerFailoverBody | undefined) ?? {};
     const { fromNodeId, toNodeId, reason = 'Manual failover initiated by admin' } = body;
 
     if (!fromNodeId) return apiError(res, '"fromNodeId" is required', 400, 'MISSING_FIELDS');

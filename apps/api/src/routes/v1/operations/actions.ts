@@ -9,6 +9,26 @@ function genId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+interface RestartAgentBody {
+  tenantId?: string;
+  agentId?: string;
+}
+
+interface RetryBody {
+  tenantId?: string;
+  connectorId?: string;
+  jobId?: string;
+}
+
+interface RunHealthBody {
+  tenantId?: string;
+}
+
+interface SyncBody {
+  tenantId?: string;
+  scope?: string;
+}
+
 function buildResult(
   action: ActionType,
   target: string,
@@ -32,7 +52,7 @@ export function registerOperationsActionsRoutes(router: Router): void {
   router.post(
     '/api/v1/operations/actions/restart-agent',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const body = (ctx.body as any) ?? {};
+      const body = (ctx.body as RestartAgentBody | undefined) ?? {};
       const { tenantId, agentId } = body;
 
       if (!tenantId) return apiError(res, '"tenantId" is required', 400, 'MISSING_FIELDS');
@@ -78,7 +98,7 @@ export function registerOperationsActionsRoutes(router: Router): void {
   router.post(
     '/api/v1/operations/actions/retry',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const body = (ctx.body as any) ?? {};
+      const body = (ctx.body as RetryBody | undefined) ?? {};
       const { tenantId, connectorId, jobId } = body;
 
       if (!tenantId) return apiError(res, '"tenantId" is required', 400, 'MISSING_FIELDS');
@@ -88,7 +108,7 @@ export function registerOperationsActionsRoutes(router: Router): void {
       const tenant = operationsStore.getTenant(tenantId);
       if (!tenant) return apiError(res, 'Tenant not found', 404, 'NOT_FOUND');
 
-      const target = connectorId ?? jobId;
+      const target = (connectorId ?? jobId) as string;
       operationsStore.addEvent({
         tenantId,
         event: 'retry.initiated',
@@ -106,7 +126,7 @@ export function registerOperationsActionsRoutes(router: Router): void {
   router.post(
     '/api/v1/operations/actions/run-health',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const body = (ctx.body as any) ?? {};
+      const body = (ctx.body as RunHealthBody | undefined) ?? {};
       const { tenantId } = body;
 
       const checks = healthEngine.runHealthCheck(tenantId ?? undefined);
@@ -131,7 +151,7 @@ export function registerOperationsActionsRoutes(router: Router): void {
 
   // POST /sync
   router.post('/api/v1/operations/actions/sync', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as SyncBody | undefined) ?? {};
     const { tenantId, scope = 'full' } = body;
 
     if (!tenantId) return apiError(res, '"tenantId" is required', 400, 'MISSING_FIELDS');

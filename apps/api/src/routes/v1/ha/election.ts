@@ -3,6 +3,15 @@ import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { leaderElection } from '../../../modules/ha/leader-election.js';
 
+interface RunElectionBody {
+  reason?: string;
+  force?: boolean;
+}
+
+interface NodeIdBody {
+  nodeId?: string;
+}
+
 export function registerHaElectionRoutes(router: Router): void {
   router.get('/api/v1/ha/election/history', async (ctx: RouteContext, res: ServerResponse) => {
     const limit = Math.min(parseInt(ctx.query.get('limit') ?? '50', 10), 200);
@@ -13,7 +22,7 @@ export function registerHaElectionRoutes(router: Router): void {
   });
 
   router.post('/api/v1/ha/election/run', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as RunElectionBody | undefined) ?? {};
     const { reason = 'Manual election requested by admin', force = false } = body;
 
     const result = leaderElection.runElection({
@@ -35,7 +44,7 @@ export function registerHaElectionRoutes(router: Router): void {
   router.post(
     '/api/v1/ha/election/simulate-failure',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const body = (ctx.body as any) ?? {};
+      const body = (ctx.body as NodeIdBody | undefined) ?? {};
       const { nodeId } = body;
       if (!nodeId) return apiError(res, '"nodeId" is required', 400, 'MISSING_FIELDS');
 
@@ -46,7 +55,7 @@ export function registerHaElectionRoutes(router: Router): void {
   );
 
   router.post('/api/v1/ha/election/recover', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as NodeIdBody | undefined) ?? {};
     const { nodeId } = body;
     if (!nodeId) return apiError(res, '"nodeId" is required', 400, 'MISSING_FIELDS');
 

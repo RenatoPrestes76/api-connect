@@ -4,9 +4,18 @@ import { json, apiError } from '../../../http/router.js';
 import { onboardingStore } from '../../../modules/onboarding/onboarding-store.js';
 import type { AdminData } from '../../../modules/onboarding/types.js';
 
+interface SetupAdminBody {
+  sessionId?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  mfaEnabled?: boolean;
+  password?: string;
+}
+
 export function registerSetupAdminRoute(router: Router): void {
   router.post('/api/v1/setup/admin', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as SetupAdminBody | undefined) ?? {};
     const { sessionId, name, email, phone, mfaEnabled = false, password } = body;
 
     if (!sessionId) return apiError(res, '"sessionId" is required', 400, 'MISSING_FIELDS');

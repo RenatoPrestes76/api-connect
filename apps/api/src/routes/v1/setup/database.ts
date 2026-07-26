@@ -6,9 +6,19 @@ import type { DatabaseData, DatabaseType } from '../../../modules/onboarding/typ
 
 const VALID_TYPES: DatabaseType[] = ['postgresql', 'mysql', 'sqlserver', 'oracle', 'supabase'];
 
+interface SetupDatabaseBody {
+  sessionId?: string;
+  type?: string;
+  host?: string;
+  port?: number;
+  database?: string;
+  username?: string;
+  ssl?: boolean;
+}
+
 export function registerSetupDatabaseRoute(router: Router): void {
   router.post('/api/v1/setup/database', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as SetupDatabaseBody | undefined) ?? {};
     const {
       sessionId,
       type,
@@ -22,7 +32,7 @@ export function registerSetupDatabaseRoute(router: Router): void {
     if (!sessionId) return apiError(res, '"sessionId" is required', 400, 'MISSING_FIELDS');
     if (!type) return apiError(res, '"type" is required', 400, 'MISSING_FIELDS');
     if (!host) return apiError(res, '"host" is required', 400, 'MISSING_FIELDS');
-    if (!VALID_TYPES.includes(type)) {
+    if (!VALID_TYPES.includes(type as DatabaseType)) {
       return apiError(res, `type must be one of: ${VALID_TYPES.join(', ')}`, 400, 'INVALID_TYPE');
     }
 
@@ -30,7 +40,7 @@ export function registerSetupDatabaseRoute(router: Router): void {
     if (!session) return apiError(res, 'Session not found', 404, 'NOT_FOUND');
 
     const db: DatabaseData = {
-      type,
+      type: type as DatabaseType,
       host,
       port: Number(port),
       database,

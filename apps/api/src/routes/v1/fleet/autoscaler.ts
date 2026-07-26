@@ -2,8 +2,16 @@ import type { ServerResponse } from 'node:http';
 import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { autoscaler } from '../../../modules/fleet-ops/autoscaler.js';
+import type { AutoscalePolicy } from '../../../modules/fleet-ops/types.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
+
+type UpdatePolicyBody = Partial<
+  Pick<
+    AutoscalePolicy,
+    'minInstances' | 'maxInstances' | 'targetCpuPct' | 'targetMemPct' | 'cooldownMs' | 'enabled'
+  >
+>;
 
 export function registerAutoscalerRoutes(router: Router): void {
   router.get(
@@ -84,7 +92,7 @@ export function registerAutoscalerRoutes(router: Router): void {
     '/admin/fleet/autoscaler/policies/:id',
     requirePermission('runtime.update')(async (ctx: RouteContext, res: ServerResponse) => {
       const id = ctx.params?.id as string;
-      const body = (ctx.body as any) ?? {};
+      const body = (ctx.body as UpdatePolicyBody | undefined) ?? {};
       const updated = autoscaler.updatePolicy(id, body);
       if (!updated) return apiError(res, 'Autoscale policy not found', 404, 'POLICY_NOT_FOUND');
       adminIdentityStore.recordAudit({

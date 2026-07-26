@@ -12,10 +12,34 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
+interface FailoverBody {
+  tenantId?: string;
+  fromRegion?: string;
+  toRegion?: string;
+  reason?: string;
+}
+
+interface AutoFailoverBody {
+  tenantId?: string;
+  reason?: string;
+}
+
+interface MigrateTenantBody {
+  tenantId?: string;
+  targetRegion?: string;
+  reason?: string;
+}
+
+interface RegionSyncBody {
+  sourceRegion?: string;
+  targetRegion?: string;
+  scope?: string;
+}
+
 export function registerRegionActionRoutes(router: Router): void {
   // POST /api/v1/regions/failover
   router.post('/api/v1/regions/failover', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as FailoverBody | undefined) ?? {};
     const { tenantId, fromRegion, toRegion, reason = 'Manual failover' } = body;
 
     if (!tenantId) return apiError(res, '"tenantId" is required', 400, 'MISSING_FIELDS');
@@ -58,7 +82,7 @@ export function registerRegionActionRoutes(router: Router): void {
 
   // POST /api/v1/regions/failover/auto — picks the nearest eligible active region automatically.
   router.post('/api/v1/regions/failover/auto', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as AutoFailoverBody | undefined) ?? {};
     const { tenantId, reason = 'Automatic geographic failover' } = body;
 
     if (!tenantId) return apiError(res, '"tenantId" is required', 400, 'MISSING_FIELDS');
@@ -79,7 +103,7 @@ export function registerRegionActionRoutes(router: Router): void {
 
   // POST /api/v1/regions/migrate-tenant
   router.post('/api/v1/regions/migrate-tenant', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as MigrateTenantBody | undefined) ?? {};
     const { tenantId, targetRegion, reason = 'Planned migration' } = body;
 
     if (!tenantId) return apiError(res, '"tenantId" is required', 400, 'MISSING_FIELDS');
@@ -143,7 +167,7 @@ export function registerRegionActionRoutes(router: Router): void {
 
   // POST /api/v1/regions/sync
   router.post('/api/v1/regions/sync', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as RegionSyncBody | undefined) ?? {};
     const { sourceRegion, targetRegion, scope = 'full' } = body;
 
     if (!sourceRegion) return apiError(res, '"sourceRegion" is required', 400, 'MISSING_FIELDS');

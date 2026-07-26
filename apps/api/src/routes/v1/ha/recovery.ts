@@ -4,6 +4,10 @@ import { json, apiError } from '../../../http/router.js';
 import { haStore } from '../../../modules/ha/ha-store.js';
 import { recoveryService } from '../../../modules/ha/recovery-service.js';
 
+interface RecoveryTestBody {
+  tenantId?: string;
+}
+
 export function registerHaRecoveryRoutes(router: Router): void {
   router.get('/api/v1/ha/recovery', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = ctx.query.get('tenantId') ?? undefined;
@@ -22,7 +26,7 @@ export function registerHaRecoveryRoutes(router: Router): void {
   });
 
   router.post('/api/v1/ha/recovery-test', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as RecoveryTestBody | undefined) ?? {};
     const { tenantId } = body;
 
     if (!tenantId) return apiError(res, '"tenantId" is required', 400, 'MISSING_FIELDS');

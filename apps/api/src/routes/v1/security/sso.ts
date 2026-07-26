@@ -4,6 +4,19 @@ import { json, apiError } from '../../../http/router.js';
 import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import { generateKey, generateNonce } from '@seltriva/aegis';
+import type { SSOProviderSlug, SSOProtocol } from '@seltriva/aegis';
+
+interface CreateSsoProviderBody {
+  name?: string;
+  slug?: SSOProviderSlug;
+  protocol?: SSOProtocol;
+  issuer?: string;
+  clientId?: string;
+  discoveryUrl?: string;
+  ssoUrl?: string;
+  logoutUrl?: string;
+  certificate?: string;
+}
 
 export function registerSsoRoutes(router: Router): void {
   // GET /api/v1/security/sso
@@ -39,16 +52,16 @@ export function registerSsoRoutes(router: Router): void {
   // POST /api/v1/security/sso
   router.post('/api/v1/security/sso', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = requireTenantId(ctx);
-    const body = ctx.body as Record<string, string | undefined>;
+    const body = (ctx.body as CreateSsoProviderBody | undefined) ?? {};
     const { name, slug, protocol, issuer, clientId, discoveryUrl, ssoUrl, logoutUrl, certificate } =
-      body ?? {};
+      body;
     if (!name || !slug || !protocol || !issuer)
       return apiError(res, 'name, slug, protocol, issuer required', 400);
     const provider = securityStore.createSsoProvider({
       tenantId,
       name,
-      slug: slug as any,
-      protocol: protocol as any,
+      slug,
+      protocol,
       issuer,
       clientId: clientId || '',
       discoveryUrl: discoveryUrl || null,

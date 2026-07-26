@@ -4,6 +4,11 @@ import { json } from '../../../http/router.js';
 import { requireTenantId } from '../../../http/tenant.js';
 import { portalStore } from '../../../modules/portal/portal-store.js';
 import { portalIdentityStore } from '../../../modules/portal-identity/portal-identity-store.js';
+import type { OnboardingStep } from '@seltriva/release';
+
+interface CompleteStepBody {
+  step?: OnboardingStep;
+}
 
 export function registerPortalDashboardRoutes(router: Router): void {
   router.get('/api/v1/portal/dashboard', async (ctx: RouteContext, res: ServerResponse) => {
@@ -20,7 +25,7 @@ export function registerPortalDashboardRoutes(router: Router): void {
   router.post(
     '/api/v1/portal/onboarding/complete-step',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const { step } = (ctx.body as any) ?? {};
+      const { step } = (ctx.body as CompleteStepBody | undefined) ?? {};
       if (!step) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: { code: 'MISSING_STEP', message: '"step" is required' } }));

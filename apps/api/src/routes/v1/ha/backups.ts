@@ -7,6 +7,17 @@ import type { BackupStatus } from '../../../modules/ha/types.js';
 
 const VALID_STATUSES: BackupStatus[] = ['completed', 'failed', 'in_progress'];
 
+interface CreateBackupBody {
+  tenantId?: string;
+  type?: string;
+}
+
+interface RestoreBackupBody {
+  backupId?: string;
+  tenantId?: string;
+  environment?: string;
+}
+
 export function registerHaBackupRoutes(router: Router): void {
   router.get('/api/v1/ha/backups', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = ctx.query.get('tenantId') ?? undefined;
@@ -27,7 +38,7 @@ export function registerHaBackupRoutes(router: Router): void {
   });
 
   router.post('/api/v1/ha/backup', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as CreateBackupBody | undefined) ?? {};
     const { tenantId, type = 'full' } = body;
 
     if (!tenantId) return apiError(res, '"tenantId" is required', 400, 'MISSING_FIELDS');
@@ -40,7 +51,7 @@ export function registerHaBackupRoutes(router: Router): void {
   });
 
   router.post('/api/v1/ha/restore', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as RestoreBackupBody | undefined) ?? {};
     const { backupId, tenantId, environment = 'staging' } = body;
 
     if (!backupId) return apiError(res, '"backupId" is required', 400, 'MISSING_FIELDS');

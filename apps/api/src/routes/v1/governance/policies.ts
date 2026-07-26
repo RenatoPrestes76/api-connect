@@ -14,6 +14,15 @@ const VALID_CATEGORIES: PolicyCategory[] = [
 ];
 const VALID_ENFORCEMENTS: PolicyEnforcement[] = ['mandatory', 'advisory', 'disabled'];
 
+interface CreatePolicyBody {
+  name?: string;
+  category?: PolicyCategory;
+  description?: string;
+  enforcement?: PolicyEnforcement;
+  rules?: Record<string, unknown>;
+  appliesTo?: string[];
+}
+
 export function registerPoliciesRoutes(router: Router): void {
   // GET /api/v1/governance/policies
   router.get('/api/v1/governance/policies', async (ctx: RouteContext, res: ServerResponse) => {
@@ -35,7 +44,7 @@ export function registerPoliciesRoutes(router: Router): void {
 
   // POST /api/v1/governance/policies
   router.post('/api/v1/governance/policies', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as CreatePolicyBody | undefined) ?? {};
     const { name, category, description, enforcement, rules, appliesTo } = body;
 
     if (!name) return apiError(res, '"name" is required', 400, 'MISSING_FIELDS');

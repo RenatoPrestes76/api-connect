@@ -12,9 +12,20 @@ import type {
 const VALID_PLANS: SetupPlan[] = ['community', 'professional', 'enterprise'];
 const VALID_ENVS: WorkspaceEnvironment[] = ['production', 'staging', 'development'];
 
+interface SetupCompanyBody {
+  sessionId?: string;
+  name?: string;
+  domain?: string;
+  cnpj?: string;
+  plan?: SetupPlan;
+  timezone?: string;
+  locale?: string;
+  workspace?: { name?: string; environment?: string };
+}
+
 export function registerSetupCompanyRoute(router: Router): void {
   router.post('/api/v1/setup/company', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as SetupCompanyBody | undefined) ?? {};
     const {
       sessionId,
       name,
@@ -49,8 +60,10 @@ export function registerSetupCompanyRoute(router: Router): void {
     };
 
     const wsInput = workspace ?? {};
-    const wsEnv: WorkspaceEnvironment = VALID_ENVS.includes(wsInput.environment)
-      ? wsInput.environment
+    const wsEnv: WorkspaceEnvironment = VALID_ENVS.includes(
+      wsInput.environment as WorkspaceEnvironment
+    )
+      ? (wsInput.environment as WorkspaceEnvironment)
       : 'production';
     const ws: WorkspaceData = { name: wsInput.name || name, environment: wsEnv };
 

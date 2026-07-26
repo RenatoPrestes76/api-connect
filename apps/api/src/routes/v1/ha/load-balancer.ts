@@ -7,13 +7,27 @@ import {
   LoadBalancerError,
 } from '../../../modules/ha/load-balancer.js';
 
+interface RouteBody {
+  strategy?: string;
+  includeLeader?: boolean;
+}
+
+interface NodeIdBody {
+  nodeId?: string;
+}
+
+interface SetWeightBody {
+  nodeId?: string;
+  weight?: number;
+}
+
 export function registerHaLoadBalancerRoutes(router: Router): void {
   router.get('/api/v1/ha/load-balancer', async (_ctx: RouteContext, res: ServerResponse) => {
     json(res, { targets: loadBalancer.getDistribution() });
   });
 
   router.post('/api/v1/ha/load-balancer/route', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as RouteBody | undefined) ?? {};
     const { strategy = 'round_robin', includeLeader = false } = body;
 
     if (!LoadBalancer.isValidStrategy(strategy)) {
@@ -39,7 +53,7 @@ export function registerHaLoadBalancerRoutes(router: Router): void {
   router.post(
     '/api/v1/ha/load-balancer/release',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const body = (ctx.body as any) ?? {};
+      const body = (ctx.body as NodeIdBody | undefined) ?? {};
       const { nodeId } = body;
       if (!nodeId) return apiError(res, '"nodeId" is required', 400, 'MISSING_FIELDS');
 
@@ -49,7 +63,7 @@ export function registerHaLoadBalancerRoutes(router: Router): void {
   );
 
   router.post('/api/v1/ha/load-balancer/weight', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as SetWeightBody | undefined) ?? {};
     const { nodeId, weight } = body;
     if (!nodeId) return apiError(res, '"nodeId" is required', 400, 'MISSING_FIELDS');
     if (typeof weight !== 'number')

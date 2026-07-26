@@ -3,7 +3,12 @@ import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { requireTenantId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
-import { envelopeDecrypt, deserializeEnvelope, type AuditAction } from '@seltriva/aegis';
+import {
+  envelopeDecrypt,
+  deserializeEnvelope,
+  type AuditAction,
+  type Secret,
+} from '@seltriva/aegis';
 
 function actor(ctx: RouteContext): string {
   return ctx.adminEmail ?? ctx.userId ?? 'unknown';
@@ -35,6 +40,18 @@ function auditSecretEvent(
     metadata,
     timestamp: new Date().toISOString(),
   });
+}
+
+interface CreateSecretBody {
+  name?: string;
+  description?: string;
+  type?: Secret['type'];
+  provider?: Secret['provider'];
+  value?: string;
+  tags?: string[];
+  expiresAt?: string | null;
+  autoRotate?: boolean;
+  rotationIntervalDays?: number | null;
 }
 
 export function registerSecretsRoutes(router: Router): void {
@@ -74,7 +91,7 @@ export function registerSecretsRoutes(router: Router): void {
   // POST /api/v1/security/secrets
   router.post('/api/v1/security/secrets', async (ctx: RouteContext, res: ServerResponse) => {
     const tenantId = requireTenantId(ctx);
-    const body = ctx.body as Record<string, unknown>;
+    const body = (ctx.body as CreateSecretBody | undefined) ?? {};
     const {
       name,
       description,
@@ -85,22 +102,22 @@ export function registerSecretsRoutes(router: Router): void {
       expiresAt = null,
       autoRotate = false,
       rotationIntervalDays = null,
-    } = body ?? {};
+    } = body;
     if (!name || !type || !provider || !value)
       return apiError(res, 'name, type, provider, value required', 400);
     if (autoRotate && !rotationIntervalDays) {
       return apiError(res, 'rotationIntervalDays is required when autoRotate is true', 400);
     }
     const secret = await securityStore.createSecret(tenantId, {
-      name: name as string,
-      description: (description as string) || '',
-      type: type as any,
-      provider: provider as any,
-      value: value as string,
-      tags: tags as string[],
-      expiresAt: expiresAt as string | null,
-      autoRotate: autoRotate as boolean,
-      rotationIntervalDays: rotationIntervalDays as number | null,
+      name,
+      description: description ?? '',
+      type,
+      provider,
+      value,
+      tags,
+      expiresAt,
+      autoRotate,
+      rotationIntervalDays,
     });
     auditSecretEvent(ctx, 'secret_created', tenantId, secret.id, {
       name: secret.name,

@@ -5,6 +5,19 @@ import { requireTenantId } from '../../../http/tenant.js';
 import { titanStore } from '../../../modules/titan/titan-store.js';
 import type { JobPriority } from '../../../modules/titan/titan-store.js';
 
+interface EnqueueBody {
+  type?: string;
+  tenantId?: string;
+  priority?: JobPriority;
+  payload?: Record<string, unknown>;
+  maxAttempts?: number;
+  idempotencyKey?: string;
+}
+
+interface DlqRetryBody {
+  jobId?: string;
+}
+
 export function registerQueuesRoutes(router: Router): void {
   // GET /api/v1/ops/queues — queue summary + job list
   router.get('/api/v1/ops/queues', async (ctx: RouteContext, res: ServerResponse) => {
@@ -17,19 +30,19 @@ export function registerQueuesRoutes(router: Router): void {
 
   // POST /api/v1/ops/queues/enqueue — enqueue a new job
   router.post('/api/v1/ops/queues/enqueue', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = ctx.body as any;
-    const type = body?.['type'] as string | undefined;
-    const tenantId = requireTenantId(ctx, body?.['tenantId'] as string | undefined);
+    const body = ctx.body as EnqueueBody | undefined;
+    const type = body?.type;
+    const tenantId = requireTenantId(ctx, body?.tenantId);
 
     if (!type) return apiError(res, '"type" is required', 400, 'MISSING_TYPE');
 
     const result = titanStore.enqueue({
       type,
-      priority: body?.['priority'] ?? 'normal',
-      payload: body?.['payload'] ?? {},
+      priority: body?.priority ?? 'normal',
+      payload: body?.payload ?? {},
       tenantId,
-      maxAttempts: body?.['maxAttempts'] ?? 3,
-      idempotencyKey: body?.['idempotencyKey'],
+      maxAttempts: body?.maxAttempts ?? 3,
+      idempotencyKey: body?.idempotencyKey,
     });
 
     if (!result) {
@@ -40,7 +53,7 @@ export function registerQueuesRoutes(router: Router): void {
 
   // POST /api/v1/ops/queues/dlq/retry — retry a dead job
   router.post('/api/v1/ops/queues/dlq/retry', async (ctx: RouteContext, res: ServerResponse) => {
-    const jobId = (ctx.body as any)?.['jobId'] as string | undefined;
+    const jobId = (ctx.body as DlqRetryBody | undefined)?.jobId;
     if (!jobId) return apiError(res, '"jobId" is required', 400, 'MISSING_JOB_ID');
     const job = titanStore.retryDlq(jobId);
     if (!job) return apiError(res, 'Job not found in DLQ', 404, 'JOB_NOT_FOUND');

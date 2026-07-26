@@ -6,6 +6,12 @@ import type { ChecklistStatus } from '@seltriva/release';
 
 const VALID_STATUSES: ChecklistStatus[] = ['pending', 'running', 'passed', 'failed', 'skipped'];
 
+interface MarkChecklistBody {
+  status?: string;
+  notes?: string;
+  checkedBy?: string;
+}
+
 export function registerChecklistRoutes(router: Router): void {
   router.get('/api/v1/release/checklist', async (_ctx: RouteContext, res: ServerResponse) => {
     json(res, releaseStore.checklist.getResult());
@@ -18,10 +24,10 @@ export function registerChecklistRoutes(router: Router): void {
   });
 
   router.put('/api/v1/release/checklist/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as any) ?? {};
+    const body = (ctx.body as MarkChecklistBody | undefined) ?? {};
     const { status, notes, checkedBy } = body;
 
-    if (!VALID_STATUSES.includes(status)) {
+    if (!status || !VALID_STATUSES.includes(status as ChecklistStatus)) {
       return apiError(
         res,
         `status must be one of: ${VALID_STATUSES.join(', ')}`,
@@ -30,7 +36,10 @@ export function registerChecklistRoutes(router: Router): void {
       );
     }
 
-    const item = releaseStore.markChecklist(ctx.params['id'], status, { notes, checkedBy });
+    const item = releaseStore.markChecklist(ctx.params['id'], status as ChecklistStatus, {
+      notes,
+      checkedBy,
+    });
     if (!item) return apiError(res, 'Checklist item not found', 404, 'NOT_FOUND');
     json(res, item);
   });

@@ -7,6 +7,10 @@ import type { ConnectorHealth } from '@seltriva/release';
 
 const VALID_HEALTH: ConnectorHealth[] = ['healthy', 'degraded', 'error', 'unknown'];
 
+interface UpdateHealthBody {
+  health?: string;
+}
+
 export function registerPortalConnectorRoutes(router: Router): void {
   router.get('/api/v1/portal/connectors', async (ctx: RouteContext, res: ServerResponse) => {
     const connectors = portalStore.listConnectors(requireTenantId(ctx));
@@ -22,8 +26,8 @@ export function registerPortalConnectorRoutes(router: Router): void {
   router.put(
     '/api/v1/portal/connectors/:id/health',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const { health } = (ctx.body as any) ?? {};
-      if (!VALID_HEALTH.includes(health)) {
+      const { health } = (ctx.body as UpdateHealthBody | undefined) ?? {};
+      if (!health || !VALID_HEALTH.includes(health as ConnectorHealth)) {
         return apiError(
           res,
           `health must be one of: ${VALID_HEALTH.join(', ')}`,
@@ -31,7 +35,10 @@ export function registerPortalConnectorRoutes(router: Router): void {
           'INVALID_HEALTH'
         );
       }
-      const connector = portalStore.updateConnectorHealth(ctx.params['id'], health);
+      const connector = portalStore.updateConnectorHealth(
+        ctx.params['id'],
+        health as ConnectorHealth
+      );
       if (!connector) return apiError(res, 'Connector not found', 404, 'NOT_FOUND');
       json(res, connector);
     }
