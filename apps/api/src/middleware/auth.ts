@@ -90,6 +90,11 @@ const PUBLIC_PATH_PREFIXES = [
   // requirePermission('connector-management.*') inline in each handler,
   // not by this generic Supabase-style middleware.
   '/connectors',
+  // Sprint 46.5 — Remote Command & Job Orchestration Engine. /jobs* mixes
+  // staff-gated routes (requirePermission inline) with the Runtime-facing
+  // /jobs/result (signature-verified inline); /runtime/jobs is already
+  // covered by the '/runtime/' prefix above.
+  '/jobs',
 ];
 
 export const authMiddleware: Middleware = async (

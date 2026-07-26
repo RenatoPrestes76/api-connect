@@ -83,6 +83,16 @@ export const PERMISSION_CATALOG: Array<{
     action: 'write',
     description: 'Assign, update, and roll back connectors on Runtimes',
   },
+  {
+    resource: 'job-orchestration',
+    action: 'read',
+    description: 'View remote command jobs and their execution history',
+  },
+  {
+    resource: 'job-orchestration',
+    action: 'write',
+    description: 'Create and cancel remote command jobs',
+  },
 ];
 
 export function permissionKey(
@@ -131,6 +141,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'runtime-registration.delete',
     'connector-management.read',
     'connector-management.write',
+    'job-orchestration.read',
+    'job-orchestration.write',
   ],
   SUPORTE: [
     'companies.read',
@@ -141,6 +153,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'connector-registry.read',
     'runtime-registration.read',
     'connector-management.read',
+    'job-orchestration.read',
   ],
   CUSTOMER_SUCCESS: [
     'companies.read',
@@ -162,6 +175,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'runtime-registration.delete',
     'connector-management.read',
     'connector-management.write',
+    'job-orchestration.read',
+    'job-orchestration.write',
   ],
   AUDITOR: [
     'companies.read',
@@ -171,6 +186,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'connector-registry.read',
     'runtime-registration.read',
     'connector-management.read',
+    'job-orchestration.read',
   ],
 };
 

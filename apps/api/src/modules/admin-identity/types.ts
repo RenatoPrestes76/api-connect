@@ -29,7 +29,8 @@ export type PermissionResource =
   | 'projects'
   | 'connector-registry'
   | 'runtime-registration'
-  | 'connector-management';
+  | 'connector-management'
+  | 'job-orchestration';
 
 export type PermissionAction =
   | 'read'
@@ -170,7 +171,11 @@ export type AdminAuditAction =
   | 'CONNECTOR_UPDATE_REQUESTED'
   | 'CONNECTOR_UPDATE_REJECTED'
   | 'CONNECTOR_INSTALLATION_OUTCOME_REPORTED'
-  | 'CONNECTOR_ROLLED_BACK';
+  | 'CONNECTOR_ROLLED_BACK'
+  // Sprint 46.5 — Remote Command & Job Orchestration Engine
+  | 'JOB_CREATED'
+  | 'JOB_CANCELLED'
+  | 'JOB_RESULT_REPORTED';
 
 export interface AdminAuditEntry {
   id: string;
