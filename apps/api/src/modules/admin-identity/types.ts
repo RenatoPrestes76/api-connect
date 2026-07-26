@@ -31,7 +31,8 @@ export type PermissionResource =
   | 'runtime-registration'
   | 'connector-management'
   | 'job-orchestration'
-  | 'message-delivery';
+  | 'message-delivery'
+  | 'erp-connectivity';
 
 export type PermissionAction =
   | 'read'
@@ -185,7 +186,14 @@ export type AdminAuditAction =
   // Reliable Message Delivery & Execution Engine (message-delivery module)
   | 'MESSAGE_ENQUEUED'
   | 'MESSAGE_ACKNOWLEDGED'
-  | 'MESSAGE_REPROCESSED';
+  | 'MESSAGE_REPROCESSED'
+  // Secure ERP Connectivity Engine (erp-connectivity module)
+  | 'CONNECTION_PROFILE_CREATED'
+  | 'CONNECTION_CREDENTIAL_ROTATED'
+  | 'CONNECTION_AUTH_FAILED'
+  | 'CONNECTION_RECONNECTED'
+  | 'CONNECTION_STATUS_CHANGED'
+  | 'CONNECTION_PROFILE_DELETED';
 
 export interface AdminAuditEntry {
   id: string;

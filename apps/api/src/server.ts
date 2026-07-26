@@ -42,6 +42,7 @@ import { registerRuntimeRegistrationRoutes } from './routes/v1/runtime-registrat
 import { registerConnectorManagementRoutes } from './routes/v1/connector-management/index.js';
 import { registerJobOrchestrationRoutes } from './routes/v1/job-orchestration/index.js';
 import { registerMessageDeliveryRoutes } from './routes/v1/message-delivery/index.js';
+import { registerErpConnectivityRoutes } from './routes/v1/erp-connectivity/index.js';
 import { wsHub } from './modules/fleet-ops/websocket-hub.js';
 import { healthHandler } from './routes/health.js';
 import { liveHandler, readyHandler } from './routes/live-ready.js';
@@ -264,6 +265,9 @@ export function createApiServer(
 
   // RELIABLE MESSAGE DELIVERY & EXECUTION ENGINE
   registerMessageDeliveryRoutes(router);
+
+  // SECURE ERP CONNECTIVITY ENGINE
+  registerErpConnectivityRoutes(router);
 
   const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
     withErrorBoundary(req, res, () => router.dispatch(req, res));

@@ -100,6 +100,11 @@ const PUBLIC_PATH_PREFIXES = [
   // /messages/ack and the runtime-poll mode of /messages/pending
   // (signature-verified inline, same scheme as /runtime/jobs).
   '/messages',
+  // Secure ERP Connectivity Engine. /erp-connectivity/* mixes staff-gated
+  // routes (requirePermission inline) with Runtime-facing profile fetch
+  // (JWT-gated via requireRuntimeAuth) and signed health/diagnostics
+  // reports (signature-verified inline).
+  '/erp-connectivity',
 ];
 
 export const authMiddleware: Middleware = async (

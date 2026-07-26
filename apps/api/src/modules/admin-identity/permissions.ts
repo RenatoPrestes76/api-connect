@@ -103,6 +103,16 @@ export const PERMISSION_CATALOG: Array<{
     action: 'write',
     description: 'Send messages and reprocess dead-lettered messages',
   },
+  {
+    resource: 'erp-connectivity',
+    action: 'read',
+    description: 'View ERP connection profiles, health, and diagnostics',
+  },
+  {
+    resource: 'erp-connectivity',
+    action: 'write',
+    description: 'Create, update, and delete ERP connection profiles',
+  },
 ];
 
 export function permissionKey(
@@ -155,6 +165,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'job-orchestration.write',
     'message-delivery.read',
     'message-delivery.write',
+    'erp-connectivity.read',
+    'erp-connectivity.write',
   ],
   SUPORTE: [
     'companies.read',
@@ -167,6 +179,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'connector-management.read',
     'job-orchestration.read',
     'message-delivery.read',
+    'erp-connectivity.read',
   ],
   CUSTOMER_SUCCESS: [
     'companies.read',
@@ -192,6 +205,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'job-orchestration.write',
     'message-delivery.read',
     'message-delivery.write',
+    'erp-connectivity.read',
+    'erp-connectivity.write',
   ],
   AUDITOR: [
     'companies.read',
@@ -203,6 +218,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'connector-management.read',
     'job-orchestration.read',
     'message-delivery.read',
+    'erp-connectivity.read',
   ],
 };
 
