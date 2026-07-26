@@ -198,7 +198,9 @@ export type AdminAuditAction =
   // Runtime Connector Execution Engine (runtime-connector-execution module)
   | 'EXECUTION_PLANNED'
   | 'EXECUTION_REJECTED'
-  | 'EXECUTION_RESULT_REPORTED';
+  | 'EXECUTION_RESULT_REPORTED'
+  // ERP Command Reliability & Production Readiness (Sprint 46.11)
+  | 'EXECUTION_ROLLED_BACK';
 
 export interface AdminAuditEntry {
   id: string;

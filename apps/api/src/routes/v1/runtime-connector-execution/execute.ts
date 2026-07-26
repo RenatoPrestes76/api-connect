@@ -15,6 +15,7 @@ interface CreateExecutionBody {
   payload?: Record<string, unknown>;
   timeoutMs?: number;
   maxAttempts?: number;
+  idempotencyKey?: string;
 }
 
 const CREATE_ERROR_STATUS: Record<CreateExecutionError, { status: number; message: string }> = {
@@ -57,6 +58,7 @@ export function registerConnectorExecuteRoute(router: Router): void {
           payload: body.payload,
           timeoutMs: body.timeoutMs,
           maxAttempts: body.maxAttempts,
+          idempotencyKey: body.idempotencyKey,
           createdBy: ctx.adminEmail ?? 'unknown',
         });
         if (!result.ok) {

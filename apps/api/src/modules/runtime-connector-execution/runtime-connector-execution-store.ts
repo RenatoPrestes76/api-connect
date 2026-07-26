@@ -16,6 +16,8 @@ import type {
   CreateExecutionError,
   ReportExecutionResultInput,
   ReportResultError,
+  RollbackExecutionError,
+  PriceMarkdownPayload,
 } from './types.js';
 import { TERMINAL_EXECUTION_STATUSES } from './types.js';
 
@@ -25,6 +27,12 @@ export type CreateExecutionResult =
 export type ReportResultResult =
   | { ok: true; plan: ExecutionPlanRecord; alreadyReported: boolean }
   | { ok: false; error: ReportResultError };
+export type RollbackExecutionResult =
+  | { ok: true; plan: ExecutionPlanRecord }
+  | { ok: false; error: RollbackExecutionError };
+
+/** Actions this store knows how to build an inverse execution for. */
+const REVERSIBLE_ACTIONS = new Set(['PRICE_MARKDOWN']);
 
 const CIRCUIT_FAILURE_THRESHOLD = 5;
 const CIRCUIT_TIMEOUT_MS = 60_000;
@@ -54,6 +62,14 @@ export class RuntimeConnectorExecutionStore {
     if (!profile) return { ok: false, error: 'PROFILE_NOT_FOUND' };
     if (profile.runtimeId !== input.runtimeId)
       return { ok: false, error: 'PROFILE_RUNTIME_MISMATCH' };
+
+    if (input.idempotencyKey) {
+      const existing = this.plans.find(
+        (p) =>
+          p.organizationId === input.organizationId && p.idempotencyKey === input.idempotencyKey
+      );
+      if (existing) return { ok: true, plan: this.evaluateTimeout(existing) };
+    }
 
     const plannedQuery = buildExecutionPlan({
       action: input.action,
@@ -97,6 +113,9 @@ export class RuntimeConnectorExecutionStore {
       resultData: null,
       resultError: validation.ok ? null : `Validation failed: ${validation.failureReason}`,
       erpReference: null,
+      idempotencyKey: input.idempotencyKey ?? null,
+      rollbackOfExecutionId: input.rollbackOfExecutionId ?? null,
+      rolledBackByExecutionId: null,
       createdAt: now,
       scheduledAt: now,
       claimedAt: null,
@@ -143,6 +162,9 @@ export class RuntimeConnectorExecutionStore {
       resultData: plan.resultData,
       resultError: plan.resultError,
       erpReference: plan.erpReference,
+      idempotencyKey: plan.idempotencyKey,
+      rollbackOfExecutionId: plan.rollbackOfExecutionId,
+      rolledBackByExecutionId: plan.rolledBackByExecutionId,
       createdAt: plan.createdAt,
       scheduledAt: plan.scheduledAt,
       claimedAt: plan.claimedAt,
@@ -274,6 +296,55 @@ export class RuntimeConnectorExecutionStore {
     );
 
     return { ok: true, plan, alreadyReported: false };
+  }
+
+  // ─── Rollback ────────────────────────────────────────────────────────────
+
+  /**
+   * Creates the inverse Execution Plan for a completed, reversible action —
+   * e.g. a PRICE_MARKDOWN's rollback swaps newPrice/previousPrice back to
+   * the price it was before the markdown. Goes through the exact same
+   * Query Planner + Execution Validator + claim/report pipeline as any
+   * other execution; nothing about dispatch or result handling is special-
+   * cased for rollbacks.
+   */
+  rollbackExecution(executionId: string, createdBy: string): RollbackExecutionResult {
+    const original = this.getExecution(executionId);
+    if (!original) return { ok: false, error: 'EXECUTION_NOT_FOUND' };
+    if (!REVERSIBLE_ACTIONS.has(original.action)) {
+      return { ok: false, error: 'ACTION_NOT_REVERSIBLE' };
+    }
+    if (original.status !== 'SUCCESS' && original.status !== 'PARTIAL') {
+      return { ok: false, error: 'EXECUTION_NOT_TERMINAL_SUCCESS' };
+    }
+    if (original.rolledBackByExecutionId) {
+      return { ok: false, error: 'ALREADY_ROLLED_BACK' };
+    }
+
+    const { productId, newPrice, previousPrice } =
+      original.payload as unknown as PriceMarkdownPayload;
+    const result = this.createExecution({
+      runtimeId: original.runtimeId,
+      organizationId: original.organizationId,
+      connectorId: original.connectorId,
+      profileId: original.profileId,
+      action: original.action,
+      createdBy,
+      payload: { productId, newPrice: previousPrice, previousPrice: newPrice },
+      timeoutMs: original.timeoutMs,
+      maxAttempts: original.maxAttempts,
+      rollbackOfExecutionId: original.id,
+    });
+    if (!result.ok) {
+      // Runtime/connector/profile were all valid for the original execution
+      // and none of that is mutable, so this path is unreachable in
+      // practice — surfaced as ACTION_NOT_REVERSIBLE rather than inventing
+      // a new error variant for a state that can't actually occur.
+      return { ok: false, error: 'ACTION_NOT_REVERSIBLE' };
+    }
+
+    original.rolledBackByExecutionId = result.plan.id;
+    return { ok: true, plan: result.plan };
   }
 }
 

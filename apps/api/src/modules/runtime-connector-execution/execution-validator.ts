@@ -1,5 +1,6 @@
 import { isVersionAtLeast } from '../runtime-registration/version-control.js';
 import { isSupportedDbType } from '../erp-connectivity/drivers.js';
+import { validateExecutionPolicy } from './execution-policy.js';
 import type { RuntimeRegistrationRecord } from '../runtime-registration/types.js';
 import type { ConnectorRecord } from '../connectors/types.js';
 import type { ConnectionProfileRecord } from '../erp-connectivity/types.js';
@@ -22,13 +23,20 @@ export function validateActionPayload(
   payload: Record<string, unknown>
 ): boolean {
   if (action === 'PRICE_MARKDOWN') {
-    const { productId, newPrice } = payload as { productId?: unknown; newPrice?: unknown };
+    const { productId, newPrice, previousPrice } = payload as {
+      productId?: unknown;
+      newPrice?: unknown;
+      previousPrice?: unknown;
+    };
     return (
       typeof productId === 'string' &&
       productId.length > 0 &&
       typeof newPrice === 'number' &&
       Number.isFinite(newPrice) &&
-      newPrice > 0
+      newPrice > 0 &&
+      typeof previousPrice === 'number' &&
+      Number.isFinite(previousPrice) &&
+      previousPrice > 0
     );
   }
   return true;
@@ -55,6 +63,7 @@ export function validateExecution(input: {
   const driverCompatible = isSupportedDbType(profile.dbType);
   const minVersionOk = isVersionAtLeast(runtime.version, connector.minRuntimeVersion);
   const payloadValid = validateActionPayload(action, payload);
+  const policyCompliant = validateExecutionPolicy(action, payload);
 
   const checks: ExecutionValidationChecks = {
     runtimeAuthorized,
@@ -63,6 +72,7 @@ export function validateExecution(input: {
     driverCompatible,
     minVersionOk,
     payloadValid,
+    policyCompliant,
   };
 
   const ok = Object.values(checks).every(Boolean);

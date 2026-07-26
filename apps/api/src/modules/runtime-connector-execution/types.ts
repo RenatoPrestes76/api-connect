@@ -51,10 +51,17 @@ export type KnownConnectorAction =
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type ConnectorAction = KnownConnectorAction | (string & {});
 
-/** Sprint 46.10's first real use case: a price reduction to push into the ERP. */
+/**
+ * Sprint 46.10's first real use case: a price reduction to push into the
+ * ERP. previousPrice is required (not just the new one) so a completed
+ * markdown can always be rolled back automatically later — Seltriva already
+ * knows both prices at request time, so no round trip to the ERP is needed
+ * to recover it.
+ */
 export interface PriceMarkdownPayload {
   productId: string;
   newPrice: number;
+  previousPrice: number;
 }
 
 // ─── Validation ──────────────────────────────────────────────────────────────
@@ -66,6 +73,8 @@ export interface ExecutionValidationChecks {
   driverCompatible: boolean;
   minVersionOk: boolean;
   payloadValid: boolean;
+  /** ERP Execution Policy — the payload touches only fields this action is allowed to change (e.g. PRICE_MARKDOWN may change newPrice, never cost/stock). */
+  policyCompliant: boolean;
 }
 
 export interface ExecutionValidationResult {
@@ -111,6 +120,12 @@ export interface ExecutionPlanRecord {
   resultError: string | null;
   /** The ERP's own confirmation/transaction identifier for this execution, when it produced one. */
   erpReference: string | null;
+  /** De-dupes creation the same way job-orchestration's CreateJobInput does — a repeated request with the same key+organizationId returns the original plan instead of creating a duplicate. */
+  idempotencyKey: string | null;
+  /** Set when this plan is itself a rollback of an earlier execution. */
+  rollbackOfExecutionId: string | null;
+  /** Set on the original execution once a rollback has been created for it — prevents rolling back the same execution twice. */
+  rolledBackByExecutionId: string | null;
   createdAt: string;
   scheduledAt: string;
   claimedAt: string | null;
@@ -138,6 +153,9 @@ export interface ExecutionPlanDTO {
   resultData: Record<string, unknown> | null;
   resultError: string | null;
   erpReference: string | null;
+  idempotencyKey: string | null;
+  rollbackOfExecutionId: string | null;
+  rolledBackByExecutionId: string | null;
   createdAt: string;
   scheduledAt: string;
   claimedAt: string | null;
@@ -156,6 +174,9 @@ export interface CreateExecutionInput {
   payload?: Record<string, unknown>;
   timeoutMs?: number;
   maxAttempts?: number;
+  idempotencyKey?: string;
+  /** Internal — set only when this plan is created by rollbackExecution(), never accepted from a caller directly. */
+  rollbackOfExecutionId?: string;
 }
 
 export type CreateExecutionError =
@@ -164,6 +185,14 @@ export type CreateExecutionError =
   | 'CONNECTOR_NOT_FOUND'
   | 'PROFILE_NOT_FOUND'
   | 'PROFILE_RUNTIME_MISMATCH';
+
+// ─── Rollback ────────────────────────────────────────────────────────────────
+
+export type RollbackExecutionError =
+  | 'EXECUTION_NOT_FOUND'
+  | 'ACTION_NOT_REVERSIBLE'
+  | 'EXECUTION_NOT_TERMINAL_SUCCESS'
+  | 'ALREADY_ROLLED_BACK';
 
 // ─── Result reporting ────────────────────────────────────────────────────────
 // The Runtime reports raw facts observed while executing against the ERP;
