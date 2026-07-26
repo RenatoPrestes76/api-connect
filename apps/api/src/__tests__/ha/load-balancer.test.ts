@@ -6,7 +6,7 @@ describe('LoadBalancer — round_robin', () => {
     const lb = new LoadBalancer();
     const first = lb.route('round_robin');
     const second = lb.route('round_robin');
-    const third = lb.route('round_robin');
+    lb.route('round_robin'); // third call — advances state so `fourth` wraps back to `first`
     const fourth = lb.route('round_robin'); // wraps back to the first target
 
     expect(first.nodeId).not.toBe(second.nodeId);

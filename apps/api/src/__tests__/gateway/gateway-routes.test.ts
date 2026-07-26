@@ -3,7 +3,6 @@ import {
   startTestServer,
   get,
   post,
-  del,
   seededOwnerAuth,
   registerFreshOrg,
   type TestServer,

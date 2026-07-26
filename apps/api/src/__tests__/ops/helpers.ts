@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import type { Server, AddressInfo } from 'node:http';
+import type { AddressInfo } from 'node:http';
 import { Router } from '../../http/router.js';
 import { registerOpsRoutes } from '../../routes/v1/ops/index.js';
 

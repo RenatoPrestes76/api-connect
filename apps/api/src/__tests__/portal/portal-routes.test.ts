@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { startTestServer, get, post, put, del, type TestServer } from './helpers.js';
+import { startTestServer, get, post, put, type TestServer } from './helpers.js';
 
 let srv: TestServer;
 beforeAll(async () => {

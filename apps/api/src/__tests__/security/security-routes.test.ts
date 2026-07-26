@@ -3,7 +3,6 @@ import { startServer, stopServer, get, post, del, put } from './helpers.js';
 import type { TestServer } from './helpers.js';
 
 const TENANT = 'tenant-enterprise';
-const TENANT_PRO = 'tenant-professional';
 const Q = (t = TENANT) => `?tenantId=${t}`;
 
 let srv: TestServer;

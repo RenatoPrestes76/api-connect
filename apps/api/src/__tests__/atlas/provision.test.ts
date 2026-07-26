@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import type { Server } from 'node:http';
 import { startTestServer, stopServer, seedToken, type TestAtlasServer } from './helpers.js';
 
 const FUTURE = new Date(Date.now() + 86_400_000);

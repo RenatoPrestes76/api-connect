@@ -2,7 +2,7 @@
  * Direct middleware tests for createAgentAuthMiddleware.
  * Tests are pure unit tests — no real HTTP server needed.
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { RouteContext } from '../../http/router.js';
 import { createAgentAuthMiddleware } from '../../middleware/agent-auth.js';

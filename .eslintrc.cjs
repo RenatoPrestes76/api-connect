@@ -68,10 +68,19 @@ module.exports = {
     {
       // Non-null assertions on test fixtures (array.find(...)! etc.) just make
       // a bad test fail fast with a clear TypeError — no production blast
-      // radius, so this rule isn't worth enforcing here.
+      // radius, so this rule isn't worth enforcing here. Same reasoning for
+      // no-explicit-any: test helpers read arbitrary JSON response bodies
+      // (`const b = body as any; expect(b.total).toBe(3)`) with no schema to
+      // narrow against — the test's own assertions are what actually catch
+      // regressions, not the response body's static type. And
+      // explicit-function-return-type on `it('...', async () => {...})`
+      // callbacks and one-off test helpers is pure restated-annotation
+      // noise (vitest already knows these return void/Promise<void>).
       files: ["**/*.test.ts", "**/*.test.tsx", "**/__tests__/**/*.ts", "**/__tests__/**/*.tsx"],
       rules: {
-        "@typescript-eslint/no-non-null-assertion": "off"
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/explicit-function-return-type": "off"
       }
     },
     {

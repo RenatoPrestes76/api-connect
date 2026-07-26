@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { startServer, stopServer, get, post } from './helpers.js';
 import type { TestServer } from './helpers.js';
-import { billingStore } from '../../modules/billing/billing-store.js';
 
 let ctx: TestServer;
 
