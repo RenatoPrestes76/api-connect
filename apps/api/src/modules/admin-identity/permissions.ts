@@ -153,6 +153,16 @@ export const PERMISSION_CATALOG: Array<{
     action: 'write',
     description: 'Build, approve, and roll back canonical business models',
   },
+  {
+    resource: 'query-planner',
+    action: 'read',
+    description: 'View and validate universal query plans',
+  },
+  {
+    resource: 'query-planner',
+    action: 'write',
+    description: 'Create universal query plans',
+  },
 ];
 
 export function permissionKey(
@@ -215,6 +225,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'semantic-mapping.write',
     'canonical-model.read',
     'canonical-model.write',
+    'query-planner.read',
+    'query-planner.write',
   ],
   SUPORTE: [
     'companies.read',
@@ -232,6 +244,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'erp-metadata.read',
     'semantic-mapping.read',
     'canonical-model.read',
+    'query-planner.read',
   ],
   CUSTOMER_SUCCESS: [
     'companies.read',
@@ -267,6 +280,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'semantic-mapping.write',
     'canonical-model.read',
     'canonical-model.write',
+    'query-planner.read',
+    'query-planner.write',
   ],
   AUDITOR: [
     'companies.read',
@@ -283,6 +298,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'erp-metadata.read',
     'semantic-mapping.read',
     'canonical-model.read',
+    'query-planner.read',
   ],
 };
 

@@ -36,7 +36,8 @@ export type PermissionResource =
   | 'runtime-connector-execution'
   | 'erp-metadata'
   | 'semantic-mapping'
-  | 'canonical-model';
+  | 'canonical-model'
+  | 'query-planner';
 
 export type PermissionAction =
   | 'read'
@@ -215,7 +216,9 @@ export type AdminAuditAction =
   // Canonical Business Model Engine (canonical-model module)
   | 'CANONICAL_MODEL_BUILT'
   | 'CANONICAL_MODEL_APPROVED'
-  | 'CANONICAL_MODEL_ROLLED_BACK';
+  | 'CANONICAL_MODEL_ROLLED_BACK'
+  // Universal Query Planning Engine (query-planner module)
+  | 'QUERY_PLAN_CREATED';
 
 export interface AdminAuditEntry {
   id: string;

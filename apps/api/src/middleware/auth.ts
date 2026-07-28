@@ -121,6 +121,11 @@ const PUBLIC_PATH_PREFIXES = [
   // semantic-mapping records and erp-metadata reports, never talks to a
   // Runtime or a customer's ERP directly.
   '/canonical-model',
+  // Universal Query Planning Engine. /query-planner/* is entirely
+  // staff-gated (requirePermission inline) — it only ever reads an
+  // organization's canonical business model, never talks to a Runtime or
+  // a customer's ERP directly, and never generates or executes SQL.
+  '/query-planner',
 ];
 
 export const authMiddleware: Middleware = async (
