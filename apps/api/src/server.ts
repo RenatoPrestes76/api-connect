@@ -46,6 +46,7 @@ import { registerErpConnectivityRoutes } from './routes/v1/erp-connectivity/inde
 import { registerRuntimeConnectorExecutionRoutes } from './routes/v1/runtime-connector-execution/index.js';
 import { registerErpMetadataRoutes } from './routes/v1/erp-metadata/index.js';
 import { registerSemanticMappingRoutes } from './routes/v1/semantic-mapping/index.js';
+import { registerCanonicalModelRoutes } from './routes/v1/canonical-model/index.js';
 import { wsHub } from './modules/fleet-ops/websocket-hub.js';
 import { healthHandler } from './routes/health.js';
 import { liveHandler, readyHandler } from './routes/live-ready.js';
@@ -280,6 +281,9 @@ export function createApiServer(
 
   // INTELLIGENT ERP SEMANTIC MAPPING ENGINE
   registerSemanticMappingRoutes(router);
+
+  // CANONICAL BUSINESS MODEL ENGINE
+  registerCanonicalModelRoutes(router);
 
   const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
     withErrorBoundary(req, res, () => router.dispatch(req, res));

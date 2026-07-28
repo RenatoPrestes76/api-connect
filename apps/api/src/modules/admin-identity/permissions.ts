@@ -143,6 +143,16 @@ export const PERMISSION_CATALOG: Array<{
     action: 'write',
     description: 'Run semantic mapping analysis and approve/reject mappings',
   },
+  {
+    resource: 'canonical-model',
+    action: 'read',
+    description: "View an organization's canonical business model, entities, and fields",
+  },
+  {
+    resource: 'canonical-model',
+    action: 'write',
+    description: 'Build, approve, and roll back canonical business models',
+  },
 ];
 
 export function permissionKey(
@@ -203,6 +213,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'erp-metadata.write',
     'semantic-mapping.read',
     'semantic-mapping.write',
+    'canonical-model.read',
+    'canonical-model.write',
   ],
   SUPORTE: [
     'companies.read',
@@ -219,6 +231,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'runtime-connector-execution.read',
     'erp-metadata.read',
     'semantic-mapping.read',
+    'canonical-model.read',
   ],
   CUSTOMER_SUCCESS: [
     'companies.read',
@@ -252,6 +265,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'erp-metadata.write',
     'semantic-mapping.read',
     'semantic-mapping.write',
+    'canonical-model.read',
+    'canonical-model.write',
   ],
   AUDITOR: [
     'companies.read',
@@ -267,6 +282,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'runtime-connector-execution.read',
     'erp-metadata.read',
     'semantic-mapping.read',
+    'canonical-model.read',
   ],
 };
 

@@ -21,7 +21,6 @@ import type {
   CBLDomainKind,
   SemanticResult,
 } from '../business-language/index.js';
-import type { ConfidenceValue } from '../confidence-engine/index.js';
 import type { CBMEntity, CBMField } from '../canonical-model/index.js';
 import type { CanonicalBusinessModel } from '../canonical-model/index.js';
 

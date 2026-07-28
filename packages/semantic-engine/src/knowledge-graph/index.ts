@@ -26,7 +26,6 @@ import type {
   CBLRelationshipKind,
   CBLDomainKind,
 } from '../business-language/index.js';
-import type { SemanticResult } from '../business-language/index.js';
 import type { ConfidenceValue } from '../confidence-engine/index.js';
 
 // ─── Business Knowledge Graph ─────────────────────────────────────────────

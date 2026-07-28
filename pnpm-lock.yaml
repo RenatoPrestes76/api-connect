@@ -265,6 +265,9 @@ importers:
       '@seltriva/release':
         specifier: workspace:*
         version: link:../../packages/release
+      '@seltriva/semantic-engine':
+        specifier: workspace:*
+        version: link:../../packages/semantic-engine
       '@seltriva/titan':
         specifier: workspace:*
         version: link:../../packages/titan
@@ -1432,9 +1435,18 @@ importers:
         specifier: workspace:*
         version: link:../types
     devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      '@vitest/coverage-v8':
+        specifier: ^2.1.8
+        version: 2.1.9(vitest@2.1.9(@types/node@20.19.43)(happy-dom@14.12.3)(lightningcss@1.32.0))
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@20.19.43)(happy-dom@14.12.3)(lightningcss@1.32.0)
 
   packages/shared:
     dependencies:

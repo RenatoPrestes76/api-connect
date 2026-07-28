@@ -55,6 +55,14 @@ export type {
   CBMDiff,
 } from './canonical-model/index.js';
 
+export {
+  CBMBuilderImpl,
+  cbmBuilder,
+  InMemoryCBMStore,
+  InMemoryCBMSnapshotStore,
+  computeCBMChecksum,
+} from './canonical-model/index.js';
+
 // ─── 3. Confidence Engine — scoring ───────────────────────────────────────
 export type {
   ConfidenceValue,

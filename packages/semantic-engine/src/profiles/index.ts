@@ -22,7 +22,6 @@ import type {
   CBLFieldTerm,
   CBLEntityKind,
   CBLFieldKind,
-  CBLDomainKind,
   SemanticResult,
 } from '../business-language/index.js';
 import type { ConfidenceValue } from '../confidence-engine/index.js';

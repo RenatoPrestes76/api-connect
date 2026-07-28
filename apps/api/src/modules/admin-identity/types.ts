@@ -35,7 +35,8 @@ export type PermissionResource =
   | 'erp-connectivity'
   | 'runtime-connector-execution'
   | 'erp-metadata'
-  | 'semantic-mapping';
+  | 'semantic-mapping'
+  | 'canonical-model';
 
 export type PermissionAction =
   | 'read'
@@ -210,7 +211,11 @@ export type AdminAuditAction =
   // Intelligent ERP Semantic Mapping Engine (semantic-mapping module)
   | 'SEMANTIC_MAPPING_ANALYZED'
   | 'SEMANTIC_MAPPING_APPROVED'
-  | 'SEMANTIC_MAPPING_REJECTED';
+  | 'SEMANTIC_MAPPING_REJECTED'
+  // Canonical Business Model Engine (canonical-model module)
+  | 'CANONICAL_MODEL_BUILT'
+  | 'CANONICAL_MODEL_APPROVED'
+  | 'CANONICAL_MODEL_ROLLED_BACK';
 
 export interface AdminAuditEntry {
   id: string;

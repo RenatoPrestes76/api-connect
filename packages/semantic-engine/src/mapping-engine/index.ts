@@ -26,7 +26,7 @@ import type {
   CBMField,
   MappingStatus,
 } from '../canonical-model/index.js';
-import type { SuggestionBundle, EntitySuggestion, FieldSuggestion } from '../suggestions/index.js';
+import type { SuggestionBundle } from '../suggestions/index.js';
 
 // ─── Mapping Engine ───────────────────────────────────────────────────────
 

@@ -139,7 +139,7 @@ export interface CBMBuilder {
   /**
    * Start a new CBM build session
    */
-  begin(name: string): CBMBuildSession;
+  begin(name: string, options?: { description?: string }): CBMBuildSession;
 }
 
 export interface CBMBuildSession {
@@ -216,3 +216,10 @@ export interface CBMDiff {
   }>;
   readonly hasChanges: boolean;
 }
+
+// ─── Runtime implementations ──────────────────────────────────────────────
+
+export { ok, err } from './result.js';
+export { CBMBuilderImpl, cbmBuilder } from './builder.js';
+export { InMemoryCBMStore } from './store.js';
+export { InMemoryCBMSnapshotStore, computeCBMChecksum } from './snapshot-store.js';

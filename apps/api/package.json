@@ -32,6 +32,7 @@
     "@seltriva/database": "workspace:*",
     "@seltriva/database-intelligence": "workspace:*",
     "@seltriva/database-sdk": "workspace:*",
+    "@seltriva/semantic-engine": "workspace:*",
     "@seltriva/logger": "workspace:*",
     "@seltriva/types": "workspace:*",
     "@seltriva/billing": "workspace:*",

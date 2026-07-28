@@ -116,6 +116,11 @@ const PUBLIC_PATH_PREFIXES = [
   // the erp-metadata report already cached for a profile, never talks to
   // a Runtime directly.
   '/semantic-mapping',
+  // Canonical Business Model Engine. /canonical-model/* is entirely
+  // staff-gated (requirePermission inline) — it only ever reads approved
+  // semantic-mapping records and erp-metadata reports, never talks to a
+  // Runtime or a customer's ERP directly.
+  '/canonical-model',
 ];
 
 export const authMiddleware: Middleware = async (

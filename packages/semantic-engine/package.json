@@ -65,7 +65,11 @@
   },
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@seltriva/core": "workspace:*",
@@ -73,7 +77,10 @@
     "@seltriva/schema-intelligence": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.4.0"
+    "@types/node": "^20.14.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "typescript": "^5.4.0",
+    "vitest": "^2.1.8"
   },
   "sideEffects": false
 }
