@@ -133,6 +133,16 @@ export const PERMISSION_CATALOG: Array<{
     action: 'write',
     description: 'Trigger ERP schema discovery against a Runtime',
   },
+  {
+    resource: 'semantic-mapping',
+    action: 'read',
+    description: 'View suggested and approved business-entity mappings',
+  },
+  {
+    resource: 'semantic-mapping',
+    action: 'write',
+    description: 'Run semantic mapping analysis and approve/reject mappings',
+  },
 ];
 
 export function permissionKey(
@@ -191,6 +201,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'runtime-connector-execution.write',
     'erp-metadata.read',
     'erp-metadata.write',
+    'semantic-mapping.read',
+    'semantic-mapping.write',
   ],
   SUPORTE: [
     'companies.read',
@@ -206,6 +218,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'erp-connectivity.read',
     'runtime-connector-execution.read',
     'erp-metadata.read',
+    'semantic-mapping.read',
   ],
   CUSTOMER_SUCCESS: [
     'companies.read',
@@ -237,6 +250,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'runtime-connector-execution.write',
     'erp-metadata.read',
     'erp-metadata.write',
+    'semantic-mapping.read',
+    'semantic-mapping.write',
   ],
   AUDITOR: [
     'companies.read',
@@ -251,6 +266,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'erp-connectivity.read',
     'runtime-connector-execution.read',
     'erp-metadata.read',
+    'semantic-mapping.read',
   ],
 };
 

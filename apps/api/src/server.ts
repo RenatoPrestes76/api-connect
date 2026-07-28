@@ -45,6 +45,7 @@ import { registerMessageDeliveryRoutes } from './routes/v1/message-delivery/inde
 import { registerErpConnectivityRoutes } from './routes/v1/erp-connectivity/index.js';
 import { registerRuntimeConnectorExecutionRoutes } from './routes/v1/runtime-connector-execution/index.js';
 import { registerErpMetadataRoutes } from './routes/v1/erp-metadata/index.js';
+import { registerSemanticMappingRoutes } from './routes/v1/semantic-mapping/index.js';
 import { wsHub } from './modules/fleet-ops/websocket-hub.js';
 import { healthHandler } from './routes/health.js';
 import { liveHandler, readyHandler } from './routes/live-ready.js';
@@ -276,6 +277,9 @@ export function createApiServer(
 
   // UNIVERSAL ERP METADATA DISCOVERY ENGINE
   registerErpMetadataRoutes(router);
+
+  // INTELLIGENT ERP SEMANTIC MAPPING ENGINE
+  registerSemanticMappingRoutes(router);
 
   const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
     withErrorBoundary(req, res, () => router.dispatch(req, res));

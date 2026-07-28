@@ -111,6 +111,11 @@ const PUBLIC_PATH_PREFIXES = [
   // staff-gated routes (requirePermission inline) with Runtime-facing
   // claim/report endpoints (JWT-gated via requireRuntimeAuth).
   '/erp-metadata',
+  // Intelligent ERP Semantic Mapping Engine. /semantic-mapping/* is
+  // entirely staff-gated (requirePermission inline) — it only ever reads
+  // the erp-metadata report already cached for a profile, never talks to
+  // a Runtime directly.
+  '/semantic-mapping',
 ];
 
 export const authMiddleware: Middleware = async (

@@ -34,7 +34,8 @@ export type PermissionResource =
   | 'message-delivery'
   | 'erp-connectivity'
   | 'runtime-connector-execution'
-  | 'erp-metadata';
+  | 'erp-metadata'
+  | 'semantic-mapping';
 
 export type PermissionAction =
   | 'read'
@@ -205,7 +206,11 @@ export type AdminAuditAction =
   // Universal ERP Metadata Discovery Engine (erp-metadata module)
   | 'METADATA_DISCOVERY_REQUESTED'
   | 'METADATA_DISCOVERY_COMPLETED'
-  | 'METADATA_DISCOVERY_FAILED';
+  | 'METADATA_DISCOVERY_FAILED'
+  // Intelligent ERP Semantic Mapping Engine (semantic-mapping module)
+  | 'SEMANTIC_MAPPING_ANALYZED'
+  | 'SEMANTIC_MAPPING_APPROVED'
+  | 'SEMANTIC_MAPPING_REJECTED';
 
 export interface AdminAuditEntry {
   id: string;
