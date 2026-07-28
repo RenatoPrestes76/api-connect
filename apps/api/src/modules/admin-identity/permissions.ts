@@ -123,6 +123,16 @@ export const PERMISSION_CATALOG: Array<{
     action: 'write',
     description: 'Request connector executions against a Runtime',
   },
+  {
+    resource: 'erp-metadata',
+    action: 'read',
+    description: 'View discovered ERP schema, tables, and relationships',
+  },
+  {
+    resource: 'erp-metadata',
+    action: 'write',
+    description: 'Trigger ERP schema discovery against a Runtime',
+  },
 ];
 
 export function permissionKey(
@@ -179,6 +189,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'erp-connectivity.write',
     'runtime-connector-execution.read',
     'runtime-connector-execution.write',
+    'erp-metadata.read',
+    'erp-metadata.write',
   ],
   SUPORTE: [
     'companies.read',
@@ -193,6 +205,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'message-delivery.read',
     'erp-connectivity.read',
     'runtime-connector-execution.read',
+    'erp-metadata.read',
   ],
   CUSTOMER_SUCCESS: [
     'companies.read',
@@ -222,6 +235,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'erp-connectivity.write',
     'runtime-connector-execution.read',
     'runtime-connector-execution.write',
+    'erp-metadata.read',
+    'erp-metadata.write',
   ],
   AUDITOR: [
     'companies.read',
@@ -235,6 +250,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'message-delivery.read',
     'erp-connectivity.read',
     'runtime-connector-execution.read',
+    'erp-metadata.read',
   ],
 };
 

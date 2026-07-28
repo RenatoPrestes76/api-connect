@@ -44,6 +44,7 @@ import { registerJobOrchestrationRoutes } from './routes/v1/job-orchestration/in
 import { registerMessageDeliveryRoutes } from './routes/v1/message-delivery/index.js';
 import { registerErpConnectivityRoutes } from './routes/v1/erp-connectivity/index.js';
 import { registerRuntimeConnectorExecutionRoutes } from './routes/v1/runtime-connector-execution/index.js';
+import { registerErpMetadataRoutes } from './routes/v1/erp-metadata/index.js';
 import { wsHub } from './modules/fleet-ops/websocket-hub.js';
 import { healthHandler } from './routes/health.js';
 import { liveHandler, readyHandler } from './routes/live-ready.js';
@@ -272,6 +273,9 @@ export function createApiServer(
 
   // RUNTIME CONNECTOR EXECUTION ENGINE
   registerRuntimeConnectorExecutionRoutes(router);
+
+  // UNIVERSAL ERP METADATA DISCOVERY ENGINE
+  registerErpMetadataRoutes(router);
 
   const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
     withErrorBoundary(req, res, () => router.dispatch(req, res));

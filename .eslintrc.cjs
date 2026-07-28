@@ -94,6 +94,34 @@ module.exports = {
       rules: {
         "@typescript-eslint/explicit-function-return-type": "off"
       }
+    },
+    {
+      // apps/api is the control plane — it must never dial a customer's ERP
+      // database directly (only the installed Atlas Runtime does, per the
+      // architecture established from Sprint 46.8 onward). @seltriva/
+      // database-sdk carries real live drivers (pg/mysql2/mssql/oracledb/
+      // node-firebird) meant only for the Runtime; apps/api may reference
+      // its *types* (DatabaseSchema, Table, Column, ...) but importing any
+      // value from it — a driver, SchemaReader, or ConnectionManager —
+      // would bundle and make callable exactly the code this boundary
+      // exists to keep out of the control plane. `allowTypeImports` lets
+      // `import type { DatabaseSchema } from ...` through untouched.
+      files: ["apps/api/src/**/*.ts"],
+      rules: {
+        "@typescript-eslint/no-restricted-imports": [
+          "error",
+          {
+            paths: [
+              {
+                name: "@seltriva/database-sdk",
+                allowTypeImports: true,
+                message:
+                  "apps/api may only import types from @seltriva/database-sdk (use `import type`) — its live DB drivers must never run in the control plane. See the erp-metadata module for the pattern (Runtime scans, Atlas classifies)."
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

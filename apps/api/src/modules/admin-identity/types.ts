@@ -33,7 +33,8 @@ export type PermissionResource =
   | 'job-orchestration'
   | 'message-delivery'
   | 'erp-connectivity'
-  | 'runtime-connector-execution';
+  | 'runtime-connector-execution'
+  | 'erp-metadata';
 
 export type PermissionAction =
   | 'read'
@@ -200,7 +201,11 @@ export type AdminAuditAction =
   | 'EXECUTION_REJECTED'
   | 'EXECUTION_RESULT_REPORTED'
   // ERP Command Reliability & Production Readiness (Sprint 46.11)
-  | 'EXECUTION_ROLLED_BACK';
+  | 'EXECUTION_ROLLED_BACK'
+  // Universal ERP Metadata Discovery Engine (erp-metadata module)
+  | 'METADATA_DISCOVERY_REQUESTED'
+  | 'METADATA_DISCOVERY_COMPLETED'
+  | 'METADATA_DISCOVERY_FAILED';
 
 export interface AdminAuditEntry {
   id: string;

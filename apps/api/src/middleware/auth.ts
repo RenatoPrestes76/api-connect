@@ -107,6 +107,10 @@ const PUBLIC_PATH_PREFIXES = [
   // (JWT-gated via requireRuntimeAuth) and signed health/diagnostics
   // reports (signature-verified inline).
   '/erp-connectivity',
+  // Universal ERP Metadata Discovery Engine. /erp-metadata/* mixes
+  // staff-gated routes (requirePermission inline) with Runtime-facing
+  // claim/report endpoints (JWT-gated via requireRuntimeAuth).
+  '/erp-metadata',
 ];
 
 export const authMiddleware: Middleware = async (
