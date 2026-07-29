@@ -38,7 +38,8 @@ export type PermissionResource =
   | 'semantic-mapping'
   | 'canonical-model'
   | 'query-planner'
-  | 'sql-generator';
+  | 'sql-generator'
+  | 'query-execution';
 
 export type PermissionAction =
   | 'read'
@@ -221,7 +222,12 @@ export type AdminAuditAction =
   // Universal Query Planning Engine (query-planner module)
   | 'QUERY_PLAN_CREATED'
   // Universal SQL Generation Engine (sql-generator module)
-  | 'SQL_QUERY_GENERATED';
+  | 'SQL_QUERY_GENERATED'
+  // Universal Query Execution Engine (query-execution module)
+  | 'QUERY_EXECUTION_REQUESTED'
+  | 'QUERY_EXECUTION_COMPLETED'
+  | 'QUERY_EXECUTION_FAILED'
+  | 'QUERY_EXECUTION_CANCELLED';
 
 export interface AdminAuditEntry {
   id: string;

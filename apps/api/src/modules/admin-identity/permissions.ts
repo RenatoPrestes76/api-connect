@@ -173,6 +173,16 @@ export const PERMISSION_CATALOG: Array<{
     action: 'write',
     description: 'Generate native SQL from a universal query plan',
   },
+  {
+    resource: 'query-execution',
+    action: 'read',
+    description: 'View query execution status, results, and history',
+  },
+  {
+    resource: 'query-execution',
+    action: 'write',
+    description: 'Execute and cancel queries against a connected ERP via its Runtime',
+  },
 ];
 
 export function permissionKey(
@@ -239,6 +249,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'query-planner.write',
     'sql-generator.read',
     'sql-generator.write',
+    'query-execution.read',
+    'query-execution.write',
   ],
   SUPORTE: [
     'companies.read',
@@ -258,6 +270,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'canonical-model.read',
     'query-planner.read',
     'sql-generator.read',
+    'query-execution.read',
   ],
   CUSTOMER_SUCCESS: [
     'companies.read',
@@ -297,6 +310,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'query-planner.write',
     'sql-generator.read',
     'sql-generator.write',
+    'query-execution.read',
+    'query-execution.write',
   ],
   AUDITOR: [
     'companies.read',
@@ -315,6 +330,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'canonical-model.read',
     'query-planner.read',
     'sql-generator.read',
+    'query-execution.read',
   ],
 };
 

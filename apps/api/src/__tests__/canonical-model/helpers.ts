@@ -174,7 +174,12 @@ export async function connectAndApproveErp(
   baseUrl: string,
   auth: Record<string, string>,
   organizationCode: string
-): Promise<{ runtimeId: string; profileId: string; organizationId: string }> {
+): Promise<{
+  runtimeId: string;
+  profileId: string;
+  organizationId: string;
+  keyPair: RuntimeKeyPair;
+}> {
   const { runtimeId, keyPair, organizationId } = await registerActiveRuntimeForOrg(
     baseUrl,
     auth,
@@ -202,7 +207,7 @@ export async function connectAndApproveErp(
       auth
     );
   }
-  return { runtimeId, profileId, organizationId };
+  return { runtimeId, profileId, organizationId, keyPair };
 }
 
 /**
@@ -214,7 +219,12 @@ export async function setUpFullyApprovedProfile(
   baseUrl: string,
   auth: Record<string, string>,
   organizationCode: string
-): Promise<{ runtimeId: string; profileId: string; organizationId: string }> {
+): Promise<{
+  runtimeId: string;
+  profileId: string;
+  organizationId: string;
+  keyPair: RuntimeKeyPair;
+}> {
   await registerOrganization(baseUrl, organizationCode);
   return connectAndApproveErp(baseUrl, auth, organizationCode);
 }

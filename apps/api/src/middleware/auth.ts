@@ -131,6 +131,11 @@ const PUBLIC_PATH_PREFIXES = [
   // native SQL text + parameters but never executes it and never talks to
   // a Runtime or a customer's ERP directly.
   '/sql-generator',
+  // Universal Query Execution Engine. /query-execution/* is staff-gated
+  // (requirePermission inline); its Runtime-facing counterpart lives under
+  // /runtime/query-execution/* which the existing '/runtime/' prefix
+  // below already covers (JWT-gated via requireRuntimeAuth).
+  '/query-execution',
 ];
 
 export const authMiddleware: Middleware = async (

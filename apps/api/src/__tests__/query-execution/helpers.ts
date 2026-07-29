@@ -9,9 +9,11 @@ import { registerErpMetadataRoutes } from '../../routes/v1/erp-metadata/index.js
 import { registerSemanticMappingRoutes } from '../../routes/v1/semantic-mapping/index.js';
 import { registerCanonicalModelRoutes } from '../../routes/v1/canonical-model/index.js';
 import { registerQueryPlannerRoutes } from '../../routes/v1/query-planner/index.js';
+import { registerSqlGeneratorRoutes } from '../../routes/v1/sql-generator/index.js';
+import { registerQueryExecutionRoutes } from '../../routes/v1/query-execution/index.js';
 import { registerPortalRoutes } from '../../routes/v1/portal/index.js';
-import { registerOrganization, setUpFullyApprovedProfile } from '../canonical-model/helpers.js';
-import type { RuntimeKeyPair } from '../runtime-registration/helpers.js';
+import { signHeartbeat } from '../runtime-registration/helpers.js';
+import { setUpOrgWithApprovedCanonicalModel, createQueryPlan } from '../sql-generator/helpers.js';
 
 export interface TestServer {
   baseUrl: string;
@@ -28,6 +30,8 @@ export async function startTestServer(): Promise<TestServer> {
   registerSemanticMappingRoutes(router);
   registerCanonicalModelRoutes(router);
   registerQueryPlannerRoutes(router);
+  registerSqlGeneratorRoutes(router);
+  registerQueryExecutionRoutes(router);
   registerPortalRoutes(router);
 
   const srv = createServer((req, res) => void router.dispatch(req, res));
@@ -79,7 +83,7 @@ const SEED_ADMIN_PASSWORD = 'root102030';
 
 export async function superAdminAuth(
   baseUrl: string,
-  ip = '10.67.0.1'
+  ip = '10.69.0.1'
 ): Promise<Record<string, string>> {
   const { body } = await post<{ accessToken: string }>(
     baseUrl,
@@ -90,41 +94,52 @@ export async function superAdminAuth(
   return bearer(body.accessToken);
 }
 
-/**
- * Full pipeline for one fresh organization with an approved canonical
- * model: discover + analyze + approve one ERP (46.9/46.10), build + approve
- * the canonical model (46.11). Returns everything a query-planner test
- * needs to plan against a real, populated CBM.
- */
-export async function setUpOrgWithApprovedCanonicalModel(
+export { setUpOrgWithApprovedCanonicalModel, createQueryPlan };
+
+/** Sends a real, signed heartbeat so the Runtime is considered online — required before executing a query, since a freshly-registered Runtime has lastHeartbeat=null. */
+export async function sendHeartbeat(
   baseUrl: string,
-  auth: Record<string, string>,
-  organizationCode: string
-): Promise<{
-  organizationId: string;
-  canonicalModelId: string;
-  runtimeId: string;
-  profileId: string;
-  keyPair: RuntimeKeyPair;
-}> {
-  const { organizationId, runtimeId, profileId, keyPair } = await setUpFullyApprovedProfile(
-    baseUrl,
-    auth,
-    organizationCode
-  );
-  const built = await post<{ model: { id: string } }>(
-    baseUrl,
-    '/canonical-model/build',
-    { organizationId },
-    auth
-  );
-  await post(
-    baseUrl,
-    '/canonical-model/approve',
-    { organizationId, modelId: built.body.model.id },
-    auth
-  );
-  return { organizationId, canonicalModelId: built.body.model.id, runtimeId, profileId, keyPair };
+  runtimeId: string,
+  privateKeyPem: string
+): Promise<void> {
+  const timestamp = new Date().toISOString();
+  const signature = signHeartbeat(privateKeyPem, {
+    runtimeId,
+    version: '1.2.0',
+    memory: 512,
+    cpu: 10,
+    timestamp,
+  });
+  await post(baseUrl, '/runtime/heartbeat', {
+    runtimeId,
+    version: '1.2.0',
+    memory: 512,
+    cpu: 10,
+    timestamp,
+    signature,
+  });
 }
 
-export { registerOrganization };
+interface GeneratedQueryBody {
+  query?: { id: string; profileId: string };
+}
+
+/** Builds a real, generated SQL query (46.13) for the given org's Product entity — everything a query-execution test needs to call POST /query-execution/execute against. */
+export async function createGeneratedQuery(
+  baseUrl: string,
+  auth: Record<string, string>,
+  organizationId: string
+): Promise<{ generatedQueryId: string; profileId: string }> {
+  const queryPlanId = await createQueryPlan(baseUrl, auth, organizationId, {
+    entity: 'Product',
+    projections: ['code', 'description'],
+  });
+  const { body } = await post<GeneratedQueryBody>(
+    baseUrl,
+    '/sql-generator/generate',
+    { organizationId, queryPlanId },
+    auth
+  );
+  if (!body.query) throw new Error('Failed to create generated query in test setup');
+  return { generatedQueryId: body.query.id, profileId: body.query.profileId };
+}
