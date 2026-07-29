@@ -126,6 +126,11 @@ const PUBLIC_PATH_PREFIXES = [
   // organization's canonical business model, never talks to a Runtime or
   // a customer's ERP directly, and never generates or executes SQL.
   '/query-planner',
+  // Universal SQL Generation Engine. /sql-generator/* is entirely
+  // staff-gated (requirePermission inline) — it turns a Query Plan into
+  // native SQL text + parameters but never executes it and never talks to
+  // a Runtime or a customer's ERP directly.
+  '/sql-generator',
 ];
 
 export const authMiddleware: Middleware = async (

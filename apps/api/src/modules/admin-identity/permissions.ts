@@ -163,6 +163,16 @@ export const PERMISSION_CATALOG: Array<{
     action: 'write',
     description: 'Create universal query plans',
   },
+  {
+    resource: 'sql-generator',
+    action: 'read',
+    description: 'View and explain generated SQL',
+  },
+  {
+    resource: 'sql-generator',
+    action: 'write',
+    description: 'Generate native SQL from a universal query plan',
+  },
 ];
 
 export function permissionKey(
@@ -227,6 +237,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'canonical-model.write',
     'query-planner.read',
     'query-planner.write',
+    'sql-generator.read',
+    'sql-generator.write',
   ],
   SUPORTE: [
     'companies.read',
@@ -245,6 +257,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'semantic-mapping.read',
     'canonical-model.read',
     'query-planner.read',
+    'sql-generator.read',
   ],
   CUSTOMER_SUCCESS: [
     'companies.read',
@@ -282,6 +295,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'canonical-model.write',
     'query-planner.read',
     'query-planner.write',
+    'sql-generator.read',
+    'sql-generator.write',
   ],
   AUDITOR: [
     'companies.read',
@@ -299,6 +314,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'semantic-mapping.read',
     'canonical-model.read',
     'query-planner.read',
+    'sql-generator.read',
   ],
 };
 

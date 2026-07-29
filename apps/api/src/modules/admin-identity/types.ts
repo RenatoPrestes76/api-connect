@@ -37,7 +37,8 @@ export type PermissionResource =
   | 'erp-metadata'
   | 'semantic-mapping'
   | 'canonical-model'
-  | 'query-planner';
+  | 'query-planner'
+  | 'sql-generator';
 
 export type PermissionAction =
   | 'read'
@@ -218,7 +219,9 @@ export type AdminAuditAction =
   | 'CANONICAL_MODEL_APPROVED'
   | 'CANONICAL_MODEL_ROLLED_BACK'
   // Universal Query Planning Engine (query-planner module)
-  | 'QUERY_PLAN_CREATED';
+  | 'QUERY_PLAN_CREATED'
+  // Universal SQL Generation Engine (sql-generator module)
+  | 'SQL_QUERY_GENERATED';
 
 export interface AdminAuditEntry {
   id: string;

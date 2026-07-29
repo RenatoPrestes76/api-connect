@@ -48,6 +48,7 @@ import { registerErpMetadataRoutes } from './routes/v1/erp-metadata/index.js';
 import { registerSemanticMappingRoutes } from './routes/v1/semantic-mapping/index.js';
 import { registerCanonicalModelRoutes } from './routes/v1/canonical-model/index.js';
 import { registerQueryPlannerRoutes } from './routes/v1/query-planner/index.js';
+import { registerSqlGeneratorRoutes } from './routes/v1/sql-generator/index.js';
 import { wsHub } from './modules/fleet-ops/websocket-hub.js';
 import { healthHandler } from './routes/health.js';
 import { liveHandler, readyHandler } from './routes/live-ready.js';
@@ -288,6 +289,9 @@ export function createApiServer(
 
   // UNIVERSAL QUERY PLANNING ENGINE
   registerQueryPlannerRoutes(router);
+
+  // UNIVERSAL SQL GENERATION ENGINE
+  registerSqlGeneratorRoutes(router);
 
   const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
     withErrorBoundary(req, res, () => router.dispatch(req, res));
