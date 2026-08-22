@@ -21,6 +21,8 @@ export function analyzeReport(report: DatabaseIntelligenceReport): MappingSugges
       confidence: refined.confidence,
       reasons: refined.reasons,
       alternatives: refined.alternatives,
+      conflicts: refined.conflicts,
+      reasoning: refined.reasoning,
     } satisfies MappingSuggestion;
   });
 }

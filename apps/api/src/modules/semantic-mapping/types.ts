@@ -12,42 +12,61 @@ import type { EntityType, ConfidenceScore } from '@seltriva/database-intelligenc
 
 export type BusinessEntityType =
   | 'PRODUTO'
+  | 'CATEGORIA'
+  | 'MARCA'
+  | 'VARIANTE_PRODUTO'
   | 'ESTOQUE'
   | 'MOVIMENTACAO_ESTOQUE'
-  | 'CLIENTE'
+  | 'DEPOSITO'
+  | 'FILIAL'
   | 'FORNECEDOR'
+  | 'CLIENTE'
   | 'COMPRA'
   | 'ITEM_COMPRA'
   | 'VENDA'
   | 'ITEM_VENDA'
-  | 'FILIAL'
+  | 'PRECO'
+  | 'PAGAMENTO'
+  | 'FUNCIONARIO'
+  | 'LOTE'
   | 'USUARIO'
   | 'OPERADOR'
-  | 'PRECO'
   | 'PROMOCAO'
-  | 'CATEGORIA'
-  | 'MARCA'
   | 'UNIDADE'
   | 'INVENTARIO'
   | 'NAO_MAPEADO';
 
+/**
+ * The 18 minimum ERP business entities this engine must recognize
+ * (Product, ProductCategory, ProductBrand, ProductVariant, Stock,
+ * StockMovement, Warehouse, Branch, Supplier, Customer, Purchase,
+ * PurchaseItem, Sale, SaleItem, Price, Payment, Employee, InventoryLot),
+ * plus additional categories (USUARIO/OPERADOR/PROMOCAO/UNIDADE/INVENTARIO)
+ * this engine already recognized beyond that minimum, plus the NAO_MAPEADO
+ * catch-all.
+ */
 export const ALL_BUSINESS_ENTITY_TYPES: readonly BusinessEntityType[] = [
   'PRODUTO',
+  'CATEGORIA',
+  'MARCA',
+  'VARIANTE_PRODUTO',
   'ESTOQUE',
   'MOVIMENTACAO_ESTOQUE',
-  'CLIENTE',
+  'DEPOSITO',
+  'FILIAL',
   'FORNECEDOR',
+  'CLIENTE',
   'COMPRA',
   'ITEM_COMPRA',
   'VENDA',
   'ITEM_VENDA',
-  'FILIAL',
+  'PRECO',
+  'PAGAMENTO',
+  'FUNCIONARIO',
+  'LOTE',
   'USUARIO',
   'OPERADOR',
-  'PRECO',
   'PROMOCAO',
-  'CATEGORIA',
-  'MARCA',
   'UNIDADE',
   'INVENTARIO',
   'NAO_MAPEADO',
@@ -66,6 +85,18 @@ export interface BusinessEntityCandidate {
   readonly confidence: ConfidenceScore;
 }
 
+/**
+ * A detected disagreement between evidence sources (e.g. table name suggests
+ * one entity while relational structure suggests another). Conflicts never
+ * hide a classification — they are surfaced alongside it so a human reviewer
+ * can see exactly where the signals disagreed.
+ */
+export interface MappingConflict {
+  readonly entityA: BusinessEntityType;
+  readonly entityB: BusinessEntityType;
+  readonly detail: string;
+}
+
 /** The engine's output for a single table, before any persistence/review state is applied. */
 export interface MappingSuggestion {
   readonly schema: string;
@@ -75,6 +106,9 @@ export interface MappingSuggestion {
   readonly confidence: ConfidenceScore;
   readonly reasons: readonly MappingReason[];
   readonly alternatives: readonly BusinessEntityCandidate[];
+  readonly conflicts: readonly MappingConflict[];
+  /** One-line human-readable synthesis of `reasons` (+ `conflicts`, when present). */
+  readonly reasoning: string;
 }
 
 export type MappingStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -107,6 +141,8 @@ export interface MappingRecord {
   suggestedConfidence: ConfidenceScore;
   reasons: readonly MappingReason[];
   alternatives: readonly BusinessEntityCandidate[];
+  conflicts: readonly MappingConflict[];
+  reasoning: string;
   approvedEntity: BusinessEntityType | null;
   approvedBy: string | null;
   approvedAt: string | null;
@@ -126,6 +162,8 @@ export interface MappingRecordDTO {
   suggestedConfidence: ConfidenceScore;
   reasons: readonly MappingReason[];
   alternatives: readonly BusinessEntityCandidate[];
+  conflicts: readonly MappingConflict[];
+  reasoning: string;
   approvedEntity: BusinessEntityType | null;
   approvedBy: string | null;
   approvedAt: string | null;

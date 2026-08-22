@@ -33,6 +33,8 @@ interface MappingDTO {
   history: Array<{ action: string; entity: string }>;
   alternatives: Array<{ entity: string; confidence: number }>;
   reasons: Array<{ signal: string; weight: number; detail: string }>;
+  conflicts: Array<{ entityA: string; entityB: string; detail: string }>;
+  reasoning: string;
 }
 
 interface EntitiesBody {
@@ -149,7 +151,7 @@ describe('POST /semantic-mapping/analyze', () => {
     expect(body.summary.tablesAnalyzed).toBeGreaterThanOrEqual(6);
     expect(body.summary.suggested).toBe(body.summary.tablesAnalyzed);
     expect(body.summary.pending).toBe(body.summary.tablesAnalyzed);
-    expect(body.summary.modelVersion).toBe(1);
+    expect(body.summary.modelVersion).toBe(2);
 
     const { body: entitiesBody } = await get<EntitiesBody>(
       srv.baseUrl,
@@ -166,6 +168,43 @@ describe('POST /semantic-mapping/analyze', () => {
     const compraItens = findMapping(entitiesBody.entities, 'compras_itens');
     expect(compraItens.reasons.length).toBeGreaterThan(0);
     expect(compraItens.status).toBe('PENDING');
+  });
+
+  it('recognizes Warehouse, Payment, Employee, ProductVariant, and InventoryLot (the remaining minimum ERP entities)', async () => {
+    const { profileId } = await setUpDiscoveredProfile();
+    await post(srv.baseUrl, '/semantic-mapping/analyze', { profileId }, auth);
+
+    const { body: entitiesBody } = await get<EntitiesBody>(
+      srv.baseUrl,
+      `/semantic-mapping/entities?profileId=${profileId}`,
+      auth
+    );
+
+    expect(findMapping(entitiesBody.entities, 'depositos').suggestedEntity).toBe('DEPOSITO');
+    expect(findMapping(entitiesBody.entities, 'pagamentos').suggestedEntity).toBe('PAGAMENTO');
+    expect(findMapping(entitiesBody.entities, 'funcionarios').suggestedEntity).toBe('FUNCIONARIO');
+    expect(findMapping(entitiesBody.entities, 'produto_variacoes').suggestedEntity).toBe(
+      'VARIANTE_PRODUTO'
+    );
+    expect(findMapping(entitiesBody.entities, 'lotes').suggestedEntity).toBe('LOTE');
+  });
+
+  it('every mapping carries an explainable reasoning string and a (possibly empty) conflicts array', async () => {
+    const { profileId } = await setUpDiscoveredProfile();
+    await post(srv.baseUrl, '/semantic-mapping/analyze', { profileId }, auth);
+
+    const { body: entitiesBody } = await get<EntitiesBody>(
+      srv.baseUrl,
+      `/semantic-mapping/entities?profileId=${profileId}`,
+      auth
+    );
+
+    expect(entitiesBody.entities.length).toBeGreaterThan(0);
+    for (const mapping of entitiesBody.entities) {
+      expect(typeof mapping.reasoning).toBe('string');
+      expect(mapping.reasoning.length).toBeGreaterThan(0);
+      expect(Array.isArray(mapping.conflicts)).toBe(true);
+    }
   });
 });
 

@@ -3,10 +3,15 @@ import type {
   EntityClassification,
   EntityType,
 } from '@seltriva/database-intelligence';
-import type { BusinessEntityCandidate, BusinessEntityType, MappingReason } from './types.js';
+import type {
+  BusinessEntityCandidate,
+  BusinessEntityType,
+  MappingConflict,
+  MappingReason,
+} from './types.js';
 
 /** Bumped whenever the refinement rules below change meaning — persisted on every suggestion/history entry so re-analyses can be told apart from a genuine model upgrade. */
-export const SEMANTIC_MODEL_VERSION = 1;
+export const SEMANTIC_MODEL_VERSION = 2;
 
 // ─── ATHENA structural entity → business entity (base mapping) ────────────
 const ATHENA_TO_BUSINESS: Readonly<Record<EntityType, BusinessEntityType>> = {
@@ -22,7 +27,10 @@ const ATHENA_TO_BUSINESS: Readonly<Record<EntityType, BusinessEntityType>> = {
   USER: 'USUARIO',
   BRANCH: 'FILIAL',
   EXPIRY: 'NAO_MAPEADO',
-  LOT: 'NAO_MAPEADO',
+  // ATHENA already recognizes lot/batch tables structurally — reuse that
+  // signal instead of discarding it (InventoryLot is one of the 18 minimum
+  // business entities this engine must recognize).
+  LOT: 'LOTE',
   PROMOTION: 'PROMOCAO',
   FISCAL: 'NAO_MAPEADO',
   LOG: 'NAO_MAPEADO',
@@ -64,6 +72,40 @@ const UNIT_PATTERNS = [
   'unitofmeasure',
 ];
 const INVENTORY_AUDIT_PATTERNS = ['inventario', 'contagem', 'balanco_estoque', 'balancoestoque'];
+const WAREHOUSE_PATTERNS = [
+  'deposito',
+  'depositos',
+  'armazem',
+  'armazens',
+  'almoxarifado',
+  'warehouse',
+  'warehouses',
+];
+const PAYMENT_PATTERNS = [
+  'pagamento',
+  'pagamentos',
+  'recebimento',
+  'recebimentos',
+  'payment',
+  'payments',
+  'pagto',
+];
+const EMPLOYEE_PATTERNS = [
+  'funcionario',
+  'funcionarios',
+  'colaborador',
+  'colaboradores',
+  'employee',
+  'employees',
+];
+const PRODUCT_VARIANT_PATTERNS = [
+  'variacao',
+  'variacoes',
+  'variante',
+  'variantes',
+  'variant',
+  'variants',
+];
 
 /**
  * Refines one ATHENA classification into the fuller business vocabulary.
@@ -88,15 +130,22 @@ export function refineClassification(
   confidence: number;
   reasons: MappingReason[];
   alternatives: BusinessEntityCandidate[];
+  conflicts: MappingConflict[];
+  reasoning: string;
 } {
   const { tableName, entity, confidence, isJunctionTable } = classification;
   const baseEntity = ATHENA_TO_BUSINESS[entity];
+  // Summary line first, then every individual signal ATHENA's own scorers
+  // (name/column/relationship/statistics/sampling) already computed — this is
+  // what makes the "multiple independent structural signals" explanation
+  // genuine rather than a single opaque pass-through score.
   const reasons: MappingReason[] = [
     {
       signal: 'athena_classification',
       weight: confidence,
       detail: `ATHENA classified this table structurally as ${entity} (confidence ${confidence})`,
     },
+    ...classification.reasons,
   ];
 
   let resultEntity: BusinessEntityType = baseEntity;
@@ -189,6 +238,66 @@ export function refineClassification(
     });
   }
 
+  // ─── Warehouse (no dedicated ATHENA structural type) ─────────────────────
+  if (matchesAny(tableName, WAREHOUSE_PATTERNS)) {
+    resultEntity = 'DEPOSITO';
+    resultConfidence = Math.max(resultConfidence, 60);
+    reasons.push({
+      signal: 'warehouse_name_alias',
+      weight: 20,
+      detail: 'Table name matches a warehouse/storage-location alias',
+    });
+  }
+
+  // ─── Payment (no dedicated ATHENA structural type) ───────────────────────
+  if (matchesAny(tableName, PAYMENT_PATTERNS)) {
+    resultEntity = 'PAGAMENTO';
+    resultConfidence = Math.max(resultConfidence, 60);
+    reasons.push({
+      signal: 'payment_name_alias',
+      weight: 20,
+      detail: 'Table name matches a payment/receipt alias',
+    });
+  }
+
+  // ─── Employee (distinct from a system login User) ────────────────────────
+  if (matchesAny(tableName, EMPLOYEE_PATTERNS)) {
+    resultEntity = 'FUNCIONARIO';
+    resultConfidence = Math.max(resultConfidence, 60);
+    reasons.push({
+      signal: 'employee_name_alias',
+      weight: 20,
+      detail: 'Table name matches an employee/staff alias, distinct from a system-login user',
+    });
+  }
+
+  // ─── Product variant (name alias, reinforced by a relational FK to a
+  // table ATHENA already classified as PRODUCT) ─────────────────────────────
+  if (matchesAny(tableName, PRODUCT_VARIANT_PATTERNS)) {
+    resultEntity = 'VARIANTE_PRODUTO';
+    resultConfidence = Math.max(resultConfidence, 55);
+    reasons.push({
+      signal: 'product_variant_name_alias',
+      weight: 15,
+      detail: 'Table name matches a product-variation alias (color/size/SKU variant)',
+    });
+    const variantPointsToProduct = allRelationships.some(
+      (r) =>
+        r.fromTable === tableName &&
+        (entityByTable.get(r.toTable) === 'PRODUCT' ||
+          matchesAny(r.toTable, ['produto', 'product']))
+    );
+    if (variantPointsToProduct) {
+      resultConfidence = Math.min(100, resultConfidence + 15);
+      reasons.push({
+        signal: 'variant_product_relationship',
+        weight: 15,
+        detail:
+          'Foreign key points to a table classified as PRODUCT — reinforces the product-variant classification',
+      });
+    }
+  }
+
   // ─── Alternatives (conflict resolution) ──────────────────────────────────
   // Base candidate (if the refinement rules moved away from it) plus every
   // ATHENA alternative mapped through the same base table, ranked and deduped.
@@ -212,5 +321,44 @@ export function refineClassification(
     .sort((a, b) => b.confidence - a.confidence)
     .slice(0, 3);
 
-  return { suggestedEntity: resultEntity, confidence: resultConfidence, reasons, alternatives };
+  // ─── Conflicts ────────────────────────────────────────────────────────────
+  // A conflict is genuine evidence disagreement — the top candidate and the
+  // runner-up are close enough in confidence that the signals do not clearly
+  // agree on a single entity (e.g. name evidence points one way, relational
+  // evidence points another, and neither dominates). This is deliberately
+  // NOT raised for the dictionary-driven overrides above (line-item, brand,
+  // unit, warehouse, payment, employee, variant, operator, inventory-audit):
+  // those are confident domain-knowledge corrections of a known-weak base
+  // signal, not unresolved disagreement, so they must not be flagged or have
+  // their confidence penalized.
+  const CONFLICT_GAP_THRESHOLD = 15;
+  const conflicts: MappingConflict[] = [];
+  const topAlternative = alternatives[0];
+  if (topAlternative && resultConfidence - topAlternative.confidence <= CONFLICT_GAP_THRESHOLD) {
+    conflicts.push({
+      entityA: resultEntity,
+      entityB: topAlternative.entity,
+      detail: `Suggested entity "${resultEntity}" and runner-up "${topAlternative.entity}" are close in confidence (${resultConfidence} vs ${topAlternative.confidence}) — evidence does not clearly agree on a single entity`,
+    });
+    resultConfidence = Math.max(0, resultConfidence - 10);
+  }
+
+  // ─── Reasoning (human-readable synthesis) ────────────────────────────────
+  let reasoning: string;
+  if (resultEntity === 'NAO_MAPEADO' || resultConfidence < 30) {
+    reasoning = `Insufficient or inconclusive structural signals to confidently classify this table (confidence ${resultConfidence}).`;
+  } else if (conflicts.length > 0 && topAlternative) {
+    reasoning = `${reasons.length} structural signal(s) were combined, but "${resultEntity}" and "${topAlternative.entity}" remain close in confidence — conflicting evidence detected, human review is recommended.`;
+  } else {
+    reasoning = `${reasons.length} structural signal(s) consistently indicate a ${resultEntity} entity.`;
+  }
+
+  return {
+    suggestedEntity: resultEntity,
+    confidence: resultConfidence,
+    reasons,
+    alternatives,
+    conflicts,
+    reasoning,
+  };
 }

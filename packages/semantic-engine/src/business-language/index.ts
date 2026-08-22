@@ -92,6 +92,7 @@ export type CBLEntityKind =
   | 'INVENTORY'
   | 'INVENTORY_MOVEMENT'
   | 'INVENTORY_COUNT'
+  | 'INVENTORY_LOT'
   | 'WAREHOUSE'
   | 'WAREHOUSE_LOCATION'
   | 'STOCK_TRANSFER'
@@ -353,6 +354,7 @@ export const CBL_ENTITY_DOMAINS: Readonly<Record<CBLEntityKind, CBLDomainKind>> 
   INVENTORY: 'inventory',
   INVENTORY_MOVEMENT: 'inventory',
   INVENTORY_COUNT: 'inventory',
+  INVENTORY_LOT: 'inventory',
   WAREHOUSE: 'inventory',
   WAREHOUSE_LOCATION: 'inventory',
   STOCK_TRANSFER: 'inventory',

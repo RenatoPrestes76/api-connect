@@ -122,6 +122,73 @@ describe('POST /canonical-model/build — criação automática do modelo', () =
   });
 });
 
+describe('Sprint 46.11 — the 5 new business entities cross the canonical model', () => {
+  it('carries VARIANTE_PRODUTO, DEPOSITO, PAGAMENTO, FUNCIONARIO, and LOTE end-to-end: fixture -> ATHENA -> semantic mapping -> approval -> canonical translation -> CBL entity', async () => {
+    const { organizationId } = await setUpFullyApprovedProfile(srv.baseUrl, auth, orgCode());
+
+    const { body } = await post<BuildBody>(
+      srv.baseUrl,
+      '/canonical-model/build',
+      { organizationId },
+      auth
+    );
+
+    const byKind = (kind: string) => body.model.entities.filter((e) => e.entityKind === kind);
+
+    const variant = byKind('PRODUCT_VARIANT');
+    expect(variant).toHaveLength(1);
+    expect(variant[0]?.sourceName).toMatch(/produto_variacoes/);
+    expect(variant[0]?.cblTerm).toBe('ENTITY_PRODUCT_VARIANT');
+
+    const warehouse = byKind('WAREHOUSE');
+    expect(warehouse).toHaveLength(1);
+    expect(warehouse[0]?.sourceName).toMatch(/depositos/);
+
+    const payment = byKind('PAYMENT');
+    expect(payment).toHaveLength(1);
+    expect(payment[0]?.sourceName).toMatch(/pagamentos/);
+
+    const lot = byKind('INVENTORY_LOT');
+    expect(lot).toHaveLength(1);
+    expect(lot[0]?.sourceName).toMatch(/lotes/);
+
+    // FUNCIONARIO converges onto EMPLOYEE alongside OPERADOR — both must be
+    // present as distinct CBMEntity instances (one per source table), never
+    // collapsed into a single record.
+    const employees = byKind('EMPLOYEE');
+    const employeeSourceTables = employees.map((e) => e.sourceName);
+    expect(employeeSourceTables.some((s) => s.includes('funcionarios'))).toBe(true);
+    expect(employeeSourceTables.some((s) => s.includes('operadores'))).toBe(true);
+    expect(new Set(employeeSourceTables).size).toBe(employeeSourceTables.length);
+  });
+
+  it('VARIANTE_PRODUTO, DEPOSITO, and LOTE never collapse into PRODUTO, FILIAL/ESTOQUE, or ESTOQUE', async () => {
+    const { organizationId } = await setUpFullyApprovedProfile(srv.baseUrl, auth, orgCode());
+    const { body } = await post<BuildBody>(
+      srv.baseUrl,
+      '/canonical-model/build',
+      { organizationId },
+      auth
+    );
+
+    const productVariantEntity = body.model.entities.find((e) =>
+      e.sourceName.includes('produto_variacoes')
+    );
+    expect(productVariantEntity?.entityKind).toBe('PRODUCT_VARIANT');
+    expect(productVariantEntity?.entityKind).not.toBe('PRODUCT');
+
+    const warehouseEntity = body.model.entities.find((e) => e.sourceName.includes('depositos'));
+    expect(warehouseEntity?.entityKind).toBe('WAREHOUSE');
+    expect(warehouseEntity?.entityKind).not.toBe('BRANCH');
+    expect(warehouseEntity?.entityKind).not.toBe('INVENTORY');
+
+    const lotEntity = body.model.entities.find((e) => e.sourceName.includes('lotes'));
+    expect(lotEntity?.entityKind).toBe('INVENTORY_LOT');
+    expect(lotEntity?.entityKind).not.toBe('INVENTORY');
+    expect(lotEntity?.entityKind).not.toBe('PRODUCT');
+  });
+});
+
 describe('atualização incremental', () => {
   it('rebuilding produces a new version reflecting the current approved state', async () => {
     const { organizationId } = await setUpFullyApprovedProfile(srv.baseUrl, auth, orgCode());

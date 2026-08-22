@@ -67,6 +67,8 @@ export class SemanticMappingStore {
           suggestedConfidence: suggestion.confidence,
           reasons: suggestion.reasons,
           alternatives: suggestion.alternatives,
+          conflicts: suggestion.conflicts,
+          reasoning: suggestion.reasoning,
           approvedEntity: null,
           approvedBy: null,
           approvedAt: null,
@@ -94,6 +96,8 @@ export class SemanticMappingStore {
         existing.suggestedConfidence = suggestion.confidence;
         existing.reasons = suggestion.reasons;
         existing.alternatives = suggestion.alternatives;
+        existing.conflicts = suggestion.conflicts;
+        existing.reasoning = suggestion.reasoning;
         existing.athenaEntity = suggestion.athenaEntity;
         existing.modelVersion = SEMANTIC_MODEL_VERSION;
         existing.updatedAt = now;
@@ -116,6 +120,8 @@ export class SemanticMappingStore {
       existing.suggestedConfidence = suggestion.confidence;
       existing.reasons = suggestion.reasons;
       existing.alternatives = suggestion.alternatives;
+      existing.conflicts = suggestion.conflicts;
+      existing.reasoning = suggestion.reasoning;
       existing.athenaEntity = suggestion.athenaEntity;
       existing.status = 'PENDING';
       existing.modelVersion = SEMANTIC_MODEL_VERSION;

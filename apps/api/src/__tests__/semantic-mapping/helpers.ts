@@ -144,8 +144,10 @@ export async function discoverSchemaForProfile(
 
 /**
  * A richer ERP schema than erp-metadata's own fixture — includes a purchase
- * header + line-item pair, an operator table, a brand lookup, and a unit
- * lookup, so every semantic-mapping refinement rule has something to fire on.
+ * header + line-item pair, an operator table, a brand lookup, a unit lookup,
+ * a warehouse, a payment, an employee, a product-variant, and a lot table,
+ * so every semantic-mapping refinement rule (including the 18 minimum ERP
+ * entities from Sprint 46.10) has something to fire on.
  */
 export function buildRichErpSchemaFixture(): DatabaseSchema {
   const col = (
@@ -236,6 +238,71 @@ export function buildRichErpSchemaFixture(): DatabaseSchema {
         ],
         primaryKey: { columns: ['id'] },
         foreignKeys: [],
+        indexes: [],
+      },
+      {
+        name: 'depositos',
+        columns: [
+          col('id', 'serial', { nullable: false, isPrimaryKey: true, isUnique: true }),
+          col('nome', 'varchar', { nullable: false }),
+          col('endereco', 'varchar'),
+        ],
+        primaryKey: { columns: ['id'] },
+        foreignKeys: [],
+        indexes: [],
+      },
+      {
+        name: 'pagamentos',
+        columns: [
+          col('id', 'serial', { nullable: false, isPrimaryKey: true, isUnique: true }),
+          col('compra_id', 'integer', { nullable: false, isForeignKey: true }),
+          col('valor', 'numeric', { nullable: false }),
+          col('forma_pagamento', 'varchar'),
+          col('data_pagamento', 'timestamp'),
+        ],
+        primaryKey: { columns: ['id'] },
+        foreignKeys: [{ column: 'compra_id', referencedTable: 'compras', referencedColumn: 'id' }],
+        indexes: [],
+      },
+      {
+        name: 'funcionarios',
+        columns: [
+          col('id', 'serial', { nullable: false, isPrimaryKey: true, isUnique: true }),
+          col('nome', 'varchar', { nullable: false }),
+          col('cargo', 'varchar'),
+          col('data_admissao', 'date'),
+        ],
+        primaryKey: { columns: ['id'] },
+        foreignKeys: [],
+        indexes: [],
+      },
+      {
+        name: 'produto_variacoes',
+        columns: [
+          col('id', 'serial', { nullable: false, isPrimaryKey: true, isUnique: true }),
+          col('produto_id', 'integer', { nullable: false, isForeignKey: true }),
+          col('cor', 'varchar'),
+          col('tamanho', 'varchar'),
+        ],
+        primaryKey: { columns: ['id'] },
+        foreignKeys: [
+          { column: 'produto_id', referencedTable: 'produtos', referencedColumn: 'id' },
+        ],
+        indexes: [],
+      },
+      {
+        name: 'lotes',
+        columns: [
+          col('id', 'serial', { nullable: false, isPrimaryKey: true, isUnique: true }),
+          col('produto_id', 'integer', { nullable: false, isForeignKey: true }),
+          col('numero_lote', 'varchar', { nullable: false }),
+          col('data_validade', 'date'),
+          col('quantidade', 'integer'),
+        ],
+        primaryKey: { columns: ['id'] },
+        foreignKeys: [
+          { column: 'produto_id', referencedTable: 'produtos', referencedColumn: 'id' },
+        ],
         indexes: [],
       },
     ],
