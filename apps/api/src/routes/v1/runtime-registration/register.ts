@@ -39,6 +39,11 @@ const ERROR_STATUS: Record<string, { status: number; code: string; message: stri
     code: 'ACTIVATION_KEY_ALREADY_USED',
     message: 'Activation key has already been used (single-use)',
   },
+  ACTIVATION_KEY_REVOKED: {
+    status: 401,
+    code: 'ACTIVATION_KEY_REVOKED',
+    message: 'Activation key has been revoked',
+  },
   FINGERPRINT_DUPLICATE: {
     status: 409,
     code: 'FINGERPRINT_DUPLICATE',
@@ -120,6 +125,7 @@ export async function registerRuntimeHandler(
         runtimeId: runtime.id,
         certificate,
         organizationId: runtime.organizationId,
+        capabilities: runtime.capabilities,
         pollingInterval: config?.pollingIntervalMs ?? 60_000,
         heartbeatInterval: config?.heartbeatIntervalMs ?? 30_000,
         logLevel: config?.logLevel ?? 'info',

@@ -143,6 +143,7 @@ export async function registerDemoRuntime(
     hostname: string;
     os: string;
     architecture: string;
+    capabilities: string[];
   }> = {}
 ): Promise<{
   status: number;
@@ -151,6 +152,7 @@ export async function registerDemoRuntime(
       runtimeId: string;
       certificate: string;
       organizationId: string;
+      capabilities: string[];
       connectorsEnabled: string[];
       environments: Array<{ id: string; name: string; kind: string }>;
     };
@@ -164,6 +166,7 @@ export async function registerDemoRuntime(
       runtimeId: string;
       certificate: string;
       organizationId: string;
+      capabilities: string[];
       connectorsEnabled: string[];
       environments: Array<{ id: string; name: string; kind: string }>;
     };

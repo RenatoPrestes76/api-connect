@@ -72,6 +72,7 @@ export async function runtimeHeartbeatHandler(
     memory: input.memory,
     cpu: input.cpu,
     uptimeSeconds: input.uptimeSeconds,
+    capabilities: input.capabilities,
   });
   if (!updated) {
     apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
@@ -91,6 +92,7 @@ export async function runtimeHeartbeatHandler(
     data: {
       runtimeId: updated.id,
       status: updated.status,
+      capabilities: updated.capabilities,
       lastHeartbeat: updated.lastHeartbeat,
     },
   });

@@ -32,6 +32,7 @@ export type RegisterRuntimeError =
   | 'ACTIVATION_KEY_INVALID'
   | 'ACTIVATION_KEY_EXPIRED'
   | 'ACTIVATION_KEY_ALREADY_USED'
+  | 'ACTIVATION_KEY_REVOKED'
   | 'FINGERPRINT_DUPLICATE';
 
 export type RegisterRuntimeResult =
@@ -70,6 +71,8 @@ export class RuntimeRegistrationStore {
       used: false,
       usedAt: null,
       usedByRuntimeId: null,
+      revoked: false,
+      revokedAt: null,
       expiresAt: new Date(now.getTime() + ACTIVATION_KEY_TTL_MS).toISOString(),
       createdAt: now.toISOString(),
     });
@@ -88,6 +91,8 @@ export class RuntimeRegistrationStore {
       used: false,
       usedAt: null,
       usedByRuntimeId: null,
+      revoked: false,
+      revokedAt: null,
       expiresAt: new Date(now.getTime() + ACTIVATION_KEY_TTL_MS).toISOString(),
       createdAt: now.toISOString(),
     };
@@ -97,6 +102,19 @@ export class RuntimeRegistrationStore {
 
   listActivationKeys(): ActivationKeyRecord[] {
     return [...this.activationKeys];
+  }
+
+  getActivationKey(id: string): ActivationKeyRecord | undefined {
+    return this.activationKeys.find((k) => k.id === id);
+  }
+
+  /** Invalidates a not-yet-consumed activation key. Never reversible — a fresh key must be issued instead. */
+  revokeActivationKey(id: string): ActivationKeyRecord | null {
+    const key = this.getActivationKey(id);
+    if (!key || key.used || key.revoked) return null;
+    key.revoked = true;
+    key.revokedAt = new Date().toISOString();
+    return key;
   }
 
   private findActivationKey(
@@ -134,6 +152,7 @@ export class RuntimeRegistrationStore {
 
     const key = this.findActivationKey(input.organizationCode, input.activationKey);
     if (!key) return { ok: false, error: 'ACTIVATION_KEY_INVALID' };
+    if (key.revoked) return { ok: false, error: 'ACTIVATION_KEY_REVOKED' };
     if (key.used) return { ok: false, error: 'ACTIVATION_KEY_ALREADY_USED' };
     if (new Date(key.expiresAt).getTime() < Date.now()) {
       return { ok: false, error: 'ACTIVATION_KEY_EXPIRED' };
@@ -155,6 +174,7 @@ export class RuntimeRegistrationStore {
       version: input.runtimeVersion,
       status: 'REGISTERED',
       publicKey: input.publicKey,
+      capabilities: input.capabilities ?? [],
       lastHeartbeat: null,
       lastHeartbeatSignature: null,
       lastMemoryMb: null,
@@ -206,6 +226,7 @@ export class RuntimeRegistrationStore {
       memory?: number;
       cpu?: number;
       uptimeSeconds?: number;
+      capabilities?: string[];
     }
   ): RuntimeRegistrationRecord | null {
     const runtime = this.getRuntime(id);
@@ -219,6 +240,7 @@ export class RuntimeRegistrationStore {
     if (data.memory !== undefined) runtime.lastMemoryMb = data.memory;
     if (data.cpu !== undefined) runtime.lastCpuPercent = data.cpu;
     if (data.uptimeSeconds !== undefined) runtime.lastUptimeSeconds = data.uptimeSeconds;
+    if (data.capabilities !== undefined) runtime.capabilities = data.capabilities;
     runtime.updatedAt = now;
     if (runtime.status === 'REGISTERED' || runtime.status === 'PENDING') {
       runtime.status = 'ACTIVE';
@@ -361,6 +383,7 @@ export class RuntimeRegistrationStore {
       architecture: runtime.architecture,
       version: runtime.version,
       status: runtime.status,
+      capabilities: runtime.capabilities,
       lastHeartbeat: runtime.lastHeartbeat,
       lastMemoryMb: runtime.lastMemoryMb,
       lastCpuPercent: runtime.lastCpuPercent,

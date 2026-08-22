@@ -326,6 +326,76 @@ describe('Runtime reports a failed scan', () => {
   });
 });
 
+describe('Idempotência e isolamento no submit do resultado', () => {
+  it('resubmitting a result for an already-COMPLETED request is idempotent (reused, no error, no reprocessing)', async () => {
+    const { requestId, runtimeId, profileId, accessToken } = await requestAndClaim();
+    const first = await post<RequestBody & { reused: boolean }>(
+      srv.baseUrl,
+      '/erp-metadata/runtime/result',
+      { requestId, runtimeId, success: true, schema: buildErpSchemaFixture() },
+      bearer(accessToken)
+    );
+    expect(first.body.request.status).toBe('COMPLETED');
+    expect(first.body.reused).toBe(false);
+
+    // The same Runtime submits the exact same completed job's result a second time
+    // (e.g. a retried HTTP call after a dropped response) — must not error, must
+    // not duplicate the cached report, and must not reset the job's own state.
+    const second = await post<RequestBody & { reused: boolean }>(
+      srv.baseUrl,
+      '/erp-metadata/runtime/result',
+      { requestId, runtimeId, success: true, schema: buildErpSchemaFixture() },
+      bearer(accessToken)
+    );
+    expect(second.status).toBe(200);
+    expect(second.body.request.status).toBe('COMPLETED');
+    expect(second.body.reused).toBe(true);
+
+    const schemaSummary = await get<{ cache: { version: number } }>(
+      srv.baseUrl,
+      `/erp-metadata/schema?profileId=${profileId}`,
+      auth
+    );
+    expect(schemaSummary.body.cache.version).toBe(1); // no duplicate re-classification
+  });
+
+  it("rejects submitting a result for another Runtime's discovery request", async () => {
+    const { requestId } = await requestAndClaim();
+    const other = await setUpRuntimeAndProfile();
+    const otherAccessToken = await obtainRuntimeAccessToken(
+      srv.baseUrl,
+      other.runtimeId,
+      other.keyPair.privateKeyPem
+    );
+
+    const { status, body } = await post<ErrorBody>(
+      srv.baseUrl,
+      '/erp-metadata/runtime/result',
+      { requestId, runtimeId: other.runtimeId, success: true, schema: buildErpSchemaFixture() },
+      bearer(otherAccessToken)
+    );
+    expect(status).toBe(409);
+    expect(body.error.code).toBe('RUNTIME_MISMATCH');
+  });
+
+  it('rejects submitting a result for a nonexistent request', async () => {
+    const { keyPair, runtimeId } = await setUpRuntimeAndProfile();
+    const accessToken = await obtainRuntimeAccessToken(
+      srv.baseUrl,
+      runtimeId,
+      keyPair.privateKeyPem
+    );
+    const { status, body } = await post<ErrorBody>(
+      srv.baseUrl,
+      '/erp-metadata/runtime/result',
+      { requestId: 'does-not-exist', runtimeId, success: true, schema: buildErpSchemaFixture() },
+      bearer(accessToken)
+    );
+    expect(status).toBe(404);
+    expect(body.error.code).toBe('REQUEST_NOT_FOUND');
+  });
+});
+
 describe('Security boundary', () => {
   it('rejects a runtime/result request without a valid Runtime JWT', async () => {
     const { status } = await post(srv.baseUrl, '/erp-metadata/runtime/result', {

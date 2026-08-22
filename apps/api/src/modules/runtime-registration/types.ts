@@ -17,6 +17,14 @@ export interface RuntimeRegistrationRecord {
   version: string;
   status: RuntimeStatus;
   publicKey: string;
+  /**
+   * Declarative capabilities the Runtime reports it supports (e.g.
+   * "DATABASE_ACCESS", "POSTGRES", "HTTP"). Informational only — declaring a
+   * capability never grants access by itself; it just tells Atlas what kinds
+   * of discovery/connection requests this installation could in principle
+   * handle. Updated on every heartbeat that includes it.
+   */
+  capabilities: string[];
   lastHeartbeat: string | null;
   /** Signature of the most recently accepted heartbeat — rejects verbatim replays within the timestamp tolerance window. Not exposed via any DTO. */
   lastHeartbeatSignature: string | null;
@@ -37,6 +45,7 @@ export interface RuntimeRegistrationDTO {
   architecture: string;
   version: string;
   status: RuntimeStatus;
+  capabilities: string[];
   lastHeartbeat: string | null;
   lastMemoryMb: number | null;
   lastCpuPercent: number | null;
@@ -118,6 +127,9 @@ export interface ActivationKeyRecord {
   used: boolean;
   usedAt: string | null;
   usedByRuntimeId: string | null;
+  /** Set by an admin to invalidate a not-yet-consumed key (e.g. it leaked). A revoked key can never be consumed, even if unexpired. */
+  revoked: boolean;
+  revokedAt: string | null;
   expiresAt: string;
   createdAt: string;
 }
@@ -133,6 +145,8 @@ export interface RegisterRuntimeInput {
   hostname: string;
   os: string;
   architecture?: string;
+  /** Declarative only — see RuntimeRegistrationRecord.capabilities. */
+  capabilities?: string[];
 }
 
 export interface RuntimeConfigDTO {
@@ -165,6 +179,8 @@ export interface HeartbeatInput {
   cpu: number;
   uptimeSeconds?: number;
   status?: string;
+  /** Declarative only — see RuntimeRegistrationRecord.capabilities. Omitted means "unchanged". */
+  capabilities?: string[];
   timestamp: string;
   signature: string;
 }

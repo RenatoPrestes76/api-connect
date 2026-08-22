@@ -175,6 +175,7 @@ export type AdminAuditAction =
   | 'RUNTIME_REACTIVATED'
   | 'RUNTIME_CERTIFICATE_REVOKED'
   | 'RUNTIME_ACTIVATION_KEY_ISSUED'
+  | 'RUNTIME_ACTIVATION_KEY_REVOKED'
   // Runtime Registration & Agent Management — JWT session auth + config
   | 'RUNTIME_LOGIN'
   | 'RUNTIME_LOGOUT'

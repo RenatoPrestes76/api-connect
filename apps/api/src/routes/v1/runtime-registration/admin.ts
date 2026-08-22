@@ -147,6 +147,33 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
     )
   );
 
+  // ─── DELETE /admin/runtime-registration/activation-keys/:id ────────────
+  // Invalidates a not-yet-consumed activation key (e.g. it leaked before the
+  // Runtime ever used it). Mirrors the credentials-revocation endpoint above.
+  router.delete(
+    '/admin/runtime-registration/activation-keys/:id',
+    requirePermission('runtime-registration.delete')(
+      async (ctx: RouteContext, res: ServerResponse) => {
+        const key = runtimeRegistrationStore.revokeActivationKey(ctx.params['id'] as string);
+        if (!key) {
+          return apiError(
+            res,
+            'Activation key not found, or already used/revoked',
+            409,
+            'INVALID_STATE'
+          );
+        }
+        adminIdentityStore.recordAudit({
+          action: 'RUNTIME_ACTIVATION_KEY_REVOKED',
+          actorEmail: ctx.adminEmail ?? 'unknown',
+          target: key.id,
+          metadata: { organizationId: key.organizationId },
+        });
+        json(res, { activationKey: key });
+      }
+    )
+  );
+
   // ─── GET /admin/runtime-registration/runtimes/:id/config ───────────────
   router.get(
     '/admin/runtime-registration/runtimes/:id/config',

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import {
   startTestServer,
   get,
@@ -98,6 +98,63 @@ describe('POST /runtime/register', () => {
     });
     expect(status).toBe(404);
     expect(body.error?.code).toBe('ORGANIZATION_NOT_FOUND');
+  });
+
+  it('accepts and echoes back declared capabilities (informational — never a grant of access)', async () => {
+    const issued = await post<{ activationKey: { code: string } }>(
+      srv.baseUrl,
+      '/admin/runtime-registration/activation-keys',
+      { organizationCode: 'ORG-0001' },
+      auth
+    );
+    const { status, body } = await registerDemoRuntime(srv.baseUrl, {
+      activationKey: issued.body.activationKey.code,
+      capabilities: ['DATABASE_ACCESS', 'POSTGRES', 'HTTP'],
+    });
+    expect(status).toBe(201);
+    expect(body.data?.capabilities).toEqual(['DATABASE_ACCESS', 'POSTGRES', 'HTTP']);
+  });
+
+  it('rejects an expired activation key with 401', async () => {
+    const issued = await post<{ activationKey: { code: string } }>(
+      srv.baseUrl,
+      '/admin/runtime-registration/activation-keys',
+      { organizationCode: 'ORG-0001' },
+      auth
+    );
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(Date.now() + 31 * 24 * 60 * 60 * 1000); // 31 days later — past the 30-day TTL
+      const { status, body } = await registerDemoRuntime(srv.baseUrl, {
+        activationKey: issued.body.activationKey.code,
+      });
+      expect(status).toBe(401);
+      expect(body.error?.code).toBe('ACTIVATION_KEY_EXPIRED');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('rejects a revoked activation key with 401', async () => {
+    const issued = await post<{ activationKey: { code: string; id: string } }>(
+      srv.baseUrl,
+      '/admin/runtime-registration/activation-keys',
+      { organizationCode: 'ORG-0001' },
+      auth
+    );
+    const revoke = await del(
+      srv.baseUrl,
+      `/admin/runtime-registration/activation-keys/${issued.body.activationKey.id}`,
+      undefined,
+      auth
+    );
+    expect(revoke.status).toBe(200);
+
+    const { status, body } = await registerDemoRuntime(srv.baseUrl, {
+      activationKey: issued.body.activationKey.code,
+    });
+    expect(status).toBe(401);
+    expect(body.error?.code).toBe('ACTIVATION_KEY_REVOKED');
   });
 
   it('rejects a duplicate machine fingerprint with 409', async () => {
@@ -307,6 +364,31 @@ describe('POST /runtime/heartbeat', () => {
     expect(replayed.status).toBe(401);
     expect(replayed.body.error.code).toBe('REPLAY_REJECTED');
   });
+
+  it('updates declared capabilities on heartbeat, without requiring them to be re-signed', async () => {
+    const issued = await post<{ activationKey: { code: string } }>(
+      srv.baseUrl,
+      '/admin/runtime-registration/activation-keys',
+      { organizationCode: 'ORG-0001' },
+      auth
+    );
+    const reg = await registerDemoRuntime(srv.baseUrl, {
+      activationKey: issued.body.activationKey.code,
+      capabilities: ['DATABASE_ACCESS'],
+    });
+    const runtimeId = reg.body.data!.runtimeId;
+
+    const timestamp = new Date().toISOString();
+    const payloadFields = { runtimeId, version: '1.0.0', memory: 1, cpu: 1, timestamp };
+    const signature = signHeartbeat(reg.keyPair.privateKeyPem, payloadFields);
+    const { status, body } = await post<{ data: { capabilities: string[] } }>(
+      srv.baseUrl,
+      '/runtime/heartbeat',
+      { ...payloadFields, signature, capabilities: ['DATABASE_ACCESS', 'MYSQL', 'ODBC'] }
+    );
+    expect(status).toBe(200);
+    expect(body.data.capabilities).toEqual(['DATABASE_ACCESS', 'MYSQL', 'ODBC']);
+  });
 });
 
 // ─── Lifecycle: block / reactivate / revoke certificate ────────────────────
@@ -403,6 +485,38 @@ describe('Runtime lifecycle (admin)', () => {
     });
     expect(rejected.status).toBe(403);
     expect(rejected.body.error.code).toBe('RUNTIME_NOT_ACTIVE');
+  });
+
+  it('revokes a not-yet-used activation key, permanently preventing its use', async () => {
+    const issued = await post<{ activationKey: { code: string; id: string } }>(
+      srv.baseUrl,
+      '/admin/runtime-registration/activation-keys',
+      { organizationCode: 'ORG-0001' },
+      auth
+    );
+
+    const revoked = await del(
+      srv.baseUrl,
+      `/admin/runtime-registration/activation-keys/${issued.body.activationKey.id}`,
+      undefined,
+      auth
+    );
+    expect(revoked.status).toBe(200);
+
+    // Revoking twice is rejected rather than silently no-op.
+    const revokedAgain = await del<ErrorBody>(
+      srv.baseUrl,
+      `/admin/runtime-registration/activation-keys/${issued.body.activationKey.id}`,
+      undefined,
+      auth
+    );
+    expect(revokedAgain.status).toBe(409);
+
+    const { status, body } = await registerDemoRuntime(srv.baseUrl, {
+      activationKey: issued.body.activationKey.code,
+    });
+    expect(status).toBe(401);
+    expect(body.error?.code).toBe('ACTIVATION_KEY_REVOKED');
   });
 });
 
