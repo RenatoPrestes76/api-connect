@@ -16,6 +16,10 @@ import {
   Activity,
   Settings,
   Blocks,
+  Radar,
+  Database,
+  Waypoints,
+  Network,
 } from 'lucide-react';
 import type { MenuItem } from '@/types';
 
@@ -29,6 +33,11 @@ export const NAV_ITEMS: MenuItem[] = [
   { href: '/projects', label: 'Projects', icon: FolderKanban },
   { href: '/environments', label: 'Ambientes', icon: Layers },
   { href: '/runtimes', label: 'Runtimes', icon: ServerCog },
+  { href: '/atlas-runtimes', label: 'Atlas Runtimes', icon: Radar },
+  { href: '/discovery', label: 'Discovery', icon: Waypoints },
+  { href: '/erp-metadata', label: 'ERP Metadata', icon: Database },
+  { href: '/semantic-mapping', label: 'Semantic Mapping', icon: Network },
+  { href: '/canonical-model', label: 'Canonical Model', icon: Blocks },
   { href: '/marketplace', label: 'Connectors', icon: Plug },
   { href: '/connector-registry', label: 'Connector Registry', icon: Blocks },
   { href: '/deployments', label: 'Deploy Center', icon: Rocket },

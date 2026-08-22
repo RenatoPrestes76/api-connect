@@ -31,7 +31,20 @@ export type Permission =
   | 'projects.delete'
   | 'connector-registry.read'
   | 'connector-registry.write'
-  | 'connector-registry.delete';
+  | 'connector-registry.delete'
+  // Sprint 46.15 — Atlas ERP-discovery pipeline (distinct from the fleet
+  // "runtime.*" permissions above, which govern HA/fleet nodes, not
+  // customer-site ERP-connector Runtimes).
+  | 'runtime-registration.read'
+  | 'runtime-registration.write'
+  | 'runtime-registration.delete'
+  | 'erp-connectivity.read'
+  | 'erp-metadata.read'
+  | 'erp-metadata.write'
+  | 'semantic-mapping.read'
+  | 'semantic-mapping.write'
+  | 'canonical-model.read'
+  | 'canonical-model.write';
 
 export interface AdminUser {
   id: string;
