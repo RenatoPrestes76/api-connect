@@ -6,6 +6,8 @@ import { adminIdentityStore } from '../../../modules/admin-identity/admin-identi
 import { canonicalModelStore } from '../../../modules/canonical-model/canonical-model-store.js';
 import type { RollbackError } from '../../../modules/canonical-model/types.js';
 import { serializeModel } from './serialize.js';
+import { parseBody } from '../../../http/validation.js';
+import { RollbackBodySchema } from './schemas.js';
 
 const ROLLBACK_ERROR_STATUS: Record<RollbackError, { status: number; message: string }> = {
   MODEL_NOT_FOUND: { status: 404, message: 'No canonical model version found with that id' },
@@ -14,11 +16,6 @@ const ROLLBACK_ERROR_STATUS: Record<RollbackError, { status: number; message: st
     message: 'This canonical model version does not belong to the given organizationId',
   },
 };
-
-interface RollbackBody {
-  organizationId?: string;
-  targetModelId?: string;
-}
 
 /**
  * POST /canonical-model/rollback — restores an older model version as the
@@ -32,15 +29,8 @@ export function registerCanonicalModelRollbackRoute(router: Router): void {
   router.post(
     '/canonical-model/rollback',
     requirePermission('canonical-model.write')(async (ctx: RouteContext, res: ServerResponse) => {
-      const body = (ctx.body as RollbackBody | undefined) ?? {};
-      if (!body.organizationId || !body.targetModelId) {
-        return apiError(
-          res,
-          'organizationId and targetModelId are required',
-          422,
-          'VALIDATION_ERROR'
-        );
-      }
+      const body = parseBody(RollbackBodySchema, ctx, res);
+      if (!body) return;
 
       const result = await canonicalModelStore.rollback(body.organizationId, body.targetModelId);
       if (!result.ok) {

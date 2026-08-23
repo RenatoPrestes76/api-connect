@@ -6,6 +6,8 @@ import { adminIdentityStore } from '../../../modules/admin-identity/admin-identi
 import { canonicalModelStore } from '../../../modules/canonical-model/canonical-model-store.js';
 import type { BuildError } from '../../../modules/canonical-model/types.js';
 import { serializeModel } from './serialize.js';
+import { parseBody } from '../../../http/validation.js';
+import { BuildBodySchema } from './schemas.js';
 
 const BUILD_ERROR_STATUS: Record<BuildError, { status: number; message: string }> = {
   NO_APPROVED_MAPPINGS: {
@@ -15,19 +17,13 @@ const BUILD_ERROR_STATUS: Record<BuildError, { status: number; message: string }
   },
 };
 
-interface BuildBody {
-  organizationId?: string;
-}
-
 /** POST /canonical-model/build — (re)builds the organization's canonical business model from every connected ERP's approved mappings. */
 export function registerCanonicalModelBuildRoute(router: Router): void {
   router.post(
     '/canonical-model/build',
     requirePermission('canonical-model.write')(async (ctx: RouteContext, res: ServerResponse) => {
-      const body = (ctx.body as BuildBody | undefined) ?? {};
-      if (!body.organizationId) {
-        return apiError(res, 'organizationId is required', 422, 'VALIDATION_ERROR');
-      }
+      const body = parseBody(BuildBodySchema, ctx, res);
+      if (!body) return;
 
       const result = await canonicalModelStore.build(body.organizationId);
       if (!result.ok) {

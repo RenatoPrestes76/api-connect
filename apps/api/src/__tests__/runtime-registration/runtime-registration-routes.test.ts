@@ -533,6 +533,29 @@ describe('GET /admin/runtime-registration/runtimes', () => {
     expect(body.total).toBeGreaterThan(0);
     expect(body.runtimes.length).toBe(body.total);
   });
+
+  it('rejects a status filter outside the known enum instead of silently returning nothing (Sprint 46.18)', async () => {
+    const { status, body } = await get<{ error: { code: string } }>(
+      srv.baseUrl,
+      '/admin/runtime-registration/runtimes?status=NOT_A_REAL_STATUS',
+      auth
+    );
+    expect(status).toBe(422);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+});
+
+describe('POST /admin/runtime-registration/activation-keys — structural validation (Sprint 46.18)', () => {
+  it('returns 422 VALIDATION_ERROR when organizationCode is not a string', async () => {
+    const { status, body } = await post<{ error: { code: string } }>(
+      srv.baseUrl,
+      '/admin/runtime-registration/activation-keys',
+      { organizationCode: 42 },
+      auth
+    );
+    expect(status).toBe(422);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
 });
 
 // ─── RBAC ────────────────────────────────────────────────────────────────────
@@ -657,6 +680,16 @@ describe('POST /runtime/auth/token, /refresh, /revoke', () => {
     expect(refreshAfterRevoke.status).toBe(401);
   });
 
+  it('returns 422 VALIDATION_ERROR (not a 500) when runtimeId is not a string (Sprint 46.18)', async () => {
+    const { status, body } = await post<ErrorBody>(srv.baseUrl, '/runtime/auth/token', {
+      runtimeId: 12345,
+      timestamp: new Date().toISOString(),
+      signature: 'whatever',
+    });
+    expect(status).toBe(422);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
   it('rejects a token request signed by the wrong Runtime key', async () => {
     const reg = await issueAndRegister();
     const other = await issueAndRegister();
@@ -765,6 +798,51 @@ describe('Runtime configuration', () => {
     expect(log.some((e) => e.action === 'RUNTIME_CONFIG_UPDATED' && e.target === runtimeId)).toBe(
       true
     );
+  });
+
+  it('rejects a negative pollingIntervalMs instead of silently storing it (Sprint 46.18)', async () => {
+    const reg = await issueAndRegister();
+    const runtimeId = reg.body.data!.runtimeId;
+    const { status, body } = await patch<{ error: { code: string } }>(
+      srv.baseUrl,
+      `/admin/runtime-registration/runtimes/${runtimeId}/config`,
+      { pollingIntervalMs: -1 },
+      auth
+    );
+    expect(status).toBe(422);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('rejects an unknown logLevel enum value (Sprint 46.18)', async () => {
+    const reg = await issueAndRegister();
+    const runtimeId = reg.body.data!.runtimeId;
+    const { status } = await patch(
+      srv.baseUrl,
+      `/admin/runtime-registration/runtimes/${runtimeId}/config`,
+      { logLevel: 'verbose' },
+      auth
+    );
+    expect(status).toBe(422);
+  });
+
+  it('rejects a non-numeric heartbeatIntervalMs instead of storing a corrupt config (Sprint 46.18)', async () => {
+    const reg = await issueAndRegister();
+    const runtimeId = reg.body.data!.runtimeId;
+    const { status } = await patch(
+      srv.baseUrl,
+      `/admin/runtime-registration/runtimes/${runtimeId}/config`,
+      { heartbeatIntervalMs: 'soon' },
+      auth
+    );
+    expect(status).toBe(422);
+
+    // Confirm the invalid patch never reached the store.
+    const after = await get<{ config: { heartbeatIntervalMs: number } }>(
+      srv.baseUrl,
+      `/admin/runtime-registration/runtimes/${runtimeId}/config`,
+      auth
+    );
+    expect(after.body.config.heartbeatIntervalMs).toBe(30_000);
   });
 
   it('is included in the /runtime/register response', async () => {

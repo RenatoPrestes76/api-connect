@@ -140,6 +140,40 @@ describe('POST /erp-connectivity/profiles — criação de perfil', () => {
     expect(status).toBe(403);
     expect(body.error.code).toBe('RUNTIME_ORGANIZATION_MISMATCH');
   });
+
+  it('returns 422 VALIDATION_ERROR when port is a string instead of a number (Sprint 46.18)', async () => {
+    const { runtimeId } = await registerActiveRuntimeWithKeys(srv.baseUrl);
+    const { status, body } = await post<ErrorBody>(
+      srv.baseUrl,
+      '/erp-connectivity/profiles',
+      {
+        runtimeId,
+        organizationId: SEED_ORG_ID,
+        name: 'ERP',
+        dbType: 'POSTGRESQL',
+        host: 'h',
+        port: '5432',
+        database: 'd',
+        username: 'u',
+        password: 'p',
+      },
+      auth
+    );
+    expect(status).toBe(422);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 422 VALIDATION_ERROR when a required field is missing, and rejects before touching the store', async () => {
+    const { runtimeId } = await registerActiveRuntimeWithKeys(srv.baseUrl);
+    const { status, body } = await post<ErrorBody>(
+      srv.baseUrl,
+      '/erp-connectivity/profiles',
+      { runtimeId, organizationId: SEED_ORG_ID, name: 'ERP' },
+      auth
+    );
+    expect(status).toBe(422);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
 });
 
 describe('Criptografia das credenciais', () => {
@@ -200,6 +234,29 @@ describe('PATCH /erp-connectivity/profiles/:id — rotação de credenciais', ()
     expect(
       log.some((e) => e.action === 'CONNECTION_CREDENTIAL_ROTATED' && e.target === profileId)
     ).toBe(true);
+  });
+
+  it('rejects a non-numeric port on rotation instead of silently corrupting the profile (Sprint 46.18)', async () => {
+    const { profileId } = await createProfile();
+    const { status, body } = await patch<ErrorBody>(
+      srv.baseUrl,
+      `/erp-connectivity/profiles/${profileId}`,
+      { port: 'not-a-port' },
+      auth
+    );
+    expect(status).toBe(422);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('rejects an unknown extra field type mismatch (e.g. additionalParams as a non-object) (Sprint 46.18)', async () => {
+    const { profileId } = await createProfile();
+    const { status } = await patch(
+      srv.baseUrl,
+      `/erp-connectivity/profiles/${profileId}`,
+      { additionalParams: 'not-an-object' },
+      auth
+    );
+    expect(status).toBe(422);
   });
 });
 

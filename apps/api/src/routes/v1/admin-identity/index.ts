@@ -10,6 +10,13 @@ import {
 } from '../../../modules/admin-identity/jwt.js';
 import { loginRateLimiter } from '../../../modules/admin-identity/rate-limiter.js';
 import { requireAdminAuth, requirePermission } from '../../../middleware/admin-auth.js';
+import { parseBody, parseQuery } from '../../../http/validation.js';
+import {
+  LoginBodySchema,
+  RefreshTokenBodySchema,
+  ChangePasswordBodySchema,
+  AuditLogQuerySchema,
+} from './schemas.js';
 
 function clientIp(ctx: RouteContext): string {
   const header = ctx.headers['x-forwarded-for'];
@@ -25,10 +32,15 @@ function userAgent(ctx: RouteContext): string {
 export function registerAdminIdentityRoutes(router: Router): void {
   // ─── POST /admin/auth/login ────────────────────────────────────────────
   router.post('/admin/auth/login', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = ctx.body as { email?: string; password?: string } | undefined;
-    const email = body?.email?.trim();
-    const password = body?.password;
-    if (!email || !password) {
+    const body = parseBody(LoginBodySchema, ctx, res, {
+      status: 400,
+      code: 'MISSING_FIELDS',
+      message: 'email and password are required',
+    });
+    if (!body) return;
+    const email = body.email.trim();
+    const password = body.password;
+    if (!email) {
       return apiError(res, 'email and password are required', 400, 'MISSING_FIELDS');
     }
 
@@ -110,10 +122,12 @@ export function registerAdminIdentityRoutes(router: Router): void {
 
   // ─── POST /admin/auth/logout ────────────────────────────────────────────
   router.post('/admin/auth/logout', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = ctx.body as { refreshToken?: string } | undefined;
-    if (!body?.refreshToken) {
-      return apiError(res, 'refreshToken is required', 400, 'MISSING_FIELDS');
-    }
+    const body = parseBody(RefreshTokenBodySchema, ctx, res, {
+      status: 400,
+      code: 'MISSING_FIELDS',
+      message: 'refreshToken is required',
+    });
+    if (!body) return;
 
     const session = adminIdentityStore.findActiveSessionByRefreshToken(body.refreshToken);
     adminIdentityStore.revokeSessionByRefreshToken(body.refreshToken);
@@ -133,10 +147,12 @@ export function registerAdminIdentityRoutes(router: Router): void {
 
   // ─── POST /admin/auth/refresh ───────────────────────────────────────────
   router.post('/admin/auth/refresh', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = ctx.body as { refreshToken?: string } | undefined;
-    if (!body?.refreshToken) {
-      return apiError(res, 'refreshToken is required', 400, 'MISSING_FIELDS');
-    }
+    const body = parseBody(RefreshTokenBodySchema, ctx, res, {
+      status: 400,
+      code: 'MISSING_FIELDS',
+      message: 'refreshToken is required',
+    });
+    if (!body) return;
 
     const session = adminIdentityStore.findActiveSessionByRefreshToken(body.refreshToken);
     if (!session) {
@@ -195,10 +211,12 @@ export function registerAdminIdentityRoutes(router: Router): void {
   router.post(
     '/admin/auth/change-password',
     requireAdminAuth(async (ctx: RouteContext, res: ServerResponse) => {
-      const body = ctx.body as { currentPassword?: string; newPassword?: string } | undefined;
-      if (!body?.currentPassword || !body?.newPassword) {
-        return apiError(res, 'currentPassword and newPassword are required', 400, 'MISSING_FIELDS');
-      }
+      const body = parseBody(ChangePasswordBodySchema, ctx, res, {
+        status: 400,
+        code: 'MISSING_FIELDS',
+        message: 'currentPassword and newPassword are required',
+      });
+      if (!body) return;
       if (body.newPassword.length < 8) {
         return apiError(res, 'newPassword must be at least 8 characters', 400, 'WEAK_PASSWORD');
       }
@@ -226,9 +244,10 @@ export function registerAdminIdentityRoutes(router: Router): void {
   router.get(
     '/admin/audit-log',
     requirePermission('audit.read')(async (ctx: RouteContext, res: ServerResponse) => {
-      const limit = ctx.query.get('limit') ? Number(ctx.query.get('limit')) : 50;
+      const query = parseQuery(AuditLogQuerySchema, ctx, res);
+      if (!query) return;
       const entries = adminIdentityStore.getAuditLog({
-        limit: Number.isFinite(limit) && limit > 0 ? Math.min(limit, 200) : 50,
+        limit: query.limit !== undefined ? Math.min(query.limit, 200) : 50,
       });
       json(res, { entries, total: entries.length });
     })

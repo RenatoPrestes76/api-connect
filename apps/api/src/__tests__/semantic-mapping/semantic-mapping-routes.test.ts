@@ -118,6 +118,26 @@ describe('rejects unauthenticated access', () => {
 });
 
 describe('POST /semantic-mapping/analyze', () => {
+  it('returns 422 VALIDATION_ERROR when profileId is missing or not a string (Sprint 46.18)', async () => {
+    const missing = await post<{ error: { code: string } }>(
+      srv.baseUrl,
+      '/semantic-mapping/analyze',
+      {},
+      auth
+    );
+    expect(missing.status).toBe(422);
+    expect(missing.body.error.code).toBe('VALIDATION_ERROR');
+
+    const wrongType = await post<{ error: { code: string } }>(
+      srv.baseUrl,
+      '/semantic-mapping/analyze',
+      { profileId: 42 },
+      auth
+    );
+    expect(wrongType.status).toBe(422);
+    expect(wrongType.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
   it('rejects analysis for a profile that has never been discovered', async () => {
     const { profileId } = await (async () => {
       const { runtimeId } = await registerActiveRuntimeWithKeys(srv.baseUrl);

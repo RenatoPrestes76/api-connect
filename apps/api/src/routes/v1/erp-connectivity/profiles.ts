@@ -8,36 +8,13 @@ import {
   isSupportedDbType,
   listSupportedDrivers,
 } from '../../../modules/erp-connectivity/drivers.js';
-import type {
-  ConnectionStatus,
-  CreateProfileError,
-  DbType,
-} from '../../../modules/erp-connectivity/types.js';
-
-interface CreateProfileBody {
-  runtimeId?: string;
-  organizationId?: string;
-  name?: string;
-  erpName?: string;
-  dbType?: string;
-  host?: string;
-  port?: number;
-  database?: string;
-  username?: string;
-  password?: string;
-  additionalParams?: Record<string, string>;
-}
-
-interface UpdateProfileBody {
-  name?: string;
-  erpName?: string;
-  host?: string;
-  port?: number;
-  database?: string;
-  username?: string;
-  password?: string;
-  additionalParams?: Record<string, string>;
-}
+import type { CreateProfileError, DbType } from '../../../modules/erp-connectivity/types.js';
+import { parseBody, parseQuery } from '../../../http/validation.js';
+import {
+  CreateProfileBodySchema,
+  UpdateProfileBodySchema,
+  ListProfilesQuerySchema,
+} from './schemas.js';
 
 const CREATE_ERROR_STATUS: Record<CreateProfileError, { status: number; message: string }> = {
   RUNTIME_NOT_FOUND: { status: 404, message: 'Runtime not found' },
@@ -60,27 +37,10 @@ export function registerErpConnectivityProfileRoutes(router: Router): void {
   router.post(
     '/erp-connectivity/profiles',
     requirePermission('erp-connectivity.write')(async (ctx: RouteContext, res: ServerResponse) => {
-      const body = (ctx.body as CreateProfileBody | undefined) ?? {};
+      const body = parseBody(CreateProfileBodySchema, ctx, res);
+      if (!body) return;
       const { runtimeId, organizationId, name, dbType, host, port, database, username, password } =
         body;
-      if (
-        !runtimeId ||
-        !organizationId ||
-        !name ||
-        !dbType ||
-        !host ||
-        !port ||
-        !database ||
-        !username ||
-        !password
-      ) {
-        return apiError(
-          res,
-          'runtimeId, organizationId, name, dbType, host, port, database, username, and password are required',
-          422,
-          'VALIDATION_ERROR'
-        );
-      }
       if (!isSupportedDbType(dbType)) {
         return apiError(res, `Unsupported dbType: ${dbType}`, 422, 'UNSUPPORTED_DB_TYPE');
       }
@@ -117,10 +77,9 @@ export function registerErpConnectivityProfileRoutes(router: Router): void {
   router.get(
     '/erp-connectivity/profiles',
     requirePermission('erp-connectivity.read')(async (ctx: RouteContext, res: ServerResponse) => {
-      const runtimeId = ctx.query.get('runtimeId') ?? undefined;
-      const organizationId = ctx.query.get('organizationId') ?? undefined;
-      const status = (ctx.query.get('status') as ConnectionStatus | null) ?? undefined;
-      const profiles = erpConnectivityStore.listProfiles({ runtimeId, organizationId, status });
+      const query = parseQuery(ListProfilesQuerySchema, ctx, res);
+      if (!query) return;
+      const profiles = erpConnectivityStore.listProfiles(query);
       json(res, {
         total: profiles.length,
         profiles: profiles.map((p) => erpConnectivityStore.toDTO(p)),
@@ -143,7 +102,8 @@ export function registerErpConnectivityProfileRoutes(router: Router): void {
     '/erp-connectivity/profiles/:id',
     requirePermission('erp-connectivity.write')(async (ctx: RouteContext, res: ServerResponse) => {
       const id = ctx.params['id'] as string;
-      const patch = (ctx.body as UpdateProfileBody | undefined) ?? {};
+      const patch = parseBody(UpdateProfileBodySchema, ctx, res);
+      if (!patch) return;
       const result = erpConnectivityStore.updateProfile(id, patch);
       if (!result.ok) return apiError(res, 'Connection profile not found', 404, 'NOT_FOUND');
 

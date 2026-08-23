@@ -5,14 +5,8 @@ import { requirePermission } from '../../../middleware/admin-auth.js';
 import { erpMetadataStore } from '../../../modules/erp-metadata/erp-metadata-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
 import type { CreateDiscoveryError } from '../../../modules/erp-metadata/types.js';
-
-interface CreateDiscoveryBody {
-  runtimeId?: string;
-  organizationId?: string;
-  profileId?: string;
-  timeoutMs?: number;
-  maxAttempts?: number;
-}
+import { parseBody } from '../../../http/validation.js';
+import { CreateDiscoveryBodySchema } from './schemas.js';
 
 const CREATE_ERROR_STATUS: Record<CreateDiscoveryError, { status: number; message: string }> = {
   RUNTIME_NOT_FOUND: { status: 404, message: 'Runtime not found' },
@@ -32,16 +26,9 @@ export function registerErpMetadataDiscoverRoute(router: Router): void {
   router.post(
     '/erp-metadata/discover',
     requirePermission('erp-metadata.write')(async (ctx: RouteContext, res: ServerResponse) => {
-      const body = (ctx.body as CreateDiscoveryBody | undefined) ?? {};
+      const body = parseBody(CreateDiscoveryBodySchema, ctx, res);
+      if (!body) return;
       const { runtimeId, organizationId, profileId } = body;
-      if (!runtimeId || !organizationId || !profileId) {
-        return apiError(
-          res,
-          'runtimeId, organizationId, and profileId are required',
-          422,
-          'VALIDATION_ERROR'
-        );
-      }
 
       const result = erpMetadataStore.createDiscoveryRequest({
         runtimeId,

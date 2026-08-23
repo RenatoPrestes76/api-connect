@@ -54,6 +54,51 @@ describe('POST /admin/auth/login', () => {
     expect((body as any).error.code).toBe('MISSING_FIELDS');
   });
 
+  it('returns 400 MISSING_FIELDS (not a 500) when email is not a string (Sprint 46.18)', async () => {
+    // Before schema validation, `body?.email?.trim()` would throw a
+    // TypeError on a non-string email (e.g. a number), which the 46.17
+    // error boundary converted into an opaque 500 — the wrong status for
+    // structurally invalid input.
+    const { status, body } = await P(
+      '/admin/auth/login',
+      { email: 12345, password: 'whatever123' },
+      { 'x-forwarded-for': '10.0.1.20' }
+    );
+    expect(status).toBe(400);
+    expect((body as any).error.code).toBe('MISSING_FIELDS');
+  });
+
+  it('returns 400 MISSING_FIELDS when password is not a string (Sprint 46.18)', async () => {
+    const { status, body } = await P(
+      '/admin/auth/login',
+      { email: SEED_EMAIL, password: { not: 'a string' } },
+      { 'x-forwarded-for': '10.0.1.21' }
+    );
+    expect(status).toBe(400);
+    expect((body as any).error.code).toBe('MISSING_FIELDS');
+  });
+
+  it('returns 400 MISSING_FIELDS for a whitespace-only email, matching the pre-existing trim() behavior', async () => {
+    const { status, body } = await P(
+      '/admin/auth/login',
+      { email: '   ', password: 'whatever123' },
+      { 'x-forwarded-for': '10.0.1.22' }
+    );
+    expect(status).toBe(400);
+    expect((body as any).error.code).toBe('MISSING_FIELDS');
+  });
+
+  it('does not leak Zod internals in the response for malformed login input', async () => {
+    const { body } = await P(
+      '/admin/auth/login',
+      { email: null, password: null },
+      { 'x-forwarded-for': '10.0.1.23' }
+    );
+    const message = (body as any).error.message as string;
+    expect(message).not.toContain('Zod');
+    expect(message).not.toContain('.ts:');
+  });
+
   it('returns 401 INVALID_CREDENTIALS for an unknown email', async () => {
     const { status, body } = await P(
       '/admin/auth/login',
@@ -212,6 +257,12 @@ describe('POST /admin/auth/logout', () => {
     expect(status).toBe(400);
   });
 
+  it('returns 400 MISSING_FIELDS when refreshToken is not a string (Sprint 46.18)', async () => {
+    const { status, body } = await P('/admin/auth/logout', { refreshToken: 12345 });
+    expect(status).toBe(400);
+    expect((body as any).error.code).toBe('MISSING_FIELDS');
+  });
+
   it('invalidates the refresh token so it cannot be reused for a refresh', async () => {
     const { refreshToken } = await loginAsSeedAdmin('10.0.4.1');
 
@@ -230,6 +281,12 @@ describe('POST /admin/auth/refresh', () => {
   it('returns 400 when refreshToken is missing', async () => {
     const { status } = await P('/admin/auth/refresh', {});
     expect(status).toBe(400);
+  });
+
+  it('returns 400 MISSING_FIELDS when refreshToken is not a string (Sprint 46.18)', async () => {
+    const { status, body } = await P('/admin/auth/refresh', { refreshToken: [] });
+    expect(status).toBe(400);
+    expect((body as any).error.code).toBe('MISSING_FIELDS');
   });
 
   it('returns 401 for an unknown refresh token', async () => {
@@ -338,6 +395,17 @@ describe('POST /admin/auth/change-password', () => {
     );
     expect(status).toBe(401);
     expect((body as any).error.code).toBe('INVALID_CREDENTIALS');
+  });
+
+  it('returns 400 MISSING_FIELDS when newPassword is not a string (Sprint 46.18)', async () => {
+    const { accessToken } = await loginAsSeedAdmin('10.0.8.9');
+    const { status, body } = await P(
+      '/admin/auth/change-password',
+      { currentPassword: 'whatever', newPassword: 12345678 },
+      bearer(accessToken)
+    );
+    expect(status).toBe(400);
+    expect((body as any).error.code).toBe('MISSING_FIELDS');
   });
 
   it('changes the password and clears mustChangePassword', async () => {

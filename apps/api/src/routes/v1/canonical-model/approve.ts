@@ -6,6 +6,8 @@ import { adminIdentityStore } from '../../../modules/admin-identity/admin-identi
 import { canonicalModelStore } from '../../../modules/canonical-model/canonical-model-store.js';
 import type { ApproveModelError } from '../../../modules/canonical-model/types.js';
 import { serializeModel } from './serialize.js';
+import { parseBody } from '../../../http/validation.js';
+import { ApproveBodySchema } from './schemas.js';
 
 const APPROVE_ERROR_STATUS: Record<ApproveModelError, { status: number; message: string }> = {
   MODEL_NOT_FOUND: { status: 404, message: 'No canonical model found with that id' },
@@ -15,20 +17,13 @@ const APPROVE_ERROR_STATUS: Record<ApproveModelError, { status: number; message:
   },
 };
 
-interface ApproveBody {
-  organizationId?: string;
-  modelId?: string;
-}
-
 /** POST /canonical-model/approve — marks a built model version as the official one other Atlas modules should consume. */
 export function registerCanonicalModelApproveRoute(router: Router): void {
   router.post(
     '/canonical-model/approve',
     requirePermission('canonical-model.write')(async (ctx: RouteContext, res: ServerResponse) => {
-      const body = (ctx.body as ApproveBody | undefined) ?? {};
-      if (!body.organizationId || !body.modelId) {
-        return apiError(res, 'organizationId and modelId are required', 422, 'VALIDATION_ERROR');
-      }
+      const body = parseBody(ApproveBodySchema, ctx, res);
+      if (!body) return;
 
       const result = await canonicalModelStore.approve(body.organizationId, body.modelId);
       if (!result.ok) {

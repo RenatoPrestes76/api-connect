@@ -13,18 +13,10 @@ import {
   RUNTIME_REFRESH_TOKEN_TTL_SECONDS,
 } from '../../../modules/runtime-registration/runtime-jwt.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
+import { parseBody } from '../../../http/validation.js';
+import { RuntimeAuthTokenBodySchema, RuntimeRefreshTokenBodySchema } from './schemas.js';
 
 const REPLAY_TOLERANCE_MS = 5 * 60_000;
-
-interface IssueTokenBody {
-  runtimeId?: string;
-  timestamp?: string;
-  signature?: string;
-}
-
-interface RefreshBody {
-  refreshToken?: string;
-}
 
 /**
  * JWT session auth for Runtimes — a second, parallel auth mode alongside
@@ -36,16 +28,9 @@ interface RefreshBody {
 export function registerRuntimeAuthRoutes(router: Router): void {
   // ─── POST /runtime/auth/token ───────────────────────────────────────────
   router.post('/runtime/auth/token', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as IssueTokenBody | undefined) ?? {};
+    const body = parseBody(RuntimeAuthTokenBodySchema, ctx, res);
+    if (!body) return;
     const { runtimeId, timestamp, signature } = body;
-    if (!runtimeId || !timestamp || !signature) {
-      return apiError(
-        res,
-        'runtimeId, timestamp, and signature are required',
-        422,
-        'VALIDATION_ERROR'
-      );
-    }
 
     const runtime = runtimeRegistrationStore.getRuntime(runtimeId);
     if (!runtime) return apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
@@ -85,10 +70,8 @@ export function registerRuntimeAuthRoutes(router: Router): void {
 
   // ─── POST /runtime/auth/refresh ─────────────────────────────────────────
   router.post('/runtime/auth/refresh', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as RefreshBody | undefined) ?? {};
-    if (!body.refreshToken) {
-      return apiError(res, 'refreshToken is required', 422, 'VALIDATION_ERROR');
-    }
+    const body = parseBody(RuntimeRefreshTokenBodySchema, ctx, res);
+    if (!body) return;
 
     const session = runtimeRegistrationStore.findActiveRuntimeSession(body.refreshToken);
     if (!session) {
@@ -126,10 +109,8 @@ export function registerRuntimeAuthRoutes(router: Router): void {
 
   // ─── POST /runtime/auth/revoke ──────────────────────────────────────────
   router.post('/runtime/auth/revoke', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = (ctx.body as RefreshBody | undefined) ?? {};
-    if (!body.refreshToken) {
-      return apiError(res, 'refreshToken is required', 422, 'VALIDATION_ERROR');
-    }
+    const body = parseBody(RuntimeRefreshTokenBodySchema, ctx, res);
+    if (!body) return;
 
     const session = runtimeRegistrationStore.findActiveRuntimeSession(body.refreshToken);
     const revoked = runtimeRegistrationStore.revokeRuntimeSessionByRefreshToken(body.refreshToken);

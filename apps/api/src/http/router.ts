@@ -11,13 +11,18 @@ export interface RouteContext {
   params: Record<string, string>;
   query: URLSearchParams;
   /**
-   * Parsed JSON request body, untyped by design — no schema validation layer
-   * exists yet for POST/PATCH routes. ~30 route handlers cast this to `any`
-   * to destructure expected fields directly; that's a deliberate, narrow
-   * escape hatch for unvalidated external input, not general-purpose `any`
-   * usage, and should be replaced with real per-route validation (e.g. zod)
-   * in a dedicated pass rather than papered over with `Record<string, unknown>`
-   * casts that only push the untyped-ness one level down.
+   * Parsed JSON request body, untyped by design — the router itself has no
+   * opinion on shape; each route validates its own body/query/params via
+   * http/validation.ts's parseBody()/parseQuery()/parseParams() (zod) right
+   * at the top of the handler, closest to the HTTP boundary. Sprint 46.18
+   * did that dedicated pass for the six Control Plane modules (admin-
+   * identity, runtime-registration, erp-connectivity, erp-metadata,
+   * semantic-mapping, canonical-model) — the ~30 handlers this comment used
+   * to warn about. Route modules outside that set (billing, security, ha,
+   * helios, hub, observatory, and others predating this multi-sprint Atlas
+   * Control Plane effort) were audited but intentionally left for a
+   * follow-up pass rather than turning that sprint into a repo-wide
+   * refactor — see the 46.18 handler inventory for the full list.
    */
   body: unknown;
   rawUrl: string;

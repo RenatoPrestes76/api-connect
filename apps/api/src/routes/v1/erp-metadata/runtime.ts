@@ -5,6 +5,8 @@ import { requireRuntimeAuth } from '../../../middleware/runtime-auth.js';
 import { erpMetadataStore } from '../../../modules/erp-metadata/erp-metadata-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
 import type { ReportSchemaInput } from '../../../modules/erp-metadata/types.js';
+import { parseBody } from '../../../http/validation.js';
+import { ReportSchemaBodySchema } from './schemas.js';
 
 /**
  * Runtime-facing endpoints — JWT session auth (Sprint 46.7's
@@ -29,11 +31,8 @@ export function registerErpMetadataRuntimeRoutes(router: Router): void {
   router.post(
     '/erp-metadata/runtime/result',
     requireRuntimeAuth(async (ctx: RouteContext, res: ServerResponse) => {
-      const body = (ctx.body as Partial<ReportSchemaInput> | undefined) ?? {};
-      const { requestId, success } = body;
-      if (!requestId || success === undefined) {
-        return apiError(res, 'requestId and success are required', 422, 'VALIDATION_ERROR');
-      }
+      const body = parseBody(ReportSchemaBodySchema, ctx, res);
+      if (!body) return;
 
       const result = await erpMetadataStore.reportSchema({
         ...(body as ReportSchemaInput),

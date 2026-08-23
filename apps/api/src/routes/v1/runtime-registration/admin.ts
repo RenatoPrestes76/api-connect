@@ -5,10 +5,12 @@ import { requirePermission } from '../../../middleware/admin-auth.js';
 import { runtimeRegistrationStore } from '../../../modules/runtime-registration/runtime-registration-store.js';
 import { portalIdentityStore } from '../../../modules/portal-identity/portal-identity-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
-import type {
-  RuntimeConfigPatch,
-  RuntimeStatus,
-} from '../../../modules/runtime-registration/types.js';
+import { parseBody, parseQuery } from '../../../http/validation.js';
+import {
+  IssueActivationKeyBodySchema,
+  ListRuntimesQuerySchema,
+  RuntimeConfigPatchSchema,
+} from './schemas.js';
 
 export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
   // ─── GET /admin/runtime-registration/runtimes ──────────────────────────
@@ -16,9 +18,9 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
     '/admin/runtime-registration/runtimes',
     requirePermission('runtime-registration.read')(
       async (ctx: RouteContext, res: ServerResponse) => {
-        const organizationId = ctx.query.get('organizationId') ?? undefined;
-        const status = (ctx.query.get('status') as RuntimeStatus | null) ?? undefined;
-        const runtimes = runtimeRegistrationStore.listRuntimes({ organizationId, status });
+        const query = parseQuery(ListRuntimesQuerySchema, ctx, res);
+        if (!query) return;
+        const runtimes = runtimeRegistrationStore.listRuntimes(query);
         json(res, {
           total: runtimes.length,
           runtimes: runtimes.map((r) => runtimeRegistrationStore.toDTO(r)),
@@ -116,8 +118,9 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
     '/admin/runtime-registration/activation-keys',
     requirePermission('runtime-registration.write')(
       async (ctx: RouteContext, res: ServerResponse) => {
-        const body = ctx.body as { organizationCode?: string } | undefined;
-        const organizationCode = body?.organizationCode?.trim();
+        const body = parseBody(IssueActivationKeyBodySchema, ctx, res);
+        if (!body) return;
+        const organizationCode = body.organizationCode.trim();
         if (!organizationCode) {
           return apiError(res, 'organizationCode is required', 422, 'VALIDATION_ERROR');
         }
@@ -199,7 +202,8 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
         if (!runtimeRegistrationStore.getRuntime(runtimeId)) {
           return apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
         }
-        const patch = (ctx.body as RuntimeConfigPatch | undefined) ?? {};
+        const patch = parseBody(RuntimeConfigPatchSchema, ctx, res);
+        if (!patch) return;
         const config = runtimeRegistrationStore.updateRuntimeConfig(runtimeId, patch);
         if (!config) return apiError(res, 'Runtime config not found', 404, 'NOT_FOUND');
 

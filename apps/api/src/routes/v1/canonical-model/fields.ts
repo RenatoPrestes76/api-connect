@@ -4,6 +4,8 @@ import { json, apiError } from '../../../http/router.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
 import { canonicalModelStore } from '../../../modules/canonical-model/canonical-model-store.js';
 import { serializeField } from './serialize.js';
+import { parseQuery } from '../../../http/validation.js';
+import { FieldsQuerySchema } from './schemas.js';
 
 const NOT_BUILT_MESSAGE =
   'No canonical model has been built for this organization yet — run POST /canonical-model/build first';
@@ -13,18 +15,16 @@ export function registerCanonicalModelFieldsRoute(router: Router): void {
   router.get(
     '/canonical-model/fields',
     requirePermission('canonical-model.read')(async (ctx: RouteContext, res: ServerResponse) => {
-      const organizationId = ctx.query.get('organizationId');
-      if (!organizationId) {
-        return apiError(res, 'organizationId query parameter is required', 422, 'VALIDATION_ERROR');
-      }
-      const status = ctx.query.get('status') ?? 'approved';
+      const query = parseQuery(FieldsQuerySchema, ctx, res);
+      if (!query) return;
+      const { organizationId, entityId } = query;
+      const status = query.status ?? 'approved';
       const model =
         status === 'latest'
           ? await canonicalModelStore.getLatestDraft(organizationId)
           : await canonicalModelStore.getApproved(organizationId);
       if (!model) return apiError(res, NOT_BUILT_MESSAGE, 404, 'NOT_BUILT');
 
-      const entityId = ctx.query.get('entityId');
       const entities = entityId ? model.entities.filter((e) => e.id === entityId) : model.entities;
       if (entityId && entities.length === 0) {
         return apiError(res, `No entity found with id "${entityId}"`, 404, 'NOT_FOUND');

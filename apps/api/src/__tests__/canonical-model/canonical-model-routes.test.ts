@@ -93,6 +93,17 @@ describe('POST /canonical-model/build — criação automática do modelo', () =
     expect(body.error.code).toBe('NO_APPROVED_MAPPINGS');
   });
 
+  it('returns 422 VALIDATION_ERROR when organizationId is not a string (Sprint 46.18)', async () => {
+    const { status, body } = await post<ErrorBody>(
+      srv.baseUrl,
+      '/canonical-model/build',
+      { organizationId: 12345 },
+      auth
+    );
+    expect(status).toBe(422);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
   it('translates approved business mappings into canonical CBL entities/fields', async () => {
     const { organizationId } = await setUpFullyApprovedProfile(srv.baseUrl, auth, orgCode());
 
@@ -425,6 +436,37 @@ describe('GET /canonical-model/entities and /fields', () => {
     expect(fields.status).toBe(200);
     expect(fields.body.total).toBeGreaterThan(0);
     expect(fields.body.fields.every((f) => f.entityId === productEntity?.id)).toBe(true);
+  });
+
+  it('rejects a status value outside approved/latest instead of silently defaulting to approved (Sprint 46.18)', async () => {
+    const { organizationId } = await setUpFullyApprovedProfile(srv.baseUrl, auth, orgCode());
+    await post(srv.baseUrl, '/canonical-model/build', { organizationId }, auth);
+
+    const entities = await get<{ error: { code: string } }>(
+      srv.baseUrl,
+      `/canonical-model/entities?organizationId=${organizationId}&status=bogus`,
+      auth
+    );
+    expect(entities.status).toBe(422);
+    expect(entities.body.error.code).toBe('VALIDATION_ERROR');
+
+    const fields = await get<{ error: { code: string } }>(
+      srv.baseUrl,
+      `/canonical-model/fields?organizationId=${organizationId}&status=bogus`,
+      auth
+    );
+    expect(fields.status).toBe(422);
+    expect(fields.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('rejects a missing organizationId query parameter with 422 VALIDATION_ERROR (Sprint 46.18)', async () => {
+    const { status, body } = await get<{ error: { code: string } }>(
+      srv.baseUrl,
+      '/canonical-model/entities',
+      auth
+    );
+    expect(status).toBe(422);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
   });
 });
 

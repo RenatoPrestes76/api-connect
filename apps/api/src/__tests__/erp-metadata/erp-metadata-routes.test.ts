@@ -102,6 +102,30 @@ describe('POST /erp-metadata/discover', () => {
     expect(status).toBe(409);
     expect(body.error.code).toBe('PROFILE_RUNTIME_MISMATCH');
   });
+
+  it('returns 422 VALIDATION_ERROR when maxAttempts is not a number (Sprint 46.18)', async () => {
+    const { runtimeId, profileId } = await setUpRuntimeAndProfile();
+    const { status, body } = await post<ErrorBody>(
+      srv.baseUrl,
+      '/erp-metadata/discover',
+      { runtimeId, organizationId: SEED_ORG_ID, profileId, maxAttempts: 'lots' },
+      auth
+    );
+    expect(status).toBe(422);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+});
+
+describe('GET /erp-metadata/requests — query validation (Sprint 46.18)', () => {
+  it('rejects a status filter outside the known enum instead of silently returning an empty list', async () => {
+    const { status, body } = await get<ErrorBody>(
+      srv.baseUrl,
+      '/erp-metadata/requests?status=NOT_A_REAL_STATUS',
+      auth
+    );
+    expect(status).toBe(422);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
 });
 
 describe('GET /erp-metadata/runtime/jobs — claim via JWT', () => {
@@ -433,6 +457,18 @@ describe('Security boundary', () => {
       success: true,
     });
     expect(status).toBe(401);
+  });
+
+  it('returns 422 VALIDATION_ERROR when success is not a boolean (Sprint 46.18)', async () => {
+    const { requestId, runtimeId, accessToken } = await requestAndClaim();
+    const { status, body } = await post<ErrorBody>(
+      srv.baseUrl,
+      '/erp-metadata/runtime/result',
+      { requestId, runtimeId, success: 'yes' },
+      bearer(accessToken)
+    );
+    expect(status).toBe(422);
+    expect(body.error.code).toBe('VALIDATION_ERROR');
   });
 });
 
