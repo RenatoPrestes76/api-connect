@@ -14,6 +14,7 @@ import {
 import { SEED_ORG_ID } from '../job-orchestration/helpers.js';
 import { adminIdentityStore } from '../../modules/admin-identity/admin-identity-store.js';
 import { hashPassword } from '../../modules/admin-identity/password.js';
+import { erpMetadataStore } from '../../modules/erp-metadata/erp-metadata-store.js';
 
 interface ErrorBody {
   error: { message: string; code: string };
@@ -323,6 +324,35 @@ describe('Runtime reports a failed scan', () => {
       bearer(accessToken)
     );
     expect(second.body.request.status).toBe('FAILED');
+  });
+});
+
+describe('Recovery — classifier throws mid-scan (Sprint 46.17)', () => {
+  it('does not leave the request stuck in SCANNING; routes it through the retry/backoff machine instead', async () => {
+    const { requestId, runtimeId, accessToken } = await requestAndClaim();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const scanner = (erpMetadataStore as any).scanner as { scan: () => Promise<never> };
+    const realScan = scanner.scan;
+    scanner.scan = () => Promise.reject(new Error('classifier exploded'));
+
+    try {
+      const reported = await post<RequestBody>(
+        srv.baseUrl,
+        '/erp-metadata/runtime/result',
+        { requestId, runtimeId, success: true, schema: buildErpSchemaFixture() },
+        bearer(accessToken)
+      );
+      // The HTTP call itself must still succeed (the exception is caught and
+      // converted into a normal retry/backoff transition) — not a 500, and
+      // critically not left at 'SCANNING' where no retry could ever reach it.
+      expect(reported.status).toBe(200);
+      expect(reported.body.request.status).toBe('REQUESTED');
+      expect(reported.body.request['attempts']).toBe(1);
+      expect(reported.body.request['error']).toContain('classifier exploded');
+    } finally {
+      scanner.scan = realScan;
+    }
   });
 });
 

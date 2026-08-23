@@ -205,7 +205,23 @@ export class ErpMetadataStore {
         port: profile?.port,
         database: profile?.database,
       });
-      const report = await this.scanner.scan(dbInput);
+
+      let report: DatabaseIntelligenceReport;
+      try {
+        report = await this.scanner.scan(dbInput);
+      } catch (err) {
+        // Without this, an exception here (e.g. a malformed/hostile Runtime
+        // payload the classifier can't handle) leaves `status` stuck at the
+        // 'SCANNING' we just set above forever — invisible to the admin UI
+        // and unrecoverable, since 'SCANNING' isn't a TERMINAL_DISCOVERY_STATUS
+        // a retry could short-circuit past. Route it through the same
+        // recordFailure() backoff/terminal-state machine used for an
+        // explicit `!input.success` report instead.
+        const message = err instanceof Error ? err.message : 'Schema classification failed';
+        this.recordFailure(request, message, false);
+        return { ok: true, request, reused: false };
+      }
+
       const now = new Date().toISOString();
       this.reports.set(request.profileId, { report, expiresAt: Date.now() + CACHE_TTL_MS });
       this.cache.set(request.profileId, {

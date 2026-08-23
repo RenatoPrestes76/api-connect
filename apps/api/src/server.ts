@@ -4,6 +4,7 @@
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse, Server } from 'node:http';
 import { WebSocketServer } from 'ws';
+import { createLogger } from '@seltriva/logger';
 import { Router, apiError } from './http/router.js';
 import { MissingTenantError } from './http/tenant.js';
 import { authMiddleware } from './middleware/auth.js';
@@ -80,8 +81,10 @@ import {
 
 // ─── Request Logger ─────────────────────────────────────────────────────────
 
+const requestLog = createLogger('api');
+
 function requestLogger(
-  _ctx: Parameters<Parameters<Router['use']>[0]>[0],
+  ctx: Parameters<Parameters<Router['use']>[0]>[0],
   req: IncomingMessage,
   _res: ServerResponse,
   next: () => Promise<void>
@@ -90,16 +93,24 @@ function requestLogger(
   const result = next();
   result
     .then(() => {
-      const ms = Date.now() - start;
-      console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} — ${ms}ms`);
+      requestLog.info('request completed', {
+        requestId: ctx.requestId,
+        method: req.method,
+        url: req.url,
+        durationMs: Date.now() - start,
+      });
     })
-    .catch(() => undefined);
+    .catch(() => undefined); // failures are logged by withErrorBoundary instead
   return result;
 }
 
 // ─── Global Error Boundary ───────────────────────────────────────────────────
 
-async function withErrorBoundary(
+// Exported for direct unit testing — this is the last line of defense
+// between an unexpected exception anywhere in a route handler/middleware and
+// the process crashing or a connection hanging, so it needs coverage that
+// doesn't depend on finding an existing route willing to throw.
+export async function withErrorBoundary(
   req: IncomingMessage,
   res: ServerResponse,
   handler: () => Promise<void>
@@ -109,7 +120,18 @@ async function withErrorBoundary(
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Internal server error';
     const code = (err as { code?: string }).code;
-    console.error(`[ERROR] ${req.method} ${req.url}:`, message);
+    // The router sets this header as the very first thing it does per
+    // request (before routing/middleware/handler), so it's available here
+    // even when the failure happened before a route ever matched — letting
+    // this log line be correlated with the per-request access log emitted
+    // by requestLogger above via the same requestId.
+    requestLog.error('request failed', {
+      requestId: res.getHeader('X-Request-Id'),
+      method: req.method,
+      url: req.url,
+      error: message,
+      stack: err instanceof Error ? err.stack : undefined,
+    });
 
     if (!res.headersSent) {
       if (err instanceof MissingTenantError) {

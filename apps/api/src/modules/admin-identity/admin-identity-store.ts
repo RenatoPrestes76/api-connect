@@ -1,5 +1,6 @@
 import { randomUUID, createHash } from 'node:crypto';
 import bcrypt from 'bcryptjs';
+import { createLogger } from '@seltriva/logger';
 import type {
   AdminRole,
   AdminRoleName,
@@ -22,6 +23,8 @@ const SEED_ADMIN_EMAIL = process.env['SEED_ADMIN_EMAIL'] ?? 'admin@atlasconnect.
  * Do not reuse this value in production; override via SEED_ADMIN_PASSWORD.
  */
 const SEED_ADMIN_TEMP_PASSWORD = process.env['SEED_ADMIN_PASSWORD'] ?? 'root102030';
+
+const logger = createLogger('admin-identity');
 
 let _instance: AdminIdentityStore | null = null;
 
@@ -235,6 +238,14 @@ export class AdminIdentityStore {
 
   // ─── Audit log ──────────────────────────────────────────────────────────
 
+  /**
+   * Every Control Plane write handler calls this AFTER its own domain write
+   * already succeeded and been returned/committed — it is deliberately
+   * exception-safe so a failure here (audit is secondary, observational
+   * data) can never surface as a 500 for an action that actually went
+   * through, which would otherwise make the client believe the action
+   * failed and potentially retry/duplicate it.
+   */
   recordAudit(entry: {
     action: AdminAuditAction;
     actorId?: string;
@@ -242,14 +253,22 @@ export class AdminIdentityStore {
     target?: string;
     ip?: string;
     metadata?: Record<string, unknown>;
-  }): AdminAuditEntry {
-    const record: AdminAuditEntry = {
-      id: randomUUID(),
-      createdAt: new Date().toISOString(),
-      ...entry,
-    };
-    this.auditLog.push(record);
-    return record;
+  }): AdminAuditEntry | undefined {
+    try {
+      const record: AdminAuditEntry = {
+        id: randomUUID(),
+        createdAt: new Date().toISOString(),
+        ...entry,
+      };
+      this.auditLog.push(record);
+      return record;
+    } catch (err) {
+      logger.error('Failed to record audit entry', {
+        action: entry.action,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return undefined;
+    }
   }
 
   getAuditLog(filters: { limit?: number; action?: AdminAuditAction } = {}): AdminAuditEntry[] {

@@ -199,6 +199,12 @@ export class Router {
       }
     }
     const requestId = (req.headers['x-request-id'] as string) ?? crypto.randomUUID();
+    // Surfaced early (before any handler/middleware runs, and even on a path
+    // that 404s or throws) so both the client and the outer error boundary
+    // in server.ts can correlate this exact request to its server-side log
+    // lines — previously requestId was generated but never left this
+    // function, making that correlation impossible from the outside.
+    if (!res.headersSent) res.setHeader('X-Request-Id', requestId);
 
     let matchedRoute: Route | null = null;
     let params: Record<string, string> = {};
