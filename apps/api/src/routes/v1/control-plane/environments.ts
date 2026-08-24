@@ -41,7 +41,7 @@ export function registerEnvironmentRoutes(router: Router): void {
           'MISSING_FIELDS'
         );
       }
-      const result = controlPlaneStore.createEnvironment({
+      const result = await controlPlaneStore.createEnvironment({
         organizationId: body.organizationId,
         name: body.name,
         slug: body.slug,

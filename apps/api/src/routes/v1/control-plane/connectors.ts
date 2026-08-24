@@ -74,7 +74,7 @@ export function registerConnectorRoutes(router: Router): void {
     '/admin/control-plane/organizations/:id/connectors',
     requirePermission('marketplace.review')(async (ctx: RouteContext, res: ServerResponse) => {
       const organizationId = ctx.params?.id as string;
-      if (!controlPlaneStore.getOrganization(organizationId)) {
+      if (!(await controlPlaneStore.getOrganization(organizationId))) {
         return apiError(res, 'Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
       }
       const installed = controlPlaneStore.listOrganizationConnectors(organizationId);

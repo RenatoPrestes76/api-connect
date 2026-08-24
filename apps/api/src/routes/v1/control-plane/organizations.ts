@@ -1,7 +1,10 @@
 import type { ServerResponse } from 'http';
 import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
-import { controlPlaneStore } from '../../../modules/control-plane/control-plane-store.js';
+import {
+  controlPlaneStore,
+  OrganizationTenantNotFoundError,
+} from '../../../modules/control-plane/control-plane-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
 import type { Organization } from '../../../modules/control-plane/types.js';
@@ -13,7 +16,7 @@ export function registerOrganizationRoutes(router: Router): void {
       const tenantId = ctx.query.get('tenantId') ?? undefined;
       const status = ctx.query.get('status') ?? undefined;
       const tier = ctx.query.get('tier') ?? undefined;
-      const organizations = controlPlaneStore.listOrganizations({ tenantId, status, tier });
+      const organizations = await controlPlaneStore.listOrganizations({ tenantId, status, tier });
       json(res, { organizations, total: organizations.length });
     })
   );
@@ -21,7 +24,7 @@ export function registerOrganizationRoutes(router: Router): void {
   router.get(
     '/admin/control-plane/organizations/:id',
     requirePermission('companies.read')(async (ctx: RouteContext, res: ServerResponse) => {
-      const org = controlPlaneStore.getOrganization(ctx.params?.id as string);
+      const org = await controlPlaneStore.getOrganization(ctx.params?.id as string);
       if (!org) return apiError(res, 'Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
       json(res, org);
     })
@@ -36,12 +39,20 @@ export function registerOrganizationRoutes(router: Router): void {
       if (!body?.name || !body?.slug) {
         return apiError(res, 'name and slug are required', 400, 'MISSING_FIELDS');
       }
-      const org = controlPlaneStore.createOrganization({
-        name: body.name,
-        slug: body.slug,
-        tenantId: body.tenantId,
-        tier: body.tier,
-      });
+      let org;
+      try {
+        org = await controlPlaneStore.createOrganization({
+          name: body.name,
+          slug: body.slug,
+          tenantId: body.tenantId,
+          tier: body.tier,
+        });
+      } catch (err) {
+        if (err instanceof OrganizationTenantNotFoundError) {
+          return apiError(res, err.message, 404, 'TENANT_NOT_FOUND');
+        }
+        throw err;
+      }
       adminIdentityStore.recordAudit({
         action: 'CREATE_ORGANIZATION',
         actorId: ctx.adminUserId,
@@ -58,7 +69,7 @@ export function registerOrganizationRoutes(router: Router): void {
       const body = ctx.body as
         | Partial<Pick<Organization, 'name' | 'tier' | 'status' | 'tenantId'>>
         | undefined;
-      const org = controlPlaneStore.updateOrganization(ctx.params?.id as string, body ?? {});
+      const org = await controlPlaneStore.updateOrganization(ctx.params?.id as string, body ?? {});
       if (!org) return apiError(res, 'Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
       adminIdentityStore.recordAudit({
         action: 'UPDATE_ORGANIZATION',
@@ -75,7 +86,7 @@ export function registerOrganizationRoutes(router: Router): void {
     '/admin/control-plane/organizations/:id',
     requirePermission('companies.delete')(async (ctx: RouteContext, res: ServerResponse) => {
       const id = ctx.params?.id as string;
-      const ok = controlPlaneStore.deleteOrganization(id);
+      const ok = await controlPlaneStore.deleteOrganization(id);
       if (!ok) return apiError(res, 'Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
       adminIdentityStore.recordAudit({
         action: 'DELETE_ORGANIZATION',

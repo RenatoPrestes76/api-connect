@@ -17,7 +17,7 @@ export function registerConnectorOpsRoutes(router: Router): void {
       }
       if (!controlPlaneStore.getConnector(pluginId))
         return apiError(res, 'Connector not found', 404, 'CONNECTOR_NOT_FOUND');
-      if (!controlPlaneStore.getOrganization(body.organizationId)) {
+      if (!(await controlPlaneStore.getOrganization(body.organizationId))) {
         return apiError(res, 'Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
       }
       const record = fleetOpsStore.installConnector(body.organizationId, pluginId, body.version);

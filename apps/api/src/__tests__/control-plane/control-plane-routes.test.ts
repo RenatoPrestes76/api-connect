@@ -11,11 +11,24 @@ import {
 } from './helpers.js';
 import { adminIdentityStore } from '../../modules/admin-identity/admin-identity-store.js';
 import { hashPassword } from '../../modules/admin-identity/password.js';
+import { prisma } from '../../services/prisma.js';
 
 let srv: TestServer;
 let auth: Record<string, string>;
 
 beforeAll(async () => {
+  // Tenant/Organization are Postgres-backed as of Sprint 46.19 — unlike
+  // every other store this suite touches, that data survives across test
+  // runs, so the hardcoded slugs this file uses (below) would collide with
+  // themselves (unique constraint) on a second run against the same
+  // database. Only this file's own known test-created rows are removed —
+  // seed data (acme-corp/techventures-labs/startupxyz) is left alone and
+  // re-used across runs via control-plane-store.ts's own idempotent seed.
+  await prisma.organization.deleteMany({ where: { slug: { in: ['fresh-org', 'to-delete'] } } });
+  await prisma.tenant.deleteMany({
+    where: { slug: { in: ['newco', 'audit-check', 'nope'] } },
+  });
+
   srv = await startTestServer();
   auth = await superAdminAuth(srv.baseUrl);
 });

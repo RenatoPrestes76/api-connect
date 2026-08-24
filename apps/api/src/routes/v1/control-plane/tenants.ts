@@ -10,7 +10,7 @@ export function registerTenantRoutes(router: Router): void {
     '/admin/control-plane/tenants',
     requirePermission('companies.read')(async (ctx: RouteContext, res: ServerResponse) => {
       const status = ctx.query.get('status') ?? undefined;
-      const tenants = controlPlaneStore.listTenants({ status });
+      const tenants = await controlPlaneStore.listTenants({ status });
       json(res, { tenants, total: tenants.length });
     })
   );
@@ -18,7 +18,7 @@ export function registerTenantRoutes(router: Router): void {
   router.get(
     '/admin/control-plane/tenants/:id',
     requirePermission('companies.read')(async (ctx: RouteContext, res: ServerResponse) => {
-      const tenant = controlPlaneStore.getTenant(ctx.params?.id as string);
+      const tenant = await controlPlaneStore.getTenant(ctx.params?.id as string);
       if (!tenant) return apiError(res, 'Tenant not found', 404, 'TENANT_NOT_FOUND');
       json(res, tenant);
     })
@@ -33,7 +33,7 @@ export function registerTenantRoutes(router: Router): void {
       if (!body?.name || !body?.slug) {
         return apiError(res, 'name and slug are required', 400, 'MISSING_FIELDS');
       }
-      const tenant = controlPlaneStore.createTenant({
+      const tenant = await controlPlaneStore.createTenant({
         name: body.name,
         slug: body.slug,
         primaryContactEmail: body.primaryContactEmail,
@@ -58,7 +58,7 @@ export function registerTenantRoutes(router: Router): void {
             primaryContactEmail?: string;
           }
         | undefined;
-      const tenant = controlPlaneStore.updateTenant(ctx.params?.id as string, body ?? {});
+      const tenant = await controlPlaneStore.updateTenant(ctx.params?.id as string, body ?? {});
       if (!tenant) return apiError(res, 'Tenant not found', 404, 'TENANT_NOT_FOUND');
       adminIdentityStore.recordAudit({
         action: 'UPDATE_TENANT',
@@ -75,7 +75,7 @@ export function registerTenantRoutes(router: Router): void {
     '/admin/control-plane/tenants/:id',
     requirePermission('companies.delete')(async (ctx: RouteContext, res: ServerResponse) => {
       const id = ctx.params?.id as string;
-      const ok = controlPlaneStore.deleteTenant(id);
+      const ok = await controlPlaneStore.deleteTenant(id);
       if (!ok) return apiError(res, 'Tenant not found', 404, 'TENANT_NOT_FOUND');
       adminIdentityStore.recordAudit({
         action: 'DELETE_TENANT',

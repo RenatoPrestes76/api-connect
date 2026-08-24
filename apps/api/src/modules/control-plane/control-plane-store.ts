@@ -14,13 +14,20 @@ import type {
   FeatureFlag,
   DeploymentStatus,
 } from './types.js';
+import { tenancyRepository } from './tenancy.repository.js';
 
 let _instance: ControlPlaneStore | null = null;
 
-/** Full serializable state captured by a Disaster Recovery backup — see exportSnapshot()/importSnapshot(). */
+/**
+ * Full serializable state captured by a Disaster Recovery backup — see
+ * exportSnapshot()/importSnapshot(). Tenant/Organization are deliberately
+ * NOT included here as of Sprint 46.19 — they moved to real Postgres
+ * persistence (tenancy.repository.ts), which has its own durability/backup
+ * story (pg_dump/pg_restore, managed-Postgres snapshots), rather than
+ * mixing two different durability mechanisms for the same data in one JS
+ * object. See docs/ATLAS-46.19-CONTROL-PLANE-PERSISTENCE.md.
+ */
 export interface ControlPlaneSnapshot {
-  tenants: Tenant[];
-  organizations: Organization[];
   projects: Project[];
   workspaces: Workspace[];
   environments: Environment[];
@@ -34,8 +41,6 @@ export interface ControlPlaneSnapshot {
 }
 
 export class ControlPlaneStore {
-  private tenants: Tenant[] = [];
-  private organizations: Organization[] = [];
   private projects: Project[] = [];
   private workspaces: Workspace[] = [];
   private environments: Environment[] = [];
@@ -46,9 +51,15 @@ export class ControlPlaneStore {
   private organizationConnectors: OrganizationConnector[] = [];
   private deployments: Deployment[] = [];
   private featureFlags: FeatureFlag[] = [];
+  private seeded: Promise<void> | null = null;
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {
-    this.seed();
+    // Tenant/Organization now live in Postgres (async) and everything below
+    // this point in seed() depends on their ids, so seeding can no longer
+    // happen synchronously in the constructor — see ready(), awaited once
+    // by the module's top-level await below before the singleton is used
+    // anywhere.
   }
 
   static getInstance(): ControlPlaneStore {
@@ -56,86 +67,101 @@ export class ControlPlaneStore {
     return _instance;
   }
 
-  // ─── Tenants ────────────────────────────────────────────────────────────
-
-  listTenants(filters: { status?: string } = {}): Tenant[] {
-    let list = this.tenants.filter((t) => !t.deletedAt);
-    if (filters.status) list = list.filter((t) => t.status === filters.status);
-    return list;
+  /**
+   * Awaited once, at module load (top-level await below) — every consumer
+   * that imports `controlPlaneStore` transitively waits for seeding to
+   * finish before its own module resolves, so no route handler, test, or
+   * other module needs an explicit init call. Safe to call more than once
+   * (e.g. a test file importing this module multiple times) — the actual
+   * seed() body only ever runs once per process; later callers just await
+   * the same in-flight/completed promise instead of re-running it (its
+   * in-memory demo steps, unlike the Postgres-backed tenant/org steps,
+   * are NOT idempotent and would duplicate runtimes/connectors/deployments
+   * if actually re-executed).
+   */
+  async ready(): Promise<void> {
+    if (!this.seeded) this.seeded = this.seed();
+    await this.seeded;
   }
 
-  getTenant(id: string): Tenant | undefined {
-    return this.tenants.find((t) => t.id === id && !t.deletedAt);
+  // ─── Tenants (Postgres-backed — Sprint 46.19, see tenancy.repository.ts) ──
+
+  async listTenants(filters: { status?: string } = {}): Promise<Tenant[]> {
+    return tenancyRepository.listTenants(filters);
   }
 
-  createTenant(input: { name: string; slug: string; primaryContactEmail?: string }): Tenant {
-    const now = new Date().toISOString();
-    const tenant: Tenant = {
-      id: randomUUID(),
-      slug: input.slug,
-      name: input.name,
-      status: 'ACTIVE',
-      primaryContactEmail: input.primaryContactEmail,
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.tenants.push(tenant);
-    return tenant;
+  async getTenant(id: string): Promise<Tenant | undefined> {
+    return tenancyRepository.getTenant(id);
   }
 
-  updateTenant(
+  async createTenant(input: {
+    name: string;
+    slug: string;
+    primaryContactEmail?: string;
+  }): Promise<Tenant> {
+    return tenancyRepository.createTenant(input);
+  }
+
+  async updateTenant(
     id: string,
     patch: Partial<Pick<Tenant, 'name' | 'status' | 'primaryContactEmail'>>
-  ): Tenant | null {
-    const tenant = this.getTenant(id);
-    if (!tenant) return null;
-    Object.assign(tenant, patch, { updatedAt: new Date().toISOString() });
-    return tenant;
+  ): Promise<Tenant | null> {
+    return tenancyRepository.updateTenant(id, patch);
   }
 
-  deleteTenant(id: string): boolean {
-    const tenant = this.getTenant(id);
-    if (!tenant) return false;
-    tenant.deletedAt = new Date().toISOString();
-    return true;
+  async deleteTenant(id: string): Promise<boolean> {
+    return tenancyRepository.deleteTenant(id);
   }
 
-  // ─── Organizations ──────────────────────────────────────────────────────
+  // ─── Organizations (Postgres-backed — Sprint 46.19) ───────────────────────
 
-  listOrganizations(
+  async listOrganizations(
     filters: { tenantId?: string; status?: string; tier?: string } = {}
-  ): Organization[] {
-    let list = this.organizations.filter((o) => !o.deletedAt);
-    if (filters.tenantId) list = list.filter((o) => o.tenantId === filters.tenantId);
-    if (filters.status) list = list.filter((o) => o.status === filters.status);
-    if (filters.tier) list = list.filter((o) => o.tier === filters.tier);
-    return list;
+  ): Promise<Organization[]> {
+    return tenancyRepository.listOrganizations(filters);
   }
 
-  getOrganization(id: string): Organization | undefined {
-    return this.organizations.find((o) => o.id === id && !o.deletedAt);
+  async getOrganization(id: string): Promise<Organization | undefined> {
+    return tenancyRepository.getOrganization(id);
   }
 
-  createOrganization(input: {
+  /**
+   * Workspace + the three standard Environments are still in-memory (out of
+   * this sprint's scope, see docs/ATLAS-46.19-CONTROL-PLANE-PERSISTENCE.md)
+   * — they're created as a best-effort side effect AFTER the Organization
+   * row is durably committed in Postgres, referencing its real id. This is
+   * unchanged in nature from before the migration (it was never atomic with
+   * anything either, since everything was in-memory); what's new is that
+   * the Organization itself, and the tenant-existence check guarding it,
+   * are now a single real transaction (see tenancyRepository.createOrganization).
+   */
+  async createOrganization(input: {
     name: string;
     slug: string;
     tenantId?: string;
     tier?: Organization['tier'];
-  }): Organization {
-    const now = new Date().toISOString();
-    const org: Organization = {
-      id: randomUUID(),
-      tenantId: input.tenantId,
-      slug: input.slug,
-      name: input.name,
-      tier: input.tier ?? 'FREE',
-      status: 'ACTIVE',
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.organizations.push(org);
+  }): Promise<Organization> {
+    const result = await tenancyRepository.createOrganization(input);
+    if (!result.ok) throw new OrganizationTenantNotFoundError();
+    const org = result.organization;
+    this.ensureDefaultWorkspace(org);
+    return org;
+  }
 
-    // Every organization gets one default (hidden) workspace + the three standard environments.
+  /**
+   * Idempotent within this process's in-memory state: a brand-new
+   * Organization never has one yet (the common case, called right after
+   * createOrganization's Postgres insert above). The second caller is
+   * seed() on a restart where the Organization already existed in Postgres
+   * from a prior process — this process's in-memory workspaces/environments
+   * arrays are empty again either way, so without this the org would be
+   * left with no default workspace to attach anything to after a restart.
+   */
+  private ensureDefaultWorkspace(org: Organization): Workspace {
+    const existing = this.workspaces.find((w) => w.organizationId === org.id);
+    if (existing) return existing;
+
+    const now = new Date().toISOString();
     const workspace: Workspace = {
       id: randomUUID(),
       organizationId: org.id,
@@ -161,24 +187,20 @@ export class ControlPlaneStore {
       });
     });
 
-    return org;
+    return workspace;
   }
 
-  updateOrganization(
+  async updateOrganization(
     id: string,
     patch: Partial<Pick<Organization, 'name' | 'tier' | 'status' | 'tenantId'>>
-  ): Organization | null {
-    const org = this.getOrganization(id);
+  ): Promise<Organization | null> {
+    const org = await tenancyRepository.updateOrganization(id, patch);
     if (!org) return null;
-    Object.assign(org, patch, { updatedAt: new Date().toISOString() });
     return org;
   }
 
-  deleteOrganization(id: string): boolean {
-    const org = this.getOrganization(id);
-    if (!org) return false;
-    org.deletedAt = new Date().toISOString();
-    return true;
+  async deleteOrganization(id: string): Promise<boolean> {
+    return tenancyRepository.deleteOrganization(id);
   }
 
   // ─── Projects ───────────────────────────────────────────────────────────
@@ -197,13 +219,13 @@ export class ControlPlaneStore {
     return this.projects.find((p) => p.id === id && !p.deletedAt);
   }
 
-  createProject(input: {
+  async createProject(input: {
     organizationId: string;
     name: string;
     slug: string;
     description?: string;
-  }): Project | 'ORGANIZATION_NOT_FOUND' {
-    const org = this.getOrganization(input.organizationId);
+  }): Promise<Project | 'ORGANIZATION_NOT_FOUND'> {
+    const org = await this.getOrganization(input.organizationId);
     if (!org) return 'ORGANIZATION_NOT_FOUND';
     const now = new Date().toISOString();
     const project: Project = {
@@ -254,13 +276,13 @@ export class ControlPlaneStore {
     return this.environments.find((e) => e.id === id && !e.deletedAt);
   }
 
-  createEnvironment(input: {
+  async createEnvironment(input: {
     organizationId: string;
     name: string;
     slug: string;
     kind: Environment['kind'];
-  }): Environment | 'ORGANIZATION_NOT_FOUND' {
-    const org = this.getOrganization(input.organizationId);
+  }): Promise<Environment | 'ORGANIZATION_NOT_FOUND'> {
+    const org = await this.getOrganization(input.organizationId);
     if (!org) return 'ORGANIZATION_NOT_FOUND';
     const workspace = this.workspaces.find((w) => w.organizationId === org.id);
     const now = new Date().toISOString();
@@ -506,18 +528,16 @@ export class ControlPlaneStore {
     return this.deployments.find((d) => d.id === id);
   }
 
-  createDeployment(input: {
+  async createDeployment(input: {
     organizationId: string;
     environmentId: string;
     pluginId: string;
     pluginVersionId: string;
     triggeredBy?: string;
-  }):
-    | Deployment
-    | 'ORGANIZATION_NOT_FOUND'
-    | 'ENVIRONMENT_NOT_FOUND'
-    | 'CONNECTOR_VERSION_NOT_FOUND' {
-    if (!this.getOrganization(input.organizationId)) return 'ORGANIZATION_NOT_FOUND';
+  }): Promise<
+    Deployment | 'ORGANIZATION_NOT_FOUND' | 'ENVIRONMENT_NOT_FOUND' | 'CONNECTOR_VERSION_NOT_FOUND'
+  > {
+    if (!(await this.getOrganization(input.organizationId))) return 'ORGANIZATION_NOT_FOUND';
     if (!this.getEnvironment(input.environmentId)) return 'ENVIRONMENT_NOT_FOUND';
     const version = this.connectorVersions.find(
       (v) => v.id === input.pluginVersionId && v.pluginId === input.pluginId
@@ -632,7 +652,7 @@ export class ControlPlaneStore {
 
   // ─── Dashboard aggregation ──────────────────────────────────────────────
 
-  getDashboardSummary(): {
+  async getDashboardSummary(): Promise<{
     tenants: number;
     organizations: number;
     environments: number;
@@ -641,10 +661,14 @@ export class ControlPlaneStore {
     connectorsPublished: number;
     deploymentsInProgress: number;
     activeFeatureFlags: number;
-  } {
+  }> {
+    const [tenants, organizations] = await Promise.all([
+      this.listTenants(),
+      this.listOrganizations(),
+    ]);
     return {
-      tenants: this.listTenants().length,
-      organizations: this.listOrganizations().length,
+      tenants: tenants.length,
+      organizations: organizations.length,
       environments: this.listEnvironments().length,
       runtimesOnline: this.runtimes.filter((r) => r.status === 'ONLINE').length,
       runtimesTotal: this.runtimes.length,
@@ -659,8 +683,6 @@ export class ControlPlaneStore {
   /** Full, serializable snapshot of all business state — the "Control Plane" a DR backup actually protects. */
   exportSnapshot(): ControlPlaneSnapshot {
     return {
-      tenants: structuredClone(this.tenants),
-      organizations: structuredClone(this.organizations),
       projects: structuredClone(this.projects),
       workspaces: structuredClone(this.workspaces),
       environments: structuredClone(this.environments),
@@ -676,8 +698,6 @@ export class ControlPlaneStore {
 
   /** Replaces all in-memory state with a previously captured snapshot. */
   importSnapshot(snapshot: ControlPlaneSnapshot): void {
-    this.tenants = structuredClone(snapshot.tenants);
-    this.organizations = structuredClone(snapshot.organizations);
     this.projects = structuredClone(snapshot.projects);
     this.workspaces = structuredClone(snapshot.workspaces);
     this.environments = structuredClone(snapshot.environments);
@@ -692,48 +712,86 @@ export class ControlPlaneStore {
 
   // ─── Seed data ──────────────────────────────────────────────────────────
 
-  private seed(): void {
+  private async seed(): Promise<void> {
     const now = new Date().toISOString();
     const daysAgo = (n: number): string => new Date(Date.now() - n * 86_400_000).toISOString();
 
+    // Tenants/Organizations now persist in Postgres across restarts (Sprint
+    // 46.19), unlike the rest of this seed — so unlike everything below,
+    // this can't unconditionally re-create on every boot: a second `pnpm
+    // dev` would either duplicate rows or hit the unique(slug) constraint.
+    // "Get existing or create" makes it safe to run on every startup.
+    const ensureTenant = async (input: {
+      name: string;
+      slug: string;
+      primaryContactEmail?: string;
+    }): Promise<Tenant> =>
+      (await tenancyRepository.findTenantBySlug(input.slug)) ?? this.createTenant(input);
+
+    // Pre-existing orgs (Postgres, prior process) still need their default
+    // workspace re-materialized in THIS process's memory — createOrganization
+    // only runs (and calls ensureDefaultWorkspace itself) for a genuinely
+    // new insert, the `??` branch below skips it.
+    const ensureOrganization = async (input: {
+      name: string;
+      slug: string;
+      tenantId?: string;
+      tier?: Organization['tier'];
+    }): Promise<Organization> => {
+      const existing = await tenancyRepository.findOrganizationBySlug(input.slug);
+      if (existing) {
+        this.ensureDefaultWorkspace(existing);
+        return existing;
+      }
+      return this.createOrganization(input);
+    };
+
     // Tenants
-    const tenantAcme = this.createTenant({
+    const tenantAcme = await ensureTenant({
       name: 'Acme Corp',
       slug: 'acme-corp',
       primaryContactEmail: 'ops@acme.example',
     });
-    const tenantTech = this.createTenant({
+    const tenantTech = await ensureTenant({
       name: 'TechVentures',
       slug: 'techventures',
       primaryContactEmail: 'it@techventures.example',
     });
-    const tenantStartup = this.createTenant({
+    const tenantStartup = await ensureTenant({
       name: 'StartupXYZ',
       slug: 'startupxyz',
       primaryContactEmail: 'founder@startupxyz.example',
     });
-    this.tenants.forEach((t) => (t.createdAt = daysAgo(180)));
 
     // Organizations (createOrganization auto-creates workspace + 3 environments each)
-    const orgAcme = this.createOrganization({
+    const orgAcme = await ensureOrganization({
       name: 'Acme Corp',
       slug: 'acme-corp',
       tenantId: tenantAcme.id,
       tier: 'ENTERPRISE',
     });
-    const orgTech = this.createOrganization({
+    const orgTech = await ensureOrganization({
       name: 'TechVentures Labs',
       slug: 'techventures-labs',
       tenantId: tenantTech.id,
       tier: 'PRO',
     });
-    const orgStartup = this.createOrganization({
+    const orgStartup = await ensureOrganization({
       name: 'StartupXYZ',
       slug: 'startupxyz',
       tenantId: tenantStartup.id,
       tier: 'STARTER',
     });
-    this.organizations.forEach((o) => (o.createdAt = daysAgo(150)));
+
+    // The rest of this method (runtimes/connectors/deployments/feature
+    // flags below) is still pure in-memory demo data, unchanged from before
+    // this sprint — it re-creates fresh rows with new ids on every process
+    // boot regardless of whether the Organizations above were newly
+    // inserted or already existed in Postgres from a prior run, exactly
+    // like it always has (that data was never meant to survive a restart;
+    // only Tenant/Organization gained that property in Sprint 46.19).
+    // ensureDefaultWorkspace() above guarantees envFor() below always finds
+    // a workspace/environments to attach to either way.
 
     const envFor = (orgId: string, kind: Environment['kind']): Environment => {
       const env = this.environments.find((e) => e.organizationId === orgId && e.kind === kind);
@@ -953,4 +1011,16 @@ export class ControlPlaneStore {
   }
 }
 
+/** Thrown by createOrganization() when a given tenantId doesn't resolve to a real, non-deleted Tenant. */
+export class OrganizationTenantNotFoundError extends Error {
+  constructor() {
+    super('Tenant not found for the given tenantId');
+    this.name = 'OrganizationTenantNotFoundError';
+  }
+}
+
 export const controlPlaneStore = ControlPlaneStore.getInstance();
+// Top-level await (valid — apps/api is an ESM package): every module that
+// imports controlPlaneStore, directly or transitively, waits for this to
+// settle before its own import resolves. See ready()'s doc comment.
+await controlPlaneStore.ready();

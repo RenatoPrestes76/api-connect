@@ -41,28 +41,31 @@ describe('GET /live', () => {
 });
 
 describe('GET /ready', () => {
-  it('reports not_ready (503) with an honest, non-faked checks breakdown when the DB is unavailable', async () => {
-    // This test environment never has a real Postgres reachable — matching
-    // the "Database unavailable — running with in-memory stores only" state
-    // apps/api always logs on startup here.
+  it('reports ready (200) with database:ok now that a real Postgres is reachable (Sprint 46.19)', async () => {
+    // Prior to Sprint 46.19, this environment never had a real Postgres
+    // reachable, so this test asserted the honest not_ready/503 failure
+    // path. Sprint 46.19 wired up a real docker-compose Postgres (Control
+    // Plane Tenant/Organization persistence) — the same DATABASE_URL this
+    // endpoint checks now genuinely connects, so the honest answer flipped.
     const { status, body } = await get('/ready');
     const checks = body['checks'] as Record<string, string>;
-    expect(status).toBe(503);
-    expect(body['status']).toBe('not_ready');
-    expect(checks.database).toBe('error');
-    // Cache/queues aren't wired up in this codebase yet — must be reported
-    // as such, never faked as 'ok'.
+    expect(status).toBe(200);
+    expect(body['status']).toBe('ready');
+    expect(checks.database).toBe('ok');
+    // Cache/queues still aren't wired up in this codebase — must be
+    // reported as such, never faked as 'ok'.
     expect(checks.cache).toBe('not_configured');
     expect(checks.queues).toBe('not_configured');
   });
 });
 
 describe('GET /health', () => {
-  it('reports degraded (503) and includes a memory check', async () => {
+  it('reports healthy (200) with database:ok and includes a memory check', async () => {
     const { status, body } = await get('/health');
     const checks = body['checks'] as Record<string, string>;
-    expect(status).toBe(503);
-    expect(body['status']).toBe('degraded');
+    expect(status).toBe(200);
+    expect(body['status']).toBe('healthy');
+    expect(checks.database).toBe('ok');
     expect(['ok', 'warning']).toContain(checks.memory);
     expect(typeof body['version']).toBe('string');
   });

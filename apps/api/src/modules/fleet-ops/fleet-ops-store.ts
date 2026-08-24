@@ -85,7 +85,7 @@ export class FleetOpsStore {
     this.seed();
     // Simulated scheduler tick — promotes SCHEDULED deployment jobs whose
     // scheduledAt has arrived. No real background-job infra in this sandbox.
-    setInterval(() => this.tickScheduledJobs(), SCHEDULED_JOB_TICK_MS).unref();
+    setInterval(() => void this.tickScheduledJobs(), SCHEDULED_JOB_TICK_MS).unref();
   }
 
   static getInstance(): FleetOpsStore {
@@ -654,11 +654,11 @@ export class FleetOpsStore {
     });
   }
 
-  private executeJob(job: DeploymentJob): void {
+  private async executeJob(job: DeploymentJob): Promise<void> {
     job.status = 'IN_PROGRESS';
     job.startedAt = new Date().toISOString();
 
-    const result = controlPlaneStore.createDeployment({
+    const result = await controlPlaneStore.createDeployment({
       organizationId: job.organizationId,
       environmentId: job.environmentId,
       pluginId: job.pluginId,
@@ -690,7 +690,7 @@ export class FleetOpsStore {
     job.completedAt = new Date().toISOString();
   }
 
-  createDeploymentJob(input: {
+  async createDeploymentJob(input: {
     organizationId: string;
     environmentId: string;
     pluginId: string;
@@ -700,7 +700,7 @@ export class FleetOpsStore {
     autoRollback?: boolean;
     scheduledAt?: string;
     requestedBy?: string;
-  }): DeploymentJob {
+  }): Promise<DeploymentJob> {
     const now = new Date().toISOString();
     const job: DeploymentJob = {
       id: randomUUID(),
@@ -723,7 +723,7 @@ export class FleetOpsStore {
     };
     this.deploymentJobs.push(job);
 
-    if (job.mode === 'AUTOMATIC') this.executeJob(job);
+    if (job.mode === 'AUTOMATIC') await this.executeJob(job);
     return job;
   }
 
@@ -746,15 +746,15 @@ export class FleetOpsStore {
     return this.deploymentTasks.filter((t) => t.jobId === jobId).sort((a, b) => a.order - b.order);
   }
 
-  approveDeploymentJob(
+  async approveDeploymentJob(
     id: string,
     approvedBy?: string
-  ): DeploymentJob | 'NOT_FOUND' | 'NOT_APPROVABLE' {
+  ): Promise<DeploymentJob | 'NOT_FOUND' | 'NOT_APPROVABLE'> {
     const job = this.getDeploymentJob(id);
     if (!job) return 'NOT_FOUND';
     if (job.status !== 'PENDING_APPROVAL') return 'NOT_APPROVABLE';
     job.approvedBy = approvedBy;
-    this.executeJob(job);
+    await this.executeJob(job);
     return job;
   }
 
@@ -777,7 +777,7 @@ export class FleetOpsStore {
   }
 
   /** Promotes SCHEDULED jobs whose scheduledAt has arrived. */
-  private tickScheduledJobs(): void {
+  private async tickScheduledJobs(): Promise<void> {
     const now = Date.now();
     for (const job of this.deploymentJobs) {
       if (
@@ -785,7 +785,7 @@ export class FleetOpsStore {
         job.scheduledAt &&
         new Date(job.scheduledAt).getTime() <= now
       ) {
-        this.executeJob(job);
+        await this.executeJob(job);
       }
     }
   }

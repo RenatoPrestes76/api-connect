@@ -9,7 +9,7 @@ export function registerDashboardRoutes(router: Router): void {
   router.get(
     '/admin/control-plane/dashboard',
     requirePermission('dashboard.view')(async (_ctx: RouteContext, res: ServerResponse) => {
-      const summary = controlPlaneStore.getDashboardSummary();
+      const summary = await controlPlaneStore.getDashboardSummary();
       const recentAudit = adminIdentityStore.getAuditLog({ limit: 10 });
       json(res, { summary, recentAudit });
     })

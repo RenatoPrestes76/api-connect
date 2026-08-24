@@ -7,9 +7,17 @@ services:
       POSTGRES_PASSWORD: seltriva_dev_password
       POSTGRES_DB: seltriva_connect
     ports:
-      - '5432:5432'
+      # Host-side port intentionally not 5432 — this machine already runs a
+      # separate, unrelated native PostgreSQL Windows service bound to 5432,
+      # and both processes ended up listening on that port simultaneously,
+      # so host connections could land on either one nondeterministically
+      # (Prisma hit the native instance and got a real but wrong "access
+      # denied", since it obviously has no `seltriva` role/database). The
+      # container's own internal port stays the Postgres default.
+      - '5433:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U seltriva']
       interval: 10s

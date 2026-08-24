@@ -84,7 +84,7 @@ export function registerDeploymentJobRoutes(router: Router): void {
           'INVALID_STRATEGY'
         );
       }
-      const job = fleetOpsStore.createDeploymentJob({
+      const job = await fleetOpsStore.createDeploymentJob({
         organizationId: body.organizationId,
         environmentId: body.environmentId,
         pluginId: body.pluginId,
@@ -110,7 +110,7 @@ export function registerDeploymentJobRoutes(router: Router): void {
     '/admin/fleet/deployments/:id/approve',
     requirePermission('marketplace.publish')(async (ctx: RouteContext, res: ServerResponse) => {
       const id = ctx.params?.id as string;
-      const result = fleetOpsStore.approveDeploymentJob(id, ctx.adminUserId);
+      const result = await fleetOpsStore.approveDeploymentJob(id, ctx.adminUserId);
       if (result === 'NOT_FOUND')
         return apiError(res, 'Deployment job not found', 404, 'JOB_NOT_FOUND');
       if (result === 'NOT_APPROVABLE')

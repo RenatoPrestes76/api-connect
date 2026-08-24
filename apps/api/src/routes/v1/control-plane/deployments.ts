@@ -54,7 +54,7 @@ export function registerDeploymentRoutes(router: Router): void {
           'MISSING_FIELDS'
         );
       }
-      const result = controlPlaneStore.createDeployment({
+      const result = await controlPlaneStore.createDeployment({
         organizationId: body.organizationId,
         environmentId: body.environmentId,
         pluginId: body.pluginId,

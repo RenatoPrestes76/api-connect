@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     globals: false,
     environment: 'node',
+    setupFiles: ['./vitest.setup.ts'],
     env: {
       SUPABASE_JWT_SECRET: 'test-only-secret-do-not-use-in-prod',
     },

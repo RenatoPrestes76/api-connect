@@ -59,7 +59,7 @@ class ChaosRunner {
           outcome = this.runLoadBalancerFailover();
           break;
         case 'deployment_rollback':
-          outcome = this.runDeploymentRollback();
+          outcome = await this.runDeploymentRollback();
           break;
         case 'region_failover':
           outcome = this.runRegionFailover();
@@ -172,8 +172,9 @@ class ChaosRunner {
     };
   }
 
-  private runDeploymentRollback(): ScenarioOutcome {
-    const org = controlPlaneStore.listOrganizations()[0];
+  private async runDeploymentRollback(): Promise<ScenarioOutcome> {
+    const orgs = await controlPlaneStore.listOrganizations();
+    const org = orgs[0];
     const env = org ? controlPlaneStore.listEnvironments({ organizationId: org.id })[0] : undefined;
     const connector = controlPlaneStore.listConnectors()[0];
     const version = connector ? controlPlaneStore.getConnectorVersions(connector.id)[0] : undefined;
@@ -187,7 +188,7 @@ class ChaosRunner {
       };
     }
 
-    const job = fleetOpsStore.createDeploymentJob({
+    const job = await fleetOpsStore.createDeploymentJob({
       organizationId: org.id,
       environmentId: env.id,
       pluginId: connector.id,
@@ -196,7 +197,7 @@ class ChaosRunner {
       strategy: 'ROLLING',
     });
     fleetOpsStore.injectDeploymentFailure(job.id, 'Health check batch 2/3');
-    const approved = fleetOpsStore.approveDeploymentJob(job.id, 'chaos-runner');
+    const approved = await fleetOpsStore.approveDeploymentJob(job.id, 'chaos-runner');
     const finalStatus = typeof approved === 'string' ? approved : approved.status;
     const passed = finalStatus === 'ROLLED_BACK';
 

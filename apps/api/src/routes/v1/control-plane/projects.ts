@@ -35,7 +35,7 @@ export function registerProjectRoutes(router: Router): void {
       if (!body?.organizationId || !body?.name || !body?.slug) {
         return apiError(res, 'organizationId, name and slug are required', 400, 'MISSING_FIELDS');
       }
-      const result = controlPlaneStore.createProject({
+      const result = await controlPlaneStore.createProject({
         organizationId: body.organizationId,
         name: body.name,
         slug: body.slug,
