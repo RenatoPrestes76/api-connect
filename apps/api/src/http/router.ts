@@ -296,10 +296,20 @@ export function corsHeaders(requestOrigin?: string): Record<string, string> {
 
 export function json(res: ServerResponse, data: unknown, status = 200): void {
   const body = JSON.stringify(data);
+  // res.req is Node's own back-reference to the request this response
+  // belongs to — reading the Origin header here (rather than requiring
+  // every one of this function's ~hundreds of call sites to thread it
+  // through) is what makes corsHeaders() reflect the *actual* calling
+  // origin on real responses, not just on the OPTIONS preflight above.
+  // Without this, allowedOrigin() always fell back to allowlist[0], so a
+  // CORS_ALLOWED_ORIGINS with more than one entry silently broke every
+  // origin except the first (undetectable in dev, where CORS_ALLOWED_
+  // ORIGINS is normally unset and the '*' fallback masks it).
+  const requestOrigin = res.req?.headers['origin'];
   res.writeHead(status, {
     'Content-Type': 'application/json',
     'Content-Length': Buffer.byteLength(body),
-    ...corsHeaders(),
+    ...corsHeaders(Array.isArray(requestOrigin) ? requestOrigin[0] : requestOrigin),
   });
   res.end(body);
 }
