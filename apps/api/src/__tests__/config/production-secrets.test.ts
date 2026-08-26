@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { assertProductionSecretsConfigured } from '../../services/production-secrets.js';
+import {
+  assertProductionSecretsConfigured,
+  assertProductionCorsConfigured,
+} from '../../services/production-secrets.js';
 
 const SECRET_ENV_VARS = [
   'ADMIN_JWT_SECRET',
@@ -47,5 +50,36 @@ describe('assertProductionSecretsConfigured', () => {
       process.env[key] = `configured-${key}`;
     }
     expect(() => assertProductionSecretsConfigured('production')).not.toThrow();
+  });
+});
+
+describe('assertProductionCorsConfigured', () => {
+  const original = process.env['CORS_ALLOWED_ORIGINS'];
+
+  afterEach(() => {
+    if (original === undefined) Reflect.deleteProperty(process.env, 'CORS_ALLOWED_ORIGINS');
+    else process.env['CORS_ALLOWED_ORIGINS'] = original;
+  });
+
+  it('is a no-op outside production even when unset', () => {
+    Reflect.deleteProperty(process.env, 'CORS_ALLOWED_ORIGINS');
+    expect(() => assertProductionCorsConfigured('development')).not.toThrow();
+    expect(() => assertProductionCorsConfigured('test')).not.toThrow();
+  });
+
+  it('throws in production when CORS_ALLOWED_ORIGINS is unset', () => {
+    Reflect.deleteProperty(process.env, 'CORS_ALLOWED_ORIGINS');
+    expect(() => assertProductionCorsConfigured('production')).toThrowError(/CORS_ALLOWED_ORIGINS/);
+  });
+
+  it('throws in production when CORS_ALLOWED_ORIGINS is the open wildcard', () => {
+    process.env['CORS_ALLOWED_ORIGINS'] = '*';
+    expect(() => assertProductionCorsConfigured('production')).toThrowError(/CORS_ALLOWED_ORIGINS/);
+  });
+
+  it('does not throw in production once a real allowlist is configured', () => {
+    process.env['CORS_ALLOWED_ORIGINS'] =
+      'https://app.atlasappruntime.com.br,https://admin.atlasappruntime.com.br';
+    expect(() => assertProductionCorsConfigured('production')).not.toThrow();
   });
 });

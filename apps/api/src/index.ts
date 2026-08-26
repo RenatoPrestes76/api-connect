@@ -5,13 +5,17 @@ import 'dotenv/config';
 import { createLogger } from '@seltriva/logger';
 import { getConfig } from '@seltriva/config';
 import { createApiServer } from './server.js';
-import { assertProductionSecretsConfigured } from './services/production-secrets.js';
+import {
+  assertProductionSecretsConfigured,
+  assertProductionCorsConfigured,
+} from './services/production-secrets.js';
 
 const logger = createLogger('api');
 
 async function main(): Promise<void> {
   const config = getConfig();
   assertProductionSecretsConfigured(config.env);
+  assertProductionCorsConfigured(config.env);
 
   logger.info('Starting Seltriva Connect API', {
     environment: config.env,

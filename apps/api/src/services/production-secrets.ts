@@ -35,3 +35,22 @@ export function assertProductionSecretsConfigured(env: string): void {
     );
   }
 }
+
+/**
+ * CORS_ALLOWED_ORIGINS unset (router.ts's allowedOrigin()) falls back to a
+ * wildcard '*' — the right default for zero-setup local dev, but a silent
+ * hole in production if the operator forgot to set it (e.g. render.yaml
+ * marks it `sync: false`, precisely so it's easy to forget). Same
+ * fail-loud-at-startup shape as assertProductionSecretsConfigured, for a
+ * config gap rather than a secret one.
+ */
+export function assertProductionCorsConfigured(env: string): void {
+  if (env !== 'production') return;
+
+  const configured = process.env['CORS_ALLOWED_ORIGINS'];
+  if (!configured || configured.trim() === '' || configured.trim() === '*') {
+    throw new Error(
+      'Refusing to start in production with an open CORS policy. Set CORS_ALLOWED_ORIGINS to a comma-separated allowlist (e.g. https://app.atlasappruntime.com.br,https://admin.atlasappruntime.com.br).'
+    );
+  }
+}
