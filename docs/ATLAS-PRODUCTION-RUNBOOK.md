@@ -262,6 +262,56 @@ threshold logic. Neither was changed in this sprint (no gap fix was small,
 local, and safe enough to justify — this is noted as a reservation, not
 fixed here).
 
+> **Update (ATLAS 46.20-B):** the gap above is closed. A real client for
+> surface 3 now exists at `apps/agent/src/atlas-runtime-client/`, wired
+> into `apps/agent`'s bootstrap as an additive, opt-in second enrollment
+> path. See the "Runtime Enrollment" section below and
+> `docs/ATLAS-RUNTIME-CLIENT.md` for the full detail. The heartbeat
+> reservation above still stands unchanged — 46.20-B intentionally did not
+> merge the two mechanisms.
+
+## Runtime Enrollment (ATLAS 46.20-B)
+
+The real Runtime client lives at `apps/agent/src/atlas-runtime-client/` —
+full detail in `docs/ATLAS-RUNTIME-CLIENT.md`. Summary for operational use:
+
+**Geração da identidade**: on first run, the client generates an Ed25519
+keypair + a machine fingerprint and persists them at
+`<data_dir>/atlas-runtime-identity.json`. The private key never leaves that
+file — it's never transmitted (only the public key is, at registration)
+and never logged. Subsequent runs reuse the same identity.
+
+**Registration**: `ATLAS_API_URL` + `ATLAS_ORGANIZATION_CODE` +
+`ATLAS_ACTIVATION_KEY` (a single-use key from
+`POST /admin/runtime-registration/activation-keys`) → `POST /runtime/register`
+→ a `runtimeId` is assigned and persisted alongside the identity. Missing
+any of the three required env vars skips this path entirely (non-fatal,
+same as the existing `SELTRIVA_CLOUD_URL` gate) rather than failing agent
+startup.
+
+**Heartbeat**: an Ed25519-signed `POST /runtime/heartbeat` — promotes the
+Runtime from `REGISTERED` to `ACTIVE` on Atlas's side. Uses
+`runtime-registration`'s own heartbeat, not the older
+`atlas/heartbeat.ts`/`agent-observability` mechanism (see the reservation
+above).
+
+**Discovery**: after obtaining a short-lived JWT (`POST /runtime/auth/token`,
+also Ed25519-signed), the client polls `GET /erp-metadata/runtime/jobs`
+(Bearer auth) for any discovery job Atlas assigned to it.
+
+**Job execution**: for each claimed job, the client runs a real GENESIS
+(`@seltriva/database-sdk`'s `PostgresDriver`) schema introspection against
+the database configured via `ATLAS_SCAN_DB_*` env vars — no fixture, no
+new ERP engine.
+
+**Result**: `POST /erp-metadata/runtime/result` (Bearer auth) with the real
+introspected schema. Atlas runs it through ATHENA (`DatabaseScanner`)
+server-side automatically — nothing further required from the client.
+
+**Troubleshooting**: see `docs/ATLAS-RUNTIME-CLIENT.md`'s Troubleshooting
+section for the specific error codes (`ACTIVATION_KEY_ALREADY_USED`,
+`INVALID_SIGNATURE`, `REPLAY_REJECTED`, etc.) and what each one means.
+
 ## Security Baseline (Fase 12)
 
 - **Secrets in code**: none found — scanned for common key/private-key

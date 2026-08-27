@@ -589,8 +589,64 @@ export class AgentBootstrapperImpl implements AgentBuilder {
       }
     }
 
+    // A second, independent enrollment path (ATLAS 46.20-B): the real
+    // Ed25519 runtime-registration protocol, gated by its own env vars and
+    // non-fatal on failure — same shape as the cloud registration above,
+    // deliberately not merged with it (see docs/ATLAS-RUNTIME-CLIENT-AUDIT.md).
+    const atlasApiUrl = process.env['ATLAS_API_URL'];
+    if (!atlasApiUrl) {
+      warnings.push('ATLAS_API_URL not set — skipping Atlas runtime-registration enrollment');
+    } else {
+      try {
+        await this._enrollWithAtlas(config, atlasApiUrl);
+        console.log('[Phase 7] Enrolled with Atlas (runtime-registration protocol)');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        warnings.push(`Atlas enrollment failed: ${msg} — running without Atlas enrollment`);
+        console.warn(`[Phase 7] Atlas enrollment failed: ${msg}`);
+      }
+    }
+
     console.log(`[Phase 7] Agent ready — id=${config.agent.id} name=${config.agent.name}`);
     process.emit('agent:ready' as never);
+  }
+
+  private async _enrollWithAtlas(config: AgentConfig, apiUrl: string): Promise<void> {
+    const organizationCode = process.env['ATLAS_ORGANIZATION_CODE'];
+    const activationKey = process.env['ATLAS_ACTIVATION_KEY'];
+    if (!organizationCode || !activationKey) {
+      throw new Error(
+        'ATLAS_ORGANIZATION_CODE and ATLAS_ACTIVATION_KEY are required alongside ATLAS_API_URL'
+      );
+    }
+
+    const { runAtlasRuntimeClient } = await import('../atlas-runtime-client/run.js');
+    const scanTarget = process.env['ATLAS_SCAN_DB_HOST']
+      ? {
+          host: process.env['ATLAS_SCAN_DB_HOST'] as string,
+          port: Number(process.env['ATLAS_SCAN_DB_PORT'] ?? 5432),
+          database: process.env['ATLAS_SCAN_DB_NAME'] as string,
+          username: process.env['ATLAS_SCAN_DB_USER'] as string,
+          password: process.env['ATLAS_SCAN_DB_PASSWORD'] as string,
+        }
+      : undefined;
+
+    const result = await runAtlasRuntimeClient({
+      apiUrl,
+      organizationCode,
+      activationKey,
+      dataDir: config.agent.data_dir,
+      runtimeVersion: config.agent.version,
+      hostname: hostname(),
+      os: platform(),
+      architecture: arch(),
+      capabilities: config.connectors.database.map((d) => d.type),
+      scanTarget,
+    });
+
+    console.log(
+      `[Phase 7] Atlas runtime ${result.identity.runtimeId} — heartbeat=${result.heartbeatStatus}, jobs=${result.jobsSucceeded}/${result.jobsProcessed}`
+    );
   }
 
   private async _registerWithCloud(config: AgentConfig, cloudUrl: string): Promise<void> {
