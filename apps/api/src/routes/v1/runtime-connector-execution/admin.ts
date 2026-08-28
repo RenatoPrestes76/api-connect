@@ -62,7 +62,7 @@ export function registerConnectorExecutionAdminRoutes(router: Router): void {
     requirePermission('runtime-connector-execution.write')(
       async (ctx: RouteContext, res: ServerResponse) => {
         const id = ctx.params['id'] as string;
-        const result = runtimeConnectorExecutionStore.rollbackExecution(
+        const result = await runtimeConnectorExecutionStore.rollbackExecution(
           id,
           ctx.adminEmail ?? 'unknown'
         );

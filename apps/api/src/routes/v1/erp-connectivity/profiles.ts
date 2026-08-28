@@ -45,7 +45,7 @@ export function registerErpConnectivityProfileRoutes(router: Router): void {
         return apiError(res, `Unsupported dbType: ${dbType}`, 422, 'UNSUPPORTED_DB_TYPE');
       }
 
-      const result = erpConnectivityStore.createProfile({
+      const result = await erpConnectivityStore.createProfile({
         runtimeId,
         organizationId,
         name,

@@ -46,9 +46,10 @@ export function registerOrganizationRoutes(router: Router): void {
       const org = await controlPlaneStore.getOrganization(id);
       if (!org) return apiError(res, 'Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
 
-      const runtimes = runtimeRegistrationStore
-        .listRuntimes({ controlPlaneOrganizationId: id })
-        .map((r) => runtimeRegistrationStore.toDTO(r));
+      const runtimeRecords = await runtimeRegistrationStore.listRuntimes({
+        controlPlaneOrganizationId: id,
+      });
+      const runtimes = runtimeRecords.map((r) => runtimeRegistrationStore.toDTO(r));
       json(res, { runtimes, total: runtimes.length });
     })
   );
@@ -92,8 +93,17 @@ export function registerOrganizationRoutes(router: Router): void {
       const body = ctx.body as
         | Partial<Pick<Organization, 'name' | 'tier' | 'status' | 'tenantId'>>
         | undefined;
-      const org = await controlPlaneStore.updateOrganization(ctx.params?.id as string, body ?? {});
-      if (!org) return apiError(res, 'Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
+      const result = await controlPlaneStore.updateOrganization(
+        ctx.params?.id as string,
+        body ?? {}
+      );
+      if (!result.ok) {
+        if (result.error === 'TENANT_NOT_FOUND') {
+          return apiError(res, 'Tenant not found for the given tenantId', 404, 'TENANT_NOT_FOUND');
+        }
+        return apiError(res, 'Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
+      }
+      const org = result.organization;
       adminIdentityStore.recordAudit({
         action: 'UPDATE_ORGANIZATION',
         actorId: ctx.adminUserId,

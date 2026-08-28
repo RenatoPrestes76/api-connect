@@ -3,6 +3,7 @@ import { portalIdentityStore } from '../portal-identity/portal-identity-store.js
 import { hashFingerprint } from './fingerprint.js';
 import { issueCertificate } from './certificate.js';
 import { needsUpdate } from './version-control.js';
+import { runtimeRegistrationRepository } from './runtime-registration.repository.js';
 import type {
   RuntimeRegistrationRecord,
   RuntimeCertificateRecord,
@@ -33,7 +34,8 @@ export type RegisterRuntimeError =
   | 'ACTIVATION_KEY_EXPIRED'
   | 'ACTIVATION_KEY_ALREADY_USED'
   | 'ACTIVATION_KEY_REVOKED'
-  | 'FINGERPRINT_DUPLICATE';
+  | 'FINGERPRINT_DUPLICATE'
+  | 'PUBLIC_KEY_ALREADY_REGISTERED';
 
 export type RegisterRuntimeResult =
   | { ok: true; runtime: RuntimeRegistrationRecord; certificate: string }
@@ -42,7 +44,11 @@ export type RegisterRuntimeResult =
 let _instance: RuntimeRegistrationStore | null = null;
 
 export class RuntimeRegistrationStore {
-  private runtimes: RuntimeRegistrationRecord[] = [];
+  // Runtime registrations themselves are Prisma-backed as of ATLAS 46.22
+  // (runtime-registration.repository.ts) — no in-memory array here anymore.
+  // Activation keys/certificates/sessions/config remain in-memory,
+  // deliberately out of this sprint's scope (see the repository's own
+  // header comment).
   private certificates: RuntimeCertificateRecord[] = [];
   private activationKeys: ActivationKeyRecord[] = [];
   private sessions: RuntimeSessionRecord[] = [];
@@ -126,33 +132,24 @@ export class RuntimeRegistrationStore {
     );
   }
 
-  // ─── Runtimes ────────────────────────────────────────────────────────────
+  // ─── Runtimes (Prisma-backed — ATLAS 46.22, see runtime-registration.repository.ts) ──
 
-  findByFingerprintHash(hash: string): RuntimeRegistrationRecord | undefined {
-    return this.runtimes.find((r) => r.machineFingerprintHash === hash && r.status !== 'REVOKED');
+  async findByFingerprintHash(hash: string): Promise<RuntimeRegistrationRecord | undefined> {
+    return runtimeRegistrationRepository.findByFingerprintHash(hash);
   }
 
-  getRuntime(id: string): RuntimeRegistrationRecord | undefined {
-    return this.runtimes.find((r) => r.id === id);
+  async getRuntime(id: string): Promise<RuntimeRegistrationRecord | undefined> {
+    return runtimeRegistrationRepository.findById(id);
   }
 
-  listRuntimes(
+  async listRuntimes(
     filter: {
       organizationId?: string;
       controlPlaneOrganizationId?: string;
       status?: RuntimeStatus;
     } = {}
-  ): RuntimeRegistrationRecord[] {
-    return this.runtimes.filter((r) => {
-      if (filter.organizationId && r.organizationId !== filter.organizationId) return false;
-      if (
-        filter.controlPlaneOrganizationId &&
-        r.controlPlaneOrganizationId !== filter.controlPlaneOrganizationId
-      )
-        return false;
-      if (filter.status && r.status !== filter.status) return false;
-      return true;
-    });
+  ): Promise<RuntimeRegistrationRecord[]> {
+    return runtimeRegistrationRepository.list(filter);
   }
 
   async registerRuntime(input: RegisterRuntimeInput): Promise<RegisterRuntimeResult> {
@@ -168,34 +165,34 @@ export class RuntimeRegistrationStore {
     }
 
     const fingerprintHash = hashFingerprint(input.fingerprint);
-    if (this.findByFingerprintHash(fingerprintHash)) {
+
+    // The repository's own unique constraints (machineFingerprintHash,
+    // publicKey) are the real, race-proof guard — this pre-check only
+    // exists to fail fast with the same error before spending an
+    // activation-key consumption on a request that's going to be rejected
+    // anyway.
+    if (await this.findByFingerprintHash(fingerprintHash)) {
       return { ok: false, error: 'FINGERPRINT_DUPLICATE' };
     }
+    if (await runtimeRegistrationRepository.findByPublicKey(input.publicKey)) {
+      return { ok: false, error: 'PUBLIC_KEY_ALREADY_REGISTERED' };
+    }
 
-    const now = new Date();
-    const runtime: RuntimeRegistrationRecord = {
-      id: randomUUID(),
+    const created = await runtimeRegistrationRepository.create({
       organizationId: org.id,
       controlPlaneOrganizationId: org.controlPlaneOrganizationId,
       machineFingerprintHash: fingerprintHash,
+      publicKey: input.publicKey,
       hostname: input.hostname,
       os: input.os,
       architecture: input.architecture ?? 'unknown',
       version: input.runtimeVersion,
-      status: 'REGISTERED',
-      publicKey: input.publicKey,
       capabilities: input.capabilities ?? [],
-      lastHeartbeat: null,
-      lastHeartbeatSignature: null,
-      lastMemoryMb: null,
-      lastCpuPercent: null,
-      lastUptimeSeconds: null,
-      registeredAt: now.toISOString(),
-      activatedAt: null,
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-    };
-    this.runtimes.push(runtime);
+    });
+    if (!created.ok) return { ok: false, error: created.error };
+    const runtime = created.runtime;
+
+    const now = new Date();
     this.configs.push({
       runtimeId: runtime.id,
       ...DEFAULT_RUNTIME_CONFIG,
@@ -222,12 +219,12 @@ export class RuntimeRegistrationStore {
   }
 
   /** True when `signature` was already accepted for this runtime's most recent heartbeat — rejects verbatim request replay. */
-  isReplayedSignature(id: string, signature: string): boolean {
-    const runtime = this.getRuntime(id);
+  async isReplayedSignature(id: string, signature: string): Promise<boolean> {
+    const runtime = await this.getRuntime(id);
     return runtime?.lastHeartbeatSignature === signature;
   }
 
-  recordHeartbeat(
+  async recordHeartbeat(
     id: string,
     data: {
       version: string;
@@ -238,42 +235,37 @@ export class RuntimeRegistrationStore {
       uptimeSeconds?: number;
       capabilities?: string[];
     }
-  ): RuntimeRegistrationRecord | null {
-    const runtime = this.getRuntime(id);
+  ): Promise<RuntimeRegistrationRecord | null> {
+    const runtime = await this.getRuntime(id);
     if (!runtime) return null;
     if (runtime.status === 'BLOCKED' || runtime.status === 'REVOKED') return null;
 
-    const now = new Date().toISOString();
-    runtime.lastHeartbeat = now;
-    runtime.lastHeartbeatSignature = data.signature;
-    runtime.version = data.version;
-    if (data.memory !== undefined) runtime.lastMemoryMb = data.memory;
-    if (data.cpu !== undefined) runtime.lastCpuPercent = data.cpu;
-    if (data.uptimeSeconds !== undefined) runtime.lastUptimeSeconds = data.uptimeSeconds;
-    if (data.capabilities !== undefined) runtime.capabilities = data.capabilities;
-    runtime.updatedAt = now;
-    if (runtime.status === 'REGISTERED' || runtime.status === 'PENDING') {
-      runtime.status = 'ACTIVE';
-      runtime.activatedAt = now;
-    }
-    return runtime;
+    const activate = runtime.status === 'REGISTERED' || runtime.status === 'PENDING';
+    const updated = await runtimeRegistrationRepository.recordHeartbeat(id, {
+      version: data.version,
+      signature: data.signature,
+      memory: data.memory,
+      cpu: data.cpu,
+      uptimeSeconds: data.uptimeSeconds,
+      capabilities: data.capabilities,
+      activate,
+    });
+    return updated ?? null;
   }
 
-  blockRuntime(id: string): RuntimeRegistrationRecord | null {
-    const runtime = this.getRuntime(id);
-    if (!runtime) return null;
-    runtime.status = 'BLOCKED';
-    runtime.updatedAt = new Date().toISOString();
+  async blockRuntime(id: string): Promise<RuntimeRegistrationRecord | null> {
+    const updated = await runtimeRegistrationRepository.updateStatus(id, 'BLOCKED');
+    if (!updated) return null;
     this.revokeAllRuntimeSessions(id);
-    return runtime;
+    return updated;
   }
 
-  reactivateRuntime(id: string): RuntimeRegistrationRecord | null {
-    const runtime = this.getRuntime(id);
+  async reactivateRuntime(id: string): Promise<RuntimeRegistrationRecord | null> {
+    const runtime = await this.getRuntime(id);
     if (!runtime || runtime.status !== 'BLOCKED') return null;
-    runtime.status = runtime.lastHeartbeat ? 'ACTIVE' : 'REGISTERED';
-    runtime.updatedAt = new Date().toISOString();
-    return runtime;
+    const nextStatus: RuntimeStatus = runtime.lastHeartbeat ? 'ACTIVE' : 'REGISTERED';
+    const updated = await runtimeRegistrationRepository.updateStatus(id, nextStatus);
+    return updated ?? null;
   }
 
   // ─── Certificates ────────────────────────────────────────────────────────
@@ -286,15 +278,13 @@ export class RuntimeRegistrationStore {
     return this.certificates.find((c) => c.certificateId === certificateId);
   }
 
-  revokeCertificate(runtimeId: string): RuntimeCertificateRecord | null {
+  async revokeCertificate(runtimeId: string): Promise<RuntimeCertificateRecord | null> {
     const cert = this.getCertificate(runtimeId);
     if (!cert || cert.revoked) return null;
     cert.revoked = true;
     cert.revokedAt = new Date().toISOString();
-    const runtime = this.getRuntime(runtimeId);
+    const runtime = await runtimeRegistrationRepository.updateStatus(runtimeId, 'REVOKED');
     if (runtime) {
-      runtime.status = 'REVOKED';
-      runtime.updatedAt = new Date().toISOString();
       this.revokeAllRuntimeSessions(runtimeId);
     }
     return cert;

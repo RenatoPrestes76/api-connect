@@ -43,7 +43,7 @@ export function registerMessageSendRoute(router: Router): void {
         );
       }
 
-      const result = messageDeliveryStore.sendMessage({
+      const result = await messageDeliveryStore.sendMessage({
         organizationId,
         runtimeId,
         jobId: body.jobId,

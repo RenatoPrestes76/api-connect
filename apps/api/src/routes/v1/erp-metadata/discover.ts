@@ -30,7 +30,7 @@ export function registerErpMetadataDiscoverRoute(router: Router): void {
       if (!body) return;
       const { runtimeId, organizationId, profileId } = body;
 
-      const result = erpMetadataStore.createDiscoveryRequest({
+      const result = await erpMetadataStore.createDiscoveryRequest({
         runtimeId,
         organizationId,
         profileId,

@@ -124,8 +124,8 @@ export class JobOrchestrationStore {
 
   // ─── Create ──────────────────────────────────────────────────────────────
 
-  createJob(input: CreateJobInput): CreateJobResult {
-    const runtime = runtimeRegistrationStore.getRuntime(input.runtimeId);
+  async createJob(input: CreateJobInput): Promise<CreateJobResult> {
+    const runtime = await runtimeRegistrationStore.getRuntime(input.runtimeId);
     if (!runtime) return { ok: false, error: 'RUNTIME_NOT_FOUND' };
     if (runtime.organizationId !== input.organizationId) {
       return { ok: false, error: 'RUNTIME_ORGANIZATION_MISMATCH' };

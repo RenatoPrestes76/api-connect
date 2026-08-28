@@ -49,6 +49,11 @@ const ERROR_STATUS: Record<string, { status: number; code: string; message: stri
     code: 'FINGERPRINT_DUPLICATE',
     message: 'A Runtime with this machine fingerprint is already registered',
   },
+  PUBLIC_KEY_ALREADY_REGISTERED: {
+    status: 409,
+    code: 'PUBLIC_KEY_ALREADY_REGISTERED',
+    message: 'This Ed25519 public key is already registered to a different Runtime',
+  },
 };
 
 export async function registerRuntimeHandler(

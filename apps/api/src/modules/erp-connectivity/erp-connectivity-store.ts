@@ -57,8 +57,8 @@ export class ErpConnectivityStore {
 
   // ─── Profiles ────────────────────────────────────────────────────────────
 
-  createProfile(input: CreateConnectionProfileInput): CreateProfileResult {
-    const runtime = runtimeRegistrationStore.getRuntime(input.runtimeId);
+  async createProfile(input: CreateConnectionProfileInput): Promise<CreateProfileResult> {
+    const runtime = await runtimeRegistrationStore.getRuntime(input.runtimeId);
     if (!runtime) return { ok: false, error: 'RUNTIME_NOT_FOUND' };
     if (runtime.organizationId !== input.organizationId) {
       return { ok: false, error: 'RUNTIME_ORGANIZATION_MISMATCH' };

@@ -28,7 +28,7 @@ export function requireRuntimeAuth(handler: RouteHandler): RouteHandler {
       return apiError(res, 'Invalid or expired Runtime session', 401, 'INVALID_SESSION');
     }
 
-    const runtime = runtimeRegistrationStore.getRuntime(payload.sub);
+    const runtime = await runtimeRegistrationStore.getRuntime(payload.sub);
     if (!runtime || runtime.status === 'BLOCKED' || runtime.status === 'REVOKED') {
       return apiError(res, 'Runtime session is no longer valid', 401, 'SESSION_REVOKED');
     }

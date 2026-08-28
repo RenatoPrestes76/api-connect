@@ -40,7 +40,11 @@ export function registerConnectorAssignRoute(router: Router): void {
           return apiError(res, 'runtimeId and connectorId are required', 422, 'VALIDATION_ERROR');
         }
 
-        const result = connectorInstallationStore.assignConnector(runtimeId, connectorId, version);
+        const result = await connectorInstallationStore.assignConnector(
+          runtimeId,
+          connectorId,
+          version
+        );
         if (!result.ok) {
           const mapped = ERROR_STATUS[result.error];
           return apiError(res, mapped.message, mapped.status, result.error);

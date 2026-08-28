@@ -57,7 +57,41 @@ Replay protection is a ±5-minute timestamp window plus exact-signature
 dedupe — there's no separate nonce field in this protocol (the brief this
 sprint started from assumed a generic nonce/header scheme; the real,
 already-shipped protocol is simpler, and this client matches what's
-actually there rather than what was assumed).
+actually there rather than what was assumed). Since ATLAS 46.22, the
+dedupe signature (`lastHeartbeatSignature`) is a real Postgres column, so
+this protection now survives an Atlas API process restart too — see
+"Runtime Registration Persistence (ATLAS 46.22)" below.
+
+## Runtime Registration Persistence (ATLAS 46.22)
+
+Server-side, the Runtime identity this client creates and registers is
+Prisma-backed (`RuntimeRegistration` model,
+`packages/database/prisma/schema.prisma`) — not in-memory. Concretely,
+for anyone integrating this client:
+
+- **Re-registering after an Atlas API restart is unnecessary.** The
+  client's own identity file (`<data_dir>/atlas-runtime-identity.json`)
+  and the server's registration record are both durable — a restarted
+  Atlas API still knows this Runtime, still accepts its heartbeats, and
+  still issues access tokens for it, with no re-registration step.
+- **Two Runtimes can never share an identity.** `machineFingerprintHash`
+  and `publicKey` are both unique at the database level (not just an
+  application-side check) — attempting to register a second Runtime with
+  either value already in use is rejected with `FINGERPRINT_DUPLICATE` or
+  `PUBLIC_KEY_ALREADY_REGISTERED` respectively, even under concurrent
+  registration attempts racing the same identity.
+- **Tenant association is derived, not stored on the Runtime.** A
+  Runtime's Tenant is whatever its linked Control Plane Organization's
+  `tenantId` currently is — see
+  `docs/ADR-ATLAS-CANONICAL-CLIENT-ONBOARDING.md`'s "ATLAS 46.22 — Runtime
+  Registration Persistence" section for the full design and the current,
+  externally-undecided state of Tenant provisioning for self-service
+  signups.
+
+See `apps/api/src/__tests__/runtime-registration/restart-durability-e2e.test.ts`
+for the real (spawned-process kill/restart) proof, and
+`apps/api/src/__tests__/runtime-registration/registration-idempotency.test.ts`
+for the uniqueness/race proofs.
 
 ## Running it
 
@@ -87,6 +121,20 @@ bootstrap step whenever the four required env vars above are set.
   submit → ATHENA classification, plus six negative cases (invalid
   signature, replayed signature, expired timestamp, unknown runtime,
   unauthenticated poll, cross-tenant result submission).
+- `apps/api/src/__tests__/runtime-registration/restart-durability-e2e.test.ts`
+  (ATLAS 46.22) — a real `node dist/index.js` process, killed and
+  restarted mid-test on the same port: register → verify in Postgres →
+  kill → restart → Runtime still there → heartbeat still works → full
+  ERP discovery/GENESIS/ATHENA cycle still completes against the new
+  process.
+- `apps/api/src/__tests__/runtime-registration/tenant-association.test.ts`
+  (ATLAS 46.22) — PENDING_TENANT_ASSIGNMENT, Tenant reassignment
+  propagation, and cross-tenant Control Plane isolation.
+- `apps/api/src/__tests__/runtime-registration/registration-idempotency.test.ts`
+  (ATLAS 46.22) — same-fingerprint and same-public-key duplicate
+  registration rejection, including a real concurrent-request race proving
+  the database unique constraint (not just an app-level check) is the
+  actual guard.
 
 ## Troubleshooting
 

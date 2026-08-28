@@ -81,8 +81,8 @@ model AgentAccessToken {
   revokedAt   DateTime?
   lastUsedAt  DateTime?
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([agentId])
   @@index([tokenPrefix])
@@ -125,7 +125,7 @@ model AtlasAgentHeartbeat {
   memoryUsage Int?
   uptime      Int?
   queueSize   Int?
-  status      String   // computed HealthStatus (ONLINE/STALE/OFFLINE) at receipt time
+  status      String // computed HealthStatus (ONLINE/STALE/OFFLINE) at receipt time
 
   @@index([agentId])
   @@index([agentId, receivedAt])
@@ -147,7 +147,7 @@ model AtlasAgentSyncHistory {
   recordsFailed    Int
   bytesTransferred Int
   compressionRatio Float?
-  result           String   // SUCCESS | PARTIAL | FAILED
+  result           String // SUCCESS | PARTIAL | FAILED
 
   @@index([agentId])
   @@index([agentId, finishedAt])
@@ -482,22 +482,23 @@ model Organization {
   metadata Json?
   settings Json?
 
-  tenant       Tenant?              @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  members      OrganizationMember[]
-  workspaces   Workspace[]
-  licenses     License[]
-  agents       Agent[]
-  plugins      OrganizationPlugin[]
-  apiKeys      ApiKey[]
-  auditEntries AuditEntry[]
-  notifications Notification[]
-  featureFlags FeatureFlag[]
-  jobs         Job[]
-  deployments  Deployment[]
-  erpIntegration ErpIntegration?
-  alerts         RuntimeAlert[]
-  deploymentJobs DeploymentJob[]
-  metricSnapshots MetricSnapshot[]
+  tenant               Tenant?               @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  members              OrganizationMember[]
+  workspaces           Workspace[]
+  licenses             License[]
+  agents               Agent[]
+  plugins              OrganizationPlugin[]
+  apiKeys              ApiKey[]
+  auditEntries         AuditEntry[]
+  notifications        Notification[]
+  featureFlags         FeatureFlag[]
+  jobs                 Job[]
+  deployments          Deployment[]
+  erpIntegration       ErpIntegration?
+  alerts               RuntimeAlert[]
+  deploymentJobs       DeploymentJob[]
+  metricSnapshots      MetricSnapshot[]
+  runtimeRegistrations RuntimeRegistration[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -507,6 +508,66 @@ model Organization {
   @@index([status])
   @@index([tier])
   @@index([tenantId])
+}
+
+// ─── RUNTIME REGISTRATION (ATLAS 46.22) ────────────────────────────────────
+//
+// The canonical Runtime identity (see docs/ADR-ATLAS-CANONICAL-CLIENT-
+// ONBOARDING.md and docs/ATLAS-RUNTIME-ONBOARDING-MATRIX.md) — the Ed25519-
+// registered ERP-connector Runtime driven by apps/agent/src/atlas-runtime-
+// client/. Deliberately its own model, not a reuse of `Agent` (a different,
+// currently-non-functional legacy enrollment flow) or `AtlasAgent` (the
+// Runtime Installer's separate flow, no keypair) — the 46.21 ADR found
+// none of the three enrollment flows to be interchangeable.
+//
+// `organizationId` is portal-identity's in-memory OrganizationRecord.id —
+// a different, non-Prisma ID space, kept as a plain indexed string rather
+// than a FK (there is nothing in Postgres for it to reference). The real
+// FK is `controlPlaneOrganizationId`, established at portal-registration
+// time (46.21's linkControlPlaneOrganization). Tenant association is
+// deliberately NOT a column here — it's derived by joining through
+// `controlPlaneOrganization.tenantId`, so a Runtime is never out of sync
+// with its Organization's actual Tenant. When `controlPlaneOrganizationId`
+// is set but that Organization's `tenantId` is null, the Runtime is in a
+// PENDING_TENANT_ASSIGNMENT state — not a fake/system Tenant, an honest
+// absence (see docs/ATLAS-RUNTIME-CLIENT.md).
+model RuntimeRegistration {
+  id                         String                    @id @default(cuid())
+  organizationId             String
+  controlPlaneOrganizationId String?
+  controlPlaneOrganization   Organization?             @relation(fields: [controlPlaneOrganizationId], references: [id], onDelete: SetNull)
+  machineFingerprintHash     String                    @unique
+  publicKey                  String                    @unique
+  hostname                   String
+  os                         String
+  architecture               String
+  version                    String
+  status                     RuntimeRegistrationStatus @default(REGISTERED)
+  capabilities               String[]
+  lastHeartbeat              DateTime?
+  // Signature of the most recently accepted heartbeat — rejects verbatim
+  // replays within the timestamp tolerance window. Never exposed via any DTO.
+  lastHeartbeatSignature     String?
+  lastMemoryMb               Float?
+  lastCpuPercent             Float?
+  lastUptimeSeconds          Int?
+
+  registeredAt DateTime  @default(now())
+  activatedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@index([controlPlaneOrganizationId])
+  @@index([status])
+}
+
+enum RuntimeRegistrationStatus {
+  PENDING
+  REGISTERED
+  ACTIVE
+  BLOCKED
+  REVOKED
 }
 
 // ─── USERS ────────────────────────────────────────────────────────────────
@@ -590,10 +651,10 @@ model Environment {
   status      EnvironmentStatus @default(ACTIVE)
   metadata    Json?
 
-  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  agents       Agent[]
-  featureFlags FeatureFlag[]
-  deployments  Deployment[]
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  agents         Agent[]
+  featureFlags   FeatureFlag[]
+  deployments    Deployment[]
   deploymentJobs DeploymentJob[]
 
   createdAt DateTime  @default(now())
@@ -624,13 +685,13 @@ model Agent {
   capabilities   String[]
   metadata       Json?
 
-  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  environment  Environment       @relation(fields: [environmentId], references: [id], onDelete: Cascade)
-  heartbeats   AgentHeartbeat[]
-  telemetry    AgentTelemetryLog[]
-  commands     AgentCommand[]
+  organization    Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  environment     Environment             @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  heartbeats      AgentHeartbeat[]
+  telemetry       AgentTelemetryLog[]
+  commands        AgentCommand[]
   healthSnapshots RuntimeHealthSnapshot[]
-  logs         RuntimeLog[]
+  logs            RuntimeLog[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -662,10 +723,10 @@ model AgentHeartbeat {
 }
 
 model AgentTelemetryLog {
-  id       String  @id @default(cuid())
-  agentId  String
-  kind     String
-  payload  Json
+  id        String @id @default(cuid())
+  agentId   String
+  kind      String
+  payload   Json
   sizeBytes Int    @default(0)
 
   agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
@@ -678,15 +739,15 @@ model AgentTelemetryLog {
 }
 
 model AgentCommand {
-  id          String  @id @default(cuid())
-  agentId     String
-  commandType String
-  payload     Json
-  issuedAt    DateTime @default(now())
-  expiresAt   DateTime?
+  id             String    @id @default(cuid())
+  agentId        String
+  commandType    String
+  payload        Json
+  issuedAt       DateTime  @default(now())
+  expiresAt      DateTime?
   acknowledgedAt DateTime?
-  result      Json?
-  error       String?
+  result         Json?
+  error          String?
 
   agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
@@ -715,11 +776,11 @@ model Plugin {
   schema      Json?
   metadata    Json?
 
-  publisher       User                 @relation(fields: [publisherId], references: [id])
-  organizations   OrganizationPlugin[]
-  versions        PluginVersion[]
-  deployments     Deployment[]
-  deploymentJobs  DeploymentJob[]
+  publisher      User                 @relation(fields: [publisherId], references: [id])
+  organizations  OrganizationPlugin[]
+  versions       PluginVersion[]
+  deployments    Deployment[]
+  deploymentJobs DeploymentJob[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -731,19 +792,19 @@ model Plugin {
 }
 
 model PluginVersion {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   pluginId  String
   version   String
   changelog String?
   manifest  Json
   published Boolean @default(false)
 
-  plugin        Plugin          @relation(fields: [pluginId], references: [id], onDelete: Cascade)
-  deployments   Deployment[]
+  plugin         Plugin          @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  deployments    Deployment[]
   deploymentJobs DeploymentJob[]
 
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   @@unique([pluginId, version])
   @@index([pluginId])
@@ -790,7 +851,7 @@ model Deployment {
 }
 
 model OrganizationPlugin {
-  id             String @id @default(cuid())
+  id             String  @id @default(cuid())
   organizationId String
   pluginId       String
   version        String
@@ -811,14 +872,14 @@ model OrganizationPlugin {
 // ─── LICENSES ─────────────────────────────────────────────────────────────
 
 model License {
-  id             String        @id @default(cuid())
+  id             String           @id @default(cuid())
   organizationId String
-  key            String        @unique
+  key            String           @unique
   tier           OrganizationTier
-  status         LicenseStatus @default(ACTIVE)
-  maxAgents      Int           @default(5)
-  maxWorkspaces  Int           @default(3)
-  maxUsers       Int           @default(10)
+  status         LicenseStatus    @default(ACTIVE)
+  maxAgents      Int              @default(5)
+  maxWorkspaces  Int              @default(3)
+  maxUsers       Int              @default(10)
   features       String[]
   activatedAt    DateTime?
   expiresAt      DateTime?
@@ -826,8 +887,8 @@ model License {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([organizationId])
   @@index([status])
@@ -851,8 +912,8 @@ model FeatureFlag {
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   environment  Environment?  @relation(fields: [environmentId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([organizationId, environmentId, key])
   @@index([key])
@@ -996,7 +1057,7 @@ model ApiKey {
 // ─── METRICS SNAPSHOTS ────────────────────────────────────────────────────
 
 model MetricSnapshot {
-  id             String @id @default(cuid())
+  id             String  @id @default(cuid())
   organizationId String
   agentId        String?
   kind           String
@@ -1030,7 +1091,7 @@ enum HealthCheckStatus {
 }
 
 model RuntimeHealthSnapshot {
-  id       String @id @default(cuid())
+  id       String            @id @default(cuid())
   agentId  String
   status   HealthCheckStatus
   checks   Json // [{ name, status, message }]
@@ -1045,11 +1106,11 @@ model RuntimeHealthSnapshot {
 }
 
 model RuntimeLog {
-  id       String  @id @default(cuid())
-  agentId  String
-  level    String // INFO | WARN | ERROR
-  message  String
-  source   String?
+  id      String  @id @default(cuid())
+  agentId String
+  level   String // INFO | WARN | ERROR
+  message String
+  source  String?
 
   agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
@@ -1096,9 +1157,9 @@ model RuntimeAlert {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  createdAt    DateTime  @default(now())
+  createdAt      DateTime  @default(now())
   acknowledgedAt DateTime?
-  resolvedAt   DateTime?
+  resolvedAt     DateTime?
 
   @@index([organizationId])
   @@index([agentId])
@@ -1122,14 +1183,14 @@ enum FleetNotificationStatus {
 }
 
 model FleetNotification {
-  id            String                   @id @default(cuid())
-  channel       NotificationChannelKind
-  target        String
-  subject       String?
-  body          String
+  id             String                  @id @default(cuid())
+  channel        NotificationChannelKind
+  target         String
+  subject        String?
+  body           String
   relatedAlertId String?
-  status        FleetNotificationStatus  @default(PENDING)
-  error         String?
+  status         FleetNotificationStatus @default(PENDING)
+  error          String?
 
   createdAt DateTime  @default(now())
   sentAt    DateTime?
@@ -1157,22 +1218,22 @@ enum DeploymentJobStatus {
 }
 
 model DeploymentJob {
-  id              String               @id @default(cuid())
+  id              String              @id @default(cuid())
   organizationId  String
   environmentId   String
   pluginId        String
   pluginVersionId String
   mode            DeploymentMode
-  status          DeploymentJobStatus  @default(PENDING_APPROVAL)
+  status          DeploymentJobStatus @default(PENDING_APPROVAL)
   scheduledAt     DateTime?
   requestedBy     String?
   approvedBy      String?
   error           String?
 
-  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  environment   Environment   @relation(fields: [environmentId], references: [id], onDelete: Cascade)
-  plugin        Plugin        @relation(fields: [pluginId], references: [id], onDelete: Cascade)
-  pluginVersion PluginVersion @relation(fields: [pluginVersionId], references: [id], onDelete: Cascade)
+  organization  Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  environment   Environment      @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  plugin        Plugin           @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  pluginVersion PluginVersion    @relation(fields: [pluginVersionId], references: [id], onDelete: Cascade)
   tasks         DeploymentTask[]
 
   createdAt   DateTime  @default(now())
@@ -1222,7 +1283,7 @@ model ErpIntegration {
   integrationType ErpIntegrationType   @default(OFF)
   status          ErpIntegrationStatus @default(ACTIVE)
 
-  erpName String?
+  erpName  String?
   host     String?
   database String?
   schema   String?

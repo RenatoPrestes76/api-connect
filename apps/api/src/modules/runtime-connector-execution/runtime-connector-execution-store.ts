@@ -50,8 +50,8 @@ export class RuntimeConnectorExecutionStore {
 
   // ─── Query Planner + Execution Validator (create) ────────────────────────
 
-  createExecution(input: CreateExecutionInput): CreateExecutionResult {
-    const runtime = runtimeRegistrationStore.getRuntime(input.runtimeId);
+  async createExecution(input: CreateExecutionInput): Promise<CreateExecutionResult> {
+    const runtime = await runtimeRegistrationStore.getRuntime(input.runtimeId);
     if (!runtime) return { ok: false, error: 'RUNTIME_NOT_FOUND' };
     if (runtime.organizationId !== input.organizationId) {
       return { ok: false, error: 'RUNTIME_ORGANIZATION_MISMATCH' };
@@ -308,7 +308,10 @@ export class RuntimeConnectorExecutionStore {
    * other execution; nothing about dispatch or result handling is special-
    * cased for rollbacks.
    */
-  rollbackExecution(executionId: string, createdBy: string): RollbackExecutionResult {
+  async rollbackExecution(
+    executionId: string,
+    createdBy: string
+  ): Promise<RollbackExecutionResult> {
     const original = this.getExecution(executionId);
     if (!original) return { ok: false, error: 'EXECUTION_NOT_FOUND' };
     if (!REVERSIBLE_ACTIONS.has(original.action)) {
@@ -323,7 +326,7 @@ export class RuntimeConnectorExecutionStore {
 
     const { productId, newPrice, previousPrice } =
       original.payload as unknown as PriceMarkdownPayload;
-    const result = this.createExecution({
+    const result = await this.createExecution({
       runtimeId: original.runtimeId,
       organizationId: original.organizationId,
       connectorId: original.connectorId,

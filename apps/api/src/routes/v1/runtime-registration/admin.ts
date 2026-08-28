@@ -20,7 +20,7 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
       async (ctx: RouteContext, res: ServerResponse) => {
         const query = parseQuery(ListRuntimesQuerySchema, ctx, res);
         if (!query) return;
-        const runtimes = runtimeRegistrationStore.listRuntimes(query);
+        const runtimes = await runtimeRegistrationStore.listRuntimes(query);
         json(res, {
           total: runtimes.length,
           runtimes: runtimes.map((r) => runtimeRegistrationStore.toDTO(r)),
@@ -34,7 +34,7 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
     '/admin/runtime-registration/runtimes/:id',
     requirePermission('runtime-registration.read')(
       async (ctx: RouteContext, res: ServerResponse) => {
-        const runtime = runtimeRegistrationStore.getRuntime(ctx.params['id'] as string);
+        const runtime = await runtimeRegistrationStore.getRuntime(ctx.params['id'] as string);
         if (!runtime) return apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
         const certificate = runtimeRegistrationStore.getCertificate(runtime.id);
         json(res, {
@@ -58,7 +58,7 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
     '/admin/runtime-registration/runtimes/:id/block',
     requirePermission('runtime-registration.write')(
       async (ctx: RouteContext, res: ServerResponse) => {
-        const runtime = runtimeRegistrationStore.blockRuntime(ctx.params['id'] as string);
+        const runtime = await runtimeRegistrationStore.blockRuntime(ctx.params['id'] as string);
         if (!runtime) return apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
         adminIdentityStore.recordAudit({
           action: 'RUNTIME_BLOCKED',
@@ -75,7 +75,9 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
     '/admin/runtime-registration/runtimes/:id/reactivate',
     requirePermission('runtime-registration.write')(
       async (ctx: RouteContext, res: ServerResponse) => {
-        const runtime = runtimeRegistrationStore.reactivateRuntime(ctx.params['id'] as string);
+        const runtime = await runtimeRegistrationStore.reactivateRuntime(
+          ctx.params['id'] as string
+        );
         if (!runtime) {
           return apiError(res, 'Runtime not found or not blocked', 409, 'INVALID_STATE');
         }
@@ -94,7 +96,7 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
     '/admin/runtime-registration/runtimes/:id/credentials',
     requirePermission('runtime-registration.delete')(
       async (ctx: RouteContext, res: ServerResponse) => {
-        const cert = runtimeRegistrationStore.revokeCertificate(ctx.params['id'] as string);
+        const cert = await runtimeRegistrationStore.revokeCertificate(ctx.params['id'] as string);
         if (!cert) {
           return apiError(
             res,
@@ -183,7 +185,7 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
     requirePermission('runtime-registration.read')(
       async (ctx: RouteContext, res: ServerResponse) => {
         const runtimeId = ctx.params['id'] as string;
-        if (!runtimeRegistrationStore.getRuntime(runtimeId)) {
+        if (!(await runtimeRegistrationStore.getRuntime(runtimeId))) {
           return apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
         }
         const config = runtimeRegistrationStore.getRuntimeConfig(runtimeId);
@@ -199,7 +201,7 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
     requirePermission('runtime-registration.write')(
       async (ctx: RouteContext, res: ServerResponse) => {
         const runtimeId = ctx.params['id'] as string;
-        if (!runtimeRegistrationStore.getRuntime(runtimeId)) {
+        if (!(await runtimeRegistrationStore.getRuntime(runtimeId))) {
           return apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
         }
         const patch = parseBody(RuntimeConfigPatchSchema, ctx, res);

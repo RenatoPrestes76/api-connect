@@ -50,7 +50,7 @@ export function registerQueryExecutionExecuteRoute(router: Router): void {
       }
 
       const actorEmail = ctx.adminEmail ?? 'unknown';
-      const result = queryExecutionStore.createExecution({
+      const result = await queryExecutionStore.createExecution({
         organizationId: body.organizationId,
         generatedQueryId: body.generatedQueryId,
         requestedBy: actorEmail,

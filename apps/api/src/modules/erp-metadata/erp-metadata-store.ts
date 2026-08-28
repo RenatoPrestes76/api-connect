@@ -52,8 +52,8 @@ export class ErpMetadataStore {
 
   // ─── Create ────────────────────────────────────────────────────────────────
 
-  createDiscoveryRequest(input: CreateDiscoveryInput): CreateDiscoveryResult {
-    const runtime = runtimeRegistrationStore.getRuntime(input.runtimeId);
+  async createDiscoveryRequest(input: CreateDiscoveryInput): Promise<CreateDiscoveryResult> {
+    const runtime = await runtimeRegistrationStore.getRuntime(input.runtimeId);
     if (!runtime) return { ok: false, error: 'RUNTIME_NOT_FOUND' };
     if (runtime.organizationId !== input.organizationId) {
       return { ok: false, error: 'RUNTIME_ORGANIZATION_MISMATCH' };

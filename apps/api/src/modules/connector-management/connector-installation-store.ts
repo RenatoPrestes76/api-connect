@@ -100,8 +100,12 @@ export class ConnectorInstallationStore {
 
   // ─── Assign ──────────────────────────────────────────────────────────────
 
-  assignConnector(runtimeId: string, connectorId: string, version?: string): AssignConnectorResult {
-    const runtime = runtimeRegistrationStore.getRuntime(runtimeId);
+  async assignConnector(
+    runtimeId: string,
+    connectorId: string,
+    version?: string
+  ): Promise<AssignConnectorResult> {
+    const runtime = await runtimeRegistrationStore.getRuntime(runtimeId);
     if (!runtime) return { ok: false, error: 'RUNTIME_NOT_FOUND' };
 
     const connector = connectorsStore.getConnector(connectorId);
@@ -142,14 +146,17 @@ export class ConnectorInstallationStore {
 
   // ─── Update ──────────────────────────────────────────────────────────────
 
-  requestUpdate(installationId: string, targetVersion: string): UpdateConnectorResult {
+  async requestUpdate(
+    installationId: string,
+    targetVersion: string
+  ): Promise<UpdateConnectorResult> {
     const installation = this.getInstallation(installationId);
     if (!installation) return { ok: false, error: 'INSTALLATION_NOT_FOUND' };
 
     const versionRecord = this.resolveVersion(installation.connectorId, targetVersion);
     if (!versionRecord) return { ok: false, error: 'VERSION_NOT_FOUND' };
 
-    const runtime = runtimeRegistrationStore.getRuntime(installation.runtimeId);
+    const runtime = await runtimeRegistrationStore.getRuntime(installation.runtimeId);
     const runtimeVersion = runtime?.version ?? '0.0.0';
     const incompatibility = this.checkCompatibilityAndSignature(runtimeVersion, versionRecord);
     if (incompatibility) return { ok: false, error: incompatibility };

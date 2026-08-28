@@ -32,7 +32,7 @@ export function registerRuntimeAuthRoutes(router: Router): void {
     if (!body) return;
     const { runtimeId, timestamp, signature } = body;
 
-    const runtime = runtimeRegistrationStore.getRuntime(runtimeId);
+    const runtime = await runtimeRegistrationStore.getRuntime(runtimeId);
     if (!runtime) return apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
     if (runtime.status === 'BLOCKED' || runtime.status === 'REVOKED') {
       return apiError(res, `Runtime is ${runtime.status.toLowerCase()}`, 403, 'RUNTIME_NOT_ACTIVE');
@@ -77,7 +77,7 @@ export function registerRuntimeAuthRoutes(router: Router): void {
     if (!session) {
       return apiError(res, 'Invalid or expired refresh token', 401, 'INVALID_REFRESH_TOKEN');
     }
-    const runtime = runtimeRegistrationStore.getRuntime(session.runtimeId);
+    const runtime = await runtimeRegistrationStore.getRuntime(session.runtimeId);
     if (!runtime || runtime.status === 'BLOCKED' || runtime.status === 'REVOKED') {
       return apiError(res, 'Runtime session is no longer valid', 401, 'SESSION_REVOKED');
     }

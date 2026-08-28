@@ -17,13 +17,13 @@ import type {
 
 const REPLAY_TOLERANCE_MS = 5 * 60_000;
 
-function verifySignedRuntimeRequest(
+async function verifySignedRuntimeRequest(
   runtimeId: string,
   timestamp: string,
   signature: string,
   payload: string
-): { ok: true } | { ok: false; status: number; message: string; code: string } {
-  const runtime = runtimeRegistrationStore.getRuntime(runtimeId);
+): Promise<{ ok: true } | { ok: false; status: number; message: string; code: string }> {
+  const runtime = await runtimeRegistrationStore.getRuntime(runtimeId);
   if (!runtime) return { ok: false, status: 404, message: 'Runtime not found', code: 'NOT_FOUND' };
   if (runtime.status === 'BLOCKED' || runtime.status === 'REVOKED') {
     return {
@@ -91,7 +91,7 @@ export function registerErpConnectivityRuntimeRoutes(router: Router): void {
     }
 
     const payload = canonicalHealthReportPayload(body as ReportHealthInput);
-    const verified = verifySignedRuntimeRequest(runtimeId, timestamp, signature, payload);
+    const verified = await verifySignedRuntimeRequest(runtimeId, timestamp, signature, payload);
     if (!verified.ok) {
       return apiError(res, verified.message, verified.status, verified.code);
     }
@@ -156,7 +156,7 @@ export function registerErpConnectivityRuntimeRoutes(router: Router): void {
       }
 
       const payload = canonicalDiagnosticsReportPayload(body as ReportDiagnosticsInput);
-      const verified = verifySignedRuntimeRequest(runtimeId, timestamp, signature, payload);
+      const verified = await verifySignedRuntimeRequest(runtimeId, timestamp, signature, payload);
       if (!verified.ok) {
         return apiError(res, verified.message, verified.status, verified.code);
       }

@@ -31,7 +31,7 @@ export async function runtimeHeartbeatHandler(
   }
 
   const input = body as HeartbeatInput;
-  const runtime = runtimeRegistrationStore.getRuntime(input.runtimeId);
+  const runtime = await runtimeRegistrationStore.getRuntime(input.runtimeId);
   if (!runtime) {
     apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
     return;
@@ -46,7 +46,7 @@ export async function runtimeHeartbeatHandler(
     apiError(res, 'Heartbeat timestamp outside acceptable window', 401, 'REPLAY_REJECTED');
     return;
   }
-  if (runtimeRegistrationStore.isReplayedSignature(input.runtimeId, input.signature)) {
+  if (await runtimeRegistrationStore.isReplayedSignature(input.runtimeId, input.signature)) {
     apiError(res, 'This exact heartbeat request was already processed', 401, 'REPLAY_REJECTED');
     return;
   }
@@ -65,7 +65,7 @@ export async function runtimeHeartbeatHandler(
   }
 
   const wasActivating = runtime.status === 'REGISTERED' || runtime.status === 'PENDING';
-  const updated = runtimeRegistrationStore.recordHeartbeat(input.runtimeId, {
+  const updated = await runtimeRegistrationStore.recordHeartbeat(input.runtimeId, {
     version: input.version,
     status: input.status,
     signature: input.signature,

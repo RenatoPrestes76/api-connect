@@ -49,7 +49,7 @@ export function registerConnectorExecuteRoute(router: Router): void {
           );
         }
 
-        const result = runtimeConnectorExecutionStore.createExecution({
+        const result = await runtimeConnectorExecutionStore.createExecution({
           runtimeId,
           organizationId,
           connectorId,

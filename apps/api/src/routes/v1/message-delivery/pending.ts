@@ -40,7 +40,7 @@ export function registerMessagePendingRoute(router: Router): void {
     const signature = ctx.query.get('signature');
 
     if (runtimeId && timestamp && signature) {
-      const runtime = runtimeRegistrationStore.getRuntime(runtimeId);
+      const runtime = await runtimeRegistrationStore.getRuntime(runtimeId);
       if (!runtime) return apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
       if (runtime.status === 'BLOCKED' || runtime.status === 'REVOKED') {
         return apiError(

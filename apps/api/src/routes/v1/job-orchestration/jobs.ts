@@ -59,7 +59,7 @@ export function registerJobRoutes(router: Router): void {
         );
       }
 
-      const result = jobOrchestrationStore.createJob({
+      const result = await jobOrchestrationStore.createJob({
         organizationId,
         runtimeId,
         connectorId,

@@ -270,6 +270,14 @@ fixed here).
 > reservation above still stands unchanged — 46.20-B intentionally did not
 > merge the two mechanisms.
 
+> **Update (ATLAS 46.22):** the Runtime identity this client registers is
+> now Prisma-backed (`RuntimeRegistration` model), not in-memory — a real
+> API process restart no longer loses any Runtime's registration state.
+> See "Runtime Registration Persistence" under "Runtime Enrollment" below.
+> The heartbeat ONLINE/STALE/OFFLINE reservation from 46.20-B still stands
+> unchanged — 46.22 persists the raw heartbeat fields but explicitly does
+> not build staleness computation.
+
 ## Runtime Enrollment (ATLAS 46.20-B, canonicalized in 46.21)
 
 **ATLAS 46.21 declared this the official, canonical onboarding path** for
@@ -329,6 +337,35 @@ server-side automatically — nothing further required from the client.
 **Troubleshooting**: see `docs/ATLAS-RUNTIME-CLIENT.md`'s Troubleshooting
 section for the specific error codes (`ACTIVATION_KEY_ALREADY_USED`,
 `INVALID_SIGNATURE`, `REPLAY_REJECTED`, etc.) and what each one means.
+
+### Runtime Registration Persistence (ATLAS 46.22)
+
+The Runtime identity registered above (`RuntimeRegistration` Prisma
+model) is durable across Atlas API restarts — an operational change from
+the state described earlier in this doc's Runtime Readiness findings.
+Operationally:
+
+- **A rolling/manual restart of the Atlas API does not require any
+  currently-enrolled Runtime to re-register.** The client's own identity
+  file is unaffected either way, but previously the server-side record
+  would have been lost on restart; now it persists. Proven with a real
+  spawned/killed/restarted `node dist/index.js` process in
+  `apps/api/src/__tests__/runtime-registration/restart-durability-e2e.test.ts`.
+- **`machineFingerprintHash` and `publicKey` are both unique at the
+  database level.** Two Runtimes can never end up sharing either value,
+  even under concurrent registration attempts — this is enforced by
+  Postgres, not just application code.
+- **Tenant provisioning for self-service signups is still an external,
+  undecided product policy.** A freshly self-service-registered
+  Organization has `tenantId = null` (PENDING TENANT ASSIGNMENT) until an
+  admin explicitly assigns a real Tenant via
+  `PATCH /admin/control-plane/organizations/:id`. Atlas does **not**
+  auto-create a Tenant at signup, and does not use any placeholder/default
+  Tenant id. See `docs/ADR-ATLAS-CANONICAL-CLIENT-ONBOARDING.md`'s "ATLAS
+  46.22 — Runtime Registration Persistence" section for the full design.
+- **Migration**: `packages/database/prisma/migrations/20260828004554_add_runtime_registration/`
+  — additive only (new table, new enum, new FK to `Organization`), no
+  data loss on either an empty or an already-populated database.
 
 ## Security Baseline (Fase 12)
 

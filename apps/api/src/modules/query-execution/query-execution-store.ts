@@ -41,7 +41,7 @@ export class QueryExecutionStore {
     return _instance;
   }
 
-  createExecution(input: CreateExecutionInput): CreateExecutionResult {
+  async createExecution(input: CreateExecutionInput): Promise<CreateExecutionResult> {
     const generatedQuery = sqlGeneratorStore.getById(input.generatedQueryId);
     if (!generatedQuery) return { ok: false, error: 'GENERATED_QUERY_NOT_FOUND' };
     if (generatedQuery.organizationId !== input.organizationId) {
@@ -51,7 +51,7 @@ export class QueryExecutionStore {
     const profile = erpConnectivityStore.getProfile(generatedQuery.profileId);
     if (!profile) return { ok: false, error: 'CONNECTION_PROFILE_NOT_FOUND' };
 
-    const runtime = runtimeRegistrationStore.getRuntime(profile.runtimeId);
+    const runtime = await runtimeRegistrationStore.getRuntime(profile.runtimeId);
     if (!runtime) return { ok: false, error: 'RUNTIME_NOT_FOUND' };
 
     const isOffline =

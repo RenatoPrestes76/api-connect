@@ -29,7 +29,7 @@ export function registerMessageAckRoute(router: Router): void {
       );
     }
 
-    const runtime = runtimeRegistrationStore.getRuntime(runtimeId);
+    const runtime = await runtimeRegistrationStore.getRuntime(runtimeId);
     if (!runtime) return apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
     if (runtime.status === 'BLOCKED' || runtime.status === 'REVOKED') {
       return apiError(res, `Runtime is ${runtime.status.toLowerCase()}`, 403, 'RUNTIME_NOT_ACTIVE');

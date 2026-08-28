@@ -193,10 +193,11 @@ export class ControlPlaneStore {
   async updateOrganization(
     id: string,
     patch: Partial<Pick<Organization, 'name' | 'tier' | 'status' | 'tenantId'>>
-  ): Promise<Organization | null> {
-    const org = await tenancyRepository.updateOrganization(id, patch);
-    if (!org) return null;
-    return org;
+  ): Promise<
+    | { ok: true; organization: Organization }
+    | { ok: false; error: 'NOT_FOUND' | 'TENANT_NOT_FOUND' }
+  > {
+    return tenancyRepository.updateOrganization(id, patch);
   }
 
   async deleteOrganization(id: string): Promise<boolean> {

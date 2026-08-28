@@ -240,9 +240,32 @@ describe('Tenant-scoped query correctness (Etapa 7)', () => {
     const moved = await tenancyRepository.updateOrganization(created.organization.id, {
       tenantId: tenantB.id,
     });
-    expect(moved?.tenantId).toBe(tenantB.id);
+    expect(moved.ok).toBe(true);
+    if (moved.ok) expect(moved.organization.tenantId).toBe(tenantB.id);
 
     const stillJustOne = await prisma.organization.count({ where: { slug: oSlug } });
     expect(stillJustOne).toBe(1);
+  });
+
+  it('ATLAS 46.22 — moving an organization to a nonexistent Tenant is rejected cleanly, not a raw FK crash, and leaves the organization untouched', async () => {
+    const slug = tenantSlug('reject-tenant');
+    const tenant = await tenancyRepository.createTenant({ name: 'Reject Tenant', slug });
+    const oSlug = orgSlug('reject-tenant-org');
+    const created = await tenancyRepository.createOrganization({
+      name: 'Untouchable',
+      slug: oSlug,
+      tenantId: tenant.id,
+    });
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+
+    const result = await tenancyRepository.updateOrganization(created.organization.id, {
+      tenantId: 'tenant-id-that-does-not-exist-at-all',
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('TENANT_NOT_FOUND');
+
+    const unchanged = await tenancyRepository.getOrganization(created.organization.id);
+    expect(unchanged?.tenantId).toBe(tenant.id);
   });
 });

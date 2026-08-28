@@ -200,23 +200,44 @@ export class TenancyRepository {
     }
   }
 
+  /**
+   * ATLAS 46.22 — when `patch.tenantId` is a non-null value, it's validated
+   * to exist first (in the same transaction as the update), matching
+   * createOrganization()'s existing TENANT_NOT_FOUND pattern. Before this,
+   * an unknown tenantId here fell through to Prisma's raw FK violation
+   * (P2003), caught only by the generic error boundary as an opaque 500 —
+   * "fails" per Fase 10's requirement, but not the clean, typed rejection
+   * every other invalid-reference case in this repository already gets.
+   */
   async updateOrganization(
     id: string,
     patch: Partial<Pick<Organization, 'name' | 'tier' | 'status' | 'tenantId'>>
-  ): Promise<Organization | null> {
+  ): Promise<
+    | { ok: true; organization: Organization }
+    | { ok: false; error: 'NOT_FOUND' | 'TENANT_NOT_FOUND' }
+  > {
     try {
-      const row = await prisma.organization.update({
-        where: { id },
-        data: {
-          ...(patch.name !== undefined ? { name: patch.name } : {}),
-          ...(patch.tier !== undefined ? { tier: patch.tier } : {}),
-          ...(patch.status !== undefined ? { status: patch.status } : {}),
-          ...(patch.tenantId !== undefined ? { tenantId: patch.tenantId } : {}),
-        },
+      const row = await prisma.$transaction(async (tx: typeof prisma) => {
+        if (patch.tenantId) {
+          const tenant = await tx.tenant.findFirst({
+            where: { id: patch.tenantId, deletedAt: null },
+          });
+          if (!tenant) throw new TenantNotFoundError();
+        }
+        return tx.organization.update({
+          where: { id },
+          data: {
+            ...(patch.name !== undefined ? { name: patch.name } : {}),
+            ...(patch.tier !== undefined ? { tier: patch.tier } : {}),
+            ...(patch.status !== undefined ? { status: patch.status } : {}),
+            ...(patch.tenantId !== undefined ? { tenantId: patch.tenantId } : {}),
+          },
+        });
       });
-      return toOrganization(row);
+      return { ok: true, organization: toOrganization(row) };
     } catch (err) {
-      if (isPrismaNotFoundError(err)) return null;
+      if (err instanceof TenantNotFoundError) return { ok: false, error: 'TENANT_NOT_FOUND' };
+      if (isPrismaNotFoundError(err)) return { ok: false, error: 'NOT_FOUND' };
       throw err;
     }
   }

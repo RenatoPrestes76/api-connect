@@ -73,7 +73,10 @@ export function registerConnectorRuntimeRoutes(router: Router): void {
           );
         }
 
-        const result = connectorInstallationStore.requestUpdate(installationId, targetVersion);
+        const result = await connectorInstallationStore.requestUpdate(
+          installationId,
+          targetVersion
+        );
         if (!result.ok) {
           const mapped = UPDATE_ERROR_STATUS[result.error];
           adminIdentityStore.recordAudit({
