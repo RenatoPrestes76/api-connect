@@ -22,6 +22,13 @@ authentication model, or API contract changed as part of this work.
 > runs entirely against `localhost`/the existing dev/CI environment, exactly
 > as this document already anticipated in §2/§7's placeholder sections.
 
+> **ATLAS 46.25 re-confirmation**: reviewed again as part of the Production
+> Operations & Runtime Observability Gate. Status **unchanged** — still
+> `RESERVED / NOT YET REGISTERED`, classified BLOCKED EXTERNAL
+> INFRASTRUCTURE. This sprint's additions (operational summary, list
+> filters, incident-troubleshooting runbook) are all API-level and
+> `localhost`-testable; none of them requires or assumes the domain.
+
 ## 1. Domain and subdomains
 
 | Host                           | Purpose                         | Maps to (this repo)                                                                                            | Confidence                                                                                                                                                                                                                                                                                                                   |

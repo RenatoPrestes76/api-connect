@@ -522,3 +522,105 @@ Runbook" section for the executable, code-knowledge-free walkthrough this
 sprint produced, and the **Production Readiness** split (Software /
 Configuration / Infrastructure / Commercial) in ATLAS 46.24's final report
 for exactly what remains externally pending.
+
+## ATLAS 46.25 — Production Operations & Runtime Observability Gate
+
+**Sprint**: ATLAS 46.25. Turns 46.23's liveness classification into
+enough operational surface to actually run a first real client — small,
+additive extensions to the existing Control Plane, no new architecture.
+
+### Runtime operational view (Part A) — already mostly there, confirmed
+
+`GET /admin/runtime-registration/runtimes/:id` (enriched in 46.24 with
+`organization`/`tenant`) already carries everything an operator needs:
+`runtimeId`, `hostname`, registration `status`, `liveness`,
+`lastHeartbeat`, `activatedAt`, Organization/Tenant. Confirmed this
+sprint, in `runtime-operational-view.test.ts`, that it never returns a
+private key, a signature, or any other credential material — nothing
+changed there, since nothing sensitive was ever in the DTO to begin with.
+
+### List filters and operational summary (Part B/C)
+
+`GET /admin/runtime-registration/runtimes` gains three new, optional,
+backward-compatible query filters: `controlPlaneOrganizationId` (already
+supported internally, now exposed at the HTTP layer), `tenantId` (new —
+filters through the `controlPlaneOrganization` relation, since Tenant is
+still not a column on `RuntimeRegistration`), and `liveness`
+(ONLINE/STALE/OFFLINE — applied in the application layer after the
+persisted-data filters run, since liveness has no column to filter on at
+the database level; see `runtime-registration-store.ts`'s `listRuntimes`).
+
+New endpoint: `GET /admin/runtime-registration/summary` — `{total,
+online, stale, offline}`, optionally scoped by the same three filters.
+Computed live from the same rows `listRuntimes` itself would return for
+that scope — no persisted counter, no cache, so it can never drift out of
+sync with what the list endpoint reports (proven directly in
+`runtime-operational-view.test.ts` by cross-checking the two responses
+for the same scope).
+
+**Naming note**: `/admin/control-plane/runtimes` already exists — it is
+the _legacy, in-memory, fixture-seeded_ `Runtime` concept `control-plane-
+store.ts` has always had (see this ADR's original "Identidade — matriz"
+table, "control-plane-store's own in-memory `Runtime` type — seeded
+fixture data only, disconnected from every real registration flow").
+The new summary endpoint deliberately lives under `/admin/runtime-
+registration/summary` instead, to avoid conflating the two — this sprint
+does not touch, rename, or migrate the legacy fleet endpoint.
+
+### Multi-client independence (Part N)
+
+`runtime-isolation.test.ts` proves liveness is computed strictly
+per-Runtime: Client A transitioning ONLINE → STALE → OFFLINE never
+changes Client B's independently-ONLINE state, B's scoped summary, or B's
+presence/absence in a `liveness=ONLINE`-filtered list — at every step,
+including a direct comparison against the unscoped global summary to
+confirm it aggregates rather than overwrites. The new filters also don't
+compose into a way to leak another Organization's Runtimes (scoping by
+`controlPlaneOrganizationId` and `liveness` together still returns exactly
+the caller's own Runtime).
+
+### Recovery, run twice (Part F/M)
+
+`runtime-liveness-operation.test.ts` runs a full ONLINE → STALE → OFFLINE
+→ ONLINE cycle **twice** in the same test, using controlled Postgres
+timestamp writes (no real sleep) — proving the cycle is a repeatable,
+stateless computation rather than a one-shot artifact of test ordering.
+Combined with `restart-durability-e2e.test.ts` (which now also covers the
+Tenant dimension, since 46.24), recovery is proven both across a real API
+process restart and across a purely liveness-driven state cycle within
+one still-running process.
+
+### Logging (Part I) — one real gap found and closed
+
+`server.ts`'s `requestLogger` never included the HTTP response status
+code in its "request completed" log line — a rejected heartbeat
+(`REPLAY_REJECTED`/`INVALID_SIGNATURE`, which return a clean `apiError()`
+response rather than throwing) logged _identically_ to a successful one,
+making a rejected heartbeat operationally indistinguishable from an
+accepted one by log alone. Fixed by reading `res.statusCode` (previously
+an unused, underscore-prefixed parameter) after the handler chain
+resolves. No other logging gap was found: audit-trail entries
+(`RUNTIME_REGISTERED`, `RUNTIME_ACTIVATED`, `RUNTIME_LOGIN`, etc.) already
+carry only non-sensitive metadata (`organizationId`, `hostname`) — never a
+signature, private key, JWT, or activation-key secret — confirmed by
+direct audit of every `recordAudit()` call site in
+`routes/v1/runtime-registration/`.
+
+### API health vs. Runtime liveness (Part J)
+
+Documented explicitly (see `docs/ATLAS-PRODUCTION-RUNBOOK.md`'s new
+"Runtime Incident Troubleshooting" section) rather than renamed: `GET
+/health`/`/live`/`/ready` describe the Atlas API _process_ — nothing about
+any individual Runtime. A Runtime's `liveness` field is the only source
+of truth for whether _that Runtime_ is checking in. No endpoint was
+renamed — `/live` predates this sprint and renaming it would be a
+breaking API change for a naming clarification that a doc section
+resolves just as well.
+
+### Alerting remains explicitly future work (Part K)
+
+No email/SMS/WhatsApp/push/paging was built, and none was attempted. The
+model is already shaped for a future alerting layer to consume without
+any persistence change: `liveness`, `lastHeartbeat`, and the new
+`GET .../summary` are all read-only, already-computed surfaces a future
+poller could watch.

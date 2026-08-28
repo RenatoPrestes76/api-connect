@@ -3,7 +3,7 @@ import { portalIdentityStore } from '../portal-identity/portal-identity-store.js
 import { hashFingerprint } from './fingerprint.js';
 import { issueCertificate } from './certificate.js';
 import { needsUpdate } from './version-control.js';
-import { classifyLiveness } from './liveness.js';
+import { classifyLiveness, type RuntimeLiveness } from './liveness.js';
 import { runtimeRegistrationRepository } from './runtime-registration.repository.js';
 import type {
   RuntimeRegistrationRecord,
@@ -148,9 +148,49 @@ export class RuntimeRegistrationStore {
       organizationId?: string;
       controlPlaneOrganizationId?: string;
       status?: RuntimeStatus;
+      tenantId?: string;
+      /**
+       * ATLAS 46.25, Part B — liveness has no column to filter on at the
+       * database level (it's never persisted — see liveness.ts's header
+       * comment), so this is applied here, after the persisted-data
+       * filters above already ran at the database level, by classifying
+       * each remaining row the exact same way `toDTO()` does.
+       */
+      liveness?: RuntimeLiveness;
     } = {}
   ): Promise<RuntimeRegistrationRecord[]> {
-    return runtimeRegistrationRepository.list(filter);
+    const { liveness, ...persistedFilter } = filter;
+    const rows = await runtimeRegistrationRepository.list(persistedFilter);
+    if (!liveness) return rows;
+    const now = new Date();
+    return rows.filter((r) => classifyLiveness(r.lastHeartbeat, now) === liveness);
+  }
+
+  /**
+   * ATLAS 46.25, Part C — a minimal operational summary: how many Runtimes
+   * (optionally scoped to one Organization/Control-Plane-Organization/
+   * Tenant) are currently ONLINE/STALE/OFFLINE. Computed live from the same
+   * persisted rows `listRuntimes` reads — no persisted counter, no cache,
+   * so the numbers can never drift from what `listRuntimes` itself would
+   * return for the same scope.
+   */
+  async getOperationalSummary(
+    filter: {
+      organizationId?: string;
+      controlPlaneOrganizationId?: string;
+      tenantId?: string;
+    } = {}
+  ): Promise<{ total: number; online: number; stale: number; offline: number }> {
+    const rows = await runtimeRegistrationRepository.list(filter);
+    const now = new Date();
+    const summary = { total: rows.length, online: 0, stale: 0, offline: 0 };
+    for (const row of rows) {
+      const liveness = classifyLiveness(row.lastHeartbeat, now);
+      if (liveness === 'ONLINE') summary.online++;
+      else if (liveness === 'STALE') summary.stale++;
+      else summary.offline++;
+    }
+    return summary;
   }
 
   async registerRuntime(input: RegisterRuntimeInput): Promise<RegisterRuntimeResult> {

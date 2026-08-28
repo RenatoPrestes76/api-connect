@@ -47,6 +47,13 @@ builds on.
 > already covered the Ed25519/JWT surface, liveness thresholds and Activation
 > Key data are not secrets. This list is confirmed complete for onboarding a
 > first real client, not just re-asserted.
+>
+> **ATLAS 46.25 re-audit**: re-checked again against the new operational
+> surface (list filters, `GET .../summary`, the `requestLogger` status-code
+> fix — see "Runtime Incident Troubleshooting" below). Nothing new needs a
+> secret: filters/summary are read-only derivations of already-persisted,
+> non-secret data, and the logging fix only adds an HTTP status code to an
+> existing log line.
 
 **Domínio / DNS**
 
@@ -54,6 +61,10 @@ builds on.
   `docs/ATLAS-PRODUCTION-DOMAIN.md` for the full domain/subdomain/DNS plan.
   Nothing in this runbook assumes it resolves. Re-confirmed unchanged as of
   ATLAS 46.24 — no domain/deploy action was taken or simulated this sprint.
+  Re-confirmed again, still unchanged, as of ATLAS 46.25 — classified
+  **BLOCKED EXTERNAL INFRASTRUCTURE**, not a code blocker: nothing in this
+  sprint's operational surface (summary, filters, troubleshooting runbook)
+  depends on the domain being registered.
 
 **Configuração**
 
@@ -616,6 +627,189 @@ restarted process in `restart-durability-e2e.test.ts`.
 - Nothing in this flow requires a database rollback — every step is either
   additive (new rows) or a single-column update (`tenantId`), never a
   destructive operation.
+
+## Runtime Incident Troubleshooting (ATLAS 46.25)
+
+For diagnosing an already-onboarded Runtime that's misbehaving — different
+from the "First Client Onboarding Runbook" above, which walks a _new_
+signup. Executable from this document alone; no code knowledge required.
+Uses the new operational surface this sprint added:
+`GET /admin/runtime-registration/summary` (Part C) and
+`GET /admin/runtime-registration/runtimes?...` with the new
+`controlPlaneOrganizationId`/`tenantId`/`liveness` filters (Part B).
+
+> **API health is not Runtime liveness.** `GET /health`/`/live`/`/ready`
+> report whether the _Atlas API process itself_ is up and can reach
+> Postgres — they say nothing about any individual Runtime.
+> `GET /admin/runtime-registration/runtimes/:id`'s `liveness` field
+> (ONLINE/STALE/OFFLINE) is the only source of truth for "is this specific
+> Runtime checking in." A perfectly healthy API can have every one of its
+> Runtimes OFFLINE, and a STALE/OFFLINE Runtime says nothing about the
+> API's own health. Never conflate the two when triaging.
+
+### 1. Verificar API
+
+`GET /health` — must be `200`/`healthy` with `database: "ok"` before
+investigating anything Runtime-specific; if the API itself is degraded,
+every Runtime will read OFFLINE for reasons that have nothing to do with
+any individual Runtime.
+
+### 2. Localizar Organization
+
+`GET /admin/control-plane/organizations?<filter by known slug/name>` — or,
+if you already have a `runtimeId`, skip straight to step 4 and read
+`organization` off that response instead.
+
+### 3. Localizar Tenant
+
+`GET /admin/control-plane/organizations/:id` — its `tenantId` (or `null`
+for a legitimate PENDING_TENANT_ASSIGNMENT Organization). Again, if you
+have a `runtimeId`, step 4's response already includes this.
+
+### 4. Localizar Runtime
+
+```
+GET /admin/runtime-registration/runtimes/:id
+GET /admin/runtime-registration/runtimes?controlPlaneOrganizationId=<id>
+GET /admin/runtime-registration/runtimes?organizationId=<id>
+```
+
+The `:id` form is the fastest path if you already know the `runtimeId`
+(e.g. from a customer support ticket); the list form with
+`controlPlaneOrganizationId` finds every Runtime under one real Control
+Plane Organization when you only know the customer, not the Runtime.
+
+### 5. Interpretar ONLINE
+
+Last heartbeat within 60s. Fully healthy — no action needed.
+
+### 6. Interpretar STALE
+
+Last heartbeat between 60s and 5 minutes ago. The Runtime is known and was
+recently seen, but hasn't checked in within its expected cadence — likely
+transient (network blip, brief outage, host under load). Not yet an
+incident; re-check in a minute before escalating.
+
+### 7. Interpretar OFFLINE
+
+Last heartbeat more than 5 minutes ago, or never recorded at all. Treat as
+a real incident once the API itself (step 1) is confirmed healthy — the
+Runtime process is very likely down, network-partitioned, or was never
+successfully installed.
+
+### 8. Verificar lastHeartbeat
+
+Same `GET .../runtimes/:id` response, `runtime.lastHeartbeat` (ISO
+timestamp, `null` if never observed) and `runtime.activatedAt` (when it
+first went ACTIVE — set once, never cleared).
+
+### 9. Verificar activation
+
+`GET /admin/runtime-registration/activation-keys` — find the key by
+`organizationCode`; check `used`/`usedByRuntimeId`/`revoked`/`expiresAt`.
+A Runtime stuck at `status: REGISTERED` (never reaching `ACTIVE`) with no
+heartbeat ever recorded usually means the Runtime process itself never
+started successfully after registration — activation key state won't
+explain that (registration already consumed it successfully by that
+point).
+
+### 10. Verificar identidade
+
+`machineFingerprintHash` and `publicKey` are both unique at the database
+level (ATLAS 46.22) — if a customer reports "my Runtime won't register,"
+check for `FINGERPRINT_DUPLICATE`/`PUBLIC_KEY_ALREADY_REGISTERED` in the
+registration response; it means this exact machine (or its identity file)
+already has a registration. The private key never left the customer's
+machine and is never visible from the API side — there is nothing to
+"verify" about it directly, only its downstream effects (signature
+validity on heartbeat/auth calls).
+
+### 11. Verificar restart
+
+An Atlas API restart never requires Runtime action. Confirm via
+`GET .../runtimes/:id` immediately after a known restart — `runtimeId`,
+`organization`, `tenant`, and `status` must all read identically to
+before the restart (persisted in Postgres, ATLAS 46.22/46.24). If they
+don't match, that's a real bug, not expected behavior — escalate (step
+18).
+
+### 12. Verificar ERP discovery
+
+`GET /erp-metadata/discover/:requestId` (or list, filtered) — `status`
+progresses `REQUESTED` → `CLAIMED` → `COMPLETED`/`FAILED`. Stuck at
+`REQUESTED`: the Runtime never polled `GET /erp-metadata/runtime/jobs` —
+check its liveness first (step 4); an OFFLINE Runtime can't claim
+anything.
+
+### 13. Verificar GENESIS
+
+A `COMPLETED` discovery request means GENESIS's real schema introspection
+succeeded and the Runtime reported back. A `FAILED` request's `error`
+field carries the introspection failure reason (e.g. unreachable ERP
+database, credential failure at the ERP end — not an Atlas-side issue).
+
+### 14. Verificar ATHENA
+
+`GET /semantic-mapping/entities?profileId=...` after
+`POST /semantic-mapping/analyze` — empty results mean either analysis
+hasn't run yet, or the discovered schema had nothing ATHENA could
+classify (rare; check the raw discovery result first).
+
+### 15. Diagnosticar heartbeat inválido
+
+- `INVALID_SIGNATURE`: the persisted identity file on the Runtime's
+  machine doesn't match what's registered server-side — most often means
+  something regenerated `<data_dir>/atlas-runtime-identity.json` after
+  registration. There is no recovery except re-registering with a fresh
+  activation key.
+- `REPLAY_REJECTED`: either the Runtime's clock has drifted more than 5
+  minutes from Atlas's, or the exact same signed request was sent twice
+  (shouldn't happen through normal client use — each call builds a fresh
+  timestamp).
+- A heartbeat that never even reaches the API (no log line, no error): a
+  network/connectivity problem, not an Atlas-side rejection — check the
+  Runtime's own logs, not Atlas's.
+
+### 16. Diagnosticar Runtime duplicado
+
+`FINGERPRINT_DUPLICATE`/`PUBLIC_KEY_ALREADY_REGISTERED` at registration
+time (see step 10) is the only way a "duplicate" can occur — both are
+enforced by real Postgres unique constraints, not just application code,
+so a duplicate row is not possible even under a concurrent registration
+race. If two Runtimes both claim to be "the same machine," the second one
+to attempt registration receives the error; the first one already
+registered is unaffected.
+
+### 17. Recuperar Runtime após restart
+
+No recovery action is normally needed (see step 11). If a Runtime shows
+OFFLINE after an API restart and stays that way past its next expected
+heartbeat interval, the issue is on the Runtime's own machine/process, not
+something to fix API-side — check that the Runtime process itself is
+still running and can reach `ATLAS_API_URL`.
+
+### 18. Escalar problema quando necessário
+
+Escalate past this runbook when: `GET /health` itself is degraded (step
+
+1. — that's an API-level incident, not a Runtime one; a restart doesn't
+   reproduce the same `runtimeId`/`organization`/`tenant` (step 11) — a real
+   persistence bug; or GENESIS/ATHENA fail consistently across multiple,
+   otherwise-healthy Runtimes — likely an Atlas-side regression, not a
+   per-customer issue.
+
+### Alerting — explicitly not built yet
+
+Every step above is a **manual** `GET` an operator runs. There is no
+email/SMS/WhatsApp/push notification, no paging integration, and no
+background sweep that watches for a Runtime crossing into STALE/OFFLINE
+and reacts on its own — deliberately out of this sprint's (and 46.23's)
+scope. When that future layer is built, it can consume `liveness`,
+`lastHeartbeat`, and the new `GET /admin/runtime-registration/summary`
+(Part C) exactly as they already exist today — nothing about the
+persistence model needs to change to support it; it would be a pure
+consumer of this already-computed state, polling on whatever interval it
+chooses.
 
 ## Security Baseline (Fase 12)
 

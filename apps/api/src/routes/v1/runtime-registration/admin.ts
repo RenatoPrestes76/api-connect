@@ -11,6 +11,7 @@ import {
   IssueActivationKeyBodySchema,
   ListRuntimesQuerySchema,
   RuntimeConfigPatchSchema,
+  RuntimeSummaryQuerySchema,
 } from './schemas.js';
 
 export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
@@ -26,6 +27,28 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
           total: runtimes.length,
           runtimes: runtimes.map((r) => runtimeRegistrationStore.toDTO(r)),
         });
+      }
+    )
+  );
+
+  // ─── GET /admin/runtime-registration/summary ────────────────────────────
+  // ATLAS 46.25, Part C — a minimal operational summary (total/ONLINE/
+  // STALE/OFFLINE), optionally scoped to one Organization/Control-Plane-
+  // Organization/Tenant. Registered before the `:id` detail route below so
+  // it can never be shadowed by it — this router matches routes by exact
+  // segment count and literal-segment equality (see http/router.ts's
+  // matchRoute), so "/summary" (3 segments) never collides with
+  // "/runtimes/:id" (4 segments) regardless of registration order, but
+  // keeping summary-like routes ahead of param routes is this codebase's
+  // established convention anyway.
+  router.get(
+    '/admin/runtime-registration/summary',
+    requirePermission('runtime-registration.read')(
+      async (ctx: RouteContext, res: ServerResponse) => {
+        const query = parseQuery(RuntimeSummaryQuerySchema, ctx, res);
+        if (!query) return;
+        const summary = await runtimeRegistrationStore.getOperationalSummary(query);
+        json(res, summary);
       }
     )
   );

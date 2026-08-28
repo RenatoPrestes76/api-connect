@@ -86,17 +86,25 @@ const requestLog = createLogger('api');
 function requestLogger(
   ctx: Parameters<Parameters<Router['use']>[0]>[0],
   req: IncomingMessage,
-  _res: ServerResponse,
+  res: ServerResponse,
   next: () => Promise<void>
 ): Promise<void> {
   const start = Date.now();
   const result = next();
   result
     .then(() => {
+      // ATLAS 46.25, Part I: `status` was missing here, so an apiError()
+      // response (e.g. a rejected heartbeat — REPLAY_REJECTED,
+      // INVALID_SIGNATURE — which returns cleanly rather than throwing)
+      // logged an identical "request completed" line to a real success,
+      // making a rejected heartbeat operationally indistinguishable from
+      // an accepted one by log alone. Thrown exceptions still get their
+      // own separate 'request failed' entry from withErrorBoundary below.
       requestLog.info('request completed', {
         requestId: ctx.requestId,
         method: req.method,
         url: req.url,
+        status: res.statusCode,
         durationMs: Date.now() - start,
       });
     })

@@ -112,6 +112,15 @@ export const runtimeRegistrationRepository = {
       organizationId?: string;
       controlPlaneOrganizationId?: string;
       status?: RuntimeStatus;
+      /**
+       * ATLAS 46.25 — Tenant is still not a column on RuntimeRegistration
+       * (see the model's own header comment); this filters through the
+       * `controlPlaneOrganization` relation, so it's exactly the same
+       * derivation `GET .../runtimes/:id`'s `tenant` field and
+       * tenant-association.test.ts already rely on, just applied as a
+       * `WHERE` instead of a per-row read.
+       */
+      tenantId?: string;
     } = {}
   ): Promise<RuntimeRegistrationRecord[]> {
     const rows = await prisma.runtimeRegistration.findMany({
@@ -121,6 +130,7 @@ export const runtimeRegistrationRepository = {
           ? { controlPlaneOrganizationId: filter.controlPlaneOrganizationId }
           : {}),
         ...(filter.status ? { status: filter.status } : {}),
+        ...(filter.tenantId ? { controlPlaneOrganization: { tenantId: filter.tenantId } } : {}),
       },
       orderBy: { createdAt: 'asc' },
     });
