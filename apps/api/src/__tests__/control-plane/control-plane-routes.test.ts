@@ -104,9 +104,18 @@ describe('Tenants', () => {
 // ─── Organizations ──────────────────────────────────────────────────────────
 
 describe('Organizations', () => {
-  it('lists the 3 seeded organizations', async () => {
+  it('lists at least the 3 seeded organizations', async () => {
+    // Not an exact-total assertion (ATLAS 46.21): portal-identity
+    // registration now also creates a real Control Plane Organization
+    // (controlPlaneOrganizationId bridge), so any other suite exercising
+    // POST /api/v1/portal/auth/register against this same database adds to
+    // this global count too — a real, intentional cross-cutting effect,
+    // not something this test should assume away.
     const { body } = await G('/admin/control-plane/organizations');
-    expect((body as any).total).toBe(3);
+    const total = (body as any).total as number;
+    const slugs = (body as any).organizations.map((o: any) => o.slug);
+    expect(total).toBeGreaterThanOrEqual(3);
+    expect(slugs).toEqual(expect.arrayContaining(['acme-corp', 'techventures-labs', 'startupxyz']));
   });
 
   it('filters organizations by tenantId', async () => {

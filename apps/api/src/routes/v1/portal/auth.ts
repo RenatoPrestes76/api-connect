@@ -48,7 +48,7 @@ export function registerPortalAuthRoutes(router: Router): void {
     }
 
     const passwordHash = await hashPassword(owner.password);
-    const { organization, owner: ownerUser } = portalIdentityStore.createOrganization({
+    const { organization, owner: ownerUser } = await portalIdentityStore.createOrganization({
       name,
       razaoSocial,
       cnpj,

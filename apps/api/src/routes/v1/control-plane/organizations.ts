@@ -8,6 +8,7 @@ import {
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
 import type { Organization } from '../../../modules/control-plane/types.js';
+import { runtimeRegistrationStore } from '../../../modules/runtime-registration/runtime-registration-store.js';
 
 export function registerOrganizationRoutes(router: Router): void {
   router.get(
@@ -27,6 +28,28 @@ export function registerOrganizationRoutes(router: Router): void {
       const org = await controlPlaneStore.getOrganization(ctx.params?.id as string);
       if (!org) return apiError(res, 'Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
       json(res, org);
+    })
+  );
+
+  /**
+   * ATLAS 46.21 — the Ed25519 runtime-registration Runtimes ("Atlas
+   * Runtimes" in apps/admin) that were registered under this real, Control
+   * Plane Organization — see docs/ADR-ATLAS-CANONICAL-CLIENT-ONBOARDING.md.
+   * A lookup, not a new store: reads runtime-registration's own records,
+   * filtered by the controlPlaneOrganizationId link established at portal
+   * registration time.
+   */
+  router.get(
+    '/admin/control-plane/organizations/:id/runtimes',
+    requirePermission('companies.read')(async (ctx: RouteContext, res: ServerResponse) => {
+      const id = ctx.params?.id as string;
+      const org = await controlPlaneStore.getOrganization(id);
+      if (!org) return apiError(res, 'Organization not found', 404, 'ORGANIZATION_NOT_FOUND');
+
+      const runtimes = runtimeRegistrationStore
+        .listRuntimes({ controlPlaneOrganizationId: id })
+        .map((r) => runtimeRegistrationStore.toDTO(r));
+      json(res, { runtimes, total: runtimes.length });
     })
   );
 

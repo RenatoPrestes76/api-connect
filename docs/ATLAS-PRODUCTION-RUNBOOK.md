@@ -270,7 +270,25 @@ fixed here).
 > reservation above still stands unchanged — 46.20-B intentionally did not
 > merge the two mechanisms.
 
-## Runtime Enrollment (ATLAS 46.20-B)
+## Runtime Enrollment (ATLAS 46.20-B, canonicalized in 46.21)
+
+**ATLAS 46.21 declared this the official, canonical onboarding path** for
+a first Atlas customer — see `docs/ADR-ATLAS-CANONICAL-CLIENT-ONBOARDING.md`
+for the full decision, `docs/ATLAS-RUNTIME-ONBOARDING-MATRIX.md` for the
+evidence, and `docs/ATLAS-HEARTBEAT-ARCHITECTURE.md` for why its heartbeat
+(not `atlas/heartbeat.ts`) is the heartbeat of record. Two other enrollment
+surfaces exist (`apps/agent`'s original cloud registration — currently
+broken; `apps/runtime-installer` — working, but a separate product surface
+feeding `apps/cloud`'s dashboard) and neither was touched or merged.
+
+**New in 46.21**: the Organization a Runtime registers under
+(`portal-identity`'s `OrganizationRecord`, resolved from
+`ATLAS_ORGANIZATION_CODE`) is now automatically linked, at portal
+registration time, to a real Postgres-persisted Control Plane `Organization`
+(`controlPlaneOrganizationId`). An admin can look up every Ed25519 Runtime
+registered under a real Control Plane Organization via
+`GET /admin/control-plane/organizations/:id/runtimes` — previously there
+was no way to cross-reference the two.
 
 The real Runtime client lives at `apps/agent/src/atlas-runtime-client/` —
 full detail in `docs/ATLAS-RUNTIME-CLIENT.md`. Summary for operational use:

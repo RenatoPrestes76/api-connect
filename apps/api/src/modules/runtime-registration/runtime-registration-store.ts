@@ -137,10 +137,19 @@ export class RuntimeRegistrationStore {
   }
 
   listRuntimes(
-    filter: { organizationId?: string; status?: RuntimeStatus } = {}
+    filter: {
+      organizationId?: string;
+      controlPlaneOrganizationId?: string;
+      status?: RuntimeStatus;
+    } = {}
   ): RuntimeRegistrationRecord[] {
     return this.runtimes.filter((r) => {
       if (filter.organizationId && r.organizationId !== filter.organizationId) return false;
+      if (
+        filter.controlPlaneOrganizationId &&
+        r.controlPlaneOrganizationId !== filter.controlPlaneOrganizationId
+      )
+        return false;
       if (filter.status && r.status !== filter.status) return false;
       return true;
     });
@@ -167,6 +176,7 @@ export class RuntimeRegistrationStore {
     const runtime: RuntimeRegistrationRecord = {
       id: randomUUID(),
       organizationId: org.id,
+      controlPlaneOrganizationId: org.controlPlaneOrganizationId,
       machineFingerprintHash: fingerprintHash,
       hostname: input.hostname,
       os: input.os,
@@ -378,6 +388,7 @@ export class RuntimeRegistrationStore {
     return {
       runtimeId: runtime.id,
       organizationId: runtime.organizationId,
+      controlPlaneOrganizationId: runtime.controlPlaneOrganizationId,
       hostname: runtime.hostname,
       os: runtime.os,
       architecture: runtime.architecture,

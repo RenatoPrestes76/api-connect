@@ -45,6 +45,19 @@ export interface OrganizationRecord {
   internalCode: string;
   status: OrganizationStatus;
   plan: OrganizationPlan;
+  /**
+   * ATLAS 46.21 — cross-reference to the real, Postgres-persisted Control
+   * Plane Organization (packages/database's `Organization` model,
+   * apps/api/src/modules/control-plane/tenancy.repository.ts) that this
+   * portal Organization was linked to at creation. portal-identity's own
+   * OrganizationRecord remains in-memory and is NOT restart-durable — see
+   * docs/ADR-ATLAS-CANONICAL-CLIENT-ONBOARDING.md for why the two weren't
+   * merged into one entity. Null when the Control Plane link couldn't be
+   * established (e.g. database unavailable at registration time) — a
+   * portal Organization is still usable without it, just not yet visible
+   * cross-referenced in the Control Plane.
+   */
+  controlPlaneOrganizationId: string | null;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;

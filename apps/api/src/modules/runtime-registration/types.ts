@@ -10,6 +10,16 @@ export type RuntimeStatus = 'PENDING' | 'REGISTERED' | 'ACTIVE' | 'BLOCKED' | 'R
 export interface RuntimeRegistrationRecord {
   id: string;
   organizationId: string;
+  /**
+   * ATLAS 46.21 — cross-reference to the real, Postgres-persisted Control
+   * Plane Organization (see portal-identity's OrganizationRecord.
+   * controlPlaneOrganizationId, resolved at registration time from
+   * `organizationId` above). Null when the owning portal Organization
+   * never got linked (e.g. it was created before this field existed, or
+   * the Control Plane database was unreachable at portal-registration
+   * time) — see docs/ADR-ATLAS-CANONICAL-CLIENT-ONBOARDING.md.
+   */
+  controlPlaneOrganizationId: string | null;
   machineFingerprintHash: string;
   hostname: string;
   os: string;
@@ -40,6 +50,7 @@ export interface RuntimeRegistrationRecord {
 export interface RuntimeRegistrationDTO {
   runtimeId: string;
   organizationId: string;
+  controlPlaneOrganizationId: string | null;
   hostname: string;
   os: string;
   architecture: string;

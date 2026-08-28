@@ -14,6 +14,56 @@ import type {
   OrgAuditEntry,
 } from './types.js';
 import { generateInviteToken, hashInviteToken } from './jwt.js';
+import { tenancyRepository } from '../control-plane/tenancy.repository.js';
+import type { Organization as ControlPlaneOrganization } from '../control-plane/types.js';
+import { createLogger } from '@seltriva/logger';
+
+const logger = createLogger('portal-identity');
+
+/** portal-identity's plan vocabulary predates the Control Plane's OrganizationTier enum — mapped, not unified, since neither is the other's source of truth for billing. */
+function planToControlPlaneTier(plan: OrganizationPlan): ControlPlaneOrganization['tier'] {
+  switch (plan) {
+    case 'enterprise':
+      return 'ENTERPRISE';
+    case 'professional':
+      return 'PRO';
+    case 'community':
+    default:
+      return 'FREE';
+  }
+}
+
+/**
+ * ATLAS 46.21 — links a newly-created portal Organization to the real,
+ * Postgres-persisted Control Plane Organization (find-by-slug first, since
+ * `tenancyRepository.createOrganization` isn't itself idempotent and a
+ * unique-slug retry would otherwise throw). Non-fatal by design: a portal
+ * registration must still succeed even if the Control Plane database is
+ * unreachable — see docs/ADR-ATLAS-CANONICAL-CLIENT-ONBOARDING.md.
+ */
+async function linkControlPlaneOrganization(
+  name: string,
+  slug: string,
+  plan: OrganizationPlan
+): Promise<string | null> {
+  try {
+    const existing = await tenancyRepository.findOrganizationBySlug(slug);
+    if (existing) return existing.id;
+
+    const created = await tenancyRepository.createOrganization({
+      name,
+      slug,
+      tier: planToControlPlaneTier(plan),
+    });
+    return created.ok ? created.organization.id : null;
+  } catch (err) {
+    logger.warn('Failed to link portal Organization to the Control Plane', {
+      slug,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
+}
 
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const DEFAULT_ENVIRONMENTS: Array<{ name: string; kind: EnvironmentKind }> = [
@@ -52,6 +102,10 @@ export class PortalIdentityStore {
       internalCode: 'ORG-0001',
       status: 'active',
       plan: 'enterprise',
+      // Seeded at process boot (synchronous constructor) — cannot await the
+      // Control Plane link here. Demo/fixture data only, never a real
+      // customer; see linkControlPlaneOrganization() for the real path.
+      controlPlaneOrganizationId: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -104,15 +158,21 @@ export class PortalIdentityStore {
     );
   }
 
-  createOrganization(input: {
+  async createOrganization(input: {
     name: string;
     razaoSocial: string;
     cnpj: string;
     internalCode: string;
     plan?: OrganizationPlan;
     owner: { name: string; email: string; passwordHash: string };
-  }): { organization: OrganizationRecord; owner: OrgUserRecord } {
+  }): Promise<{ organization: OrganizationRecord; owner: OrgUserRecord }> {
     const now = new Date().toISOString();
+    const plan = input.plan ?? 'community';
+    const controlPlaneOrganizationId = await linkControlPlaneOrganization(
+      input.name,
+      input.internalCode,
+      plan
+    );
     const organization: OrganizationRecord = {
       id: randomUUID(),
       name: input.name,
@@ -120,7 +180,8 @@ export class PortalIdentityStore {
       cnpj: input.cnpj,
       internalCode: input.internalCode,
       status: 'active',
-      plan: input.plan ?? 'community',
+      plan,
+      controlPlaneOrganizationId,
       createdAt: now,
       updatedAt: now,
     };

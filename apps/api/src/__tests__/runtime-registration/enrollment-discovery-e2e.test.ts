@@ -12,6 +12,7 @@ import {
 import { registerDemoRuntime, signHeartbeat } from './helpers.js';
 import { obtainRuntimeAccessToken } from '../erp-connectivity/helpers.js';
 import { buildRichErpSchemaFixture } from '../semantic-mapping/helpers.js';
+import { prisma } from '../../services/prisma.js';
 
 /**
  * Sprint 46.12 — proves the full chain end-to-end, in one place, using only
@@ -34,6 +35,9 @@ describe('Sprint 46.12 — Runtime enrollment through to canonical model (full c
 
   afterAll(async () => {
     await srv.close();
+    // ATLAS 46.21: registerOrganization() now also links a real Control
+    // Plane Organization in Postgres — clean up this file's own slugs.
+    await prisma.organization.deleteMany({ where: { slug: { startsWith: 'E2E' } } });
   });
 
   it('1-tenant -> 2-enrollment -> 3-register -> 4-auth -> 5-heartbeat -> 6-discover -> 7-claim -> 8-submit -> 9-semantic-mapping -> 10-canonical-model', async () => {

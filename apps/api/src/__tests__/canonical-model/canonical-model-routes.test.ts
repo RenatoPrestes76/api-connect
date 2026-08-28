@@ -12,6 +12,7 @@ import {
 } from './helpers.js';
 import { adminIdentityStore } from '../../modules/admin-identity/admin-identity-store.js';
 import { hashPassword } from '../../modules/admin-identity/password.js';
+import { prisma } from '../../services/prisma.js';
 
 interface ErrorBody {
   error: { message: string; code: string };
@@ -50,6 +51,11 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await srv.close();
+  // ATLAS 46.21: registerOrganization() now also links a real, Postgres-
+  // persisted Control Plane Organization (see portal-identity-store.ts's
+  // linkControlPlaneOrganization) — unlike this suite's other in-memory
+  // stores, that survives across runs unless removed explicitly.
+  await prisma.organization.deleteMany({ where: { slug: { startsWith: 'CBM' } } });
 });
 
 let codeCounter = 0;

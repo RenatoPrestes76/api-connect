@@ -28,6 +28,7 @@ import { executeDiscoveryScan } from '../../../../agent/src/atlas-runtime-client
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { prisma } from '../../services/prisma.js';
 
 const SCAN_TARGET = {
   host: 'localhost',
@@ -51,6 +52,9 @@ describe('ATLAS 46.20-B — real Runtime client end-to-end against a real Atlas 
   afterAll(async () => {
     await srv.close();
     rmSync(dataDir, { recursive: true, force: true });
+    // ATLAS 46.21: registerOrganization() now also links a real Control
+    // Plane Organization in Postgres — clean up this file's own slugs.
+    await prisma.organization.deleteMany({ where: { slug: { startsWith: 'RC' } } });
   });
 
   it('register -> auth token -> heartbeat -> discover -> claim -> execute (real GENESIS scan) -> submit result', async () => {
