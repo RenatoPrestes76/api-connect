@@ -178,9 +178,9 @@ nada, porque tudo era memória).
 
 Não existe, neste sistema, um papel de usuário com credenciais escopadas a
 um único Tenant que possa acessar estas rotas — o Control Plane é operado
-por staff SUPER_ADMIN-like, global por desenho (confirmado explicitamente
-na Sprint 46.16: _"SUPER_ADMIN is global by design — respect that, don't
-invent an incompatible isolation rule"_). A propriedade testada é, por
+por staff SUPER*ADMIN-like, global por desenho (confirmado explicitamente
+na Sprint 46.16: *"SUPER*ADMIN is global by design — respect that, don't
+invent an incompatible isolation rule"*). A propriedade testada é, por
 isso, mais estreita e mais correta para este domínio: o **filtro**
 `tenantId` usado por um operador global nunca vaza linhas de outro tenant,
 e uma alteração por id nunca afeta uma linha diferente da endereçada. Ver
