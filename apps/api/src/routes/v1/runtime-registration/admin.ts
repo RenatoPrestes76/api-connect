@@ -4,6 +4,7 @@ import { json, apiError } from '../../../http/router.js';
 import { requirePermission } from '../../../middleware/admin-auth.js';
 import { runtimeRegistrationStore } from '../../../modules/runtime-registration/runtime-registration-store.js';
 import { portalIdentityStore } from '../../../modules/portal-identity/portal-identity-store.js';
+import { controlPlaneStore } from '../../../modules/control-plane/control-plane-store.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
 import { parseBody, parseQuery } from '../../../http/validation.js';
 import {
@@ -37,8 +38,31 @@ export function registerRuntimeRegistrationAdminRoutes(router: Router): void {
         const runtime = await runtimeRegistrationStore.getRuntime(ctx.params['id'] as string);
         if (!runtime) return apiError(res, 'Runtime not found', 404, 'NOT_FOUND');
         const certificate = runtimeRegistrationStore.getCertificate(runtime.id);
+
+        // ATLAS 46.24 — Part L: an operator looking at one Runtime shouldn't
+        // have to manually chase controlPlaneOrganizationId -> Organization
+        // -> Tenant across three separate admin calls to answer "which
+        // Organization/Tenant is this". Computed at read time, exactly like
+        // `liveness` (46.23) — nothing new is stored, and Runtime still has
+        // no tenantId of its own; this is the same derivation
+        // tenant-association.test.ts already proves, just surfaced here.
+        let organization: { id: string; name: string } | null = null;
+        let tenant: { id: string; name: string } | null = null;
+        if (runtime.controlPlaneOrganizationId) {
+          const org = await controlPlaneStore.getOrganization(runtime.controlPlaneOrganizationId);
+          if (org) {
+            organization = { id: org.id, name: org.name };
+            if (org.tenantId) {
+              const t = await controlPlaneStore.getTenant(org.tenantId);
+              if (t) tenant = { id: t.id, name: t.name };
+            }
+          }
+        }
+
         json(res, {
           runtime: runtimeRegistrationStore.toDTO(runtime),
+          organization,
+          tenant,
           certificate: certificate
             ? {
                 certificateId: certificate.certificateId,

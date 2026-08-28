@@ -43,6 +43,15 @@ const SCAN_TARGET = {
  * computed by whichever process answers the request, purely from the
  * persisted `lastHeartbeat`, never from anything held in memory — including
  * a controlled-timestamp STALE/OFFLINE transition with no real sleep.
+ *
+ * ATLAS 46.24 additions (Part G): closes the one dimension of the canonical
+ * onboarding flow this file didn't previously exercise — Tenant provisioning
+ * (see docs/ADR-ATLAS-CANONICAL-CLIENT-ONBOARDING.md's "ATLAS 46.23" and
+ * "ATLAS 46.24" sections). The Organization is explicitly associated with a
+ * real Tenant in pass 1, and pass 2 confirms the Runtime's *derived* Tenant
+ * (joined through controlPlaneOrganization.tenantId, never a column on the
+ * Runtime itself) still resolves correctly from a process that never held
+ * any of this in memory.
  */
 
 const PORT = 3097; // fixed, not random — a restart must reconnect on the same port
@@ -122,6 +131,7 @@ describe('ATLAS 46.22 — Runtime registration survives a real API process resta
       where: { organizationId: { not: '' }, hostname: 'restart-durability-host' },
     });
     await prisma.organization.deleteMany({ where: { slug: orgCode } });
+    await prisma.tenant.deleteMany({ where: { slug: `t46-24-restart-${orgCode.toLowerCase()}` } });
   });
 
   it('register -> real process kill -> real process restart -> Runtime still there -> heartbeat still works', async () => {
@@ -132,6 +142,7 @@ describe('ATLAS 46.22 — Runtime registration survives a real API process resta
     let runtimeId: string;
     let controlPlaneOrgId: string;
     let portalOrgId: string;
+    let tenantId: string;
     try {
       await waitForHealth();
       const auth = await adminAuth();
@@ -149,6 +160,40 @@ describe('ATLAS 46.22 — Runtime registration survives a real API process resta
         },
       });
       portalOrgId = orgRes.organization.id;
+
+      // (ATLAS 46.24, Part G) Tenant provisioning — explicit, admin-
+      // controlled, exactly the boundary formalized in 46.23/46.24: the
+      // Organization starts without a Tenant (PENDING_TENANT_ASSIGNMENT)
+      // and is associated here before the Runtime ever registers, so the
+      // whole canonical chain (Organization -> Tenant -> Runtime) is
+      // exercised through the restart, not just Organization -> Runtime.
+      const orgLookup = await get<{ organizations: Array<{ id: string; slug: string }> }>(
+        '/admin/control-plane/organizations',
+        auth
+      );
+      controlPlaneOrgId = orgLookup.body.organizations.find((o) => o.slug === orgCode)!.id;
+
+      const tenantSlug = `t46-24-restart-${orgCode.toLowerCase()}`;
+      const tenantRes = await post<{ id: string }>(
+        '/admin/control-plane/tenants',
+        { name: `Restart Durability Tenant ${orgCode}`, slug: tenantSlug },
+        auth
+      );
+      tenantId = tenantRes.id;
+
+      const assignRes = await fetch(
+        `${BASE_URL}/admin/control-plane/organizations/${controlPlaneOrgId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...auth },
+          body: JSON.stringify({ tenantId }),
+        }
+      );
+      expect(assignRes.status).toBe(200);
+      const orgAfterAssign = await prisma.organization.findUnique({
+        where: { id: controlPlaneOrgId },
+      });
+      expect(orgAfterAssign?.tenantId).toBe(tenantId);
 
       const keyRes = await post<{ activationKey: { code: string } }>(
         '/admin/runtime-registration/activation-keys',
@@ -212,6 +257,23 @@ describe('ATLAS 46.22 — Runtime registration survives a real API process resta
       );
       expect(cpLookup.status).toBe(200);
       expect(cpLookup.body.runtimes.some((r) => r.runtimeId === runtimeId)).toBe(true);
+
+      // 2b. (ATLAS 46.24, Part G) The Runtime's *derived* Tenant — joined
+      // through controlPlaneOrganization.tenantId, never a column on
+      // RuntimeRegistration itself — still resolves correctly from proc2,
+      // which never held the Tenant assignment made in pass 1 in memory.
+      const runtimeRowPostRestart = await prisma.runtimeRegistration.findUnique({
+        where: { id: runtimeId },
+        include: { controlPlaneOrganization: true },
+      });
+      expect(runtimeRowPostRestart?.controlPlaneOrganization?.tenantId).toBe(tenantId);
+      // Also confirm through the enriched admin lookup (ATLAS 46.24, Part L)
+      // — the operator-facing surface, not just a raw Prisma read.
+      const enrichedLookup = await get<{ tenant: { id: string; name: string } | null }>(
+        `/admin/runtime-registration/runtimes/${runtimeId}`,
+        auth2
+      );
+      expect(enrichedLookup.body.tenant?.id).toBe(tenantId);
 
       // 3. The real client (same persisted identity — never regenerated,
       // never re-registered) can still authenticate and heartbeat

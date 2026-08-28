@@ -13,6 +13,15 @@ being registered.
 This is infrastructure preparation, not a feature sprint. No business logic,
 authentication model, or API contract changed as part of this work.
 
+> **ATLAS 46.24 re-confirmation**: reviewed again as part of the Production
+> Client Onboarding & Operational Readiness Gate. Status is **unchanged** —
+> still `RESERVED / NOT YET REGISTERED`. No DNS record, deploy, or domain
+> action was taken or simulated this sprint either; the canonical onboarding
+> flow this sprint proves end to end (see
+> `docs/ADR-ATLAS-CANONICAL-CLIENT-ONBOARDING.md`'s "ATLAS 46.24" section)
+> runs entirely against `localhost`/the existing dev/CI environment, exactly
+> as this document already anticipated in §2/§7's placeholder sections.
+
 ## 1. Domain and subdomains
 
 | Host                           | Purpose                         | Maps to (this repo)                                                                                            | Confidence                                                                                                                                                                                                                                                                                                                   |

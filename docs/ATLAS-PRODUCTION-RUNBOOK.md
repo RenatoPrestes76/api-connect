@@ -39,11 +39,21 @@ builds on.
   a production boot with any of them missing now fails immediately and
   loudly instead of silently signing/encrypting with a public default.
 
+> **ATLAS 46.24 re-audit**: the secret/CORS validation above was re-checked
+> against everything the canonical onboarding flow (signup → Organization →
+> Tenant → activation key → Runtime → heartbeat → ONLINE → ERP discovery →
+> GENESIS → ATHENA) actually touches. No new secret-bearing config was
+> introduced by 46.22/46.23/46.24 — `RUNTIME_JWT_SECRET`/`RUNTIME_CERT_SECRET`
+> already covered the Ed25519/JWT surface, liveness thresholds and Activation
+> Key data are not secrets. This list is confirmed complete for onboarding a
+> first real client, not just re-asserted.
+
 **Domínio / DNS**
 
 - `atlasappruntime.com.br` is RESERVED, not yet registered — see
   `docs/ATLAS-PRODUCTION-DOMAIN.md` for the full domain/subdomain/DNS plan.
-  Nothing in this runbook assumes it resolves.
+  Nothing in this runbook assumes it resolves. Re-confirmed unchanged as of
+  ATLAS 46.24 — no domain/deploy action was taken or simulated this sprint.
 
 **Configuração**
 
@@ -419,6 +429,193 @@ never automatic. Confirmed and tested this sprint:
 **Whether/when a self-service signup should automatically receive a
 Tenant remains an external product decision**, not made by 46.22 or
 46.23.
+
+## First Client Onboarding Runbook (ATLAS 46.24)
+
+A step-by-step walkthrough for onboarding a real first client, written so
+someone can execute it from this document alone, with no prior knowledge of
+the codebase. Every step below is proven, end to end, by
+`apps/api/src/__tests__/runtime-registration/client-zero-onboarding-e2e.test.ts`
+(fast, in-process) and, with a real API process restart spliced in, by
+`restart-durability-e2e.test.ts`. No secret value appears anywhere below.
+
+### 1. Pré-requisitos
+
+- Atlas API reachable and healthy (`GET /health` returns 200) — see
+  "Pré-requisitos"/"Deploy" above.
+- A super-admin credential to call the `/admin/*` endpoints below (seed
+  admin in dev; a real admin account in production).
+
+### 2. Criação do cliente (signup)
+
+```
+POST /api/v1/portal/auth/register
+{
+  "name": "<company display name>",
+  "razaoSocial": "<legal company name>",
+  "cnpj": "<company tax id>",
+  "internalCode": "<a short, unique organization code you choose>",
+  "plan": "professional",
+  "owner": { "name": "...", "email": "...", "password": "..." }
+}
+```
+
+This immediately creates a real, Postgres-persisted Control Plane
+`Organization`, linked via `controlPlaneOrganizationId` — not a fixture, not
+in-memory-only.
+
+### 3. Confirmar Organization (sem Tenant ainda)
+
+```
+GET /admin/control-plane/organizations?<filter by the slug you chose>
+```
+
+Expect `tenantId: null` — this is the correct, legitimate
+PENDING_TENANT_ASSIGNMENT state, not an error to fix.
+
+### 4. Associação do Tenant
+
+Create a real Tenant (or reuse an existing one this customer belongs to),
+then associate it explicitly:
+
+```
+POST  /admin/control-plane/tenants           { "name": "...", "slug": "..." }
+PATCH /admin/control-plane/organizations/:id { "tenantId": "<the Tenant id>" }
+```
+
+Confirm: `GET /admin/control-plane/organizations/:id` now shows the
+assigned `tenantId`.
+
+### 5. Geração da Activation Key
+
+```
+POST /admin/runtime-registration/activation-keys
+{ "organizationCode": "<the internalCode from step 2>" }
+```
+
+Single-use — hand the returned `code` to whoever is installing the Runtime.
+It only works for this exact `organizationCode`; see "Security" below.
+
+### 6. Instalação/configuração do Runtime
+
+On the customer's machine, set (see `docs/ATLAS-RUNTIME-CLIENT.md` for the
+full reference):
+
+```
+ATLAS_API_URL=<the real Atlas API base URL>
+ATLAS_ORGANIZATION_CODE=<the internalCode from step 2>
+ATLAS_ACTIVATION_KEY=<the code from step 5>
+ATLAS_SCAN_DB_HOST / _PORT / _NAME / _USER / _PASSWORD=<the customer's ERP database>
+```
+
+Then run `apps/agent` (or its bootstrap, if embedded in a larger install).
+The Runtime generates its own Ed25519 identity locally — the private key
+never leaves that machine.
+
+### 7. Primeiro heartbeat
+
+Happens automatically after registration, on the interval Atlas returned at
+registration time (`heartbeatInterval`, 30s default). No manual action
+needed.
+
+### 8. Confirmação ONLINE
+
+```
+GET /admin/runtime-registration/runtimes/:runtimeId
+```
+
+Check `runtime.status` is `ACTIVE` and `runtime.liveness` is `ONLINE`. The
+same response now also includes `organization` and `tenant` summaries
+(ATLAS 46.24) — confirm they match steps 2/4, closing the loop without
+extra lookups.
+
+### 9. ERP discovery
+
+An admin creates a connection profile and requests discovery:
+
+```
+POST /erp-connectivity/profiles      { runtimeId, organizationId, ... }
+POST /erp-metadata/discover          { runtimeId, organizationId, profileId }
+```
+
+The Runtime polls, claims, and executes the scan automatically.
+
+### 10. Confirmação GENESIS
+
+```
+GET /erp-metadata/discover/:requestId   (or list, filtered)
+```
+
+Expect `status: "COMPLETED"` once the Runtime reports back.
+
+### 11. Confirmação ATHENA
+
+```
+POST /semantic-mapping/analyze     { profileId }
+GET  /semantic-mapping/entities?profileId=...
+POST /semantic-mapping/approve     { profileId, schema, table, decision: "APPROVE" }
+```
+
+Classified entities appear from the `GET`; approving them is the last
+manual step before this ERP's data participates in the canonical model.
+
+### 12. Validação de isolamento
+
+Before considering onboarding complete for a client sharing infrastructure
+with others, spot-check:
+
+- `GET /admin/control-plane/organizations/:id/runtimes` for this
+  Organization never includes another Organization's Runtime.
+- The Activation Key issued in step 5 cannot be reused with a different
+  `organizationCode` (`ACTIVATION_KEY_INVALID` if attempted).
+
+See `apps/api/src/__tests__/runtime-registration/onboarding-isolation.test.ts`
+for the automated proof of both.
+
+### 13. Troubleshooting
+
+See `docs/ATLAS-RUNTIME-CLIENT.md`'s Troubleshooting section for
+`ACTIVATION_KEY_ALREADY_USED`, `INVALID_SIGNATURE`, `REPLAY_REJECTED`, and
+missing-scan-target behavior. Additionally:
+
+- **`liveness` stuck at `STALE`/`OFFLINE` despite the Runtime running**:
+  check the Runtime's local clock — heartbeat timestamps outside a 5-minute
+  window of Atlas's clock are rejected before they'd even update
+  `lastHeartbeat` (`REPLAY_REJECTED`), which then also stalls liveness.
+- **`tenant` is `null` in step 8's response**: step 4 (Tenant association)
+  wasn't completed, or was completed against the wrong Organization id —
+  re-check `GET /admin/control-plane/organizations/:id`.
+
+### 14. Restart / recovery
+
+An Atlas API restart (planned maintenance, deploy, crash recovery) requires
+**no re-onboarding action** — Runtime identity, heartbeat history, and
+Tenant association are all Postgres-persisted (ATLAS 46.22/46.23). After a
+restart, re-run step 8's `GET` — it should show the same `runtimeId`,
+`organization`, and `tenant` as before, with `liveness` recovering to
+`ONLINE` on the Runtime's next heartbeat. Proven with a real spawned/killed/
+restarted process in `restart-durability-e2e.test.ts`.
+
+### 15. Critérios de sucesso
+
+- Step 8's `GET` shows `status: ACTIVE`, `liveness: ONLINE`, correct
+  `organization`/`tenant`.
+- Step 10/11 both show completed/classified data.
+- Step 12's isolation checks pass.
+
+### 16. Critérios de rollback
+
+- If registration fails at step 6 (`ACTIVATION_KEY_*` error): revoke the
+  key (`DELETE /admin/runtime-registration/activation-keys/:id`) and issue
+  a fresh one — a failed/expired key is never silently reusable.
+- If the Runtime was registered with the wrong Organization or a
+  compromised identity: `DELETE /admin/runtime-registration/runtimes/:id/credentials`
+  revokes its certificate and kills its active sessions immediately: it
+  can no longer authenticate, and a fresh install must re-register under a
+  new activation key.
+- Nothing in this flow requires a database rollback — every step is either
+  additive (new rows) or a single-column update (`tenantId`), never a
+  destructive operation.
 
 ## Security Baseline (Fase 12)
 

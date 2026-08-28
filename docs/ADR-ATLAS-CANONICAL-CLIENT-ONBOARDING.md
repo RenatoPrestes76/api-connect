@@ -426,3 +426,99 @@ decision, unchanged from 46.22** — this sprint formalizes and tests the
 technical boundary (`PATCH .../organizations/:id` as the explicit
 provisioning point) without deciding _when_ or _whether_ a self-service
 signup should automatically receive one.
+
+## ATLAS 46.24 — Production Client Onboarding & Operational Readiness Gate
+
+**Sprint**: ATLAS 46.24. Does not change the architecture established by
+46.19–46.23 — this sprint proves the already-built components function
+together as one reproducible onboarding operation, and closes the small,
+genuinely missing pieces found while proving it.
+
+### Canonical flow, consolidated
+
+```
+Signup (POST /api/v1/portal/auth/register)
+  -> Organization (real, linked via controlPlaneOrganizationId)
+  -> Organization.tenantId is null (PENDING TENANT ASSIGNMENT, legitimate)
+  -> Tenant provisioned explicitly (PATCH .../organizations/:id)
+  -> Activation Key issued (single-use, bound to one organizationCode)
+  -> Runtime generates its Ed25519 identity and registers
+  -> Runtime heartbeats -> ACTIVE -> liveness ONLINE
+  -> ERP discovery -> real GENESIS scan -> ATHENA classification
+  -> Every relation above verified, directly in Postgres, to belong to the
+     same Organization/Tenant/Runtime triple
+```
+
+Proven, fast and in-process, in
+`apps/api/src/__tests__/runtime-registration/client-zero-onboarding-e2e.test.ts`
+— the one file that walks this exact sequence including the Tenant step
+(the one dimension `client-zero-e2e.test.ts` (46.21) didn't exercise, since
+it predates this flow's Tenant-association test coverage), ending in a
+direct-Postgres integrity audit (no orphans, no duplicate Organization/
+RuntimeRegistration/Tenant rows, `tenantId` structurally absent from the
+`RuntimeRegistration` row) and one negative case (ERP discovery against a
+nonexistent Runtime -> `RUNTIME_NOT_FOUND`, 404).
+
+The same flow, restart included, is proven in
+`restart-durability-e2e.test.ts` — extended this sprint to add the Tenant
+step to pass 1 and, in pass 2, confirm the Runtime's _derived_ Tenant
+(joined through `controlPlaneOrganization.tenantId`) still resolves
+correctly from a process that never held the Tenant assignment in memory.
+
+### Isolation checklist (Part C)
+
+Consolidated in the new
+`apps/api/src/__tests__/runtime-registration/onboarding-isolation.test.ts`,
+which states explicitly what's proven where rather than re-testing
+everything from scratch:
+
+1. Client A's Runtime is invisible from Client B's Organization-scoped
+   lookup, and vice versa — proven fresh in this file.
+2. Two Organizations that legitimately share one real Tenant still keep
+   their Runtimes strictly separate — proven fresh in this file (a
+   genuinely new scenario: prior tests only used one Organization per
+   Tenant).
+3. A Runtime can never be arbitrarily pulled into a foreign Tenant — same
+   test as #2; structurally true since `RuntimeRegistration` has no
+   `tenantId` column for anything to write to.
+4. A client-supplied `tenantId` cannot alter ownership — already proven in
+   `tenant-association.test.ts` (46.23).
+5. **An Activation Key issued for Organization A is rejected when
+   presented with Organization B's `organizationCode`** — genuinely new
+   this sprint. Prior coverage (`runtime-registration-routes.test.ts`)
+   only exercised a bogus key _string_; this closes the real gap of a
+   _valid_ key used against the wrong Organization. The rejected attempt
+   also leaves the key unconsumed and still valid for its real owner.
+6. A public key or fingerprint already registered elsewhere cannot be
+   reused, including under a real concurrent-request race — already
+   proven in `registration-idempotency.test.ts` (46.22).
+
+### Observability (Part L)
+
+`GET /admin/runtime-registration/runtimes/:id` now additionally returns
+`organization: {id, name} | null` and `tenant: {id, name} | null`,
+computed at read time from `controlPlaneOrganizationId` (exactly the same
+derivation `liveness` used in 46.23 — nothing new stored, nothing cached).
+Closes a real small gap: previously, answering "which Organization/Tenant
+is this Runtime under" required three separate admin calls
+(Runtime → Organization → Tenant); now the first call answers it. No
+dashboard, no alerting, no background sweep was built — out of scope,
+per this sprint's explicit boundary.
+
+### Production readiness — re-audited, not re-built
+
+`apps/api/src/services/production-secrets.ts` (ATLAS 46.20) already
+validates every secret-bearing env var this onboarding flow depends on
+(`RUNTIME_JWT_SECRET`, `RUNTIME_CERT_SECRET`, plus the others unrelated to
+Runtime onboarding specifically) and `CORS_ALLOWED_ORIGINS`, failing loud
+at boot in production. Re-audited this sprint against the full onboarding
+chain — nothing new needed validating (liveness thresholds and Activation
+Key data are not secrets). `docs/ATLAS-PRODUCTION-DOMAIN.md`'s domain/DNS
+plan is unchanged and re-confirmed still `RESERVED / NOT YET REGISTERED` —
+no domain, DNS, or deploy action was taken or simulated.
+
+See `docs/ATLAS-PRODUCTION-RUNBOOK.md`'s new "First Client Onboarding
+Runbook" section for the executable, code-knowledge-free walkthrough this
+sprint produced, and the **Production Readiness** split (Software /
+Configuration / Infrastructure / Commercial) in ATLAS 46.24's final report
+for exactly what remains externally pending.
