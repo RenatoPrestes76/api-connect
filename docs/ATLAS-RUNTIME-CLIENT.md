@@ -93,6 +93,30 @@ for the real (spawned-process kill/restart) proof, and
 `apps/api/src/__tests__/runtime-registration/registration-idempotency.test.ts`
 for the uniqueness/race proofs.
 
+## Runtime Liveness (ATLAS 46.23)
+
+Separate from `status` (the registration lifecycle this client drives —
+`REGISTERED` on register, `ACTIVE` on first heartbeat), every Runtime read
+now also carries a `liveness` field: `ONLINE` / `STALE` / `OFFLINE`,
+computed fresh on every read from `lastHeartbeat`, never stored, never
+cached. For anyone integrating this client:
+
+- Send heartbeats at (or faster than) the interval Atlas returned at
+  registration (`heartbeatInterval` in the `/runtime/register` response,
+  30s by default) to stay `ONLINE` — the window is 2x that interval (60s),
+  tolerating exactly one missed beat.
+- Beyond 5 minutes since the last accepted heartbeat, Atlas reports the
+  Runtime `OFFLINE` — this is the same `maxHeartbeatGapMs` policy value
+  already returned in that same registration response, not a new number.
+- A Runtime that registered but never sent a single heartbeat reports
+  `OFFLINE`, not `ONLINE` or `STALE` — nothing was ever observed.
+- `liveness` is returned on `POST /runtime/heartbeat`'s own response, and
+  on every admin/Control Plane read of a Runtime — see
+  `docs/ADR-ATLAS-CANONICAL-CLIENT-ONBOARDING.md`'s "ATLAS 46.23" section
+  for the full threshold rationale and
+  `apps/api/src/modules/runtime-registration/liveness.ts` for the
+  implementation.
+
 ## Running it
 
 Standalone, for a one-off check:

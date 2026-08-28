@@ -310,3 +310,119 @@ restart, where previously (in-memory) it would have been silently wiped.
 - Ed25519 signing/verification itself: untouched — this sprint changed
   only the persistence layer beneath an already-shipped, already-tested
   protocol.
+
+## ATLAS 46.23 — Runtime Liveness & Commercial Tenant Onboarding
+
+**Sprint**: ATLAS 46.23 — Runtime Liveness & Commercial Tenant Onboarding
+Gate. Builds directly on 46.22's baseline (Prisma-backed
+`RuntimeRegistration`, restart-durable, `Organization.tenantId`-derived
+Tenant association) — nothing about that baseline changed shape this
+sprint; no migration was needed.
+
+### Liveness
+
+`ONLINE` / `STALE` / `OFFLINE` — a **second, orthogonal** dimension to the
+existing `status` (`PENDING`/`REGISTERED`/`ACTIVE`/`BLOCKED`/`REVOKED`),
+not a replacement or a parallel state machine. `status` keeps its
+pre-46.23 meaning exactly: the Runtime's registration lifecycle, changed
+only by explicit actions (register, first-heartbeat activation, block,
+reactivate, revoke). Liveness answers a different question — "is this
+Runtime checking in right now" — and is **never stored**: it is
+recomputed, fresh, on every read, by a pure function of
+`(lastHeartbeat, now, thresholds)` — see
+`apps/api/src/modules/runtime-registration/liveness.ts`.
+
+- **ONLINE**: last heartbeat within `LIVENESS_ONLINE_WINDOW_MS` (60s = 2x
+  the default 30s heartbeat cadence already established in
+  `runtime-registration-store.ts`'s `DEFAULT_RUNTIME_CONFIG` — tolerates
+  exactly one missed beat before downgrading).
+- **STALE**: last heartbeat beyond the ONLINE window but within
+  `LIVENESS_STALE_WINDOW_MS` (5 minutes — reuses, unchanged, the
+  `policies.maxHeartbeatGapMs` value already advertised to every Runtime
+  at registration time in `routes/v1/runtime-registration/register.ts`,
+  not a new number).
+  Runtime known and registered, just not currently reachable.
+- **OFFLINE**: last heartbeat beyond the STALE window, **or no heartbeat
+  ever recorded** (`lastHeartbeat === null` — never observed, which is a
+  different, stronger absence than "was seen and aged out").
+- **Future timestamps** (clock skew — `lastHeartbeat` is always
+  server-assigned at write time, never client-supplied, so this can only
+  be legitimate drift, never an attacker-controlled value): the gap is
+  clamped to zero, classified ONLINE. Explicit, safe, never a crash.
+- **Source of truth**: `RuntimeRegistration.lastHeartbeat` (Postgres),
+  exactly the column 46.22 made durable. No cache, no background sweep, no
+  in-memory liveness state anywhere — a restart cannot desynchronize
+  liveness because there is nothing to desynchronize.
+
+Exposed additively as `liveness` on `RuntimeRegistrationDTO` (every
+`toDTO()` call site: the admin list/detail/block/reactivate routes and the
+46.21 Control Plane organization-runtimes lookup) and on the
+`POST /runtime/heartbeat` response — both backward-compatible field
+additions, no existing field removed or repurposed.
+
+Proven in `apps/api/src/__tests__/runtime-registration/liveness.test.ts`
+(pure-function unit tests: recent heartbeat, both boundaries exactly and
+just beyond, no heartbeat, future timestamp, restart-independence via
+identical-input determinism, custom thresholds) and, for the persistence
+angle specifically, in `restart-durability-e2e.test.ts`'s steps 4b/4c: a
+real restarted process computing ONLINE right after a fresh heartbeat,
+then STALE and OFFLINE after directly backdating `lastHeartbeat` in
+Postgres (a controlled-timestamp transition — no real sleep, no flake
+risk).
+
+### Tenant onboarding — formalized, not changed
+
+The real, already-existing flow, now stated explicitly rather than left
+implicit:
+
+```
+Signup (POST /api/v1/portal/auth/register)
+  -> Organization created, linked via controlPlaneOrganizationId (46.21)
+  -> Organization.tenantId is null (PENDING TENANT ASSIGNMENT — legitimate,
+     not an error state, not temporary scaffolding)
+  -> Runtime registers and heartbeats normally — entirely independent of
+     Tenant; ACTIVE/ONLINE never requires a Tenant to exist
+  -> An admin explicitly assigns a Tenant:
+     PATCH /admin/control-plane/organizations/:id { tenantId }
+     (tenancyRepository.updateOrganization — validates the Tenant exists,
+     in the same transaction as the write; ATLAS 46.22)
+  -> The Runtime's derived Tenant (joined through
+     controlPlaneOrganization.tenantId) updates immediately, with zero
+     writes to the Runtime row
+```
+
+**This sprint did not build automatic Tenant provisioning**, and
+explicitly was not asked to. `PATCH /admin/control-plane/organizations/:id`
+already **is** the provisioning point — explicit, admin-controlled, this
+sprint's job was to confirm and test its boundary, not add a new one:
+
+- **Reassignment** (Tenant A → Tenant B): the Runtime's derived Tenant
+  follows immediately; no duplicate Organization or RuntimeRegistration
+  row is ever created — it is an update to one existing column, not an
+  insert. Proven in `tenant-association.test.ts`.
+- **Removal** (`tenantId: null`): already supported by 46.22's
+  `updateOrganization` (the `patch.tenantId !== undefined` write path
+  accepts `null`) — the Organization returns to a legitimate, honest
+  PENDING_TENANT_ASSIGNMENT state. **No fallback/default Tenant is ever
+  substituted.** Proven in `tenant-association.test.ts`.
+- **Client-supplied `tenantId` cannot influence ownership.** There is no
+  `tenantId` field anywhere in `RegisterRuntimeInput` or
+  `ListRuntimesQuerySchema` — an injected `tenantId` in a registration
+  body or as a query-string parameter on the Organization-scoped Runtime
+  lookup is structurally inert, not merely "rejected." Proven in
+  `tenant-association.test.ts` by literally injecting one and confirming
+  zero effect on the result.
+- **Concurrency**: two simultaneous Tenant (re)assignments on the same
+  Organization are a normal last-write-wins race on a single scalar FK
+  column — not a corruption risk (there is no multi-row invariant to
+  protect here, unlike `createOrganization`'s tenant-existence check,
+  which already runs inside a transaction from 46.22). Both requests
+  complete cleanly; the Organization ends up with exactly one of the two
+  Tenants; no duplicate row of any kind results. Proven in
+  `tenant-association.test.ts`.
+
+**Tenant commercial provisioning policy remains an external product
+decision, unchanged from 46.22** — this sprint formalizes and tests the
+technical boundary (`PATCH .../organizations/:id` as the explicit
+provisioning point) without deciding _when_ or _whether_ a self-service
+signup should automatically receive one.

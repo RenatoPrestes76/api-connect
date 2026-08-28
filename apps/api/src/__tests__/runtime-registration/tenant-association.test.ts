@@ -84,7 +84,28 @@ describe('ATLAS 46.22 — Runtime -> Organization -> Tenant association', () => 
   // Every registerPortalOrgAndRuntime() call below uses one of these fixed
   // label prefixes for its portal internalCode — cleaned up by prefix
   // rather than tracking each generated code individually.
-  const ORG_CODE_PREFIXES = ['PEND', 'ASSIGN', 'TXA', 'TXB'];
+  const ORG_CODE_PREFIXES = [
+    'PEND',
+    'ASSIGN',
+    'TXA',
+    'TXB',
+    'REASN',
+    'LOSE',
+    'ARBID',
+    'CONCA',
+    'CONCB',
+  ];
+
+  async function patchOrganizationTenant(
+    organizationId: string,
+    tenantId: string | null
+  ): Promise<Response> {
+    return fetch(`${baseUrl}/admin/control-plane/organizations/${organizationId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...auth },
+      body: JSON.stringify({ tenantId }),
+    });
+  }
 
   beforeAll(async () => {
     server = createApiServer();
@@ -230,5 +251,250 @@ describe('ATLAS 46.22 — Runtime -> Organization -> Tenant association', () => 
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  // ─── ATLAS 46.23 — Part F: reassignment, removal, arbitrary tenantId ────
+
+  it("reassigning the Organization from Tenant A to Tenant B: the Runtime's derived Tenant follows, and no row is duplicated anywhere", async () => {
+    const { controlPlaneOrganizationId, runtimeId } = await registerPortalOrgAndRuntime(
+      baseUrl,
+      auth,
+      'REASN'
+    );
+
+    const slugA = `t46-23-reasn-a-${Date.now().toString(36)}`;
+    const slugB = `t46-23-reasn-b-${Date.now().toString(36)}`;
+    createdTenantSlugs.push(slugA, slugB);
+    const tenantA = await post<{ id: string }>(
+      baseUrl,
+      '/admin/control-plane/tenants',
+      { name: 'Reassignment Tenant A', slug: slugA },
+      auth
+    );
+    const tenantB = await post<{ id: string }>(
+      baseUrl,
+      '/admin/control-plane/tenants',
+      { name: 'Reassignment Tenant B', slug: slugB },
+      auth
+    );
+
+    const firstAssign = await patchOrganizationTenant(controlPlaneOrganizationId, tenantA.body.id);
+    expect(firstAssign.status).toBe(200);
+    const afterFirst = await prisma.runtimeRegistration.findUnique({
+      where: { id: runtimeId },
+      include: { controlPlaneOrganization: true },
+    });
+    expect(afterFirst?.controlPlaneOrganization?.tenantId).toBe(tenantA.body.id);
+
+    const reassign = await patchOrganizationTenant(controlPlaneOrganizationId, tenantB.body.id);
+    expect(reassign.status).toBe(200);
+    const afterReassign = await prisma.runtimeRegistration.findUnique({
+      where: { id: runtimeId },
+      include: { controlPlaneOrganization: true },
+    });
+    expect(afterReassign?.controlPlaneOrganization?.tenantId).toBe(tenantB.body.id);
+    expect(afterReassign?.controlPlaneOrganization?.tenantId).not.toBe(tenantA.body.id);
+
+    // No duplicate rows: exactly one Organization row, exactly one
+    // RuntimeRegistration row — reassignment is an update, never an insert.
+    const orgCount = await prisma.organization.count({
+      where: { id: controlPlaneOrganizationId },
+    });
+    const runtimeCount = await prisma.runtimeRegistration.count({ where: { id: runtimeId } });
+    expect(orgCount).toBe(1);
+    expect(runtimeCount).toBe(1);
+  });
+
+  it('an Organization that loses its Tenant (tenantId set back to null) returns the Runtime to PENDING_TENANT_ASSIGNMENT — no fallback Tenant is substituted', async () => {
+    const { controlPlaneOrganizationId, runtimeId } = await registerPortalOrgAndRuntime(
+      baseUrl,
+      auth,
+      'LOSE'
+    );
+
+    const slug = `t46-23-lose-${Date.now().toString(36)}`;
+    createdTenantSlugs.push(slug);
+    const tenant = await post<{ id: string }>(
+      baseUrl,
+      '/admin/control-plane/tenants',
+      { name: 'Losable Tenant', slug },
+      auth
+    );
+
+    const assign = await patchOrganizationTenant(controlPlaneOrganizationId, tenant.body.id);
+    expect(assign.status).toBe(200);
+    const assigned = await prisma.organization.findUnique({
+      where: { id: controlPlaneOrganizationId },
+    });
+    expect(assigned?.tenantId).toBe(tenant.body.id);
+
+    const remove = await patchOrganizationTenant(controlPlaneOrganizationId, null);
+    expect(remove.status).toBe(200);
+    const removed = await prisma.organization.findUnique({
+      where: { id: controlPlaneOrganizationId },
+    });
+    expect(removed?.tenantId).toBeNull(); // honest absence again, not a fallback/default Tenant
+
+    const runtime = await prisma.runtimeRegistration.findUnique({
+      where: { id: runtimeId },
+      include: { controlPlaneOrganization: true },
+    });
+    expect(runtime?.controlPlaneOrganization?.tenantId).toBeNull();
+    // The Runtime itself was never written to by either the assignment or
+    // the removal — this whole scenario is entirely an Organization-side
+    // state change.
+    expect(runtime?.controlPlaneOrganizationId).toBe(controlPlaneOrganizationId);
+  });
+
+  it('a client-supplied tenantId cannot be used to influence Runtime registration or escape Organization-scoped Runtime lookups', async () => {
+    const orgCode = `ARBID${Date.now().toString(36)}`;
+    const orgRes = await post<{ organization: { id: string; controlPlaneOrganizationId: string } }>(
+      baseUrl,
+      '/api/v1/portal/auth/register',
+      {
+        name: `Arbitrary Tenant ${orgCode}`,
+        razaoSocial: `Arbitrary Tenant ${orgCode} LTDA`,
+        cnpj: `${String(Math.floor(Math.random() * 1e8)).padStart(8, '0')}0001`,
+        internalCode: orgCode,
+        plan: 'professional',
+        owner: {
+          name: 'Owner',
+          email: `owner-${orgCode.toLowerCase()}@example.com`,
+          password: 'S3nhaDoOwner123!',
+        },
+      }
+    );
+    const controlPlaneOrganizationId = orgRes.body.organization.controlPlaneOrganizationId;
+
+    const keyRes = await post<{ activationKey: { code: string } }>(
+      baseUrl,
+      '/admin/runtime-registration/activation-keys',
+      { organizationCode: orgCode },
+      auth
+    );
+
+    // A real, unrelated Tenant — never assigned to this Organization. If a
+    // client-supplied tenantId could influence anything, it would show up
+    // as this Tenant's id leaking into the Runtime's derived association.
+    const foreignSlug = `t46-23-arbid-foreign-${Date.now().toString(36)}`;
+    createdTenantSlugs.push(foreignSlug);
+    const foreignTenant = await post<{ id: string }>(
+      baseUrl,
+      '/admin/control-plane/tenants',
+      { name: 'Foreign Tenant', slug: foreignSlug },
+      auth
+    );
+
+    // 1. Registration request body carries an extra, unsupported `tenantId`
+    // field pointing at the foreign Tenant. RegisterRuntimeInput has no
+    // such field — the server has no code path that reads it.
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-tenant-assoc-arbid-'));
+    let runtimeId: string;
+    try {
+      const identity = loadOrCreateIdentity(dir);
+      const rawRes = await fetch(`${baseUrl}/runtime/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organizationCode: orgCode,
+          activationKey: keyRes.body.activationKey.code,
+          runtimeVersion: '1.2.0',
+          fingerprint: identity.fingerprint,
+          publicKey: identity.publicKeyPem,
+          hostname: 'arbid-host',
+          os: 'linux',
+          tenantId: foreignTenant.body.id, // injected, unsupported field
+        }),
+      });
+      expect(rawRes.status).toBe(201);
+      const rawBody = (await rawRes.json()) as { data: { runtimeId: string } };
+      runtimeId = rawBody.data.runtimeId;
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+
+    const runtimeRow = await prisma.runtimeRegistration.findUnique({
+      where: { id: runtimeId },
+      include: { controlPlaneOrganization: true },
+    });
+    expect(runtimeRow?.controlPlaneOrganizationId).toBe(controlPlaneOrganizationId);
+    // Still PENDING_TENANT_ASSIGNMENT — the injected tenantId had zero effect.
+    expect(runtimeRow?.controlPlaneOrganization?.tenantId).toBeNull();
+    expect(runtimeRow?.controlPlaneOrganization?.tenantId).not.toBe(foreignTenant.body.id);
+
+    // 2. The Organization-scoped Runtime lookup ignores an injected
+    // `tenantId` query parameter — the route has no such parameter in its
+    // contract at all; only the `:id` path segment (the real Organization
+    // id) ever determines the result set.
+    const withInjectedQuery = await get<{ runtimes: Array<{ runtimeId: string }> }>(
+      baseUrl,
+      `/admin/control-plane/organizations/${controlPlaneOrganizationId}/runtimes?tenantId=${foreignTenant.body.id}`,
+      auth
+    );
+    const withoutQuery = await get<{ runtimes: Array<{ runtimeId: string }> }>(
+      baseUrl,
+      `/admin/control-plane/organizations/${controlPlaneOrganizationId}/runtimes`,
+      auth
+    );
+    expect(withInjectedQuery.body.runtimes.map((r) => r.runtimeId).sort()).toEqual(
+      withoutQuery.body.runtimes.map((r) => r.runtimeId).sort()
+    );
+    expect(withInjectedQuery.body.runtimes.some((r) => r.runtimeId === runtimeId)).toBe(true);
+  });
+
+  // ─── ATLAS 46.23 — Part G: concurrency ──────────────────────────────────
+
+  it('two concurrent Tenant (re)assignments on the same Organization: both requests complete cleanly, the Organization ends up with exactly one Tenant, and the Runtime derives whichever one won — never a duplicate row, never a crash', async () => {
+    const { controlPlaneOrganizationId, runtimeId } = await registerPortalOrgAndRuntime(
+      baseUrl,
+      auth,
+      'CONCA'
+    );
+
+    const slugA = `t46-23-conc-a-${Date.now().toString(36)}`;
+    const slugB = `t46-23-conc-b-${Date.now().toString(36)}`;
+    createdTenantSlugs.push(slugA, slugB);
+    const tenantA = await post<{ id: string }>(
+      baseUrl,
+      '/admin/control-plane/tenants',
+      { name: 'Concurrent Tenant A', slug: slugA },
+      auth
+    );
+    const tenantB = await post<{ id: string }>(
+      baseUrl,
+      '/admin/control-plane/tenants',
+      { name: 'Concurrent Tenant B', slug: slugB },
+      auth
+    );
+
+    const [resA, resB] = await Promise.all([
+      patchOrganizationTenant(controlPlaneOrganizationId, tenantA.body.id),
+      patchOrganizationTenant(controlPlaneOrganizationId, tenantB.body.id),
+    ]);
+    // Neither request should ever crash (no 5xx) — a normal last-write-wins
+    // race on a single scalar FK column is an acceptable, non-corrupting
+    // outcome; there is no multi-row invariant here to protect.
+    expect(resA.status).toBe(200);
+    expect(resB.status).toBe(200);
+
+    const finalOrg = await prisma.organization.findUnique({
+      where: { id: controlPlaneOrganizationId },
+    });
+    expect([tenantA.body.id, tenantB.body.id]).toContain(finalOrg?.tenantId);
+
+    // Exactly one Organization row, exactly one RuntimeRegistration row —
+    // no duplicate/partial writes from the race.
+    const orgCount = await prisma.organization.count({
+      where: { id: controlPlaneOrganizationId },
+    });
+    const runtimeCount = await prisma.runtimeRegistration.count({ where: { id: runtimeId } });
+    expect(orgCount).toBe(1);
+    expect(runtimeCount).toBe(1);
+
+    const runtimeRow = await prisma.runtimeRegistration.findUnique({
+      where: { id: runtimeId },
+      include: { controlPlaneOrganization: true },
+    });
+    expect(runtimeRow?.controlPlaneOrganization?.tenantId).toBe(finalOrg?.tenantId);
   });
 });

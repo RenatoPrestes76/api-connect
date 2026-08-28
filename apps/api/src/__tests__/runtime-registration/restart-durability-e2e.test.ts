@@ -37,6 +37,12 @@ const SCAN_TARGET = {
  * Requires `pnpm --filter=@seltriva/api build` to have already run (this
  * test does not rebuild — matching this repo's established convention of
  * production-smoke tests exercising the real build artifact, not source).
+ *
+ * ATLAS 46.23 additions (step 4b/4c below): proves Runtime liveness
+ * (ONLINE/STALE/OFFLINE — see modules/runtime-registration/liveness.ts) is
+ * computed by whichever process answers the request, purely from the
+ * persisted `lastHeartbeat`, never from anything held in memory — including
+ * a controlled-timestamp STALE/OFFLINE transition with no real sleep.
  */
 
 const PORT = 3097; // fixed, not random — a restart must reconnect on the same port
@@ -227,6 +233,50 @@ describe('ATLAS 46.22 — Runtime registration survives a real API process resta
       expect(rowAfterHeartbeat?.lastHeartbeat).not.toBeNull();
       expect(rowAfterHeartbeat?.status).toBe('ACTIVE');
       expect(rowAfterHeartbeat?.activatedAt).not.toBeNull();
+
+      // 4b. (ATLAS 46.23) Liveness is computed by the brand-new process
+      // (proc2) purely from the persisted `lastHeartbeat` it just read from
+      // Postgres — never from anything proc1 held in memory. Right after a
+      // fresh heartbeat, liveness must be ONLINE.
+      const liveAfterHeartbeat = await get<{ runtime: { liveness: string } }>(
+        `/admin/runtime-registration/runtimes/${runtimeId}`,
+        auth2
+      );
+      expect(liveAfterHeartbeat.body.runtime.liveness).toBe('ONLINE');
+
+      // 4c. (ATLAS 46.23, Fase C) A controlled-timestamp transition — no
+      // real sleep. Backdating `lastHeartbeat` directly in Postgres (the
+      // only durable source of truth liveness ever reads) simulates time
+      // having passed without waiting for it, and proves the classification
+      // this same restarted process (proc2) computes reacts purely to the
+      // persisted value, not to any state proc2 itself has accumulated.
+      await prisma.runtimeRegistration.update({
+        where: { id: runtimeId },
+        data: { lastHeartbeat: new Date(Date.now() - 2 * 60_000) }, // 2 minutes ago -> STALE
+      });
+      const liveStale = await get<{ runtime: { liveness: string } }>(
+        `/admin/runtime-registration/runtimes/${runtimeId}`,
+        auth2
+      );
+      expect(liveStale.body.runtime.liveness).toBe('STALE');
+
+      await prisma.runtimeRegistration.update({
+        where: { id: runtimeId },
+        data: { lastHeartbeat: new Date(Date.now() - 10 * 60_000) }, // 10 minutes ago -> OFFLINE
+      });
+      const liveOffline = await get<{ runtime: { liveness: string } }>(
+        `/admin/runtime-registration/runtimes/${runtimeId}`,
+        auth2
+      );
+      expect(liveOffline.body.runtime.liveness).toBe('OFFLINE');
+
+      // Restore a fresh heartbeat so the rest of this test (auth/token,
+      // discovery, GENESIS, ATHENA below) exercises an ACTIVE, ONLINE
+      // Runtime, matching what a real Client Zero flow would look like.
+      await prisma.runtimeRegistration.update({
+        where: { id: runtimeId },
+        data: { lastHeartbeat: new Date() },
+      });
 
       // 5. The auth/token exchange (a second, independent signed proof)
       // also still works post-restart.

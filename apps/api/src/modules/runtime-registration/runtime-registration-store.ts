@@ -3,6 +3,7 @@ import { portalIdentityStore } from '../portal-identity/portal-identity-store.js
 import { hashFingerprint } from './fingerprint.js';
 import { issueCertificate } from './certificate.js';
 import { needsUpdate } from './version-control.js';
+import { classifyLiveness } from './liveness.js';
 import { runtimeRegistrationRepository } from './runtime-registration.repository.js';
 import type {
   RuntimeRegistrationRecord,
@@ -392,6 +393,7 @@ export class RuntimeRegistrationStore {
       registeredAt: runtime.registeredAt,
       activatedAt: runtime.activatedAt,
       needsUpdate: needsUpdate(runtime.version),
+      liveness: classifyLiveness(runtime.lastHeartbeat, new Date()),
     };
   }
 }

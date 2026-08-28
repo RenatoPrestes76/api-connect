@@ -7,6 +7,7 @@ import {
   canonicalHeartbeatPayload,
 } from '../../../modules/runtime-registration/signature.js';
 import { adminIdentityStore } from '../../../modules/admin-identity/admin-identity-store.js';
+import { classifyLiveness } from '../../../modules/runtime-registration/liveness.js';
 import type { HeartbeatInput } from '../../../modules/runtime-registration/types.js';
 
 const REPLAY_TOLERANCE_MS = 5 * 60_000; // 5 minutes
@@ -94,6 +95,7 @@ export async function runtimeHeartbeatHandler(
       status: updated.status,
       capabilities: updated.capabilities,
       lastHeartbeat: updated.lastHeartbeat,
+      liveness: classifyLiveness(updated.lastHeartbeat, new Date()),
     },
   });
 }

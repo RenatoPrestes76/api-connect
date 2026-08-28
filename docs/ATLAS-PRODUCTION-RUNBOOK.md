@@ -367,6 +367,59 @@ Operationally:
   — additive only (new table, new enum, new FK to `Organization`), no
   data loss on either an empty or an already-populated database.
 
+### Runtime Liveness (ATLAS 46.23)
+
+Every Runtime read (admin list/detail, the 46.21 Control Plane
+organization-runtimes lookup, and the `POST /runtime/heartbeat` response
+itself) now carries a `liveness` field — `ONLINE` / `STALE` / `OFFLINE` —
+alongside the existing `status` field, which keeps its pre-46.23 meaning
+unchanged. Operationally:
+
+- **ONLINE**: last heartbeat within 60 seconds (2x the default 30s
+  heartbeat cadence).
+- **STALE**: last heartbeat between 60 seconds and 5 minutes ago — known,
+  registered, just not currently reachable. The 5-minute boundary reuses,
+  unchanged, the `maxHeartbeatGapMs` policy value already returned to
+  every Runtime at registration time — not a new threshold invented this
+  sprint.
+- **OFFLINE**: last heartbeat more than 5 minutes ago, or no heartbeat was
+  ever recorded at all.
+- **No new operational surface to monitor**: liveness is computed fresh on
+  every API read directly from `RuntimeRegistration.lastHeartbeat` — there
+  is no cache, no background job, and nothing that can drift or need
+  restarting on its own. A restarted Atlas API computes the identical
+  liveness a still-running one would, from the same Postgres row.
+- **STALE/OFFLINE alerting/paging is still out of scope** — this sprint
+  makes the classification available on read; it does not add a
+  notification, dashboard widget, or scheduled sweep. That remains future
+  work, same reservation carried since 46.20-B/46.21's heartbeat
+  architecture notes.
+
+See `docs/ADR-ATLAS-CANONICAL-CLIENT-ONBOARDING.md`'s "ATLAS 46.23" section
+for the full threshold rationale and
+`apps/api/src/modules/runtime-registration/liveness.ts` for the
+implementation.
+
+### Tenant Onboarding Boundary (ATLAS 46.23)
+
+Formalizes, without changing, 46.22's Tenant association design:
+`PATCH /admin/control-plane/organizations/:id` **is** the one and only
+Tenant-provisioning point in the system today — explicit, admin-controlled,
+never automatic. Confirmed and tested this sprint:
+
+- Reassigning an Organization's Tenant propagates to its Runtime(s)
+  immediately (derived, no Runtime row write).
+- Removing an Organization's Tenant (`tenantId: null`) returns it to a
+  legitimate PENDING_TENANT_ASSIGNMENT state — never a fallback/default
+  Tenant.
+- No client-supplied `tenantId` anywhere in the Runtime registration or
+  lookup surface can influence ownership — there is no such field to
+  supply in the first place.
+
+**Whether/when a self-service signup should automatically receive a
+Tenant remains an external product decision**, not made by 46.22 or
+46.23.
+
 ## Security Baseline (Fase 12)
 
 - **Secrets in code**: none found — scanned for common key/private-key

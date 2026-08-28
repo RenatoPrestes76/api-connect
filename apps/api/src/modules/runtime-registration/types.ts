@@ -1,3 +1,5 @@
+import type { RuntimeLiveness } from './liveness.js';
+
 // ─── Runtime status ─────────────────────────────────────────────────────────
 // PENDING is reserved for a future manual-approval/two-phase registration
 // flow — no transition in this sprint produces it. register() creates a
@@ -65,6 +67,13 @@ export interface RuntimeRegistrationDTO {
   activatedAt: string | null;
   /** True when `version` is below the recommended (not minimum-required) Runtime version. */
   needsUpdate: boolean;
+  /**
+   * ATLAS 46.23 — operational liveness (ONLINE/STALE/OFFLINE), computed
+   * fresh on every read from `lastHeartbeat` — see liveness.ts. Additive,
+   * backward-compatible field: orthogonal to `status`, which keeps its
+   * pre-46.23 meaning unchanged.
+   */
+  liveness: RuntimeLiveness;
 }
 
 // ─── Certificates ───────────────────────────────────────────────────────────
