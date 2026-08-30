@@ -4,6 +4,7 @@ import {
   get,
   post,
   put,
+  patch,
   del,
   seededOwnerAuth,
   type TestServer,
@@ -110,6 +111,39 @@ describe('Organization registration and login', () => {
     expect(status).toBe(401);
     expect(body.error.code).toBe('INVALID_CREDENTIALS');
   });
+
+  it('locks out after 5 failed attempts from the same IP (ATLAS 46.26, Part N — brute-force protection)', async () => {
+    const ip = '203.0.113.77';
+    for (let i = 0; i < 5; i++) {
+      const { status } = await post<ErrorBody>(
+        srv.baseUrl,
+        '/api/v1/portal/auth/login',
+        { email: 'owner@acme.test', password: 'wrong' },
+        { 'x-forwarded-for': ip }
+      );
+      expect(status).toBe(401);
+    }
+    const { status, body } = await post<ErrorBody>(
+      srv.baseUrl,
+      '/api/v1/portal/auth/login',
+      { email: 'owner@acme.test', password: 'S3nhaForte!' },
+      { 'x-forwarded-for': ip }
+    );
+    // Locked out even with the CORRECT password now — proves this blocks
+    // brute force rather than just re-rejecting bad guesses.
+    expect(status).toBe(423);
+    expect(body.error.code).toBe('ACCOUNT_LOCKED');
+  });
+
+  it("a different IP is unaffected by another IP's lockout (keyed by email+IP, not email alone)", async () => {
+    const { status } = await post<AuthResponse>(
+      srv.baseUrl,
+      '/api/v1/portal/auth/login',
+      { email: 'owner@acme.test', password: 'S3nhaForte!' },
+      { 'x-forwarded-for': '198.51.100.42' }
+    );
+    expect(status).toBe(200);
+  });
 });
 
 // ─── Invite → accept → role change → remove ────────────────────────────────
@@ -209,6 +243,46 @@ describe('RBAC', () => {
     );
     expect(status).toBe(403);
     expect(body.error.code).toBe('FORBIDDEN');
+  });
+});
+
+// ─── Organization update — mass assignment (final hardening, Part 8) ──────────
+
+describe('PATCH /api/v1/portal/organization', () => {
+  it('updates an allowlisted field normally', async () => {
+    const { status, body } = await patch<OrganizationBody>(
+      srv.baseUrl,
+      '/api/v1/portal/organization',
+      { name: 'Acme Corp Renamed' },
+      ownerAuth
+    );
+    expect(status).toBe(200);
+    expect(body.name).toBe('Acme Corp Renamed');
+  });
+
+  it('a body containing controlPlaneOrganizationId/id cannot re-link or corrupt the organization identity', async () => {
+    const before = await get<OrganizationBody & { controlPlaneOrganizationId: string | null }>(
+      srv.baseUrl,
+      '/api/v1/portal/organization',
+      ownerAuth
+    );
+    const { status, body } = await patch<
+      OrganizationBody & { controlPlaneOrganizationId: string | null }
+    >(
+      srv.baseUrl,
+      '/api/v1/portal/organization',
+      {
+        name: 'Still Acme Corp',
+        id: 'some-other-org-id',
+        controlPlaneOrganizationId: 'victim-control-plane-org-id',
+        createdAt: '2000-01-01T00:00:00.000Z',
+      } as unknown as Record<string, unknown>,
+      ownerAuth
+    );
+    expect(status).toBe(200);
+    expect(body.id).toBe(before.body.id);
+    expect(body.controlPlaneOrganizationId).toBe(before.body.controlPlaneOrganizationId);
+    expect(body.name).toBe('Still Acme Corp');
   });
 });
 

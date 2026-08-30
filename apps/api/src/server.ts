@@ -6,7 +6,7 @@ import type { IncomingMessage, ServerResponse, Server } from 'node:http';
 import { WebSocketServer } from 'ws';
 import { createLogger } from '@seltriva/logger';
 import { Router, apiError } from './http/router.js';
-import { MissingTenantError } from './http/tenant.js';
+import { MissingTenantError, MissingOrganizationError } from './http/tenant.js';
 import { authMiddleware } from './middleware/auth.js';
 import { securityHeaders } from './middleware/security-headers.js';
 import { gatewayMiddleware } from './middleware/gateway.js';
@@ -142,7 +142,7 @@ export async function withErrorBoundary(
     });
 
     if (!res.headersSent) {
-      if (err instanceof MissingTenantError) {
+      if (err instanceof MissingTenantError || err instanceof MissingOrganizationError) {
         apiError(res, err.message, err.status, err.code);
       } else if (code === 'P2002') {
         apiError(res, 'Resource already exists', 409, 'CONFLICT');

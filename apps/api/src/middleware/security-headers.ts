@@ -14,5 +14,12 @@ export const securityHeaders: Middleware = async (
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Content-Security-Policy', "default-src 'self'; frame-ancestors 'none'");
   res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
+  // ATLAS 46.26 — final hardening, Part 11: this API returns authenticated,
+  // often sensitive JSON (billing, secrets metadata, admin data) with no
+  // prior Cache-Control default — a shared/browser cache could otherwise
+  // retain a response after logout or across sessions on a shared device.
+  // Route-specific overrides (e.g. observatory/metrics-routes.ts's SSE
+  // stream) still take precedence via their own res.writeHead() call.
+  res.setHeader('Cache-Control', 'no-store');
   return next();
 };

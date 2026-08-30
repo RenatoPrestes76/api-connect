@@ -3,7 +3,7 @@
  * Supports path params (:id), method routing, and async middleware chains.
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { MissingTenantError } from './tenant.js';
+import { MissingTenantError, MissingOrganizationError } from './tenant.js';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -256,7 +256,7 @@ export class Router {
       await runChain(0);
     } catch (err) {
       if (res.headersSent) return;
-      if (err instanceof MissingTenantError) {
+      if (err instanceof MissingTenantError || err instanceof MissingOrganizationError) {
         apiError(res, err.message, err.status, err.code);
         return;
       }

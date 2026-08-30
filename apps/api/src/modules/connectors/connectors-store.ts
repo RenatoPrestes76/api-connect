@@ -220,6 +220,16 @@ export class ConnectorsStore {
     return connector;
   }
 
+  /**
+   * ATLAS 46.26 — final hardening, Part 8 (mass-assignment sweep):
+   * Object.assign(connector, patch, {...}) copied every own, runtime
+   * property of `patch` — the Pick<> below is a compile-time-only
+   * restriction, erased by the route's `as Partial<CreateConnectorBody>`
+   * cast (routes/v1/connector-registry/connectors.ts), so a body
+   * containing e.g. `identifier` (documented as "Immutable after
+   * creation") or `id` would have silently overwritten them. Fixed with
+   * an explicit allowlist matching this method's own declared Pick<>.
+   */
   updateConnector(
     id: string,
     patch: Partial<
@@ -231,7 +241,24 @@ export class ConnectorsStore {
   ): ConnectorRecord | null {
     const connector = this.getConnector(id);
     if (!connector) return null;
-    Object.assign(connector, patch, { updatedAt: new Date().toISOString() });
+    const { name, vendor, description, icon, category, minRuntimeVersion } = patch;
+    Object.assign(
+      connector,
+      {
+        ...(name !== undefined ? { name } : {}),
+        ...(vendor !== undefined ? { vendor } : {}),
+        ...(description !== undefined ? { description } : {}),
+        ...(icon !== undefined ? { icon } : {}),
+        ...(category !== undefined ? { category } : {}),
+        ...(minRuntimeVersion !== undefined ? { minRuntimeVersion } : {}),
+      },
+      {
+        id: connector.id,
+        identifier: connector.identifier,
+        createdAt: connector.createdAt,
+        updatedAt: new Date().toISOString(),
+      }
+    );
     return connector;
   }
 
@@ -360,7 +387,39 @@ export class ConnectorsStore {
   ): ConnectorParameterRecord | null {
     const parameter = this.getParameter(connectorId, id);
     if (!parameter) return null;
-    Object.assign(parameter, patch, { updatedAt: new Date().toISOString() });
+    // ATLAS 46.26 — final hardening, Part 8: same class of fix as
+    // updateConnector() above — `id`/`connectorId` (the parent link) must
+    // never move via a PATCH body, regardless of what the route's type
+    // cast claims is present.
+    const {
+      label,
+      required,
+      defaultValue,
+      validationPattern,
+      options,
+      sensitive,
+      description,
+      order,
+    } = patch;
+    Object.assign(
+      parameter,
+      {
+        ...(label !== undefined ? { label } : {}),
+        ...(required !== undefined ? { required } : {}),
+        ...(defaultValue !== undefined ? { defaultValue } : {}),
+        ...(validationPattern !== undefined ? { validationPattern } : {}),
+        ...(options !== undefined ? { options } : {}),
+        ...(sensitive !== undefined ? { sensitive } : {}),
+        ...(description !== undefined ? { description } : {}),
+        ...(order !== undefined ? { order } : {}),
+      },
+      {
+        id: parameter.id,
+        connectorId: parameter.connectorId,
+        createdAt: parameter.createdAt,
+        updatedAt: new Date().toISOString(),
+      }
+    );
     return parameter;
   }
 

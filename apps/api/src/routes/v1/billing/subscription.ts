@@ -1,14 +1,14 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
-import { requireTenantId } from '../../../http/tenant.js';
+import { requireOrgId } from '../../../http/tenant.js';
 import { billingStore } from '../../../modules/billing/billing-store.js';
 import { PLANS } from '@seltriva/billing';
 import type { PlanSlug, BillingCycle } from '@seltriva/billing';
 
 // GET /api/v1/billing/subscription
 export async function getSubscription(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const tenantId = requireTenantId(ctx);
+  const tenantId = requireOrgId(ctx);
   const sub = billingStore.getSubscription(tenantId);
   if (!sub) {
     apiError(res, 'No subscription found', 404, 'NOT_FOUND');
@@ -20,7 +20,7 @@ export async function getSubscription(ctx: RouteContext, res: ServerResponse): P
 
 // POST /api/v1/billing/upgrade
 export async function upgradePlan(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const tenantId = requireTenantId(ctx);
+  const tenantId = requireOrgId(ctx);
   const body = ctx.body as { planSlug?: PlanSlug; billingCycle?: BillingCycle } | undefined;
 
   if (!body?.planSlug) {
@@ -50,7 +50,7 @@ export async function upgradePlan(ctx: RouteContext, res: ServerResponse): Promi
 
 // POST /api/v1/billing/downgrade
 export async function downgradePlan(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const tenantId = requireTenantId(ctx);
+  const tenantId = requireOrgId(ctx);
   const body = ctx.body as { planSlug?: PlanSlug; billingCycle?: BillingCycle } | undefined;
 
   if (!body?.planSlug) {
@@ -71,7 +71,7 @@ export async function downgradePlan(ctx: RouteContext, res: ServerResponse): Pro
 
 // POST /api/v1/billing/cancel
 export async function cancelPlan(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const tenantId = requireTenantId(ctx);
+  const tenantId = requireOrgId(ctx);
   try {
     const canceled = billingStore.cancelSubscription(tenantId);
     json(res, {

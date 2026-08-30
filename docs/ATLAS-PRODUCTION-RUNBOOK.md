@@ -850,3 +850,63 @@ component was invented — the existing `assertProductionSecretsConfigured`/
 `assertProductionCorsConfigured` pair (extended, not replaced, this sprint)
 and the existing `requirePermission` middleware already cover this ground
 under their established names.
+
+## ATLAS 46.26 — Production Security & Hardening
+
+A dedicated, adversarial security audit of billing/security/ops/ha/portal —
+attacking the system as ten threat-actor personas rather than trusting
+existing tests. Full write-up: the "ATLAS 46.26 — RESULTADO" report
+delivered alongside the commit that closed this sprint (see `git log` for
+the commit message and its body).
+
+**Authorization model.** Every tenant-scoped route now derives its tenant
+strictly from the authenticated session (`requireOrgId(ctx)` for the
+generic/portal surfaces, `ctx.portalOrganizationId` for the portal
+surface) — never from a client-supplied `x-tenant-id` header, `tenantId`
+query/body param, or URL path segment. Genuinely platform-wide staff
+surfaces (`ops/*`, `ha/*` read endpoints, security audit-chain-verify,
+compliance framework controls) remain intentionally unscoped, each with
+an explicit code comment recording that decision. Privileged, consequential
+staff actions (billing admin dashboard, the Stripe webhook handler,
+secret-rotation evaluate, HA backup/restore/recovery-test) are gated by
+`requirePermission(...)` — reusing the existing admin-identity permission
+system, extended with two new permissions (`security.manage`,
+`ha.manage`) rather than a parallel authorization scheme.
+
+**Mass assignment.** Several store-level update methods accepted a raw
+`Partial<T>` patch via `Object.assign(target, patch, {...})` with only
+`updatedAt` (sometimes `id`) protected — a TypeScript-only restriction,
+erased at runtime by the calling route's type assertion on `ctx.body`. The
+most severe instance let a portal organization owner PATCH their own
+organization's `controlPlaneOrganizationId`, re-linking it to a
+_different_ organization's real, Postgres-persisted Control Plane record.
+Fixed with explicit field allowlisting everywhere this pattern was found.
+
+**Brute force.** `/api/v1/portal/auth/login` and `/api/v1/security/mfa/verify`
+had no attempt throttling. Both now lock out after 5 failures in a
+15-minute window (`modules/portal-identity/rate-limiter.ts`,
+`modules/security/rate-limiter.ts`), reusing the exact mechanism
+`/admin/auth/login` already had, keyed to avoid a client simply spoofing a
+header to reset the counter.
+
+**Rate-limiter/JWT-scheme routing note.** Any route moved behind
+`requirePermission(...)` (an admin-identity Bearer JWT) must also be added
+to `middleware/auth.ts`'s `PUBLIC_PATHS`/`PUBLIC_PATH_PREFIXES`, or the
+generic Supabase-style middleware rejects the admin token before
+`requirePermission` ever runs — discovered mid-sprint via the new
+end-to-end test suites (auth chain, not just the isolated handler).
+
+**Deferred / external, not silently marked complete:**
+
+- Stripe webhook has no real `Stripe-Signature` verification — there is no
+  real Stripe integration anywhere in this codebase yet (no `stripe` SDK
+  dependency; `stripe-simulation.ts` fabricates URLs locally), so this is
+  explicitly deferred until a real Stripe account is part of Go-Live, not
+  quietly left broken.
+- `ops/*`'s "staff-only" boundary relies on the generic auth layer's
+  identity being genuinely staff-only; it is not independently verified by
+  a `requirePermission` check of its own (unlike `ha/*`'s mutating
+  endpoints, which now are).
+- `security/mfa/verify`'s new rate limiter is not paired with rate limiting
+  on `security/mfa/setup`/other MFA endpoints — scoped to the one endpoint
+  with a real brute-force target (a 6-digit code).

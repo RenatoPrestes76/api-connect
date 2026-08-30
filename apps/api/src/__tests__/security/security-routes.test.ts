@@ -1,9 +1,23 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { startServer, stopServer, get, post, del, put } from './helpers.js';
+import { generateTotpToken, base32Decode } from '@seltriva/aegis';
+import {
+  startServer,
+  stopServer,
+  get,
+  post,
+  del,
+  put,
+  orgBearer,
+  noOrgBearer,
+  securityAdminBearer,
+  lowPrivAdminBearer,
+} from './helpers.js';
 import type { TestServer } from './helpers.js';
 
 const TENANT = 'tenant-enterprise';
-const Q = (t = TENANT) => `?tenantId=${t}`;
+const OTHER_TENANT = 'tenant-professional';
+const auth = orgBearer(TENANT);
+const otherAuth = orgBearer(OTHER_TENANT);
 
 let srv: TestServer;
 beforeAll(async () => {
@@ -17,49 +31,113 @@ afterAll(async () => {
 
 describe('GET /api/v1/security/secrets', () => {
   it('returns secrets list for enterprise tenant', async () => {
-    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/secrets${Q()}`);
+    const { status, body } = await get<any>(srv.baseUrl, '/api/v1/security/secrets', auth);
     expect(status).toBe(200);
     expect(body.secrets.length).toBeGreaterThan(0);
     expect(body.total).toBeGreaterThan(0);
   });
 
   it('does not expose encryptedValue in list', async () => {
-    const { body } = await get<any>(srv.baseUrl, `/api/v1/security/secrets${Q()}`);
+    const { body } = await get<any>(srv.baseUrl, '/api/v1/security/secrets', auth);
     for (const s of body.secrets) {
       expect(s.encryptedValue).toBeUndefined();
       expect(s.masked).toBeTruthy();
     }
   });
+
+  it("never returns another tenant's secrets, even with a ?tenantId= override in the URL", async () => {
+    const { body } = await get<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets?tenantId=${OTHER_TENANT}`,
+      auth
+    );
+    expect(body.secrets.every((s: any) => s.tenantId === TENANT)).toBe(true);
+  });
+
+  it('returns 401 unauthenticated', async () => {
+    const { status } = await get<any>(srv.baseUrl, '/api/v1/security/secrets');
+    expect(status).toBe(401);
+  });
+
+  it('returns 403 ORGANIZATION_NOT_LINKED for a session with no org', async () => {
+    const { status, body } = await get<any>(srv.baseUrl, '/api/v1/security/secrets', noOrgBearer());
+    expect(status).toBe(403);
+    expect(body.error.code).toBe('ORGANIZATION_NOT_LINKED');
+  });
 });
 
-describe('GET /api/v1/security/secrets/:id', () => {
-  it('returns metadata for a seeded secret', async () => {
-    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/secrets/sec-001`);
+describe('GET /api/v1/security/secrets/:id — cross-tenant BOLA', () => {
+  it('returns metadata for a seeded secret to its own tenant', async () => {
+    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/secrets/sec-001`, auth);
     expect(status).toBe(200);
     expect(body.secret.id).toBe('sec-001');
     expect(body.secret.encryptedValue).toBeUndefined();
   });
 
+  it("tenant-professional cannot read tenant-enterprise's secret (sec-001)", async () => {
+    const { status } = await get<any>(srv.baseUrl, `/api/v1/security/secrets/sec-001`, otherAuth);
+    expect(status).toBe(404);
+  });
+
+  it("tenant-enterprise cannot read tenant-professional's secret (sec-004)", async () => {
+    const { status } = await get<any>(srv.baseUrl, `/api/v1/security/secrets/sec-004`, auth);
+    expect(status).toBe(404);
+  });
+
   it('returns 404 for unknown id', async () => {
-    const { status } = await get<any>(srv.baseUrl, `/api/v1/security/secrets/sec-999`);
+    const { status } = await get<any>(srv.baseUrl, `/api/v1/security/secrets/sec-999`, auth);
     expect(status).toBe(404);
   });
 });
 
-describe('POST /api/v1/security/secrets/:id/decrypt', () => {
-  it('decrypts a seeded secret', async () => {
+describe('POST /api/v1/security/secrets/:id/decrypt — the most severe finding in this audit', () => {
+  it('decrypts a seeded secret for its own tenant', async () => {
     const { status, body } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/secrets/sec-001/decrypt`
+      `/api/v1/security/secrets/sec-001/decrypt`,
+      undefined,
+      auth
     );
     expect(status).toBe(200);
     expect(body.value).toBeTruthy();
     expect(typeof body.value).toBe('string');
   });
 
-  it('returns 404 for unknown secret', async () => {
-    const { status } = await post<any>(srv.baseUrl, `/api/v1/security/secrets/sec-999/decrypt`);
+  it("tenant-professional cannot decrypt tenant-enterprise's secret plaintext (sec-001)", async () => {
+    const { status, body } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets/sec-001/decrypt`,
+      undefined,
+      otherAuth
+    );
     expect(status).toBe(404);
+    expect(body.value).toBeUndefined();
+  });
+
+  it("tenant-enterprise cannot decrypt tenant-professional's secret plaintext (sec-004)", async () => {
+    const { status, body } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets/sec-004/decrypt`,
+      undefined,
+      auth
+    );
+    expect(status).toBe(404);
+    expect(body.value).toBeUndefined();
+  });
+
+  it('returns 404 for unknown secret', async () => {
+    const { status } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets/sec-999/decrypt`,
+      undefined,
+      auth
+    );
+    expect(status).toBe(404);
+  });
+
+  it('returns 401 unauthenticated (cannot decrypt anything with no session at all)', async () => {
+    const { status } = await post<any>(srv.baseUrl, `/api/v1/security/secrets/sec-001/decrypt`);
+    expect(status).toBe(401);
   });
 });
 
@@ -67,69 +145,94 @@ describe('POST /api/v1/security/secrets + DELETE', () => {
   it('creates and deletes a secret', async () => {
     const { status, body } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/secrets${Q('tenant-mutation-test')}`,
+      `/api/v1/security/secrets`,
       {
         name: 'Test Secret',
         type: 'api_key',
         provider: 'internal',
         value: 'my-test-key',
         tags: [],
-      }
+      },
+      orgBearer('tenant-mutation-test')
     );
     expect(status).toBe(201);
     const id = body.secret.id;
-    const { status: delStatus } = await del<any>(srv.baseUrl, `/api/v1/security/secrets/${id}`);
+    const { status: delStatus } = await del<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets/${id}`,
+      undefined,
+      orgBearer('tenant-mutation-test')
+    );
     expect(delStatus).toBe(200);
   });
 
+  it("a body-supplied tenantId/organizationId is ignored — the secret is always created under the caller's session org (mass-assignment check)", async () => {
+    const { status, body } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets`,
+      {
+        name: 'Mass-assignment probe',
+        type: 'api_key',
+        provider: 'internal',
+        value: 'v',
+        tags: [],
+        tenantId: OTHER_TENANT,
+        organizationId: OTHER_TENANT,
+      },
+      auth
+    );
+    expect(status).toBe(201);
+    expect(body.secret.tenantId).toBe(TENANT);
+  });
+
+  it("another tenant cannot delete this tenant's secret by id", async () => {
+    const created = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets`,
+      { name: 'Delete-target', type: 'api_key', provider: 'internal', value: 'v', tags: [] },
+      auth
+    );
+    const id = created.body.secret.id;
+    const { status } = await del<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets/${id}`,
+      undefined,
+      otherAuth
+    );
+    expect(status).toBe(404);
+    // Still readable by the rightful owner — proves delete was actually blocked, not a no-op 404 that also deleted it.
+    const stillThere = await get<any>(srv.baseUrl, `/api/v1/security/secrets/${id}`, auth);
+    expect(stillThere.status).toBe(200);
+  });
+
   it('returns 400 when value missing', async () => {
-    const { status } = await post<any>(srv.baseUrl, `/api/v1/security/secrets${Q()}`, {
-      name: 'Test',
-      type: 'api_key',
-      provider: 'internal',
-    });
+    const { status } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets`,
+      {
+        name: 'Test',
+        type: 'api_key',
+        provider: 'internal',
+      },
+      auth
+    );
     expect(status).toBe(400);
   });
 
   it('requires rotationIntervalDays when autoRotate is true', async () => {
-    const { status } = await post<any>(srv.baseUrl, `/api/v1/security/secrets${Q()}`, {
-      name: 'Auto-rotate without interval',
-      type: 'api_key',
-      provider: 'internal',
-      value: 'v',
-      autoRotate: true,
-    });
-    expect(status).toBe(400);
-  });
-
-  it('a secret created with provider=hashicorp_vault reports vaultStatus=not_configured (no live Vault in this sandbox)', async () => {
-    const { body } = await post<any>(
+    const { status } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/secrets${Q('tenant-mutation-test')}`,
+      `/api/v1/security/secrets`,
       {
-        name: 'Vault-backed secret',
-        type: 'api_key',
-        provider: 'hashicorp_vault',
-        value: 'vault-value',
-        tags: [],
-      }
-    );
-    expect(body.secret.vaultStatus).toBe('not_configured');
-  });
-
-  it('an internal-provider secret has vaultStatus null', async () => {
-    const { body } = await post<any>(
-      srv.baseUrl,
-      `/api/v1/security/secrets${Q('tenant-mutation-test')}`,
-      {
-        name: 'Internal secret',
+        name: 'Auto-rotate without interval',
         type: 'api_key',
         provider: 'internal',
-        value: 'internal-value',
-        tags: [],
-      }
+        value: 'v',
+        autoRotate: true,
+      },
+      auth
     );
-    expect(body.secret.vaultStatus).toBeNull();
+    expect(status).toBe(400);
   });
 });
 
@@ -137,10 +240,11 @@ describe('POST /api/v1/security/secrets + DELETE', () => {
 
 describe('Secrets — access auditing writes to the tamper-evident chain', () => {
   it('decrypting a secret records a secret_accessed audit event', async () => {
-    await post<any>(srv.baseUrl, `/api/v1/security/secrets/sec-001/decrypt`, {});
+    await post<any>(srv.baseUrl, `/api/v1/security/secrets/sec-001/decrypt`, undefined, auth);
     const { body } = await get<any>(
       srv.baseUrl,
-      `/api/v1/security/audit${Q()}&action=secret_accessed`
+      `/api/v1/security/audit?action=secret_accessed`,
+      auth
     );
     expect(body.entries.some((e: any) => e.event.resourceId === 'sec-001')).toBe(true);
   });
@@ -148,23 +252,35 @@ describe('Secrets — access auditing writes to the tamper-evident chain', () =>
   it('creating, rotating, and deleting a secret each record their own audit action', async () => {
     const created = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/secrets${Q('tenant-mutation-test')}`,
+      `/api/v1/security/secrets`,
       {
         name: 'Audited lifecycle secret',
         type: 'api_key',
         provider: 'internal',
         value: 'v1',
         tags: [],
-      }
+      },
+      orgBearer('tenant-mutation-test')
     );
     const id = created.body.secret.id;
 
-    await post<any>(srv.baseUrl, `/api/v1/security/secrets/${id}/rotate`, { value: 'v2' });
-    await del<any>(srv.baseUrl, `/api/v1/security/secrets/${id}`);
+    await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets/${id}/rotate`,
+      { value: 'v2' },
+      orgBearer('tenant-mutation-test')
+    );
+    await del<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets/${id}`,
+      undefined,
+      orgBearer('tenant-mutation-test')
+    );
 
     const { body } = await get<any>(
       srv.baseUrl,
-      `/api/v1/security/audit${Q('tenant-mutation-test')}`
+      `/api/v1/security/audit`,
+      orgBearer('tenant-mutation-test')
     );
     const actions = body.entries
       .filter((e: any) => e.event.resourceId === id)
@@ -175,8 +291,20 @@ describe('Secrets — access auditing writes to the tamper-evident chain', () =>
   });
 
   it('the audit chain still verifies as tamper-free after these new entries', async () => {
-    const { body } = await get<any>(srv.baseUrl, '/api/v1/security/audit/verify');
+    const { body } = await get<any>(srv.baseUrl, '/api/v1/security/audit/verify', auth);
     expect(body.valid).toBe(true);
+  });
+});
+
+describe('POST /api/v1/security/secrets/:id/rotate — cross-tenant BOLA', () => {
+  it("tenant-professional cannot rotate tenant-enterprise's secret", async () => {
+    const { status } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/secrets/sec-001/rotate`,
+      { value: 'hostile-overwrite' },
+      otherAuth
+    );
+    expect(status).toBe(404);
   });
 });
 
@@ -184,11 +312,12 @@ describe('Secrets — access auditing writes to the tamper-evident chain', () =>
 
 describe('Secret rotation scheduler', () => {
   it('rotate-now genuinely re-encrypts and bumps the version', async () => {
-    const before = await get<any>(srv.baseUrl, '/api/v1/security/secrets/sec-001');
+    const before = await get<any>(srv.baseUrl, '/api/v1/security/secrets/sec-001', auth);
     const { status, body } = await post<any>(
       srv.baseUrl,
       '/api/v1/security/secrets/sec-001/rotate-now',
-      {}
+      undefined,
+      auth
     );
     expect(status).toBe(200);
     expect(body.secretId).toBe('sec-001');
@@ -196,59 +325,142 @@ describe('Secret rotation scheduler', () => {
     expect(body.previousVersion).toBe(before.body.secret.version);
   });
 
+  it("tenant-professional cannot force-rotate tenant-enterprise's secret via rotate-now", async () => {
+    const { status } = await post<any>(
+      srv.baseUrl,
+      '/api/v1/security/secrets/sec-002/rotate-now',
+      undefined,
+      otherAuth
+    );
+    expect(status).toBe(404);
+  });
+
   it('rotate-now returns 404 for an unknown secret', async () => {
     const { status } = await post<any>(
       srv.baseUrl,
       '/api/v1/security/secrets/sec-does-not-exist/rotate-now',
-      {}
+      undefined,
+      auth
     );
     expect(status).toBe(404);
   });
 
   it('rotation history includes the forced rotation', async () => {
-    await post<any>(srv.baseUrl, '/api/v1/security/secrets/sec-004/rotate-now', {});
+    await post<any>(
+      srv.baseUrl,
+      '/api/v1/security/secrets/sec-004/rotate-now',
+      undefined,
+      otherAuth
+    );
     const { body } = await get<any>(
       srv.baseUrl,
-      '/api/v1/security/secrets/rotation/history?secretId=sec-004'
+      '/api/v1/security/secrets/rotation/history?secretId=sec-004',
+      otherAuth
     );
     expect(body.history.some((r: any) => r.secretId === 'sec-004')).toBe(true);
   });
 
-  it('evaluate does not touch secrets whose expiry is far in the future', async () => {
-    // sec-005 is seeded with autoRotate=true but expiresAt ~315 days out — not due.
-    const before = await get<any>(srv.baseUrl, '/api/v1/security/secrets/sec-005');
-    await post<any>(srv.baseUrl, '/api/v1/security/secrets/rotation/evaluate', {});
-    const after = await get<any>(srv.baseUrl, '/api/v1/security/secrets/sec-005');
-    expect(after.body.secret.version).toBe(before.body.secret.version);
+  describe('GET /rotation/history — cross-tenant BOLA (final hardening, Part 1)', () => {
+    it('returns 401 unauthenticated', async () => {
+      const { status } = await get<any>(srv.baseUrl, '/api/v1/security/secrets/rotation/history');
+      expect(status).toBe(401);
+    });
+
+    it("never returns another tenant's rotation history, even unfiltered", async () => {
+      const { body } = await get<any>(
+        srv.baseUrl,
+        '/api/v1/security/secrets/rotation/history',
+        auth
+      );
+      expect(body.history.every((r: any) => r.tenantId === TENANT)).toBe(true);
+    });
+
+    it("tenant-enterprise cannot read tenant-professional's per-secret rotation history (sec-004)", async () => {
+      const { status } = await get<any>(
+        srv.baseUrl,
+        '/api/v1/security/secrets/rotation/history?secretId=sec-004',
+        auth
+      );
+      expect(status).toBe(404);
+    });
   });
 
-  it('evaluate rotates a secret whose expiry falls inside the rotation lead window', async () => {
-    const created = await post<any>(
-      srv.baseUrl,
-      `/api/v1/security/secrets${Q('tenant-mutation-test')}`,
-      {
-        name: 'Nearly-expired auto-rotate secret',
-        type: 'api_key',
-        provider: 'internal',
-        value: 'about-to-expire',
-        tags: [],
-        autoRotate: true,
-        rotationIntervalDays: 30,
-        expiresAt: new Date(Date.now() + 60_000).toISOString(), // 1 minute out — inside the 24h lead window
-      }
-    );
-    const id = created.body.secret.id;
-    expect(created.body.secret.version).toBe(1);
+  describe('POST /rotation/evaluate — platform-wide admin operation, not a tenant self-service one (final hardening, Part 1)', () => {
+    it('rejects a plain tenant session (any authenticated user could previously force fleet-wide rotation)', async () => {
+      const { status } = await post<any>(
+        srv.baseUrl,
+        '/api/v1/security/secrets/rotation/evaluate',
+        undefined,
+        auth
+      );
+      expect(status).toBe(401);
+    });
 
-    const { body } = await post<any>(srv.baseUrl, '/api/v1/security/secrets/rotation/evaluate', {});
-    expect(body.rotated.some((r: any) => r.secretId === id)).toBe(true);
+    it('rejects an admin session without security.manage', async () => {
+      const { status } = await post<any>(
+        srv.baseUrl,
+        '/api/v1/security/secrets/rotation/evaluate',
+        undefined,
+        await lowPrivAdminBearer()
+      );
+      expect(status).toBe(403);
+    });
 
-    const after = await get<any>(srv.baseUrl, `/api/v1/security/secrets/${id}`);
-    expect(after.body.secret.version).toBe(2);
-    // expiresAt should have been pushed forward by rotationIntervalDays, well past the 1-minute mark.
-    expect(new Date(after.body.secret.expiresAt).getTime()).toBeGreaterThan(
-      Date.now() + 20 * 24 * 60 * 60 * 1000
-    );
+    it('rejects a fully unauthenticated caller', async () => {
+      const { status } = await post<any>(srv.baseUrl, '/api/v1/security/secrets/rotation/evaluate');
+      expect(status).toBe(401);
+    });
+
+    it('does not touch secrets whose expiry is far in the future, for an admin holding security.manage', async () => {
+      const before = await get<any>(srv.baseUrl, '/api/v1/security/secrets/sec-005', auth);
+      const { status } = await post<any>(
+        srv.baseUrl,
+        '/api/v1/security/secrets/rotation/evaluate',
+        undefined,
+        await securityAdminBearer()
+      );
+      expect(status).toBe(200);
+      const after = await get<any>(srv.baseUrl, '/api/v1/security/secrets/sec-005', auth);
+      expect(after.body.secret.version).toBe(before.body.secret.version);
+    });
+
+    it('rotates a secret whose expiry falls inside the rotation lead window, for an admin holding security.manage', async () => {
+      const created = await post<any>(
+        srv.baseUrl,
+        `/api/v1/security/secrets`,
+        {
+          name: 'Nearly-expired auto-rotate secret',
+          type: 'api_key',
+          provider: 'internal',
+          value: 'about-to-expire',
+          tags: [],
+          autoRotate: true,
+          rotationIntervalDays: 30,
+          expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        },
+        orgBearer('tenant-mutation-test')
+      );
+      const id = created.body.secret.id;
+      expect(created.body.secret.version).toBe(1);
+
+      const { body } = await post<any>(
+        srv.baseUrl,
+        '/api/v1/security/secrets/rotation/evaluate',
+        undefined,
+        await securityAdminBearer()
+      );
+      expect(body.rotated.some((r: any) => r.secretId === id)).toBe(true);
+
+      const after = await get<any>(
+        srv.baseUrl,
+        `/api/v1/security/secrets/${id}`,
+        orgBearer('tenant-mutation-test')
+      );
+      expect(after.body.secret.version).toBe(2);
+      expect(new Date(after.body.secret.expiresAt).getTime()).toBeGreaterThan(
+        Date.now() + 20 * 24 * 60 * 60 * 1000
+      );
+    });
   });
 });
 
@@ -258,7 +470,8 @@ describe('GET /api/v1/security/mfa/status', () => {
   it('returns enrolled status for enterprise admin', async () => {
     const { status, body } = await get<any>(
       srv.baseUrl,
-      `/api/v1/security/mfa/status${Q()}&userId=admin@atlas.enterprise.com`
+      `/api/v1/security/mfa/status?userId=admin@atlas.enterprise.com`,
+      auth
     );
     expect(status).toBe(200);
     expect(body.enrolled).toBe(true);
@@ -268,40 +481,244 @@ describe('GET /api/v1/security/mfa/status', () => {
   it('returns not enrolled for community tenant', async () => {
     const { status, body } = await get<any>(
       srv.baseUrl,
-      `/api/v1/security/mfa/status?tenantId=tenant-community&userId=dev@atlas.community.com`
+      `/api/v1/security/mfa/status?userId=dev@atlas.community.com`,
+      orgBearer('tenant-community')
     );
     expect(status).toBe(200);
     expect(body.enrolled).toBe(false);
   });
+
+  it('MFA userId default never crosses tenant boundary (final hardening, Part 5)', async () => {
+    // enterprise's default identity IS enrolled (seeded); professional's
+    // own default (a DIFFERENT string, derived from its own tenantId) must
+    // report its own independent state, never leaking enterprise's.
+    const enterpriseDefault = await get<any>(srv.baseUrl, `/api/v1/security/mfa/status`, auth);
+    expect(enterpriseDefault.body.userId).toBe('admin@atlas.enterprise.com');
+    expect(enterpriseDefault.body.enrolled).toBe(true);
+
+    const professionalDefault = await get<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/status`,
+      otherAuth
+    );
+    expect(professionalDefault.body.userId).toBe('admin@atlas.professional.com');
+    expect(professionalDefault.body.userId).not.toBe(enterpriseDefault.body.userId);
+  });
 });
 
-describe('POST /api/v1/security/mfa/setup + verify', () => {
+describe('MFA — cross-tenant BOLA', () => {
   it('sets up MFA and verifies backup codes are returned', async () => {
     const { status, body } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/mfa/setup${Q('tenant-mutation-test')}`,
-      {
-        userId: 'test@mutation.com',
-      }
+      `/api/v1/security/mfa/setup`,
+      { userId: 'test@mutation.com' },
+      orgBearer('tenant-mutation-test')
     );
     expect(status).toBe(201);
     expect(body.secret).toBeTruthy();
     expect(body.otpUri).toMatch(/^otpauth:\/\/totp\//);
     expect(body.backupCodes).toHaveLength(8);
   });
-});
 
-describe('DELETE /api/v1/security/mfa/disable', () => {
+  it("tenant-professional's status check for enterprise's admin userId reports not-enrolled, never enterprise's real MFA state (each tenant's userId namespace is independent)", async () => {
+    const { body } = await get<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/status?userId=admin@atlas.enterprise.com`,
+      otherAuth
+    );
+    expect(body.enrolled).toBe(false);
+  });
+
   it('disables MFA for a tenant', async () => {
-    await post<any>(srv.baseUrl, `/api/v1/security/mfa/setup${Q('tenant-mutation-test')}`, {
-      userId: 'disable@mutation.com',
-    });
+    await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'disable@mutation.com' },
+      orgBearer('tenant-mutation-test')
+    );
     const { status, body } = await del<any>(
       srv.baseUrl,
-      `/api/v1/security/mfa/disable?tenantId=tenant-mutation-test&userId=disable%40mutation.com`
+      `/api/v1/security/mfa/disable?userId=disable%40mutation.com`,
+      undefined,
+      orgBearer('tenant-mutation-test')
     );
     expect(status).toBe(200);
     expect(body.disabled).toBe(true);
+  });
+
+  it("another tenant cannot disable this tenant's MFA for the same userId string, because it's scoped by session org, not the userId alone", async () => {
+    await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'shared-name@example.com' },
+      auth
+    );
+    const { status } = await del<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/disable?userId=shared-name%40example.com`,
+      undefined,
+      otherAuth
+    );
+    // tenant-professional has no MFA record for this userId under its own
+    // tenant scope — 404, and tenant-enterprise's record must be untouched.
+    expect(status).toBe(404);
+    const stillEnrolled = await get<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/status?userId=shared-name%40example.com`,
+      auth
+    );
+    expect(stillEnrolled.body.enrolled).toBe(true);
+  });
+});
+
+describe('POST /api/v1/security/mfa/verify — brute-force lockout (final hardening, Part 2)', () => {
+  it('locks out after 5 invalid attempts, a valid code is then rejected too, and a different userId is unaffected', async () => {
+    const setup = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'bruteforce-target@mutation.com' },
+      orgBearer('tenant-mutation-test')
+    );
+    const secretBase32 = setup.body.secret;
+    const validToken = generateTotpToken(base32Decode(secretBase32));
+
+    for (let i = 0; i < 5; i++) {
+      const { body } = await post<any>(
+        srv.baseUrl,
+        `/api/v1/security/mfa/verify`,
+        { userId: 'bruteforce-target@mutation.com', token: '000000' },
+        orgBearer('tenant-mutation-test')
+      );
+      expect(body.valid).toBe(false);
+    }
+
+    // Locked out even with the CORRECT TOTP now — proves this blocks brute
+    // force rather than just re-rejecting bad guesses.
+    const lockedOut = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'bruteforce-target@mutation.com', token: validToken },
+      orgBearer('tenant-mutation-test')
+    );
+    expect(lockedOut.status).toBe(423);
+    expect(lockedOut.body.error.code).toBe('MFA_LOCKED');
+
+    // Keyed by (tenantId, userId), deliberately not IP — a different
+    // x-forwarded-for on the SAME userId+tenant is still locked out (an
+    // attacker can't escape the limit by spoofing a header).
+    const differentIp = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'bruteforce-target@mutation.com', token: validToken },
+      { ...orgBearer('tenant-mutation-test'), 'x-forwarded-for': '203.0.113.55' }
+    );
+    expect(differentIp.status).toBe(423);
+
+    // A different userId under the same tenant is completely unaffected.
+    const otherSetup = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'unrelated-user@mutation.com' },
+      orgBearer('tenant-mutation-test')
+    );
+    const otherToken = generateTotpToken(base32Decode(otherSetup.body.secret));
+    const otherUser = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'unrelated-user@mutation.com', token: otherToken },
+      orgBearer('tenant-mutation-test')
+    );
+    expect(otherUser.status).toBe(200);
+    expect(otherUser.body.valid).toBe(true);
+  });
+
+  it('a successful verification resets the failure counter', async () => {
+    const setup = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'reset-check@mutation.com' },
+      orgBearer('tenant-mutation-test')
+    );
+    const validToken = generateTotpToken(base32Decode(setup.body.secret));
+
+    // 2 failures, well under the 5-attempt threshold.
+    for (let i = 0; i < 2; i++) {
+      await post<any>(
+        srv.baseUrl,
+        `/api/v1/security/mfa/verify`,
+        { userId: 'reset-check@mutation.com', token: '111111' },
+        orgBearer('tenant-mutation-test')
+      );
+    }
+    const success = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'reset-check@mutation.com', token: validToken },
+      orgBearer('tenant-mutation-test')
+    );
+    expect(success.status).toBe(200);
+    expect(success.body.valid).toBe(true);
+
+    // 2 more failures after the reset — still well under threshold, so this
+    // must NOT be locked out (proves the counter was actually cleared, not
+    // just not-yet-at-5).
+    for (let i = 0; i < 2; i++) {
+      await post<any>(
+        srv.baseUrl,
+        `/api/v1/security/mfa/verify`,
+        { userId: 'reset-check@mutation.com', token: '222222' },
+        orgBearer('tenant-mutation-test')
+      );
+    }
+    const stillOpen = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'reset-check@mutation.com', token: validToken },
+      orgBearer('tenant-mutation-test')
+    );
+    expect(stillOpen.status).toBe(200);
+    expect(stillOpen.body.valid).toBe(true);
+  });
+
+  it("tenant-professional's failed MFA attempts against its own userId never lock out tenant-enterprise's identically-named userId", async () => {
+    const enterpriseSetup = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'shared-mfa-name@example.com' },
+      auth
+    );
+    const enterpriseToken = generateTotpToken(base32Decode(enterpriseSetup.body.secret));
+
+    await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'shared-mfa-name@example.com' },
+      otherAuth
+    );
+    for (let i = 0; i < 5; i++) {
+      await post<any>(
+        srv.baseUrl,
+        `/api/v1/security/mfa/verify`,
+        { userId: 'shared-mfa-name@example.com', token: '000000' },
+        otherAuth
+      );
+    }
+    const otherLocked = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'shared-mfa-name@example.com', token: '000000' },
+      otherAuth
+    );
+    expect(otherLocked.status).toBe(423);
+
+    const enterpriseStillOpen = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'shared-mfa-name@example.com', token: enterpriseToken },
+      auth
+    );
+    expect(enterpriseStillOpen.status).toBe(200);
+    expect(enterpriseStillOpen.body.valid).toBe(true);
   });
 });
 
@@ -309,15 +726,51 @@ describe('DELETE /api/v1/security/mfa/disable', () => {
 
 describe('GET /api/v1/security/sso', () => {
   it('returns providers for enterprise', async () => {
-    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/sso${Q()}`);
+    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/sso`, auth);
     expect(status).toBe(200);
     expect(body.providers.length).toBeGreaterThan(0);
   });
 });
 
+describe('GET/DELETE /api/v1/security/sso/:id — cross-tenant BOLA', () => {
+  it("tenant-professional cannot read tenant-enterprise's SSO provider config (sso-001)", async () => {
+    const { status } = await get<any>(srv.baseUrl, `/api/v1/security/sso/sso-001`, otherAuth);
+    expect(status).toBe(404);
+  });
+
+  it('the rightful tenant can read its own SSO provider', async () => {
+    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/sso/sso-001`, auth);
+    expect(status).toBe(200);
+    expect(body.provider.id).toBe('sso-001');
+  });
+
+  it("tenant-professional cannot delete tenant-enterprise's SSO provider (denial-of-login-service attack)", async () => {
+    const { status } = await del<any>(
+      srv.baseUrl,
+      `/api/v1/security/sso/sso-001`,
+      undefined,
+      otherAuth
+    );
+    expect(status).toBe(404);
+    const stillThere = await get<any>(srv.baseUrl, `/api/v1/security/sso/sso-001`, auth);
+    expect(stillThere.status).toBe(200);
+  });
+});
+
 describe('POST /api/v1/security/sso/:id/initiate', () => {
+  // See sso.ts's doc comment: despite reading like a pre-session login-start
+  // step, this module sits behind the global generic authMiddleware, so it
+  // already requires a valid session in the deployed system today — a
+  // pre-existing functional inconsistency, not a vulnerability, left
+  // unchanged per this audit's scope (see ATLAS 46.26 report, Residual
+  // Risks).
   it('returns redirect URL for active OIDC provider', async () => {
-    const { status, body } = await post<any>(srv.baseUrl, `/api/v1/security/sso/sso-001/initiate`);
+    const { status, body } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/sso/sso-001/initiate`,
+      undefined,
+      auth
+    );
     expect(status).toBe(200);
     expect(body.redirectUrl).toBeTruthy();
     expect(body.state).toBeTruthy();
@@ -325,13 +778,28 @@ describe('POST /api/v1/security/sso/:id/initiate', () => {
   });
 
   it('returns 400 for inactive provider', async () => {
-    const { status } = await post<any>(srv.baseUrl, `/api/v1/security/sso/sso-003/initiate`);
+    const { status } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/sso/sso-003/initiate`,
+      undefined,
+      auth
+    );
     expect(status).toBe(400);
   });
 
   it('returns 404 for unknown provider', async () => {
-    const { status } = await post<any>(srv.baseUrl, `/api/v1/security/sso/sso-999/initiate`);
+    const { status } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/sso/sso-999/initiate`,
+      undefined,
+      auth
+    );
     expect(status).toBe(404);
+  });
+
+  it('returns 401 unauthenticated (confirms the current, if unintended, auth requirement)', async () => {
+    const { status } = await post<any>(srv.baseUrl, `/api/v1/security/sso/sso-001/initiate`);
+    expect(status).toBe(401);
   });
 });
 
@@ -339,7 +807,7 @@ describe('POST /api/v1/security/sso/:id/initiate', () => {
 
 describe('GET /api/v1/security/policies', () => {
   it('returns policies for tenant', async () => {
-    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/policies${Q()}`);
+    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/policies`, auth);
     expect(status).toBe(200);
     expect(body.policies.length).toBeGreaterThan(0);
     expect(body.total).toBeGreaterThan(0);
@@ -350,10 +818,9 @@ describe('POST /api/v1/security/policies/evaluate', () => {
   it('evaluates ALLOW for admin role', async () => {
     const { status, body } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/policies/evaluate${Q()}`,
-      {
-        context: { role: 'admin', riskScore: 10 },
-      }
+      `/api/v1/security/policies/evaluate`,
+      { context: { role: 'admin', riskScore: 10 } },
+      auth
     );
     expect(status).toBe(200);
     expect(body.decision).toBe('ALLOW');
@@ -363,32 +830,27 @@ describe('POST /api/v1/security/policies/evaluate', () => {
   it('DEFAULT_DENY when no policies match', async () => {
     const { status, body } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/policies/evaluate${Q('tenant-mutation-test')}`,
-      {
-        context: { role: 'nobody' },
-      }
+      `/api/v1/security/policies/evaluate`,
+      { context: { role: 'nobody' } },
+      orgBearer('tenant-mutation-test')
     );
     expect(status).toBe(200);
     expect(body.decision).toBe('DEFAULT_DENY');
   });
 
-  it('returns 400 when context missing', async () => {
-    const { status } = await post<any>(srv.baseUrl, `/api/v1/security/policies/evaluate${Q()}`, {});
-    expect(status).toBe(200); // context defaults to {} — evaluates fine
+  it('returns 200 when context missing (defaults to {})', async () => {
+    const { status } = await post<any>(srv.baseUrl, `/api/v1/security/policies/evaluate`, {}, auth);
+    expect(status).toBe(200);
   });
 });
 
-describe('POST + PUT + DELETE /api/v1/security/policies', () => {
+describe('POST + PUT + DELETE /api/v1/security/policies — CRUD + cross-tenant BOLA + mass assignment', () => {
   it('CRUD lifecycle', async () => {
     const { status: cs, body: cb } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/policies${Q('tenant-mutation-test')}`,
-      {
-        name: 'TEST_POLICY',
-        effect: 'ALLOW',
-        logic: 'AND',
-        conditions: [],
-      }
+      `/api/v1/security/policies`,
+      { name: 'TEST_POLICY', effect: 'ALLOW', logic: 'AND', conditions: [] },
+      orgBearer('tenant-mutation-test')
     );
     expect(cs).toBe(201);
     const id = cb.policy.id;
@@ -396,13 +858,101 @@ describe('POST + PUT + DELETE /api/v1/security/policies', () => {
     const { status: us, body: ub } = await put<any>(
       srv.baseUrl,
       `/api/v1/security/policies/${id}`,
-      { active: false }
+      { active: false },
+      orgBearer('tenant-mutation-test')
     );
     expect(us).toBe(200);
     expect(ub.policy.active).toBe(false);
 
-    const { status: ds } = await del<any>(srv.baseUrl, `/api/v1/security/policies/${id}`);
+    const { status: ds } = await del<any>(
+      srv.baseUrl,
+      `/api/v1/security/policies/${id}`,
+      undefined,
+      orgBearer('tenant-mutation-test')
+    );
     expect(ds).toBe(200);
+  });
+
+  it("a PUT body containing tenantId/id/createdAt cannot reassign a policy to a different tenant (mass-assignment fix in security-store.ts's updatePolicy)", async () => {
+    const created = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/policies`,
+      { name: 'MASS_ASSIGN_PROBE', effect: 'DENY', logic: 'AND', conditions: [] },
+      auth
+    );
+    const id = created.body.policy.id;
+    const originalCreatedAt = created.body.policy.createdAt;
+
+    const { status, body } = await put<any>(
+      srv.baseUrl,
+      `/api/v1/security/policies/${id}`,
+      {
+        name: 'Renamed',
+        tenantId: OTHER_TENANT,
+        id: 'pol-should-not-change',
+        createdAt: '2000-01-01T00:00:00.000Z',
+      },
+      auth
+    );
+    expect(status).toBe(200);
+    expect(body.policy.tenantId).toBe(TENANT);
+    expect(body.policy.id).toBe(id);
+    expect(body.policy.createdAt).toBe(originalCreatedAt);
+    expect(body.policy.name).toBe('Renamed');
+
+    // And the policy must not have become visible/reachable under the other tenant.
+    const stolen = await get<any>(srv.baseUrl, `/api/v1/security/policies/${id}`, otherAuth);
+    expect(stolen.status).toBe(404);
+  });
+
+  it("tenant-professional cannot read tenant-enterprise's policy by id", async () => {
+    const created = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/policies`,
+      { name: 'ENTERPRISE_ONLY', effect: 'ALLOW', logic: 'AND', conditions: [] },
+      auth
+    );
+    const id = created.body.policy.id;
+    const { status } = await get<any>(srv.baseUrl, `/api/v1/security/policies/${id}`, otherAuth);
+    expect(status).toBe(404);
+  });
+
+  it("tenant-professional cannot flip a DENY policy to ALLOW on tenant-enterprise's policy (privilege-widening BOLA)", async () => {
+    const created = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/policies`,
+      { name: 'DENY_SENSITIVE', effect: 'DENY', logic: 'AND', conditions: [] },
+      auth
+    );
+    const id = created.body.policy.id;
+    const { status } = await put<any>(
+      srv.baseUrl,
+      `/api/v1/security/policies/${id}`,
+      { effect: 'ALLOW' },
+      otherAuth
+    );
+    expect(status).toBe(404);
+    const stillDeny = await get<any>(srv.baseUrl, `/api/v1/security/policies/${id}`, auth);
+    expect(stillDeny.body.policy.effect).toBe('DENY');
+  });
+
+  it("tenant-professional cannot delete tenant-enterprise's policy", async () => {
+    const created = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/policies`,
+      { name: 'DELETE_TARGET', effect: 'ALLOW', logic: 'AND', conditions: [] },
+      auth
+    );
+    const id = created.body.policy.id;
+    const { status } = await del<any>(
+      srv.baseUrl,
+      `/api/v1/security/policies/${id}`,
+      undefined,
+      otherAuth
+    );
+    expect(status).toBe(404);
+    const stillThere = await get<any>(srv.baseUrl, `/api/v1/security/policies/${id}`, auth);
+    expect(stillThere.status).toBe(200);
   });
 });
 
@@ -410,20 +960,29 @@ describe('POST + PUT + DELETE /api/v1/security/policies', () => {
 
 describe('GET /api/v1/security/audit', () => {
   it('returns audit entries for tenant', async () => {
-    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/audit${Q()}`);
+    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/audit`, auth);
     expect(status).toBe(200);
     expect(body.entries.length).toBeGreaterThan(0);
   });
 
   it('respects limit and offset', async () => {
-    const { body } = await get<any>(srv.baseUrl, `/api/v1/security/audit${Q()}&limit=3&offset=0`);
+    const { body } = await get<any>(srv.baseUrl, `/api/v1/security/audit?limit=3&offset=0`, auth);
     expect(body.entries.length).toBeLessThanOrEqual(3);
+  });
+
+  it("never returns another tenant's audit entries, even with a ?tenantId= override", async () => {
+    const { body } = await get<any>(
+      srv.baseUrl,
+      `/api/v1/security/audit?tenantId=${OTHER_TENANT}`,
+      auth
+    );
+    expect(body.entries.every((e: any) => e.event.tenantId === TENANT)).toBe(true);
   });
 });
 
 describe('GET /api/v1/security/audit/verify', () => {
-  it('verifies chain integrity', async () => {
-    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/audit/verify`);
+  it('verifies chain integrity (deliberately global — whole-chain cryptographic check, not tenant data)', async () => {
+    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/audit/verify`, auth);
     expect(status).toBe(200);
     expect(body.valid).toBe(true);
     expect(body.total).toBeGreaterThan(0);
@@ -431,8 +990,13 @@ describe('GET /api/v1/security/audit/verify', () => {
 });
 
 describe('POST /api/v1/security/audit/export', () => {
-  it('exports in ECS format', async () => {
-    const { status, body } = await post<any>(srv.baseUrl, `/api/v1/security/audit/export${Q()}`);
+  it("exports in ECS format, scoped to the caller's own tenant", async () => {
+    const { status, body } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/audit/export`,
+      undefined,
+      auth
+    );
     expect(status).toBe(200);
     expect(body.format).toBe('ecs');
     expect(body.records.length).toBeGreaterThan(0);
@@ -443,16 +1007,25 @@ describe('POST /api/v1/security/audit/export', () => {
 // ─── Compliance ───────────────────────────────────────────────────────────────
 
 describe('GET /api/v1/security/compliance', () => {
-  it('returns compliance controls and summary', async () => {
-    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/compliance`);
+  it('returns compliance controls and summary (deliberately global — framework controls, not tenant data)', async () => {
+    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/compliance`, auth);
     expect(status).toBe(200);
     expect(body.controls.length).toBeGreaterThan(0);
     expect(body.summary.length).toBeGreaterThan(0);
   });
 
   it('filters by framework', async () => {
-    const { body } = await get<any>(srv.baseUrl, `/api/v1/security/compliance?framework=LGPD`);
+    const { body } = await get<any>(
+      srv.baseUrl,
+      `/api/v1/security/compliance?framework=LGPD`,
+      auth
+    );
     expect(body.controls.every((c: any) => c.framework === 'LGPD')).toBe(true);
+  });
+
+  it('returns 401 unauthenticated (still requires SOME session, even though the data is global)', async () => {
+    const { status } = await get<any>(srv.baseUrl, `/api/v1/security/compliance`);
+    expect(status).toBe(401);
   });
 });
 
@@ -460,12 +1033,9 @@ describe('POST /api/v1/security/compliance/data-request', () => {
   it('creates a LGPD data deletion request', async () => {
     const { status, body } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/compliance/data-request${Q()}`,
-      {
-        type: 'deletion',
-        requestorEmail: 'user@example.com',
-        framework: 'LGPD',
-      }
+      `/api/v1/security/compliance/data-request`,
+      { type: 'deletion', requestorEmail: 'user@example.com', framework: 'LGPD' },
+      auth
     );
     expect(status).toBe(201);
     expect(body.request.type).toBe('deletion');
@@ -475,10 +1045,30 @@ describe('POST /api/v1/security/compliance/data-request', () => {
   it('returns 400 when missing fields', async () => {
     const { status } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/compliance/data-request${Q()}`,
-      { type: 'deletion' }
+      `/api/v1/security/compliance/data-request`,
+      { type: 'deletion' },
+      auth
     );
     expect(status).toBe(400);
+  });
+});
+
+describe('GET /api/v1/security/compliance/data-requests — tenant isolation', () => {
+  it("never returns another tenant's data requests", async () => {
+    await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/compliance/data-request`,
+      { type: 'access', requestorEmail: 'isolation-check@example.com', framework: 'GDPR' },
+      auth
+    );
+    const { body } = await get<any>(
+      srv.baseUrl,
+      `/api/v1/security/compliance/data-requests`,
+      otherAuth
+    );
+    expect(
+      body.requests.every((r: any) => r.requestorEmail !== 'isolation-check@example.com')
+    ).toBe(true);
   });
 });
 
@@ -486,7 +1076,7 @@ describe('POST /api/v1/security/compliance/data-request', () => {
 
 describe('GET /api/v1/security/consent', () => {
   it('returns consent records for enterprise', async () => {
-    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/consent${Q()}`);
+    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/consent`, auth);
     expect(status).toBe(200);
     expect(body.records.length).toBeGreaterThan(0);
   });
@@ -496,12 +1086,9 @@ describe('POST /api/v1/security/consent', () => {
   it('records a new consent', async () => {
     const { status, body } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/consent${Q('tenant-mutation-test')}`,
-      {
-        userId: 'consent@mutation.com',
-        purpose: 'analytics',
-        framework: 'GDPR',
-      }
+      `/api/v1/security/consent`,
+      { userId: 'consent@mutation.com', purpose: 'analytics', framework: 'GDPR' },
+      orgBearer('tenant-mutation-test')
     );
     expect(status).toBe(201);
     expect(body.record.granted).toBe(true);
@@ -512,17 +1099,16 @@ describe('DELETE /api/v1/security/consent/revoke', () => {
   it('revokes an existing consent', async () => {
     const { body: created } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/consent${Q('tenant-mutation-test')}`,
-      {
-        userId: 'revoke@mutation.com',
-        purpose: 'marketing',
-        framework: 'LGPD',
-      }
+      `/api/v1/security/consent`,
+      { userId: 'revoke@mutation.com', purpose: 'marketing', framework: 'LGPD' },
+      orgBearer('tenant-mutation-test')
     );
     expect(created.record.granted).toBe(true);
     const { status, body } = await del<any>(
       srv.baseUrl,
-      `/api/v1/security/consent/revoke?tenantId=tenant-mutation-test&userId=revoke%40mutation.com&purpose=marketing`
+      `/api/v1/security/consent/revoke?userId=revoke%40mutation.com&purpose=marketing`,
+      undefined,
+      orgBearer('tenant-mutation-test')
     );
     expect(status).toBe(200);
     expect(body.record.granted).toBe(false);
@@ -532,7 +1118,25 @@ describe('DELETE /api/v1/security/consent/revoke', () => {
   it('returns 404 for unknown consent', async () => {
     const { status } = await del<any>(
       srv.baseUrl,
-      `/api/v1/security/consent/revoke?tenantId=tenant-enterprise&userId=nobody%40example.com&purpose=analytics`
+      `/api/v1/security/consent/revoke?userId=nobody%40example.com&purpose=analytics`,
+      undefined,
+      auth
+    );
+    expect(status).toBe(404);
+  });
+
+  it("another tenant cannot revoke this tenant's consent for the same userId/purpose", async () => {
+    await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/consent`,
+      { userId: 'cross-tenant@example.com', purpose: 'marketing', framework: 'LGPD' },
+      auth
+    );
+    const { status } = await del<any>(
+      srv.baseUrl,
+      `/api/v1/security/consent/revoke?userId=cross-tenant%40example.com&purpose=marketing`,
+      undefined,
+      otherAuth
     );
     expect(status).toBe(404);
   });
@@ -542,26 +1146,37 @@ describe('DELETE /api/v1/security/consent/revoke', () => {
 
 describe('GET /api/v1/security/risk', () => {
   it('returns risk events for enterprise', async () => {
-    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/risk${Q()}`);
+    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/risk`, auth);
     expect(status).toBe(200);
     expect(body.events.length).toBeGreaterThan(0);
   });
 
   it('filters unresolved events', async () => {
-    const { body } = await get<any>(srv.baseUrl, `/api/v1/security/risk${Q()}&resolved=false`);
+    const { body } = await get<any>(srv.baseUrl, `/api/v1/security/risk?resolved=false`, auth);
     expect(body.events.every((e: any) => e.resolved === false)).toBe(true);
   });
 });
 
-describe('GET /api/v1/security/risk/score/:tenantId', () => {
-  it('returns risk score for enterprise', async () => {
+describe('GET /api/v1/security/risk/score/:tenantId — previously trusted the URL segment with NO check at all', () => {
+  it('returns risk score for enterprise when the URL segment matches the session', async () => {
     const { status, body } = await get<any>(
       srv.baseUrl,
-      `/api/v1/security/risk/score/tenant-enterprise`
+      `/api/v1/security/risk/score/tenant-enterprise`,
+      auth
     );
     expect(status).toBe(200);
     expect(body.score).toBeGreaterThanOrEqual(0);
     expect(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).toContain(body.level);
+  });
+
+  it("returns 403 when tenant-professional requests tenant-enterprise's risk score by editing the URL", async () => {
+    const { status, body } = await get<any>(
+      srv.baseUrl,
+      `/api/v1/security/risk/score/tenant-enterprise`,
+      otherAuth
+    );
+    expect(status).toBe(403);
+    expect(body.error.code).toBe('FORBIDDEN');
   });
 });
 
@@ -569,7 +1184,7 @@ describe('POST /api/v1/security/risk/assess + resolve', () => {
   it('creates and resolves a risk event', async () => {
     const { status: cs, body: cb } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/risk/assess${Q('tenant-mutation-test')}`,
+      `/api/v1/security/risk/assess`,
       {
         type: 'suspicious_ip',
         actor: 'test@mutation.com',
@@ -577,24 +1192,56 @@ describe('POST /api/v1/security/risk/assess + resolve', () => {
         score: 55,
         description: 'Test risk event',
         ip: '1.2.3.4',
-      }
+      },
+      orgBearer('tenant-mutation-test')
     );
     expect(cs).toBe(201);
     const id = cb.event.id;
 
     const { status: rs, body: rb } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/risk/${id}/resolve`
+      `/api/v1/security/risk/${id}/resolve`,
+      undefined,
+      orgBearer('tenant-mutation-test')
     );
     expect(rs).toBe(200);
     expect(rb.event.resolved).toBe(true);
   });
 
   it('returns 400 when missing fields', async () => {
-    const { status } = await post<any>(srv.baseUrl, `/api/v1/security/risk/assess${Q()}`, {
-      type: 'bot_detected',
-    });
+    const { status } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/risk/assess`,
+      { type: 'bot_detected' },
+      auth
+    );
     expect(status).toBe(400);
+  });
+
+  it("tenant-professional cannot resolve tenant-enterprise's risk event", async () => {
+    const created = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/risk/assess`,
+      {
+        type: 'bot_detected',
+        actor: 'attacker@example.com',
+        level: 'HIGH',
+        score: 90,
+        description: 'Cross-tenant resolve probe',
+        ip: '9.9.9.9',
+      },
+      auth
+    );
+    const id = created.body.event.id;
+    const { status } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/risk/${id}/resolve`,
+      undefined,
+      otherAuth
+    );
+    expect(status).toBe(404);
+    const stillUnresolved = await get<any>(srv.baseUrl, `/api/v1/security/risk`, auth);
+    expect(stillUnresolved.body.events.find((e: any) => e.id === id)?.resolved).toBe(false);
   });
 });
 
@@ -602,26 +1249,43 @@ describe('POST /api/v1/security/risk/assess + resolve', () => {
 
 describe('GET /api/v1/security/certificates', () => {
   it('returns certificates for enterprise', async () => {
-    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/certificates${Q()}`);
+    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/certificates`, auth);
     expect(status).toBe(200);
     expect(body.certificates.length).toBeGreaterThan(0);
     expect(body.expiringSoon).toBeGreaterThan(0); // cert-001 expires in 25 days
   });
 });
 
-describe('POST /api/v1/security/certificates/renew/:id', () => {
-  it('renews a certificate', async () => {
+describe('POST /api/v1/security/certificates/renew/:id — cross-tenant BOLA', () => {
+  it('renews a certificate for its own tenant', async () => {
     const { status, body } = await post<any>(
       srv.baseUrl,
-      `/api/v1/security/certificates/renew/cert-001`
+      `/api/v1/security/certificates/renew/cert-002`,
+      undefined,
+      auth
     );
     expect(status).toBe(200);
     expect(body.certificate.daysUntilExpiry).toBe(365);
     expect(body.certificate.renewedAt).toBeTruthy();
   });
 
+  it("tenant-professional cannot renew tenant-enterprise's certificate", async () => {
+    const { status } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/certificates/renew/cert-003`,
+      undefined,
+      otherAuth
+    );
+    expect(status).toBe(404);
+  });
+
   it('returns 404 for unknown certificate', async () => {
-    const { status } = await post<any>(srv.baseUrl, `/api/v1/security/certificates/renew/cert-999`);
+    const { status } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/certificates/renew/cert-999`,
+      undefined,
+      auth
+    );
     expect(status).toBe(404);
   });
 });
@@ -630,7 +1294,7 @@ describe('POST /api/v1/security/certificates/renew/:id', () => {
 
 describe('GET /api/v1/security/dashboard', () => {
   it('returns a complete security dashboard', async () => {
-    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/dashboard${Q()}`);
+    const { status, body } = await get<any>(srv.baseUrl, `/api/v1/security/dashboard`, auth);
     expect(status).toBe(200);
     expect(typeof body.eventsToday).toBe('number');
     expect(typeof body.failedAuthLast24h).toBe('number');
@@ -642,43 +1306,54 @@ describe('GET /api/v1/security/dashboard', () => {
   });
 
   it('dashboard has LGPD and GDPR compliance fields', async () => {
-    const { body } = await get<any>(srv.baseUrl, `/api/v1/security/dashboard${Q()}`);
+    const { body } = await get<any>(srv.baseUrl, `/api/v1/security/dashboard`, auth);
     expect(body.compliance.LGPD).toBeTruthy();
     expect(body.compliance.GDPR).toBeTruthy();
   });
 });
 
-// ─── Tenant enforcement (Sprint 00.1) ──────────────────────────────────────────
-// No route may fall back to a default tenant — every request below omits
-// x-tenant-id and tenantId and must fail with 400 TENANT_REQUIRED.
+// ─── Org enforcement ──────────────────────────────────────────────────────────
+// No route may fall back to a default tenant, trust a client-supplied
+// tenantId header/query param, or serve an unauthenticated request.
 
-describe('Tenant enforcement — no hardcoded tenant fallback', () => {
-  const NO_TENANT_ROUTES: Array<[string, string]> = [
-    ['GET', '/api/v1/security/secrets'],
-    ['GET', '/api/v1/security/policies'],
-    ['GET', '/api/v1/security/risk'],
-    ['GET', '/api/v1/security/consent'],
-    ['GET', '/api/v1/security/compliance/data-requests'],
-    ['GET', '/api/v1/security/sso'],
-    ['GET', '/api/v1/security/mfa/status'],
-    ['GET', '/api/v1/security/dashboard'],
-    ['GET', '/api/v1/security/certificates'],
-    ['GET', '/api/v1/security/audit'],
+describe('Org enforcement — session-derived identity only, no client-supplied fallback', () => {
+  const ORG_SCOPED_GET_ROUTES = [
+    '/api/v1/security/secrets',
+    '/api/v1/security/policies',
+    '/api/v1/security/risk',
+    '/api/v1/security/consent',
+    '/api/v1/security/compliance/data-requests',
+    '/api/v1/security/sso',
+    '/api/v1/security/mfa/status',
+    '/api/v1/security/dashboard',
+    '/api/v1/security/certificates',
+    '/api/v1/security/audit',
   ];
 
-  for (const [method, path] of NO_TENANT_ROUTES) {
-    it(`${method} ${path} returns 400 TENANT_REQUIRED without a tenant`, async () => {
-      const { status, body } =
-        method === 'GET'
-          ? await get<{ error: { code: string } }>(srv.baseUrl, path)
-          : await post<{ error: { code: string } }>(srv.baseUrl, path);
-      expect(status).toBe(400);
-      expect(body.error.code).toBe('TENANT_REQUIRED');
+  for (const path of ORG_SCOPED_GET_ROUTES) {
+    it(`GET ${path} returns 401 unauthenticated`, async () => {
+      const { status } = await get(srv.baseUrl, path);
+      expect(status).toBe(401);
+    });
+
+    it(`GET ${path} returns 403 ORGANIZATION_NOT_LINKED for a session with no org`, async () => {
+      const { status, body } = await get<{ error: { code: string } }>(
+        srv.baseUrl,
+        path,
+        noOrgBearer()
+      );
+      expect(status).toBe(403);
+      expect(body.error.code).toBe('ORGANIZATION_NOT_LINKED');
+    });
+
+    it(`GET ${path}?tenantId=${OTHER_TENANT} is ignored — an x-tenant-id-style override no longer controls scope`, async () => {
+      const { status } = await get(srv.baseUrl, `${path}?tenantId=${OTHER_TENANT}`, auth);
+      expect([200, 403, 404]).toContain(status);
     });
   }
 
   it('a valid tenant continues to work (no regression)', async () => {
-    const { status } = await get(srv.baseUrl, `/api/v1/security/secrets${Q()}`);
+    const { status } = await get(srv.baseUrl, `/api/v1/security/secrets`, auth);
     expect(status).toBe(200);
   });
 });

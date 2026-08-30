@@ -33,7 +33,9 @@ export function registerHaFailoverRoutes(router: Router): void {
         return apiError(res, 'Source node not found', 404, 'NOT_FOUND');
       if (code === 'TARGET_NODE_NOT_FOUND')
         return apiError(res, 'Target node not found', 404, 'NOT_FOUND');
-      return apiError(res, (err as Error).message, 500, 'FAILOVER_ERROR');
+      // ATLAS 46.26 — final hardening, Part 10: generic message for
+      // anything not a recognized, deliberately-worded failover error.
+      return apiError(res, 'Failover failed due to an internal error', 500, 'FAILOVER_ERROR');
     }
   });
 }

@@ -16,6 +16,16 @@ const REQUIRED_IN_PRODUCTION = [
   { envVar: 'CONNECTOR_PACKAGE_SECRET', usedBy: 'modules/connectors/package-integrity.ts' },
   { envVar: 'MESSAGE_DELIVERY_SECRET', usedBy: 'modules/message-delivery/message-signature.ts' },
   { envVar: 'ATLAS_MASTER_KEY', usedBy: '@seltriva/aegis crypto.ts (ERP credential encryption)' },
+  // ATLAS 46.26 — found missing during the billing/security/ops audit.
+  // middleware/auth.ts's generic Supabase-style authMiddleware (guards
+  // everything NOT covered by a dedicated admin/portal/runtime auth scheme
+  // — concretely /api/v1/billing/*, /api/v1/security/*, /api/v1/ops/*)
+  // falls back to `createHmac('sha256', '')` (an empty, publicly-known
+  // HMAC key) when this is unset, rather than refusing to boot — a
+  // forgeable-JWT hole distinct from, and previously uncaught by, the dev-
+  // only complete-bypass branch in that same file (which is correctly
+  // gated to NODE_ENV==='development' already).
+  { envVar: 'SUPABASE_JWT_SECRET', usedBy: 'middleware/auth.ts' },
 ] as const;
 
 /**

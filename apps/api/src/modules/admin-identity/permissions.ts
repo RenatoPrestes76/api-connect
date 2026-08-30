@@ -183,6 +183,35 @@ export const PERMISSION_CATALOG: Array<{
     action: 'write',
     description: 'Execute and cancel queries against a connected ERP via its Runtime',
   },
+  // ATLAS 46.26 — Part 1 of final hardening. secret-rotation.ts's
+  // evaluateAll() is a genuinely platform-wide operation by design (it
+  // mirrors the scheduler's own internal 60s tick, evaluating every
+  // tenant's due-for-rotation secrets in one pass) — not something a
+  // tenant-scoped permission can meaningfully express. Gating its manual
+  // HTTP trigger behind a dedicated admin permission, rather than
+  // "any authenticated tenant session", closes the "any user can force
+  // fleet-wide rotation" nuisance/availability gap found in that audit.
+  {
+    resource: 'security',
+    action: 'manage',
+    description: 'Trigger platform-wide secret rotation evaluation',
+  },
+  // ATLAS 46.26 — final hardening, Part 7 (final requireTenantId /
+  // tenantId sweep): POST /ha/backup, /ha/restore, and /ha/recovery-test
+  // had NO permission check at all — any authenticated caller (any tenant
+  // user, not verified staff) could trigger a real backup/restore/DR-test
+  // for any tenant by supplying its tenantId in the body. Unlike
+  // ops/queues.ts's enqueue (already evaluated as low-risk "attribution
+  // only"), these are consequential infrastructure operations (restore
+  // actually overwrites control-plane state), so they get a permission
+  // gate rather than the "deferred, generic-auth-is-good-enough" treatment
+  // given to read-only staff dashboards (ops/*, operations/*,
+  // governance/audit.ts, ha's own GET routes).
+  {
+    resource: 'ha',
+    action: 'manage',
+    description: 'Trigger backups, restores, and disaster-recovery tests',
+  },
 ];
 
 export function permissionKey(
@@ -251,6 +280,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'sql-generator.write',
     'query-execution.read',
     'query-execution.write',
+    'security.manage',
+    'ha.manage',
   ],
   SUPORTE: [
     'companies.read',
@@ -312,6 +343,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'sql-generator.write',
     'query-execution.read',
     'query-execution.write',
+    'security.manage',
+    'ha.manage',
   ],
   AUDITOR: [
     'companies.read',

@@ -1,21 +1,21 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
-import { requireTenantId } from '../../../http/tenant.js';
+import { requireOrgId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import type { ConsentPurpose } from '@seltriva/aegis';
 
 export function registerConsentRoutes(router: Router): void {
   // GET /api/v1/security/consent
   router.get('/api/v1/security/consent', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = requireTenantId(ctx);
+    const tenantId = requireOrgId(ctx);
     const records = securityStore.getConsentRecords(tenantId);
     json(res, { records, total: records.length });
   });
 
   // POST /api/v1/security/consent
   router.post('/api/v1/security/consent', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = requireTenantId(ctx);
+    const tenantId = requireOrgId(ctx);
     const body = (ctx.body ?? {}) as Record<string, unknown>;
     const userId = body['userId'] as string | undefined;
     const purpose = body['purpose'] as ConsentPurpose | undefined;
@@ -45,7 +45,7 @@ export function registerConsentRoutes(router: Router): void {
   router.delete(
     '/api/v1/security/consent/revoke',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const tenantId = requireTenantId(ctx);
+      const tenantId = requireOrgId(ctx);
       const userId = ctx.query.get('userId');
       const purpose = ctx.query.get('purpose');
       if (!userId || !purpose) return apiError(res, 'userId and purpose required', 400);

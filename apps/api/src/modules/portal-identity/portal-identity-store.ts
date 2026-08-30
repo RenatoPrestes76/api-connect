@@ -206,6 +206,22 @@ export class PortalIdentityStore {
     return { organization, owner };
   }
 
+  /**
+   * ATLAS 46.26 — final hardening, Part 8 (mass-assignment sweep): a real,
+   * severe finding. `Object.assign(organization, patch, {...})` copies
+   * every OWN, RUNTIME property of `patch` — the parameter type here is
+   * TypeScript-only, erased at runtime, and its one caller
+   * (routes/v1/portal/organization.ts) reaches it via `ctx.body as
+   * UpdateOrganizationBody`, a type ASSERTION that does not strip extra
+   * JSON fields. A malicious org owner could PATCH
+   * `{ controlPlaneOrganizationId: "<victim-org-id>" }` and re-link their
+   * own portal organization to a DIFFERENT org's real, Postgres-persisted
+   * Control Plane Organization (see OrganizationRecord's doc comment) —
+   * or overwrite `id`, corrupting the record's own identity relative to
+   * the Map it's stored under. Fixed with an explicit allowlist; `id`,
+   * `controlPlaneOrganizationId`, `createdAt` are never accepted from the
+   * patch, always re-pinned to their original values.
+   */
   updateOrganization(
     id: string,
     patch: Partial<
@@ -214,7 +230,24 @@ export class PortalIdentityStore {
   ): OrganizationRecord | null {
     const organization = this.getOrganization(id);
     if (!organization) return null;
-    Object.assign(organization, patch, { updatedAt: new Date().toISOString() });
+    const { name, razaoSocial, cnpj, internalCode, status, plan } = patch;
+    Object.assign(
+      organization,
+      {
+        ...(name !== undefined ? { name } : {}),
+        ...(razaoSocial !== undefined ? { razaoSocial } : {}),
+        ...(cnpj !== undefined ? { cnpj } : {}),
+        ...(internalCode !== undefined ? { internalCode } : {}),
+        ...(status !== undefined ? { status } : {}),
+        ...(plan !== undefined ? { plan } : {}),
+      },
+      {
+        id: organization.id,
+        controlPlaneOrganizationId: organization.controlPlaneOrganizationId,
+        createdAt: organization.createdAt,
+        updatedAt: new Date().toISOString(),
+      }
+    );
     return organization;
   }
 

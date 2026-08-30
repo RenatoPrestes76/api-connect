@@ -1246,13 +1246,32 @@ class SecurityStore {
     return policy;
   }
 
+  /**
+   * ATLAS 46.26 — Part J: `patch` previously spread directly onto the
+   * stored record with only `id` protected, so a request body containing
+   * `tenantId` (or `createdAt`) would silently reassign the policy to a
+   * different tenant, or forge its creation timestamp. `tenantId` is
+   * ownership — it must never move via an update payload, only by a
+   * dedicated transfer operation this system doesn't have. Allowlists the
+   * fields a PATCH may actually touch instead of trusting the body's shape.
+   */
   updatePolicy(id: string, patch: Partial<Policy>): Policy | undefined {
     const p = this.policies.get(id);
     if (!p) return undefined;
+    const { name, description, conditions, logic, effect, priority, active }: Partial<Policy> =
+      patch;
     const updated: Policy = {
       ...p,
-      ...patch,
+      ...(name !== undefined ? { name } : {}),
+      ...(description !== undefined ? { description } : {}),
+      ...(conditions !== undefined ? { conditions } : {}),
+      ...(logic !== undefined ? { logic } : {}),
+      ...(effect !== undefined ? { effect } : {}),
+      ...(priority !== undefined ? { priority } : {}),
+      ...(active !== undefined ? { active } : {}),
       id: p.id,
+      tenantId: p.tenantId,
+      createdAt: p.createdAt,
       version: p.version + 1,
       updatedAt: new Date().toISOString(),
     };

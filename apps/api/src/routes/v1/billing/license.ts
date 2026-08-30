@@ -1,13 +1,13 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
-import { requireTenantId } from '../../../http/tenant.js';
+import { requireOrgId } from '../../../http/tenant.js';
 import { billingStore } from '../../../modules/billing/billing-store.js';
 import { isValidKeyFormat, keyFingerprint } from '@seltriva/billing';
 
 // GET /api/v1/billing/license
 export async function getLicense(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const tenantId = requireTenantId(ctx);
+  const tenantId = requireOrgId(ctx);
   const lic = billingStore.getLicense(tenantId);
   if (!lic) {
     apiError(res, 'License not found', 404, 'NOT_FOUND');

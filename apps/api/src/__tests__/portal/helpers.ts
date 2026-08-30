@@ -53,6 +53,27 @@ export const post = <T>(
   payload?: unknown,
   headers?: Record<string, string>
 ) => request<T>(baseUrl, 'POST', path, payload, headers);
-export const put = <T>(baseUrl: string, path: string, payload?: unknown) =>
-  request<T>(baseUrl, 'PUT', path, payload);
-export const del = <T>(baseUrl: string, path: string) => request<T>(baseUrl, 'DELETE', path);
+export const put = <T>(
+  baseUrl: string,
+  path: string,
+  payload?: unknown,
+  headers?: Record<string, string>
+) => request<T>(baseUrl, 'PUT', path, payload, headers);
+export const del = <T>(baseUrl: string, path: string, headers?: Record<string, string>) =>
+  request<T>(baseUrl, 'DELETE', path, undefined, headers);
+
+export function bearer(token: string): Record<string, string> {
+  return { Authorization: `Bearer ${token}` };
+}
+
+const SEED_OWNER_EMAIL = 'owner@enterprise.demo';
+const SEED_OWNER_PASSWORD = 'TrocarNoPrimeiroLogin!';
+
+/** Logs in as the seeded demo organization's Owner and returns a ready-to-use Authorization header. */
+export async function seededOwnerAuth(baseUrl: string): Promise<Record<string, string>> {
+  const { body } = await post<{ token: string }>(baseUrl, '/api/v1/portal/auth/login', {
+    email: SEED_OWNER_EMAIL,
+    password: SEED_OWNER_PASSWORD,
+  });
+  return bearer(body.token);
+}

@@ -243,13 +243,36 @@ export class ControlPlaneStore {
     return project;
   }
 
+  /**
+   * ATLAS 46.26 — final hardening, Part 8 (mass-assignment sweep): a body
+   * containing `organizationId` (a real ownership field on Project) would
+   * have silently re-parented this project to a different organization —
+   * the route's `ctx.body as Partial<Pick<...>>` cast is compile-time
+   * only. Fixed with an explicit allowlist; `id`, `organizationId`,
+   * `slug`, `createdAt` are never accepted from the patch.
+   */
   updateProject(
     id: string,
     patch: Partial<Pick<Project, 'name' | 'status' | 'description'>>
   ): Project | null {
     const project = this.getProject(id);
     if (!project) return null;
-    Object.assign(project, patch, { updatedAt: new Date().toISOString() });
+    const { name, status, description } = patch;
+    Object.assign(
+      project,
+      {
+        ...(name !== undefined ? { name } : {}),
+        ...(status !== undefined ? { status } : {}),
+        ...(description !== undefined ? { description } : {}),
+      },
+      {
+        id: project.id,
+        organizationId: project.organizationId,
+        slug: project.slug,
+        createdAt: project.createdAt,
+        updatedAt: new Date().toISOString(),
+      }
+    );
     return project;
   }
 

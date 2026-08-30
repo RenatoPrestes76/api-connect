@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { startTestServer, get, post } from './helpers.js';
+import { startTestServer, get, post, haAdminBearer, lowPrivAdminBearer } from './helpers.js';
 import type { TestServer } from './helpers.js';
 
 let server: TestServer;
+let admin: Record<string, string>;
 beforeAll(async () => {
   server = await startTestServer();
+  admin = await haAdminBearer();
 });
 afterAll(async () => {
   await server.close();
@@ -210,10 +212,12 @@ describe('GET /api/v1/ha/backups', () => {
 
 describe('POST /api/v1/ha/backup', () => {
   it('creates a full backup', async () => {
-    const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/backup', {
-      tenantId: 'tenant-enterprise',
-      type: 'full',
-    });
+    const { status, body } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/backup',
+      { tenantId: 'tenant-enterprise', type: 'full' },
+      admin
+    );
     expect(status).toBe(201);
     expect(body.type).toBe('full');
     expect(body.status).toBe('completed');
@@ -221,35 +225,65 @@ describe('POST /api/v1/ha/backup', () => {
   });
 
   it('creates an incremental backup', async () => {
-    const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/backup', {
-      tenantId: 'tenant-professional',
-      type: 'incremental',
-    });
+    const { status, body } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/backup',
+      { tenantId: 'tenant-professional', type: 'incremental' },
+      admin
+    );
     expect(status).toBe(201);
     expect(body.type).toBe('incremental');
   });
 
   it('defaults type to full when not provided', async () => {
-    const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/backup', {
-      tenantId: 'tenant-community',
-    });
+    const { status, body } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/backup',
+      { tenantId: 'tenant-community' },
+      admin
+    );
     expect(status).toBe(201);
     expect(body.type).toBe('full');
   });
 
   it('returns 400 when tenantId missing', async () => {
-    const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/backup', { type: 'full' });
+    const { status, body } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/backup',
+      { type: 'full' },
+      admin
+    );
     expect(status).toBe(400);
     expect(body.error.code).toBe('MISSING_FIELDS');
   });
 
   it('returns 400 for invalid backup type', async () => {
-    const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/backup', {
-      tenantId: 'tenant-enterprise',
-      type: 'delta',
-    });
+    const { status, body } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/backup',
+      { tenantId: 'tenant-enterprise', type: 'delta' },
+      admin
+    );
     expect(status).toBe(400);
     expect(body.error.code).toBe('INVALID_TYPE');
+  });
+
+  it('rejects a fully unauthenticated caller (final hardening, Part 7)', async () => {
+    const { status } = await post<any>(server.baseUrl, '/api/v1/ha/backup', {
+      tenantId: 'tenant-enterprise',
+      type: 'full',
+    });
+    expect(status).toBe(401);
+  });
+
+  it('rejects an admin session without ha.manage', async () => {
+    const { status } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/backup',
+      { tenantId: 'tenant-enterprise', type: 'full' },
+      await lowPrivAdminBearer()
+    );
+    expect(status).toBe(403);
   });
 });
 
@@ -293,9 +327,12 @@ describe('GET /api/v1/ha/recovery', () => {
 
 describe('POST /api/v1/ha/recovery-test', () => {
   it('runs recovery test for enterprise tenant', async () => {
-    const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/recovery-test', {
-      tenantId: 'tenant-enterprise',
-    });
+    const { status, body } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/recovery-test',
+      { tenantId: 'tenant-enterprise' },
+      admin
+    );
     expect(status).toBe(201);
     expect(body.result).toBe('passed');
     expect(typeof body.rtoSeconds).toBe('number');
@@ -304,26 +341,49 @@ describe('POST /api/v1/ha/recovery-test', () => {
   });
 
   it('returns rtoSeconds and rpoMinutes in test result', async () => {
-    const { body } = await post<any>(server.baseUrl, '/api/v1/ha/recovery-test', {
-      tenantId: 'tenant-professional',
-    });
+    const { body } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/recovery-test',
+      { tenantId: 'tenant-professional' },
+      admin
+    );
     expect(typeof body.rtoSeconds).toBe('number');
     expect(typeof body.rpoMinutes).toBe('number');
     expect(body.tenantId).toBe('tenant-professional');
   });
 
   it('returns 400 when tenantId missing', async () => {
-    const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/recovery-test', {});
+    const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/recovery-test', {}, admin);
     expect(status).toBe(400);
     expect(body.error.code).toBe('MISSING_FIELDS');
   });
 
   it('returns 404 for unknown tenant', async () => {
-    const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/recovery-test', {
-      tenantId: 'tenant-unknown',
-    });
+    const { status, body } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/recovery-test',
+      { tenantId: 'tenant-unknown' },
+      admin
+    );
     expect(status).toBe(404);
     expect(body.error.code).toBe('NOT_FOUND');
+  });
+
+  it('rejects a fully unauthenticated caller (final hardening, Part 7)', async () => {
+    const { status } = await post<any>(server.baseUrl, '/api/v1/ha/recovery-test', {
+      tenantId: 'tenant-enterprise',
+    });
+    expect(status).toBe(401);
+  });
+
+  it('rejects an admin session without ha.manage', async () => {
+    const { status } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/recovery-test',
+      { tenantId: 'tenant-enterprise' },
+      await lowPrivAdminBearer()
+    );
+    expect(status).toBe(403);
   });
 });
 
@@ -331,17 +391,20 @@ describe('POST /api/v1/ha/recovery-test', () => {
 
 describe('POST /api/v1/ha/restore', () => {
   it('initiates restore from a known backup', async () => {
-    const created = await post<any>(server.baseUrl, '/api/v1/ha/backup', {
-      tenantId: 'tenant-enterprise',
-      type: 'full',
-    });
+    const created = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/backup',
+      { tenantId: 'tenant-enterprise', type: 'full' },
+      admin
+    );
     const backupId = created.body.id;
 
-    const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/restore', {
-      backupId,
-      tenantId: 'tenant-enterprise',
-      environment: 'staging',
-    });
+    const { status, body } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/restore',
+      { backupId, tenantId: 'tenant-enterprise', environment: 'staging' },
+      admin
+    );
     expect(status).toBe(200);
     expect(body.success).toBe(true);
     expect(body.restoreId).toBeDefined();
@@ -349,46 +412,78 @@ describe('POST /api/v1/ha/restore', () => {
   });
 
   it('restore result contains estimatedDuration', async () => {
-    const created = await post<any>(server.baseUrl, '/api/v1/ha/backup', {
-      tenantId: 'tenant-professional',
-      type: 'incremental',
-    });
+    const created = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/backup',
+      { tenantId: 'tenant-professional', type: 'incremental' },
+      admin
+    );
     const backupId = created.body.id;
 
-    const { body } = await post<any>(server.baseUrl, '/api/v1/ha/restore', {
-      backupId,
-      tenantId: 'tenant-professional',
-    });
+    const { body } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/restore',
+      { backupId, tenantId: 'tenant-professional' },
+      admin
+    );
     expect(body.estimatedDuration).toBeDefined();
     expect(typeof body.message).toBe('string');
   });
 
   it('returns 400 when backupId missing', async () => {
-    const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/restore', {
-      tenantId: 'tenant-enterprise',
-    });
+    const { status, body } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/restore',
+      { tenantId: 'tenant-enterprise' },
+      admin
+    );
     expect(status).toBe(400);
     expect(body.error.code).toBe('MISSING_FIELDS');
   });
 
   it('returns 400 when tenantId missing', async () => {
-    const created = await post<any>(server.baseUrl, '/api/v1/ha/backup', {
-      tenantId: 'tenant-enterprise',
-      type: 'full',
-    });
-    const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/restore', {
-      backupId: created.body.id,
-    });
+    const created = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/backup',
+      { tenantId: 'tenant-enterprise', type: 'full' },
+      admin
+    );
+    const { status, body } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/restore',
+      { backupId: created.body.id },
+      admin
+    );
     expect(status).toBe(400);
     expect(body.error.code).toBe('MISSING_FIELDS');
   });
 
   it('returns 404 for unknown backup', async () => {
-    const { status, body } = await post<any>(server.baseUrl, '/api/v1/ha/restore', {
-      backupId: 'bk-does-not-exist',
-      tenantId: 'tenant-enterprise',
-    });
+    const { status, body } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/restore',
+      { backupId: 'bk-does-not-exist', tenantId: 'tenant-enterprise' },
+      admin
+    );
     expect(status).toBe(404);
     expect(body.error.code).toBe('NOT_FOUND');
+  });
+
+  it('rejects a fully unauthenticated caller (final hardening, Part 7)', async () => {
+    const { status } = await post<any>(server.baseUrl, '/api/v1/ha/restore', {
+      backupId: 'whatever',
+      tenantId: 'tenant-enterprise',
+    });
+    expect(status).toBe(401);
+  });
+
+  it('rejects an admin session without ha.manage', async () => {
+    const { status } = await post<any>(
+      server.baseUrl,
+      '/api/v1/ha/restore',
+      { backupId: 'whatever', tenantId: 'tenant-enterprise' },
+      await lowPrivAdminBearer()
+    );
+    expect(status).toBe(403);
   });
 });

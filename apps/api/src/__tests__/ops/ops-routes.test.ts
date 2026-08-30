@@ -1,5 +1,16 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { startTestServer, get, post, put, del, type TestServer } from './helpers.js';
+import {
+  startTestServer,
+  startTestServerWithAuth,
+  get,
+  post,
+  put,
+  del,
+  genericAuthBearer,
+  portalUserBearer,
+  runtimeBearer,
+  type TestServer,
+} from './helpers.js';
 
 let srv: TestServer;
 beforeAll(async () => {
@@ -7,6 +18,105 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await srv.close();
+});
+
+// ATLAS 46.26 — Part H audit: unlike billing/security, this module (and its
+// six siblings — health, dashboard, feature-flags, slo, dr, circuit-breakers)
+// is deliberately left admin-global rather than tenant-scoped; see the doc
+// comment atop routes/v1/ops/queues.ts for the full reasoning. These two
+// tests document that decision as an explicit, intentional contract rather
+// than an untested gap — this module has no tenant identity concept to test
+// isolation against; any authenticated staff caller sees/controls the whole
+// platform queue by design.
+describe('Ops queues — deliberately admin-global (documented ATLAS 46.26 Part H decision)', () => {
+  it('GET /queues returns jobs across all tenants unfiltered by caller identity', async () => {
+    const a = await post<any>(srv.baseUrl, '/api/v1/ops/queues/enqueue', {
+      type: 'cross_tenant_visibility_probe',
+      tenantId: 'tenant-a-ops-probe',
+    });
+    const b = await post<any>(srv.baseUrl, '/api/v1/ops/queues/enqueue', {
+      type: 'cross_tenant_visibility_probe',
+      tenantId: 'tenant-b-ops-probe',
+    });
+    const { body } = await get<any>(srv.baseUrl, '/api/v1/ops/queues');
+    const ids = body.jobs.map((j: any) => j.id);
+    expect(ids).toContain(a.body.job.id);
+    expect(ids).toContain(b.body.job.id);
+  });
+
+  it('enqueue\'s tenantId is attribution metadata only (who this job is "for"), not an access-control boundary — any caller may set it to any value', async () => {
+    const { status, body } = await post<any>(srv.baseUrl, '/api/v1/ops/queues/enqueue', {
+      type: 'attribution_probe',
+      tenantId: 'tenant-arbitrary-attribution',
+    });
+    expect(status).toBe(201);
+    expect(body.job.tenantId).toBe('tenant-arbitrary-attribution');
+  });
+});
+
+/**
+ * ATLAS 46.26 — final hardening, Part 6. Confirmed, via the real
+ * production auth chain (authMiddleware, not the auth-less server the
+ * rest of this file uses): ops/* correctly excludes portal users and
+ * Runtimes — structurally, by construction, since they're issued tokens
+ * signed with PORTAL_JWT_SECRET / RUNTIME_JWT_SECRET respectively, which
+ * can never verify against the generic middleware's SUPABASE_JWT_SECRET —
+ * and correctly excludes fully anonymous callers.
+ *
+ * DEFERRED / EXTERNAL (not silently marked "already secure"): unlike
+ * billing/admin and the rotation/evaluate endpoint, ops/* has no
+ * admin-identity `requirePermission` check of its own — it only requires
+ * SOME valid generic-auth session. Whether that structurally excludes
+ * every non-staff identity depends on who is provisioned in the external
+ * Supabase Auth tenant this generic middleware verifies against, which is
+ * outside this codebase's control and outside this sprint's explicit
+ * "no ops architecture change" boundary. Not treated as ACCEPTED
+ * ARCHITECTURAL DESIGN — flagged as a genuine residual risk in the final
+ * report.
+ */
+describe('Ops — auth boundary (final hardening, Part 6)', () => {
+  let authSrv: TestServer;
+  beforeAll(async () => {
+    authSrv = await startTestServerWithAuth();
+  });
+  afterAll(async () => {
+    await authSrv.close();
+  });
+
+  const REPRESENTATIVE_ROUTES = [
+    '/api/v1/ops/health',
+    '/api/v1/ops/dashboard',
+    '/api/v1/ops/queues',
+    '/api/v1/ops/feature-flags',
+    '/api/v1/ops/slo',
+    '/api/v1/ops/dr',
+    '/api/v1/ops/circuit-breakers',
+  ];
+
+  for (const path of REPRESENTATIVE_ROUTES) {
+    it(`GET ${path} rejects a fully anonymous caller`, async () => {
+      const { status } = await get<any>(authSrv.baseUrl, path);
+      expect(status).toBe(401);
+    });
+
+    it(`GET ${path} rejects a real portal-identity session (different signing secret)`, async () => {
+      const { status } = await get<any>(authSrv.baseUrl, path, await portalUserBearer());
+      expect(status).toBe(401);
+    });
+
+    it(`GET ${path} rejects a real Runtime access token (different signing secret)`, async () => {
+      const { status } = await get<any>(authSrv.baseUrl, path, await runtimeBearer());
+      expect(status).toBe(401);
+    });
+
+    it(`GET ${path} allows a valid generic-auth (staff) session`, async () => {
+      const { status } = await get<any>(authSrv.baseUrl, path, genericAuthBearer());
+      // /health may legitimately report 207 (degraded, e.g. no DB configured
+      // in this bare test server) — what matters here is that auth let the
+      // request through to the handler at all, not the health verdict.
+      expect([200, 207]).toContain(status);
+    });
+  }
 });
 
 // ─── Health ──────────────────────────────────────────────────────────────────

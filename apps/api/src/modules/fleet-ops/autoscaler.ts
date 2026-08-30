@@ -73,6 +73,13 @@ class Autoscaler {
     return this.policies.find((p) => p.id === id);
   }
 
+  /**
+   * ATLAS 46.26 — final hardening, Part 8 (mass-assignment sweep): a body
+   * containing `organizationId`/`environmentId` (real ownership fields on
+   * AutoscalePolicy, used by listPolicies()'s filters) would have
+   * silently re-scoped this policy — the route's type cast is
+   * compile-time only. Fixed with an explicit allowlist.
+   */
   updatePolicy(
     id: string,
     updates: Partial<
@@ -84,7 +91,25 @@ class Autoscaler {
   ): AutoscalePolicy | null {
     const policy = this.getPolicy(id);
     if (!policy) return null;
-    Object.assign(policy, updates, { updatedAt: new Date().toISOString() });
+    const { minInstances, maxInstances, targetCpuPct, targetMemPct, cooldownMs, enabled } = updates;
+    Object.assign(
+      policy,
+      {
+        ...(minInstances !== undefined ? { minInstances } : {}),
+        ...(maxInstances !== undefined ? { maxInstances } : {}),
+        ...(targetCpuPct !== undefined ? { targetCpuPct } : {}),
+        ...(targetMemPct !== undefined ? { targetMemPct } : {}),
+        ...(cooldownMs !== undefined ? { cooldownMs } : {}),
+        ...(enabled !== undefined ? { enabled } : {}),
+      },
+      {
+        id: policy.id,
+        organizationId: policy.organizationId,
+        environmentId: policy.environmentId,
+        createdAt: policy.createdAt,
+        updatedAt: new Date().toISOString(),
+      }
+    );
     return policy;
   }
 

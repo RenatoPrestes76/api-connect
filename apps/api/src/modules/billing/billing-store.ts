@@ -414,7 +414,7 @@ class BillingStore {
     };
 
     seedLicense('tenant-community', 'community', null);
-    seedLicense('tenant-professional', 'professional', '2026-08-01T00:00:00.000Z');
+    seedLicense('tenant-professional', 'professional', isoDate(30));
     seedLicense('tenant-enterprise', 'enterprise', '2027-01-01T00:00:00.000Z');
 
     // ── Invoices ───────────────────────────────────────────────────────────────
@@ -561,7 +561,7 @@ class BillingStore {
     });
 
     // Current month usage
-    const cur = isoMonth(2026, 7);
+    const cur = monthStr(0);
     this.usageRecords.push(
       makeUsage('tenant-community', cur, 1, 2, 1, 45, 120, 3200, 38),
       makeUsage('tenant-professional', cur, 4, 18, 9, 1240, 5300, 87000, 412),

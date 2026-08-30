@@ -359,3 +359,37 @@ Render provides (§7, replacing the placeholders here with real values), set
 `CORS_ALLOWED_ORIGINS` and the four API-base-URL variables (§2, §3) in
 their respective dashboards, and re-verify `/health` resolves over the real
 domain before pointing any frontend at it.
+
+## 16. ATLAS 46.26 — Production Security & Hardening
+
+A dedicated adversarial security audit of `apps/api` (billing, security,
+ops, ha, portal) — object-level authorization, mass assignment, brute
+force, error leakage, and CORS/headers, in addition to §12's baseline.
+Full write-up: the "ATLAS 46.26 — RESULTADO" report accompanying the
+commit that closed this sprint.
+
+**Production secrets (extends §3/§12).** `SUPABASE_JWT_SECRET` was found
+missing from `assertProductionSecretsConfigured`'s required list — the
+generic Supabase-style auth middleware (guards `/api/v1/billing/*`,
+`/api/v1/security/*`, `/api/v1/ops/*`, `/api/v1/ha/*`) falls back to
+`createHmac('sha256', '')` when unset, an empty, publicly-known HMAC key
+that makes session JWTs forgeable in production. Added to the
+fail-loud-at-boot list alongside the other seven secrets already there.
+
+**Headers (extends §12).** Added `Cache-Control: no-store` as a default
+on every response — this API returns authenticated, often sensitive JSON
+with no prior cache directive.
+
+**CORS.** Re-verified after all changes in this sprint —
+`apps/api/src/__tests__/http/cors.test.ts` (7/7) and the new
+`apps/api/src/__tests__/http/security-headers.test.ts` (1/1) both pass;
+`assertProductionCorsConfigured` is unchanged and still refuses to boot
+in production with an open/unset `CORS_ALLOWED_ORIGINS`.
+
+**Object-level authorization.** Every tenant-scoped billing/security route
+now derives its tenant strictly from the authenticated session
+(`requireOrgId`), never a client-supplied header/query/body/path value —
+closing real cross-tenant read/write access across secrets, SSO,
+policies, certificates, risk scores, invoices, subscriptions, and usage.
+See the ADR doc's own §"ATLAS 46.26" section for the most severe single
+finding (portal organization re-linking via mass assignment).

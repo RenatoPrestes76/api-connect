@@ -1,13 +1,13 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
-import { requireTenantId } from '../../../http/tenant.js';
+import { requireOrgId } from '../../../http/tenant.js';
 import { billingStore } from '../../../modules/billing/billing-store.js';
 import { stripeSimulation } from '../../../modules/billing/stripe-simulation.js';
 
 // GET /api/v1/billing/customer-portal
 export async function getCustomerPortal(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const tenantId = requireTenantId(ctx);
+  const tenantId = requireOrgId(ctx);
   const sub = billingStore.getSubscription(tenantId);
   if (!sub || sub.planSlug === 'community') {
     apiError(res, 'Customer portal is only available for paid plans', 403, 'FORBIDDEN');
@@ -19,7 +19,7 @@ export async function getCustomerPortal(ctx: RouteContext, res: ServerResponse):
 
 // POST /api/v1/billing/checkout
 export async function createCheckout(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const tenantId = requireTenantId(ctx);
+  const tenantId = requireOrgId(ctx);
   const body = ctx.body as { planSlug?: string; billingCycle?: string } | undefined;
 
   if (!body?.planSlug) {

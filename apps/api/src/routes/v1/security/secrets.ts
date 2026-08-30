@@ -1,7 +1,7 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
-import { requireTenantId } from '../../../http/tenant.js';
+import { requireOrgId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import {
   envelopeDecrypt,
@@ -54,18 +54,32 @@ interface CreateSecretBody {
   rotationIntervalDays?: number | null;
 }
 
+/**
+ * ATLAS 46.26 — the single most severe finding of this audit: every `:id`
+ * route below (GET, decrypt, rotate, delete) previously took the secret id
+ * from the URL alone with NO tenant check whatsoever — most critically
+ * `POST .../decrypt`, which returns the real plaintext value. Any caller
+ * holding nothing more than a valid Supabase session could decrypt and
+ * read, rotate, or delete any other tenant's stored secret by guessing or
+ * enumerating an id. Fixed by requiring the session-derived org
+ * (requireOrgId, never a client-supplied header) and verifying
+ * `secret.tenantId` matches it before any read or mutation — a 404 either
+ * way, so a response never distinguishes "doesn't exist" from "exists but
+ * isn't yours".
+ */
 export function registerSecretsRoutes(router: Router): void {
   // GET /api/v1/security/secrets
   router.get('/api/v1/security/secrets', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = requireTenantId(ctx);
+    const tenantId = requireOrgId(ctx);
     const secrets = securityStore.getSecrets(tenantId);
     json(res, { secrets, total: secrets.length });
   });
 
   // GET /api/v1/security/secrets/:id
   router.get('/api/v1/security/secrets/:id', async (ctx: RouteContext, res: ServerResponse) => {
+    const tenantId = requireOrgId(ctx);
     const secret = securityStore.getSecretById(ctx.params['id']);
-    if (!secret) return apiError(res, 'Secret not found', 404);
+    if (!secret || secret.tenantId !== tenantId) return apiError(res, 'Secret not found', 404);
     const { encryptedValue: _, ...metadata } = secret;
     json(res, {
       secret: { ...metadata, masked: `***${ctx.params['id'].slice(-4).toUpperCase()}` },
@@ -76,8 +90,9 @@ export function registerSecretsRoutes(router: Router): void {
   router.post(
     '/api/v1/security/secrets/:id/decrypt',
     async (ctx: RouteContext, res: ServerResponse) => {
+      const tenantId = requireOrgId(ctx);
       const secret = securityStore.getSecretById(ctx.params['id']);
-      if (!secret) return apiError(res, 'Secret not found', 404);
+      if (!secret || secret.tenantId !== tenantId) return apiError(res, 'Secret not found', 404);
       try {
         const value = envelopeDecrypt(deserializeEnvelope(secret.encryptedValue));
         auditSecretEvent(ctx, 'secret_accessed', secret.tenantId, secret.id, { name: secret.name });
@@ -90,7 +105,7 @@ export function registerSecretsRoutes(router: Router): void {
 
   // POST /api/v1/security/secrets
   router.post('/api/v1/security/secrets', async (ctx: RouteContext, res: ServerResponse) => {
-    const tenantId = requireTenantId(ctx);
+    const tenantId = requireOrgId(ctx);
     const body = (ctx.body as CreateSecretBody | undefined) ?? {};
     const {
       name,
@@ -130,10 +145,13 @@ export function registerSecretsRoutes(router: Router): void {
   router.post(
     '/api/v1/security/secrets/:id/rotate',
     async (ctx: RouteContext, res: ServerResponse) => {
+      const tenantId = requireOrgId(ctx);
       const body = ctx.body as Record<string, unknown>;
       if (!body?.['value']) return apiError(res, 'value required', 400);
       const existing = securityStore.getSecretById(ctx.params['id']);
-      if (!existing) return apiError(res, 'Secret not found', 404);
+      if (!existing || existing.tenantId !== tenantId) {
+        return apiError(res, 'Secret not found', 404);
+      }
       const secret = await securityStore.rotateSecret(ctx.params['id'], body['value'] as string);
       if (!secret) return apiError(res, 'Secret not found', 404);
       auditSecretEvent(ctx, 'secret_rotated', existing.tenantId, secret.id, {
@@ -145,8 +163,11 @@ export function registerSecretsRoutes(router: Router): void {
 
   // DELETE /api/v1/security/secrets/:id
   router.delete('/api/v1/security/secrets/:id', async (ctx: RouteContext, res: ServerResponse) => {
+    const tenantId = requireOrgId(ctx);
     const existing = securityStore.getSecretById(ctx.params['id']);
-    if (!existing) return apiError(res, 'Secret not found', 404);
+    if (!existing || existing.tenantId !== tenantId) {
+      return apiError(res, 'Secret not found', 404);
+    }
     const ok = securityStore.deleteSecret(ctx.params['id']);
     if (!ok) return apiError(res, 'Secret not found', 404);
     auditSecretEvent(ctx, 'secret_deleted', existing.tenantId, existing.id, {

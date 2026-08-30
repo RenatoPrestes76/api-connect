@@ -63,6 +63,18 @@ const PUBLIC_PATHS = new Set([
   '/api/v1/sync-status',
   '/api/v1/me',
   '/api/v1/atlas/openapi',
+  // ATLAS 46.26 — final hardening, Part 7: these three now require
+  // admin-identity's requirePermission('ha.manage') (see routes/v1/ha/
+  // backups.ts and recovery.ts), a different Bearer scheme than this
+  // generic Supabase-style middleware — same reasoning as the billing/
+  // admin and security/rotation/evaluate bypasses above. Listed in the
+  // exact-match PUBLIC_PATHS (not the startsWith PUBLIC_PATH_PREFIXES)
+  // deliberately: '/api/v1/ha/backup' as a *prefix* would also match
+  // '/api/v1/ha/backups' (plural, the still tenant-filterable staff GET
+  // dashboard, which must stay behind the generic middleware).
+  '/api/v1/ha/backup',
+  '/api/v1/ha/restore',
+  '/api/v1/ha/recovery-test',
 ]);
 
 /**
@@ -136,6 +148,25 @@ const PUBLIC_PATH_PREFIXES = [
   // /runtime/query-execution/* which the existing '/runtime/' prefix
   // below already covers (JWT-gated via requireRuntimeAuth).
   '/query-execution',
+  // ATLAS 46.26 — Billing admin surface & Stripe webhook. Both are gated by
+  // admin-identity's requirePermission('billing.manage') (see
+  // routes/v1/billing/admin.ts and stripe-webhooks.ts), a wholly different
+  // Bearer scheme (admin JWT, ADMIN_JWT_SECRET) from this generic
+  // Supabase-style middleware (SUPABASE_JWT_SECRET). Without this bypass, a
+  // real admin token gets rejected here as an invalid Supabase JWT before
+  // requirePermission ever runs — discovered because the ATLAS 46.26 test
+  // suite exercises the real auth chain end-to-end, not just the route
+  // handler in isolation. Same shape as the existing '/admin/' bypass.
+  '/api/v1/billing/admin/',
+  '/api/v1/billing/webhooks/',
+  // ATLAS 46.26 — final hardening, Part 1: secret-rotation evaluate is now
+  // gated by admin-identity's requirePermission('security.manage') (a
+  // platform-wide operation, not tenant-scoped — see rotation.ts's doc
+  // comment), the same admin JWT scheme as the billing/admin bypass above,
+  // so it needs the same treatment. Scoped to this one exact path — its
+  // sibling routes (secrets/:id, rotation/history) stay behind the generic
+  // middleware, since those ARE tenant-scoped via requireOrgId.
+  '/api/v1/security/secrets/rotation/evaluate',
 ];
 
 export const authMiddleware: Middleware = async (

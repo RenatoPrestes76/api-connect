@@ -46,7 +46,9 @@ export function registerHaLoadBalancerRoutes(router: Router): void {
       if (err instanceof LoadBalancerError && err.code === 'NO_HEALTHY_TARGETS') {
         return apiError(res, err.message, 503, 'NO_HEALTHY_TARGETS');
       }
-      return apiError(res, (err as Error).message, 500, 'ROUTE_ERROR');
+      // ATLAS 46.26 — final hardening, Part 10: generic message for
+      // anything not a recognized, deliberately-worded LoadBalancerError.
+      return apiError(res, 'Routing failed due to an internal error', 500, 'ROUTE_ERROR');
     }
   });
 

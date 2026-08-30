@@ -624,3 +624,23 @@ model is already shaped for a future alerting layer to consume without
 any persistence change: `liveness`, `lastHeartbeat`, and the new
 `GET .../summary` are all read-only, already-computed surfaces a future
 poller could watch.
+
+## ATLAS 46.26 — Production Security & Hardening (object-level authorization)
+
+A follow-on, adversarial security audit (billing/security/ops/ha/portal),
+directly relevant to this ADR's onboarding surfaces: the portal
+organization self-service update endpoint
+(`PATCH /api/v1/portal/organization`) had a mass-assignment gap letting an
+org owner's PATCH body silently overwrite `controlPlaneOrganizationId` —
+the exact cross-reference this ADR establishes between portal-identity's
+in-memory `OrganizationRecord` and the real, Postgres-persisted Control
+Plane `Organization`. A malicious org owner could have re-linked their own
+portal organization to point at a _different_ organization's Control
+Plane record, and from there to that organization's real Runtimes (see
+`GET /admin/control-plane/organizations/:id/runtimes`, §"Part J" logic
+above). Fixed by allowlisting `updateOrganization`'s mutable fields
+explicitly (`modules/portal-identity/portal-identity-store.ts`) — `id`,
+`controlPlaneOrganizationId`, and `createdAt` are now always re-pinned to
+their original values regardless of what the request body contains. Full
+audit write-up: the "ATLAS 46.26 — RESULTADO" report accompanying the
+commit that closed this sprint.

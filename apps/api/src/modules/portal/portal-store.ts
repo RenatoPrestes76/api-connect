@@ -223,8 +223,16 @@ export class PortalStore {
     );
   }
 
-  getTicket(id: string): SupportTicket | undefined {
-    return this.tickets.get(id);
+  /**
+   * ATLAS 46.26 — object-level check: a ticket is only ever returned to the
+   * tenant it actually belongs to. Previously this took only `id`, letting
+   * any caller read any tenant's ticket by guessing/enumerating one — see
+   * docs/ADR-ATLAS-CANONICAL-CLIENT-ONBOARDING.md's "ATLAS 46.26" section.
+   */
+  getTicket(id: string, tenantId: string): SupportTicket | undefined {
+    const ticket = this.tickets.get(id);
+    if (!ticket || ticket.tenantId !== tenantId) return undefined;
+    return ticket;
   }
 
   createTicket(data: {
@@ -248,9 +256,10 @@ export class PortalStore {
     return ticket;
   }
 
-  updateTicketStatus(id: string, status: SupportStatus): SupportTicket | null {
+  /** ATLAS 46.26 — same object-level check as getTicket(): a caller can never mutate a ticket outside their own tenant. */
+  updateTicketStatus(id: string, tenantId: string, status: SupportStatus): SupportTicket | null {
     const ticket = this.tickets.get(id);
-    if (!ticket) return null;
+    if (!ticket || ticket.tenantId !== tenantId) return null;
     ticket.status = status;
     ticket.updatedAt = new Date().toISOString();
     if (status === 'resolved') ticket.resolvedAt = new Date().toISOString();
@@ -286,9 +295,14 @@ export class PortalStore {
     return tenantId ? all.filter((c) => c.tenantId === tenantId) : all;
   }
 
-  updateConnectorHealth(id: string, health: ConnectorHealth): PortalConnector | null {
+  /** ATLAS 46.26 — same object-level check: a caller can never flip another tenant's connector health. */
+  updateConnectorHealth(
+    id: string,
+    tenantId: string,
+    health: ConnectorHealth
+  ): PortalConnector | null {
     const c = this.connectors.get(id);
-    if (!c) return null;
+    if (!c || c.tenantId !== tenantId) return null;
     c.health = health;
     c.lastSyncAt = health !== 'error' ? new Date().toISOString() : c.lastSyncAt;
     return { ...c };

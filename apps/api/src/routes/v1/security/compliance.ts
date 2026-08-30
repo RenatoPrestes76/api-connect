@@ -1,7 +1,7 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
-import { requireTenantId } from '../../../http/tenant.js';
+import { requireOrgId } from '../../../http/tenant.js';
 import { securityStore } from '../../../modules/security/security-store.js';
 import type { DataRequestType } from '@seltriva/aegis';
 
@@ -28,7 +28,7 @@ export function registerComplianceRoutes(router: Router): void {
   router.get(
     '/api/v1/security/compliance/data-requests',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const tenantId = requireTenantId(ctx);
+      const tenantId = requireOrgId(ctx);
       const requests = securityStore.getDataRequests(tenantId);
       json(res, { requests, total: requests.length });
     }
@@ -38,7 +38,7 @@ export function registerComplianceRoutes(router: Router): void {
   router.post(
     '/api/v1/security/compliance/data-request',
     async (ctx: RouteContext, res: ServerResponse) => {
-      const tenantId = requireTenantId(ctx);
+      const tenantId = requireOrgId(ctx);
       const body = (ctx.body ?? {}) as Record<string, unknown>;
       const type = body['type'] as DataRequestType | undefined;
       const requestorEmail = body['requestorEmail'] as string | undefined;

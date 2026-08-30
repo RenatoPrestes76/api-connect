@@ -6,7 +6,14 @@ import { hashPassword, verifyPassword } from '../../../modules/portal-identity/p
 import { signPortalSessionToken } from '../../../modules/portal-identity/jwt.js';
 import { requirePortalAuth } from '../../../middleware/portal-auth.js';
 import { ROLE_PERMISSIONS } from '../../../modules/portal-identity/permissions.js';
+import { loginRateLimiter } from '../../../modules/portal-identity/rate-limiter.js';
 import type { OrganizationPlan } from '../../../modules/portal-identity/types.js';
+
+function clientIp(ctx: RouteContext): string {
+  const header = ctx.headers['x-forwarded-for'];
+  const value = Array.isArray(header) ? header[0] : header;
+  return value?.split(',')[0]?.trim() ?? 'unknown';
+}
 
 interface RegisterBody {
   name?: string;
@@ -83,8 +90,24 @@ export function registerPortalAuthRoutes(router: Router): void {
       return apiError(res, '"email" and "password" are required', 400, 'MISSING_FIELDS');
     }
 
+    const ip = clientIp(ctx);
+
+    // ATLAS 46.26 — Part N: this endpoint previously allowed unlimited
+    // password guesses. Same brute-force lockout admin-identity's
+    // /admin/auth/login already had (5 failures / 15-minute window,
+    // keyed by email+IP).
+    if (loginRateLimiter.isLocked(email, ip)) {
+      return apiError(
+        res,
+        'Too many failed login attempts. Try again in 15 minutes.',
+        423,
+        'ACCOUNT_LOCKED'
+      );
+    }
+
     const user = portalIdentityStore.findUserByEmail(email);
     if (!user || user.status !== 'active' || !(await verifyPassword(password, user.passwordHash))) {
+      loginRateLimiter.recordFailure(email, ip);
       if (user) {
         portalIdentityStore.recordAudit({
           organizationId: user.organizationId,
@@ -96,6 +119,7 @@ export function registerPortalAuthRoutes(router: Router): void {
       return apiError(res, 'Invalid email or password', 401, 'INVALID_CREDENTIALS');
     }
 
+    loginRateLimiter.recordSuccess(email, ip);
     portalIdentityStore.recordLogin(user.id);
     portalIdentityStore.recordAudit({
       organizationId: user.organizationId,

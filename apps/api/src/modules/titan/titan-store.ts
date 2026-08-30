@@ -468,10 +468,27 @@ class TitanStore {
   upsertFlag(flag: FeatureFlag): void {
     this.flags.set(flag.id, { ...flag, updatedAt: new Date().toISOString() });
   }
+  /**
+   * ATLAS 46.26 — final hardening, Part 8 (mass-assignment sweep): only
+   * `id` was protected — a PATCH body containing `createdAt`/`createdBy`
+   * would have silently rewritten this flag's provenance. Not a
+   * cross-tenant BOLA (FeatureFlag has no tenant/org field at all — see
+   * @seltriva/titan's types.ts), but still an integrity gap for two
+   * fields this sprint's own field checklist explicitly calls out. Now
+   * re-pinned to their original values, same idiom as security-store.ts's
+   * updatePolicy() fix.
+   */
   patchFlag(id: string, updates: Partial<FeatureFlag>): FeatureFlag | null {
     const flag = this.flags.get(id);
     if (!flag) return null;
-    const updated = { ...flag, ...updates, id: flag.id, updatedAt: new Date().toISOString() };
+    const updated = {
+      ...flag,
+      ...updates,
+      id: flag.id,
+      createdAt: flag.createdAt,
+      createdBy: flag.createdBy,
+      updatedAt: new Date().toISOString(),
+    };
     this.flags.set(id, updated);
     return updated;
   }

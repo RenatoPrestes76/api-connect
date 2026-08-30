@@ -39,7 +39,9 @@ export type PermissionResource =
   | 'canonical-model'
   | 'query-planner'
   | 'sql-generator'
-  | 'query-execution';
+  | 'query-execution'
+  | 'security'
+  | 'ha';
 
 export type PermissionAction =
   | 'read'
