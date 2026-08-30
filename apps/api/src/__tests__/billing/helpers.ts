@@ -51,7 +51,7 @@ function base64Url(input: Buffer | string): string {
  * fallback). A real signature over a real payload, not a bypass, so these
  * tests exercise the exact code path production traffic goes through.
  */
-export function signSupabaseJWT(orgId: string | undefined, userId = randomUUID()): string {
+export function signSupabaseJWT(orgId: string | undefined, userId: string = randomUUID()): string {
   const secret = process.env['SUPABASE_JWT_SECRET'] ?? '';
   const header = { alg: 'HS256', typ: 'JWT' };
   const payload = {

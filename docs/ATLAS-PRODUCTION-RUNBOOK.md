@@ -903,10 +903,51 @@ end-to-end test suites (auth chain, not just the isolated handler).
   dependency; `stripe-simulation.ts` fabricates URLs locally), so this is
   explicitly deferred until a real Stripe account is part of Go-Live, not
   quietly left broken.
-- `ops/*`'s "staff-only" boundary relies on the generic auth layer's
-  identity being genuinely staff-only; it is not independently verified by
-  a `requirePermission` check of its own (unlike `ha/*`'s mutating
-  endpoints, which now are).
+- ~~`ops/*`'s "staff-only" boundary relies on the generic auth layer's
+  identity being genuinely staff-only~~ — closed by ATLAS 46.27, see below.
 - `security/mfa/verify`'s new rate limiter is not paired with rate limiting
   on `security/mfa/setup`/other MFA endpoints — scoped to the one endpoint
   with a real brute-force target (a 6-digit code).
+
+## ATLAS 46.27 — Ops Authorization & Privilege Boundary Gate
+
+Closed the residual flagged at the end of ATLAS 46.26: `ops/*` (health,
+dashboard, feature-flags, SLOs, DR, circuit breakers, queues — 16 routes
+across 7 files) relied entirely on the generic Supabase-style
+`authMiddleware` for "authorization" — any caller holding a valid generic
+session was implicitly treated as staff, with no explicit permission
+check of any kind, unlike every other admin-gated surface in this
+codebase.
+
+**Model.** Two new permissions, reusing the existing `requirePermission`
+mechanism (no parallel authorization system): `ops.read` (all 10 `GET`
+routes plus feature-flag evaluation, a read-only computation) and
+`ops.manage` (create/update/delete feature flags, trigger DR
+backups/tests, reset circuit breakers, enqueue/retry queue jobs). Granted
+to `ATLAS_ADMIN`/`DEVOPS` (both tiers) and `SUPORTE`/`AUDITOR` (`ops.read`
+only) — the same role-grant pattern already used for `security.manage`/
+`ha.manage`. `ops/*` moved entirely off the generic middleware (added to
+`PUBLIC_PATH_PREFIXES`, same treatment as `billing/admin/*` and
+`security/secrets/rotation/evaluate` in 46.26) since every route is now
+admin-identity-gated, with no remaining tenant-scoped route on that
+prefix.
+
+**Unchanged by design:** `ops/queues.ts`'s `tenantId` on `enqueue` remains
+attribution metadata only (which tenant a job is "for"), never an
+authorization boundary — that was already true before this sprint and
+stays true; the actual authorization boundary is now `ops.manage`.
+
+**Verified no regression:** Portal, Runtime (Ed25519/RuntimeRegistration
+untouched), Security, Billing, and HA suites all re-run clean — this
+sprint touched only `routes/v1/ops/*`, the permission catalog, and the
+`ops/*` test suite.
+
+**Bonus finding, unrelated to ops:** running the monorepo's actual
+`pnpm type-check` (not the narrower `tsconfig.build.json`-scoped check
+used throughout 46.26, which excludes `__tests__/**`) surfaced a real,
+pre-existing type-inference bug in two 46.26 test helpers
+(`signSupabaseJWT`'s `userId` parameter inferred the branded `UUID`
+template-literal type from its `= randomUUID()` default instead of
+`string`, rejecting plain-string callers). Fixed with an explicit `:
+string` annotation — a type-strictness fix, not a runtime behavior
+change or a security finding.

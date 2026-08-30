@@ -212,6 +212,27 @@ export const PERMISSION_CATALOG: Array<{
     action: 'manage',
     description: 'Trigger backups, restores, and disaster-recovery tests',
   },
+  // ATLAS 46.27 — ops/* (health, dashboard, feature flags, SLOs, DR,
+  // circuit breakers, queues) previously relied entirely on the generic
+  // Supabase-style authMiddleware for "authorization" — any caller
+  // holding nothing more than a valid generic session was treated as
+  // staff, with no explicit permission check of any kind. Closes the
+  // residual flagged at the end of ATLAS 46.26: ops/* now requires an
+  // explicit permission, the same requirePermission mechanism every
+  // other admin-gated surface in this codebase already uses, instead of
+  // an implicit "generic identity provider == staff" assumption.
+  {
+    resource: 'ops',
+    action: 'read',
+    description:
+      'View platform operational telemetry (health, dashboard, SLOs, DR, queues, feature flags, circuit breakers)',
+  },
+  {
+    resource: 'ops',
+    action: 'manage',
+    description:
+      'Trigger DR backups/tests, reset circuit breakers, manage feature flags, enqueue/retry queue jobs',
+  },
 ];
 
 export function permissionKey(
@@ -282,6 +303,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'query-execution.write',
     'security.manage',
     'ha.manage',
+    'ops.read',
+    'ops.manage',
   ],
   SUPORTE: [
     'companies.read',
@@ -302,6 +325,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'query-planner.read',
     'sql-generator.read',
     'query-execution.read',
+    'ops.read',
   ],
   CUSTOMER_SUCCESS: [
     'companies.read',
@@ -345,6 +369,8 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'query-execution.write',
     'security.manage',
     'ha.manage',
+    'ops.read',
+    'ops.manage',
   ],
   AUDITOR: [
     'companies.read',
@@ -364,6 +390,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, PermissionKey[]> = {
     'query-planner.read',
     'sql-generator.read',
     'query-execution.read',
+    'ops.read',
   ],
 };
 

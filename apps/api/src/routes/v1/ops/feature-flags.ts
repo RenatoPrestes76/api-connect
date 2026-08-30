@@ -1,6 +1,7 @@
 import type { ServerResponse } from 'node:http';
 import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
+import { requirePermission } from '../../../middleware/admin-auth.js';
 import { titanStore } from '../../../modules/titan/titan-store.js';
 import { evaluateFlag } from '@seltriva/titan';
 import type { FeatureFlag, FlagEvaluationContext } from '@seltriva/titan';
@@ -15,70 +16,85 @@ interface EvaluateFlagBody {
 
 export function registerFeatureFlagsRoutes(router: Router): void {
   // GET /api/v1/ops/feature-flags — list all flags
-  router.get('/api/v1/ops/feature-flags', async (_ctx: RouteContext, res: ServerResponse) => {
-    json(res, { flags: titanStore.listFlags(), total: titanStore.listFlags().length });
-  });
+  router.get(
+    '/api/v1/ops/feature-flags',
+    requirePermission('ops.read')(async (_ctx: RouteContext, res: ServerResponse) => {
+      json(res, { flags: titanStore.listFlags(), total: titanStore.listFlags().length });
+    })
+  );
 
   // POST /api/v1/ops/feature-flags/:id/evaluate — must register BEFORE /:id
   router.post(
     '/api/v1/ops/feature-flags/:id/evaluate',
-    async (ctx: RouteContext, res: ServerResponse) => {
+    requirePermission('ops.read')(async (ctx: RouteContext, res: ServerResponse) => {
       const id = ctx.params['id'];
       const flag = titanStore.getFlag(id) ?? titanStore.getFlagByKey(id);
       if (!flag) return apiError(res, 'Feature flag not found', 404, 'FLAG_NOT_FOUND');
       const evalCtx = (ctx.body as EvaluateFlagBody | undefined)?.context ?? {};
       const result = evaluateFlag(flag, evalCtx);
       json(res, result);
-    }
+    })
   );
 
   // GET /api/v1/ops/feature-flags/:id
-  router.get('/api/v1/ops/feature-flags/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const id = ctx.params['id'];
-    const flag = titanStore.getFlag(id) ?? titanStore.getFlagByKey(id);
-    if (!flag) return apiError(res, 'Feature flag not found', 404, 'FLAG_NOT_FOUND');
-    json(res, flag);
-  });
+  router.get(
+    '/api/v1/ops/feature-flags/:id',
+    requirePermission('ops.read')(async (ctx: RouteContext, res: ServerResponse) => {
+      const id = ctx.params['id'];
+      const flag = titanStore.getFlag(id) ?? titanStore.getFlagByKey(id);
+      if (!flag) return apiError(res, 'Feature flag not found', 404, 'FLAG_NOT_FOUND');
+      json(res, flag);
+    })
+  );
 
   // POST /api/v1/ops/feature-flags — create a new flag
-  router.post('/api/v1/ops/feature-flags', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = ctx.body as Partial<FeatureFlag> | null;
-    if (!body?.key || !body?.name) {
-      return apiError(res, '"name" and "key" are required', 400, 'MISSING_FIELDS');
-    }
-    const now = new Date().toISOString();
-    const flag: FeatureFlag = {
-      id: uid(),
-      name: body.name,
-      key: body.key,
-      description: body.description ?? '',
-      enabled: body.enabled ?? false,
-      rolloutPercentage: body.rolloutPercentage ?? 0,
-      targetingRules: body.targetingRules ?? [],
-      variants: body.variants ?? [],
-      defaultVariant: body.defaultVariant ?? 'control',
-      createdAt: now,
-      updatedAt: now,
-      createdBy: (ctx.headers['x-user-id'] as string) || 'api',
-    };
-    titanStore.upsertFlag(flag);
-    json(res, flag, 201);
-  });
+  router.post(
+    '/api/v1/ops/feature-flags',
+    requirePermission('ops.manage')(async (ctx: RouteContext, res: ServerResponse) => {
+      const body = ctx.body as Partial<FeatureFlag> | null;
+      if (!body?.key || !body?.name) {
+        return apiError(res, '"name" and "key" are required', 400, 'MISSING_FIELDS');
+      }
+      const now = new Date().toISOString();
+      const flag: FeatureFlag = {
+        id: uid(),
+        name: body.name,
+        key: body.key,
+        description: body.description ?? '',
+        enabled: body.enabled ?? false,
+        rolloutPercentage: body.rolloutPercentage ?? 0,
+        targetingRules: body.targetingRules ?? [],
+        variants: body.variants ?? [],
+        defaultVariant: body.defaultVariant ?? 'control',
+        createdAt: now,
+        updatedAt: now,
+        createdBy: (ctx.headers['x-user-id'] as string) || 'api',
+      };
+      titanStore.upsertFlag(flag);
+      json(res, flag, 201);
+    })
+  );
 
   // PUT /api/v1/ops/feature-flags/:id — full update
-  router.put('/api/v1/ops/feature-flags/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const id = ctx.params['id'];
-    const body = ctx.body as Partial<FeatureFlag> | null;
-    const updated = titanStore.patchFlag(id, body ?? {});
-    if (!updated) return apiError(res, 'Feature flag not found', 404, 'FLAG_NOT_FOUND');
-    json(res, updated);
-  });
+  router.put(
+    '/api/v1/ops/feature-flags/:id',
+    requirePermission('ops.manage')(async (ctx: RouteContext, res: ServerResponse) => {
+      const id = ctx.params['id'];
+      const body = ctx.body as Partial<FeatureFlag> | null;
+      const updated = titanStore.patchFlag(id, body ?? {});
+      if (!updated) return apiError(res, 'Feature flag not found', 404, 'FLAG_NOT_FOUND');
+      json(res, updated);
+    })
+  );
 
   // DELETE /api/v1/ops/feature-flags/:id
-  router.delete('/api/v1/ops/feature-flags/:id', async (ctx: RouteContext, res: ServerResponse) => {
-    const id = ctx.params['id'];
-    const deleted = titanStore.deleteFlag(id);
-    if (!deleted) return apiError(res, 'Feature flag not found', 404, 'FLAG_NOT_FOUND');
-    json(res, { deleted: true });
-  });
+  router.delete(
+    '/api/v1/ops/feature-flags/:id',
+    requirePermission('ops.manage')(async (ctx: RouteContext, res: ServerResponse) => {
+      const id = ctx.params['id'];
+      const deleted = titanStore.deleteFlag(id);
+      if (!deleted) return apiError(res, 'Feature flag not found', 404, 'FLAG_NOT_FOUND');
+      json(res, { deleted: true });
+    })
+  );
 }

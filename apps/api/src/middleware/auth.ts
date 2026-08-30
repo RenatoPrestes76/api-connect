@@ -167,6 +167,19 @@ const PUBLIC_PATH_PREFIXES = [
   // sibling routes (secrets/:id, rotation/history) stay behind the generic
   // middleware, since those ARE tenant-scoped via requireOrgId.
   '/api/v1/security/secrets/rotation/evaluate',
+  // ATLAS 46.27 — ops/* (health, dashboard, feature-flags, slo, dr,
+  // circuit-breakers, queues) previously relied entirely on this generic
+  // middleware for "authorization" — any caller holding a valid generic
+  // session was implicitly treated as staff, with no explicit permission
+  // check. Every ops/* route now requires admin-identity's
+  // requirePermission('ops.read'|'ops.manage') instead — the same admin
+  // JWT scheme as the billing/admin and security/rotation/evaluate
+  // bypasses above, so the whole prefix needs the same treatment. Unlike
+  // billing/security (which mix tenant-scoped requireOrgId routes with
+  // admin-gated ones), every route under ops/* is now admin-gated, so
+  // bypassing the whole prefix — not just individual paths — is correct
+  // here, not a scope-widening shortcut.
+  '/api/v1/ops/',
 ];
 
 export const authMiddleware: Middleware = async (

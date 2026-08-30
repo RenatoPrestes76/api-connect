@@ -49,7 +49,7 @@ function base64Url(input: Buffer | string): string {
  * __tests__/billing/helpers.ts's twin of this function for the full
  * rationale.
  */
-export function signSupabaseJWT(orgId: string | undefined, userId = randomUUID()): string {
+export function signSupabaseJWT(orgId: string | undefined, userId: string = randomUUID()): string {
   const secret = process.env['SUPABASE_JWT_SECRET'] ?? '';
   const header = { alg: 'HS256', typ: 'JWT' };
   const payload = {

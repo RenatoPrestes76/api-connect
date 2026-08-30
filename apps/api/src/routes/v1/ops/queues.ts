@@ -2,6 +2,7 @@ import type { ServerResponse } from 'node:http';
 import type { RouteContext, Router } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
 import { requireTenantId } from '../../../http/tenant.js';
+import { requirePermission } from '../../../middleware/admin-auth.js';
 import { titanStore } from '../../../modules/titan/titan-store.js';
 import type { JobPriority } from '../../../modules/titan/titan-store.js';
 
@@ -15,9 +16,9 @@ import type { JobPriority } from '../../../modules/titan/titan-store.js';
  *
  *   - `ops/queues.ts` is the ONLY file in `ops/*` (health, dashboard,
  *     feature-flags, slo, dr, circuit-breakers) that references a tenant
- *     concept at all — its six siblings have no tenant/permission check
- *     whatsoever and are already, uniformly, "any authenticated staff
- *     session sees the whole platform's operational state".
+ *     concept at all — its six siblings have no tenant concept
+ *     whatsoever and are already, uniformly, "any staff session sees the
+ *     whole platform's operational state".
  *   - `titanStore`'s data (job queue, DLQ, SLOs, DR status, circuit
  *     breakers) is platform/SRE operational telemetry, not tenant-owned
  *     business data (contrast with billing invoices or security secrets).
@@ -30,24 +31,14 @@ import type { JobPriority } from '../../../modules/titan/titan-store.js';
  *     via the same unfiltered list) would be asymmetric with that
  *     already-global read surface, not a real hardening.
  *
- * Not fixed: making `ops/*` require admin-identity's `requirePermission`
- * instead of the generic Supabase authMiddleware would be a real, useful
- * hardening step, but it's a decision spanning all seven files uniformly,
- * not a targeted vulnerability fix — out of this sprint's "no
- * architectural rewrite" boundary. Flagged as a residual risk in the
- * final report, not silently left unmentioned.
- *
- * Final hardening, Part 6 — re-confirmed via real auth-chain tests
- * (__tests__/ops/ops-routes.test.ts's "Ops — auth boundary" block):
- * portal users and Runtimes are structurally excluded (different JWT
- * signing secrets — PORTAL_JWT_SECRET / RUNTIME_JWT_SECRET can never
- * verify against this middleware's SUPABASE_JWT_SECRET), and anonymous
- * callers are rejected. NOT reclassified as "ACCEPTED ARCHITECTURAL
- * DESIGN" outright: whether every non-staff identity is excluded depends
- * on who is provisioned in the external Supabase Auth tenant this generic
- * middleware verifies against — outside this codebase's visibility and
- * outside this sprint's "no ops architecture change" boundary. Reported
- * as DEFERRED/EXTERNAL, not silently marked complete.
+ * ATLAS 46.27 — closes the residual flagged at the end of 46.26:
+ * `requireTenantId` here was NEVER the authorization boundary (it never
+ * gated who could call this route — only whether an attribution label
+ * was present) and stays exactly that: an attribution field on the
+ * enqueued job, still validated as present, still never trusted for
+ * access control. The actual authorization boundary is now the
+ * `requirePermission('ops.manage')` gate below, same mechanism as every
+ * other admin-gated surface in this codebase.
  */
 
 interface EnqueueBody {
@@ -65,43 +56,54 @@ interface DlqRetryBody {
 
 export function registerQueuesRoutes(router: Router): void {
   // GET /api/v1/ops/queues — queue summary + job list
-  router.get('/api/v1/ops/queues', async (ctx: RouteContext, res: ServerResponse) => {
-    const priority = ctx.query.get('priority') as JobPriority | null;
-    const jobs = titanStore.listJobs(priority ?? undefined);
-    const dlq = titanStore.listDlq();
-    const stats = titanStore.getQueueStats();
-    json(res, { stats, jobs, dlq });
-  });
+  router.get(
+    '/api/v1/ops/queues',
+    requirePermission('ops.read')(async (ctx: RouteContext, res: ServerResponse) => {
+      const priority = ctx.query.get('priority') as JobPriority | null;
+      const jobs = titanStore.listJobs(priority ?? undefined);
+      const dlq = titanStore.listDlq();
+      const stats = titanStore.getQueueStats();
+      json(res, { stats, jobs, dlq });
+    })
+  );
 
   // POST /api/v1/ops/queues/enqueue — enqueue a new job
-  router.post('/api/v1/ops/queues/enqueue', async (ctx: RouteContext, res: ServerResponse) => {
-    const body = ctx.body as EnqueueBody | undefined;
-    const type = body?.type;
-    const tenantId = requireTenantId(ctx, body?.tenantId);
+  router.post(
+    '/api/v1/ops/queues/enqueue',
+    requirePermission('ops.manage')(async (ctx: RouteContext, res: ServerResponse) => {
+      const body = ctx.body as EnqueueBody | undefined;
+      const type = body?.type;
+      // Attribution label only — never an authorization boundary. See the
+      // module doc comment above.
+      const tenantId = requireTenantId(ctx, body?.tenantId);
 
-    if (!type) return apiError(res, '"type" is required', 400, 'MISSING_TYPE');
+      if (!type) return apiError(res, '"type" is required', 400, 'MISSING_TYPE');
 
-    const result = titanStore.enqueue({
-      type,
-      priority: body?.priority ?? 'normal',
-      payload: body?.payload ?? {},
-      tenantId,
-      maxAttempts: body?.maxAttempts ?? 3,
-      idempotencyKey: body?.idempotencyKey,
-    });
+      const result = titanStore.enqueue({
+        type,
+        priority: body?.priority ?? 'normal',
+        payload: body?.payload ?? {},
+        tenantId,
+        maxAttempts: body?.maxAttempts ?? 3,
+        idempotencyKey: body?.idempotencyKey,
+      });
 
-    if (!result) {
-      return apiError(res, 'Duplicate idempotency key', 409, 'DUPLICATE_JOB');
-    }
-    json(res, { job: result }, 201);
-  });
+      if (!result) {
+        return apiError(res, 'Duplicate idempotency key', 409, 'DUPLICATE_JOB');
+      }
+      json(res, { job: result }, 201);
+    })
+  );
 
   // POST /api/v1/ops/queues/dlq/retry — retry a dead job
-  router.post('/api/v1/ops/queues/dlq/retry', async (ctx: RouteContext, res: ServerResponse) => {
-    const jobId = (ctx.body as DlqRetryBody | undefined)?.jobId;
-    if (!jobId) return apiError(res, '"jobId" is required', 400, 'MISSING_JOB_ID');
-    const job = titanStore.retryDlq(jobId);
-    if (!job) return apiError(res, 'Job not found in DLQ', 404, 'JOB_NOT_FOUND');
-    json(res, { job });
-  });
+  router.post(
+    '/api/v1/ops/queues/dlq/retry',
+    requirePermission('ops.manage')(async (ctx: RouteContext, res: ServerResponse) => {
+      const jobId = (ctx.body as DlqRetryBody | undefined)?.jobId;
+      if (!jobId) return apiError(res, '"jobId" is required', 400, 'MISSING_JOB_ID');
+      const job = titanStore.retryDlq(jobId);
+      if (!job) return apiError(res, 'Job not found in DLQ', 404, 'JOB_NOT_FOUND');
+      json(res, { job });
+    })
+  );
 }

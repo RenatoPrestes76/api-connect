@@ -41,7 +41,8 @@ export type PermissionResource =
   | 'sql-generator'
   | 'query-execution'
   | 'security'
-  | 'ha';
+  | 'ha'
+  | 'ops';
 
 export type PermissionAction =
   | 'read'
