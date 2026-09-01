@@ -1330,3 +1330,332 @@ READY FOR NEXT SPRINT
 
 Not a Go-Live declaration — this sprint proves production _readiness_ of
 the operational cycle, not authorization to onboard a real client.
+
+## ATLAS 46.31 — First Client Deployment & Operational Acceptance
+
+This sprint validated the real deployment path — source through a booted,
+serving container — rather than the operational cycle already proved in
+46.30. It found and fixed a genuine deploy blocker: **the actual Docker
+image this repo has shipped since 46.20 never successfully booted.**
+`pnpm build` passing was never proof of that (this gate's own rule 18) —
+nobody had actually run `docker build && docker run` end to end since the
+Dockerfile was written, because every prior sprint's validation used
+`node dist/index.js` directly on the host or an in-process vitest server,
+never the real image.
+
+### The blocker, root-caused and fixed
+
+Building the image with `docker build -f docker/Dockerfile.api .` and
+running it with plain `docker run` (not `docker-compose up`, whose dev-mode
+`volumes:` bind-mounts the host's own `apps/api`/`packages` over the
+image's — silently shadowing whatever the image actually shipped, which is
+why this was never caught: `docker compose up` always tested the _host's_
+node_modules, not the image's) reproduced, deterministically:
+
+```text
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'dotenv'
+imported from /app/apps/api/dist/index.js
+```
+
+Root cause: the final stage copied `node_modules` and
+`apps/api/node_modules` straight from the build stage on the theory that
+pnpm's relative per-package symlinks (e.g. `apps/api/node_modules/dotenv`
+-> `../../node_modules/.pnpm/dotenv@.../node_modules/dotenv`) would keep
+resolving after the copy. `pnpm --filter=@seltriva/api deploy --prod
+/app/deploy` — pnpm's own purpose-built command for exactly this — replaces
+that with a self-contained, non-symlinked `node_modules`, eliminating the
+whole class of issue. That surfaced a second, real, separate bug: the
+deployed `@prisma/client` copy was never generated (`db:generate` earlier
+in the build wrote into the _shared_ store, not the deploy output's own
+copy) and, once pointed at the right schema, a third: `npx prisma` floated
+to an unrelated newer `prisma` CLI version already present elsewhere in
+this workspace, mismatched against the pinned `@prisma/client@5.22.0`.
+Fixed by copying `prisma/schema.prisma` into the deploy output (so
+schema-relative resolution lands on the deployed client) and invoking
+`packages/database/node_modules/.bin/prisma` explicitly — the exact pinned
+binary, no floating resolution. See `docker/Dockerfile.api`'s inline
+comments for the full chain.
+
+**Verified end to end, for real, not just "build succeeded":** built the
+image, ran it standalone on the shared Docker network with a full,
+correctly-formatted set of production secrets and `NODE_ENV=production`,
+confirmed `/health`/`/ready` both 200 and Docker's own `HEALTHCHECK`
+directive reports `healthy`, and separately confirmed the production
+fail-loud secret gate still refuses to boot (clear error, not a hang or
+silent degraded start) when a required secret is missing. Then confirmed
+the _absence_ of a secret is caught before any of this — i.e., re-ran the
+existing `production-secrets.test.ts` suite, unaffected by this fix.
+
+### A second, independent finding: health/ready could false-positive during a real outage
+
+Investigating the container boot led to running a real dependency-outage
+test against the built artifact (stop the Postgres container the running
+API is using, mid-life) — and `/health` kept reporting `database:"ok"`
+indefinitely afterward. Root cause: the handlers called `connectDB()`
+(`$connect()`), which is a no-op once a Prisma client believes it's already
+connected — it never re-verifies. This is exactly this gate's own BLOCKER
+example ("readiness declara pronto quando serviço crítico está
+indisponível"). Fixed with a new `pingDB()` (a real `SELECT 1` round trip)
+that `/health` and `/ready` now call instead; `connectDB()` is unchanged
+and still used for boot's one-time initial connection. Never documented
+as fixed by mocking alone — `db-real-outage-recovery.test.ts` (new)
+proves it against a real, separate, throwaway Postgres container and the
+real built artifact: healthy at boot, degraded/not_ready within seconds of
+a real stop, recovered once the database returns. `db-unavailable.test.ts`
+(existing, 46.19) now mocks `pingDB()` instead of `connectDB()` — it was
+mocking a function the handlers no longer call, which would have made it
+pass for the wrong reason.
+
+### Environment contract
+
+Audited every `process.env[...]` read in `apps/api/src` against
+`services/production-secrets.ts`'s `REQUIRED_IN_PRODUCTION`, `render.yaml`,
+and `.env.example`. Found `render.yaml` and `.env.example` both missing 7
+of the 8 secrets that gate on `NODE_ENV=production`
+(`ADMIN_JWT_SECRET`, `PORTAL_JWT_SECRET`, `RUNTIME_JWT_SECRET`,
+`RUNTIME_CERT_SECRET`, `CONNECTOR_PACKAGE_SECRET`,
+`MESSAGE_DELIVERY_SECRET`, `SUPABASE_JWT_SECRET` — only `ATLAS_MASTER_KEY`
+was already declared) — a real deploy on Render would have had these
+unset and hit the fail-loud gate immediately (safe failure, but an
+avoidable one). Added all 7 to both files, and to `scripts/validate-env.js`
+(a pre-existing, previously-incomplete standalone checker — extended, not
+replaced). Confirmed with a real run: never prints values, only
+name+presence.
+
+| NAME                                                                                                                                                                                          | PURPOSE                                    | REQUIRED/OPTIONAL                                                  | ENVIRONMENT |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------ | ----------- |
+| `DATABASE_URL`                                                                                                                                                                                | Postgres connection                        | Required                                                           | all         |
+| `API_SECRET_KEY`                                                                                                                                                                              | generic API auth                           | Required                                                           | all         |
+| `NODE_ENV`                                                                                                                                                                                    | environment mode                           | Optional (default `development`)                                   | all         |
+| `API_PORT`                                                                                                                                                                                    | HTTP listen port                           | Optional (default `3001`)                                          | all         |
+| `LOG_LEVEL`                                                                                                                                                                                   | logger verbosity                           | Optional (default `info`)                                          | all         |
+| `CORS_ALLOWED_ORIGINS`                                                                                                                                                                        | CORS allowlist                             | Required in production (fail-loud)                                 | production  |
+| `ADMIN_JWT_SECRET` / `PORTAL_JWT_SECRET` / `RUNTIME_JWT_SECRET` / `RUNTIME_CERT_SECRET` / `CONNECTOR_PACKAGE_SECRET` / `MESSAGE_DELIVERY_SECRET` / `SUPABASE_JWT_SECRET` / `ATLAS_MASTER_KEY` | signing/encryption keys, one per subsystem | Required in production (fail-loud)                                 | production  |
+| `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`                                                                                                                                                    | bootstrap admin identity                   | Optional (dev-only defaults)                                       | all         |
+| `ANTHROPIC_API_KEY`                                                                                                                                                                           | AI Copilot routes                          | Optional (demo fallback)                                           | all         |
+| `REDIS_URL`                                                                                                                                                                                   | provisioned in docker-compose              | **Not read by any application code** (finding, not a required var) | —           |
+
+### Database / migrations
+
+Ran `prisma migrate deploy` against a genuinely fresh, empty, throwaway
+Postgres container (not the shared dev database) — both migrations
+(`20260824000000_init_baseline`, `20260828004554_add_runtime_registration`)
+applied cleanly, then the real built API booted against that same
+freshly-migrated database and served `/health`/`/ready` correctly. Both
+migrations remain additive-only — no destructive migration exists to
+audit. No automated migration step exists in the deploy path (Dockerfile
+CMD is just `node dist/index.js`; `render.yaml` has no pre-deploy hook) —
+this was already true before this sprint and is already documented above
+under Troubleshooting; still a real, manual operator step, not fixed here
+(no Render-specific YAML feature was assumed without evidence — see
+Findings).
+
+### CORS / Domain
+
+`atlasappruntime.com.br` and `api.atlasappruntime.com.br`: confirmed via a
+real DNS resolution attempt (not assumed from prior docs) —
+`getaddrinfo ENOTFOUND` for both. **NOT CONFIGURED — EXTERNAL/DEFERRED.**
+`CORS_ALLOWED_ORIGINS` behavior (allowlist, fail-loud in production, no
+`Access-Control-Allow-Credentials`) is unchanged and already covered by
+`__tests__/http/cors.test.ts`.
+
+### Deployment pipeline
+
+`.github/workflows/ci.yml` ran lint/type-check/build/format/security-audit
+on every push and PR, but **never the test suite** — a broken test could
+have merged to `master` without CI ever failing. Added a `test` job:
+Postgres+Redis services (mirroring `docker-compose.yml`), `prisma migrate
+deploy`, `pnpm build` (a few integration tests exercise the real `dist/`
+artifact), then `pnpm test`. Not independently verified via a live GitHub
+Actions run in this sprint (no `gh` CLI access in this environment) —
+YAML syntax validated locally; the next push's Actions run is the real
+confirmation, recommended as a follow-up check.
+
+### Rollback
+
+Unchanged from the existing Rollback section above (Render/Vercel
+platform-native prior-deploy rollback, `git revert` for source, migrations
+still additive-only so no down-migration is needed yet) — reconfirmed
+accurate, not modified. **EXTERNAL/DEFERRED** for an actual live-platform
+rollback drill (no production deployment exists to drill against); the
+underlying mechanism (redeploy a prior image) is standard platform
+behavior, not custom code, so this is not classified as a gap.
+
+### Data safety
+
+Migrations: additive-only (above). Transactions: proved correct in 46.30
+(`tenancy-persistence.test.ts` — rollback on invalid FK and on a
+delete-mid-transaction race). Destructive operations: none in the deploy
+path; `prisma migrate reset` remains explicitly warned against. Backup/
+restore: the only backup/restore code in this repo
+(`routes/v1/ha/backups.ts`, `restore.ts`) is an in-memory DR-dashboard
+simulation (`haStore`/`backupService`), not real `pg_dump`/`pg_restore`
+against the actual database — **EXTERNAL/DEFERRED**, real backup depends
+on the hosting platform's managed Postgres backup feature once
+provisioned. Not invented here.
+
+### First Client Operating Procedure
+
+Reproducible in a test/staging environment (never real client data):
+
+1. Provision environment — `docker compose up -d postgres redis`, `.env`
+   from `.env.example`.
+2. `pnpm install --frozen-lockfile && pnpm --filter=@seltriva/database
+run db:generate`.
+3. `cd packages/database && npx prisma migrate deploy`.
+4. `pnpm build --filter=@seltriva/api` (or `docker build -f
+docker/Dockerfile.api .` for the real deploy artifact).
+5. Start the API (`node apps/api/dist/index.js`, or run the built
+   container) and verify `GET /health` and `GET /ready` both `200`.
+6. Sign up a Client Zero (`POST /api/v1/portal/auth/register`) —
+   Organization created, no Tenant yet (`PENDING_TENANT_ASSIGNMENT`).
+7. Provision a Tenant (`POST /admin/control-plane/tenants`) and associate
+   it (`PATCH /admin/control-plane/organizations/:id`).
+8. Issue an activation key (`POST
+/admin/runtime-registration/activation-keys`).
+9. Register a Runtime with that key, authenticate (signed proof-of-identity
+   -> session token), send a heartbeat, confirm `liveness: "ONLINE"` via
+   `GET /admin/runtime-registration/runtimes/:id`.
+10. Execute ERP discovery (`POST /erp-connectivity/profiles` then `POST
+/erp-metadata/discover`), confirm `status: "COMPLETED"`.
+11. Create and execute a job (`POST /jobs` -> claim -> `POST
+/jobs/result`), confirm `status: "SUCCESS"`.
+12. Verify persistence by independently re-reading the job and runtime.
+13. Verify observability: runtime list/detail, liveness, job list filtered
+    by status, audit trail entries for each mutation above.
+
+Steps 6–13 are exactly `atlas-46-30-production-readiness-e2e.test.ts`
+(46.30) automated — this procedure is that test's steps, described for a
+human operator, not new code.
+
+### Client Zero acceptance
+
+Re-proved only what this gate specifically needs (not the full 46.30
+suite): `atlas-46-30-production-readiness-e2e.test.ts` re-run as part of
+this sprint's full-suite passes — Client Zero, Tenant, Runtime, auth,
+heartbeat, discovery, job, persistence, and cross-tenant isolation all
+still PASS, unchanged since 46.30, against the current `HEAD`.
+
+**EXECUTION ENVIRONMENT = LOCAL/CONTAINERIZED** — Postgres/Redis via real
+Docker containers throughout; the Client Zero acceptance flow itself runs
+via vitest's in-process HTTP server (real HTTP, real Postgres, not the
+Docker image); the Docker _image_ boot/health/readiness/fail-loud
+verification above used the real built container directly. No staging or
+production environment exists to execute against (domain not registered,
+no confirmed live Render/Vercel deployment) — not claimed as either.
+
+### Observability
+
+Using only existing surfaces (no new dashboard): environment
+(`/health`'s `version`/`uptime`, `/ready`'s per-dependency `checks`),
+runtime (`GET .../runtimes`, `.../runtimes/:id`: tenant, organization,
+liveness, last heartbeat), jobs (`GET /jobs?status=...`, `job.lastError`,
+`job.history[].outcome`), failures distinguishable (infrastructure:
+`/health` 503 with no leaked connection detail; functional: job `FAILED`
+with its own reason in `history`). All PASS.
+
+### Security (deployment subset)
+
+No secrets committed (`.env*` gitignored, confirmed no tracked `.env`
+files exist; build artifact scanned, none found). No secrets in logs
+(structured logger emits method/url/status/duration only). Production
+config fails safely (confirmed via a real container boot with a secret
+missing — immediate, clear crash, never a silent degraded start).
+Authentication/authorization/tenant-isolation/runtime-authorization:
+unchanged since 46.26–46.30, reconfirmed passing in the full suite; not
+re-audited from scratch (out of this gate's scope, no regression
+evidence). CORS: allowlist + fail-loud in production, confirmed.
+
+### Acceptance check tooling
+
+`scripts/atlas-production-readiness.mjs` (46.20) already does exactly what
+Phase O asks for against a live, already-running instance — build
+artifact, environment, migrations, health, readiness, authentication,
+persistence+isolation, CORS — deterministic PASS/BLOCKED. Not duplicated.
+Did not extend it with a full runtime-registration-to-job cycle: that
+would require re-implementing the Ed25519 signing logic already in
+`agent/src/atlas-runtime-client/*` inside a separate, fetch-only script —
+meaningful new surface for a check the vitest E2E (46.30 +
+`atlas-46-30-production-readiness-e2e.test.ts`) already covers
+deterministically. The two together (this script for a live deployed
+instance's baseline; the vitest E2E for the full operational cycle) are
+the automated acceptance check this gate asks for.
+
+### Tests
+
+Full `apps/api` suite run twice: **89 files / 1799 tests, 0 failures, 0
+flakes**, both passes. `pnpm type-check`, `pnpm lint`, `pnpm build` all
+clean.
+
+### Final Deployment Readiness Matrix
+
+| Área                | Status                             | Evidência                                                                              |
+| ------------------- | ---------------------------------- | -------------------------------------------------------------------------------------- |
+| Build               | PASS                               | clean `pnpm build`; real Docker image builds and boots                                 |
+| Configuration       | PASS                               | render.yaml/.env.example/validate-env.js gaps closed; fail-loud confirmed live         |
+| Database            | PASS                               | migrations apply cleanly to a genuinely empty DB                                       |
+| Migrations          | PASS                               | additive-only, applied and verified; no automated pipeline step (documented)           |
+| Startup             | PASS                               | real container boots in `NODE_ENV=production` with full secret set                     |
+| Health              | PASS                               | `pingDB()` fix verified against a real mid-life outage                                 |
+| Readiness           | PASS                               | same fix; never reports ready with a real dependency down                              |
+| CORS                | PASS                               | allowlist + production fail-loud, tested                                               |
+| Domain              | NOT CONFIGURED / EXTERNAL-DEFERRED | live DNS resolution attempted, confirmed unregistered                                  |
+| Deployment pipeline | PASS (gap closed)                  | CI now runs the test suite; not yet observed on a live Actions run                     |
+| Rollback            | EXTERNAL/DEFERRED (live drill)     | mechanism documented, platform-native, untestable without production                   |
+| Client Zero         | PASS                               | 46.30 E2E re-confirmed                                                                 |
+| Runtime             | PASS                               | registration/auth/heartbeat/liveness re-confirmed                                      |
+| Discovery           | PASS                               | re-confirmed                                                                           |
+| Job                 | PASS                               | re-confirmed                                                                           |
+| Observability       | PASS                               | existing surfaces sufficient                                                           |
+| Security            | PASS (subset)                      | no secrets committed/logged, fail-loud confirmed live, auth/tenant isolation unchanged |
+| Data safety         | PASS / EXTERNAL-DEFERRED (backup)  | transactions/migrations safe; real backup depends on hosting platform                  |
+
+### Findings
+
+- **BLOCKER, fixed and verified** — the shipped Docker image never
+  actually booted (`Cannot find package 'dotenv'`, then a Prisma Client
+  generation gap once that was fixed). Root-caused and fixed in
+  `docker/Dockerfile.api`; verified with a real build + boot +
+  health/ready + fail-loud check.
+- **BLOCKER, fixed and verified** — `/health`/`/ready` could report ready
+  during a real, ongoing database outage (this gate's own BLOCKER
+  example, verbatim). Fixed with `pingDB()`; verified with a real
+  outage/recovery integration test, not a mock alone.
+- **MEDIUM** — no automated migration step in the deploy pipeline; a real
+  deploy still depends on an operator remembering to run `prisma migrate
+deploy`. Already documented in the existing Troubleshooting section;
+  not fixed with unverified Render-specific YAML (rule against inventing
+  infrastructure).
+- **LOW** — `REDIS_URL` is provisioned in `docker-compose.yml`/documented
+  in `.env.example` but read by no application code — either wire it up
+  when something needs it, or remove the unused provisioning;
+  informational.
+- **LOW** — CI's new `test` job has not yet been observed passing on a
+  live GitHub Actions run (no `gh` CLI access in this environment) —
+  recommend confirming on the next push.
+
+### Deferred / External
+
+| Item                                                        | Status                                                            |
+| ----------------------------------------------------------- | ----------------------------------------------------------------- |
+| `atlasappruntime.com.br` / `api.atlasappruntime.com.br` DNS | EXTERNAL/DEFERRED — confirmed unregistered                        |
+| Live Render/Vercel deployment                               | EXTERNAL/DEFERRED — not provisioned                               |
+| Real backup/restore                                         | EXTERNAL/DEFERRED — depends on hosting platform                   |
+| Live rollback drill                                         | EXTERNAL/DEFERRED — no production to drill against                |
+| Stripe integration                                          | EXTERNAL/DEFERRED — unchanged, not created (out of scope, rule 8) |
+| MFA `disable` reconfirmation / `userId` binding             | DEFERRED — unchanged since 46.28/46.29                            |
+
+### Final Verdict
+
+```text
+ATLAS 46.31 — COMPLETE
+READY FOR DEPLOYMENT GATE
+```
+
+Not GO-LIVE. Two real blockers were found and fixed this sprint — the
+production Docker image did not boot at all, and health/readiness could
+false-positive during a real outage — both now verified against real
+infrastructure, not just re-read source. What remains before an actual
+first client is exclusively external/platform-dependent (DNS, a live
+Render/Vercel deployment, managed backups) — nothing left is a code gap
+this repository controls.

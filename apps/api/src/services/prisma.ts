@@ -61,6 +61,24 @@ export async function connectDB(): Promise<void> {
   await client.$connect();
 }
 
+/**
+ * ATLAS 46.31 — health.ts/live-ready.ts used to call connectDB() (i.e.
+ * $connect()) on every request to prove the database is reachable *right
+ * now*. That's only true the first time: once a Prisma client believes it's
+ * already connected, $connect() is a no-op and does not re-verify the
+ * connection — confirmed by starting a real built server against a real
+ * Postgres container, then stopping that container: /health kept reporting
+ * database:"ok" indefinitely afterward. A real round-trip query is the only
+ * way to detect a connection that was live at boot but has since died — the
+ * exact case /health and /ready exist to catch (a dependency going down
+ * mid-life, not just failing to connect at cold start).
+ */
+export async function pingDB(): Promise<void> {
+  const client = getPrismaClient();
+  if (!client) throw new Error('@prisma/client not available');
+  await client.$queryRaw`SELECT 1`;
+}
+
 export async function disconnectDB(): Promise<void> {
   if (_prisma) {
     await _prisma.$disconnect();

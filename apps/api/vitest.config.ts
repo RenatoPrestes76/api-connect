@@ -5,6 +5,15 @@ export default defineConfig({
     globals: false,
     environment: 'node',
     setupFiles: ['./vitest.setup.ts'],
+    // ATLAS 46.31 — the default (10s) hook timeout is tight enough that a
+    // handful of real-Docker/real-child-process integration test files
+    // (db-real-outage-recovery.test.ts, restart-durability-e2e.test.ts and
+    // similar) running concurrently with everything else can occasionally
+    // push a completely unrelated file's simple beforeAll/afterAll
+    // (server.listen()/close()) past 10s under system load — observed
+    // directly running this suite locally. Raised, not removed: a hook that
+    // is genuinely stuck should still fail eventually.
+    hookTimeout: 30_000,
     env: {
       SUPABASE_JWT_SECRET: 'test-only-secret-do-not-use-in-prod',
     },

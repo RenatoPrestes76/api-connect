@@ -48,6 +48,79 @@ jobs:
       - name: Format check
         run: pnpm format:check
 
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # ATLAS 46.31 — this job did not exist before this sprint. CI ran
+    # lint/type-check/build/format on every push and PR, but never the
+    # actual test suite (1798+ tests as of 46.30) — a broken test could
+    # merge to master without CI ever noticing. Mirrors docker-compose.yml's
+    # postgres/redis setup so the suite runs against the same shape of
+    # database this repo's tests already assume everywhere else.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: seltriva
+          POSTGRES_PASSWORD: seltriva_dev_password
+          POSTGRES_DB: seltriva_connect
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U seltriva"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://seltriva:seltriva_dev_password@localhost:5433/seltriva_connect
+      API_SECRET_KEY: ci_test_secret_key_not_for_production
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply database migrations
+        working-directory: packages/database
+        run: npx prisma migrate deploy
+
+      - name: Build
+        # A handful of integration tests (restart-durability-e2e,
+        # db-real-outage-recovery) exercise the real dist/ artifact, not
+        # source — dist/ is gitignored, so it must exist before `pnpm test`.
+        run: pnpm build
+
+      - name: Run test suite
+        run: pnpm test
+
   security:
     name: Security Scan
     runs-on: ubuntu-latest

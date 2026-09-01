@@ -8,8 +8,8 @@ export async function healthHandler(_ctx: RouteContext, res: ServerResponse): Pr
   let dbStatus: 'ok' | 'error' = 'error';
 
   try {
-    const { connectDB } = await import('../services/prisma.js');
-    await connectDB();
+    const { pingDB } = await import('../services/prisma.js');
+    await pingDB();
     dbStatus = 'ok';
   } catch {
     dbStatus = 'error';

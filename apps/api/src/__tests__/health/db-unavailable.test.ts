@@ -6,14 +6,24 @@ import type { Server } from 'node:http';
  * health-live-ready.test.ts exercises the DB-available path (the only one
  * this environment has had since Sprint 46.19 wired up a real Postgres).
  * Production must survive the database being genuinely down — this test
- * proves that path is still correct by mocking connectDB() to reject,
- * rather than actually tearing down the docker Postgres for one test file.
+ * proves that path is still correct by mocking pingDB() to reject, rather
+ * than actually tearing down the docker Postgres for one test file.
+ *
+ * ATLAS 46.31 — this used to mock connectDB(), which health.ts/
+ * live-ready.ts no longer call on every request: $connect() is a no-op
+ * once a Prisma client believes it's already connected, so it never
+ * actually re-verifies a connection that died after boot — confirmed by
+ * starting a real server against a real Postgres container, stopping the
+ * container, and observing /health keep reporting database:"ok"
+ * indefinitely. pingDB() (a real `SELECT 1` round trip) is what the
+ * handlers call now, so that's what this test mocks to simulate a
+ * mid-life outage.
  */
 vi.mock('../../services/prisma.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../services/prisma.js')>();
   return {
     ...actual,
-    connectDB: vi
+    pingDB: vi
       .fn()
       .mockRejectedValue(
         new Error('connection refused: password authentication failed for user "seltriva"')

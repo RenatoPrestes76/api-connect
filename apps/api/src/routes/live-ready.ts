@@ -17,8 +17,8 @@ export async function liveHandler(_ctx: RouteContext, res: ServerResponse): Prom
 export async function readyHandler(_ctx: RouteContext, res: ServerResponse): Promise<void> {
   let database: 'ok' | 'error' = 'error';
   try {
-    const { connectDB } = await import('../services/prisma.js');
-    await connectDB();
+    const { pingDB } = await import('../services/prisma.js');
+    await pingDB();
     database = 'ok';
   } catch {
     database = 'error';

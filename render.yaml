@@ -23,9 +23,30 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
-      # Optional — see .env.example for the full list and defaults.
+      # ATLAS 46.31 — required in production (apps/api/src/services/
+      # production-secrets.ts's REQUIRED_IN_PRODUCTION): the process now
+      # refuses to boot with NODE_ENV=production if any of these eight are
+      # unset, rather than silently signing/encrypting with a hardcoded dev
+      # default. Previously missing from this file — a real deploy gap
+      # flagged in the 46.26 runbook entry and closed here. Set the actual
+      # values in the Render dashboard, never here.
       - key: ATLAS_MASTER_KEY
         sync: false
+      - key: ADMIN_JWT_SECRET
+        sync: false
+      - key: PORTAL_JWT_SECRET
+        sync: false
+      - key: RUNTIME_JWT_SECRET
+        sync: false
+      - key: RUNTIME_CERT_SECRET
+        sync: false
+      - key: CONNECTOR_PACKAGE_SECRET
+        sync: false
+      - key: MESSAGE_DELIVERY_SECRET
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      # Optional — see .env.example for the full list and defaults.
       - key: SEED_ADMIN_EMAIL
         sync: false
       - key: SEED_ADMIN_PASSWORD

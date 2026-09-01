@@ -10,10 +10,7 @@ WORKDIR /app
 # A single stage does the full workspace install + build. A separate
 # "install only apps/api/package.json" stage doesn't work with pnpm
 # workspaces — pnpm needs every workspace member's package.json (copied in
-# via `COPY . .` below) to resolve anything. `pnpm prune --prod` was tried
-# to slim the final node_modules but incorrectly strips real runtime deps
-# (e.g. dotenv) in this workspace's virtual-store layout — correctness over
-# image size, so the full install ships as-is.
+# via `COPY . .` below) to resolve anything.
 FROM base AS build
 COPY pnpm-lock.yaml .
 COPY package.json .
@@ -22,16 +19,54 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm --filter=@seltriva/database run db:generate
 RUN pnpm build --filter=./apps/api
 
+# ATLAS 46.31 — this stage used to COPY the build stage's node_modules
+# directories directly into the final image (root node_modules +
+# apps/api/node_modules) on the theory that pnpm's per-package symlinks
+# (e.g. apps/api/node_modules/dotenv -> ../../node_modules/.pnpm/dotenv@.../
+# node_modules/dotenv) would keep resolving correctly as long as both sides
+# preserved the same relative depth. In practice the shipped image crashed
+# immediately on boot: `Error [ERR_MODULE_NOT_FOUND]: Cannot find package
+# 'dotenv' imported from /app/apps/api/dist/index.js` — confirmed directly,
+# a real container built from this file never actually started. `pnpm
+# deploy` is pnpm's own purpose-built solution for exactly this: it
+# materializes one workspace package's production dependencies into a
+# self-contained directory with a real (non-symlinked) node_modules, so
+# there's no virtual-store indirection left to break across a COPY
+# --from=. `pnpm prune --prod` (tried previously, per the removed comment
+# above) attacks the same problem from the wrong end — pruning the shared
+# store in place, rather than deploying a clean, standalone copy.
+RUN pnpm --filter=@seltriva/api deploy --prod /app/deploy
+# `pnpm deploy` materializes its own, separate copy of @prisma/client — a
+# real directory, not a symlink into the workspace's shared store — so the
+# engine `db:generate` (run above, against the *shared* store) wrote into
+# is not the copy this deployed output actually uses. @prisma/client's own
+# postinstall does try to run again during `pnpm deploy`'s install, but it
+# can't find prisma/schema.prisma from inside the isolated deploy
+# directory (confirmed directly: `prisma:warn We could not find your
+# Prisma schema in the default locations`), so it silently no-ops and the
+# deployed client is left ungenerated — confirmed directly too: a real
+# container built without this fix crashes on the first Prisma query with
+# `@prisma/client did not initialize yet`. Prisma resolves which
+# `@prisma/client` install to generate into by walking up from the schema
+# file's own directory — copying the schema inside /app/deploy first (and
+# running from there) makes that walk land on the deployed copy, not the
+# shared workspace store `db:generate` already populated.
+RUN mkdir -p /app/deploy/prisma && \
+    cp /app/packages/database/prisma/schema.prisma /app/deploy/prisma/schema.prisma
+# `npx prisma` here (rather than the workspace's own pinned binary) floats
+# to whatever `prisma` CLI version npx resolves independently — confirmed
+# directly: this workspace has *two* `prisma`/`@prisma/client` major
+# versions coexisting (packages/database pins 5.22.0; another app in this
+# monorepo pins 6.19.3), and npx picked the mismatched one, producing a
+# client generated for a query-engine WASM file that pairing doesn't ship.
+# packages/database/node_modules/.bin/prisma is the exact CLI version
+# packages/database's own lockfile entry pins (the same one `db:generate`
+# above already used successfully) — unambiguous, no floating resolution.
+RUN cd /app/deploy && /app/packages/database/node_modules/.bin/prisma generate --schema=./prisma/schema.prisma
+
 FROM base
-# pnpm's per-package node_modules (e.g. apps/api/node_modules/dotenv) are symlinks
-# with RELATIVE targets into the root node_modules/.pnpm virtual store (e.g.
-# ../../node_modules/.pnpm/dotenv@.../node_modules/dotenv). Flattening dist to
-# /app/dist while only copying the root node_modules breaks those symlinks —
-# apps/api's own node_modules must be copied too, at its original relative depth.
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=build /app/deploy/node_modules ./apps/api/node_modules
 COPY --from=build /app/apps/api/dist ./apps/api/dist
-COPY --from=build /app/packages ./packages
 
 WORKDIR /app/apps/api
 EXPOSE 3001
