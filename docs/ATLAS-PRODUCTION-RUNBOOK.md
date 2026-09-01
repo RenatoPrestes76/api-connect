@@ -1037,3 +1037,105 @@ Risks in the delivered report):**
   for MFA alone, while every sibling resource in the module stays
   tenant-scoped, would be a novel, inconsistent authorization philosophy
   for one endpoint family, not a targeted fix.
+
+## ATLAS 46.29 — Production Security Residual Closure Gate
+
+Audit-only sprint (no application code changes) reauditing the residuals
+carried forward from 46.22–46.28. Starting point: `7665b64` (46.28),
+working tree already clean. Result: no production surface was found
+accepting a sensitive operation without adequate authentication,
+authorization, integrity, or abuse protection.
+
+**A — Stripe/webhook reaudit.** Reconfirmed, independently, that no real
+Stripe integration exists anywhere in the monorepo: zero `stripe` entries
+in any `package.json` and zero `stripe@` resolutions in the lockfile.
+The only two files anywhere referencing `Stripe-Signature` /
+`constructEvent` / `STRIPE_WEBHOOK_SECRET` are this runbook and
+`stripe-webhooks.ts`'s own doc comment describing what a _real_
+integration would require — neither is executable verification code.
+`modules/billing/stripe-simulation.ts` fabricates fake
+`checkout.stripe.com/demo/...` URLs locally; no outbound call to any real
+Stripe API exists. `http/router.ts`'s `parseBody()` only ever exposes
+parsed JSON — the raw request bytes a genuine Stripe signature check
+would need to HMAC over are discarded before a handler ever runs, so
+real verification isn't even plumbable today. `handleStripeWebhook`
+remains gated behind `billing.manage` (the interim protection established
+in 46.26); billing-routes.test.ts's existing "rejects a fully
+unauthenticated caller" test already demonstrates no unauthenticated
+traffic — real Stripe or otherwise — can reach this route. Verdict:
+**STRIPE_WEBHOOK = EXTERNAL/DEFERRED — NO REAL STRIPE WEBHOOK
+IMPLEMENTATION PRESENT.** No fake/simulated signature-verification layer
+was built, per this sprint's explicit instruction not to invent an
+integration that doesn't exist.
+
+**B — Authorization residuals.** `ops/*` (closed in 46.27) and the
+`security/*`/`billing/*` tenant-scoping fixes (closed in 46.26/46.28)
+were re-verified against the current tree rather than assumed: `git log`
+confirms `HEAD` is still exactly the 46.28 commit, so none of that
+previously-audited code has changed since it was last tested and
+committed — regression is not possible on files nothing has touched.
+Spot-verified `security/risk.ts` (session-derived tenant, no client-
+controlled `:tenantId` trust) and `ops/*`'s 21 `requirePermission('ops.*')`
+gate sites are still in place. No new residual found; nothing reopened
+without new evidence, per this sprint's own rule against relitigating
+closed work.
+
+**C — Secret/credential exposure.** Re-verified `security/secrets.ts`:
+list/get responses strip `encryptedValue` and return a masked value only;
+`POST /secrets` and `POST /secrets/:id/rotate` both strip
+`encryptedValue` from their store-layer return value before it reaches
+`json()`; only `POST /secrets/:id/decrypt` reveals plaintext, by design,
+tenant-checked and audit-logged. `mfa.ts`'s `status` handler still strips
+`secretBase32`/`backupCodes`/`lastUsedStep`. No route handler in
+`security/*` logs request/response bodies — the shared request logger
+(`server.ts`) logs only method/url/status/duration, never body content.
+No new exposure found.
+
+**D — Replay/idempotency.** MFA replay protection (46.28) is unchanged
+and still covered by its own regression test. The Stripe webhook handler
+is idempotent by construction where it matters: `markInvoicePaid` and
+`syncStripeSubscription` are state-setters (last-write-wins), not
+counters, so redundant delivery can't double-charge or double-count; a
+repeat `subscription.deleted` is already caught by a try/catch treating
+"already canceled" as a no-op. No idempotency keys were added — no
+concrete risk was demonstrated that would justify them, and the route
+has no real (non-simulated) traffic reaching it regardless.
+
+**E — CORS/trust boundaries.** `CORS_ALLOWED_ORIGINS` is enforced
+fail-loud at boot in production (`assertProductionCorsConfigured`,
+wired in `index.ts`) — refuses to start with an open/unset/`*` policy.
+No `Access-Control-Allow-Credentials` header is ever set, so the
+wildcard-plus-credentials misconfiguration this guard exists to prevent
+isn't reachable even in dev. Existing `__tests__/http/cors.test.ts`
+already covers unset/allowlisted/out-of-allowlist/multi-origin behavior.
+No change needed.
+
+**F — Error/observability.** `withErrorBoundary` (server.ts) returns a
+generic `Internal server error` (500) for any uncaught exception —
+`err.message`/`err.stack` go only to the server-side structured log,
+correlated by `X-Request-Id`, never to the response. The handful of
+route-level `catch` blocks that do echo `err.message` to a client
+(`load-balancer.ts`, `control-plane/organizations.ts`,
+`control-plane/erp-integrations.ts`) do so only for their own
+deliberately-worded custom error classes (`LoadBalancerError`,
+`OrganizationTenantNotFoundError`, `ErpIntegrationNotConfiguredError`),
+each narrowed by `instanceof` with every other exception rethrown to the
+generic boundary — the exact pattern established in 46.26. No leak
+found.
+
+**G — Test matrix.** No new findings in A–F, so no new tests were added —
+existing coverage (Stripe auth-gating, MFA replay/rate-limiting/
+concurrency, secrets redaction, CORS, error-boundary leak tests) already
+demonstrates the properties this sprint reaudited.
+
+**H — Regression.** Root `pnpm type-check`, `pnpm lint`, and `pnpm build`
+all clean (all cached — confirms zero source drift from the last
+verified state). `apps/api`'s full suite run twice: 87 files / 1797
+tests, 0 failures, 0 flakes, both passes.
+
+**Closing decision.** No production surface was found still capable of
+accepting a sensitive operation without adequate authentication,
+authorization, integrity, or abuse protection. **ATLAS 46.29 —
+COMPLETE. READY FOR NEXT SPRINT.** (Not a Go-Live declaration.)
+This was an audit-only sprint — no application source changed, only this
+documentation.
