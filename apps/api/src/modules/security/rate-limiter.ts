@@ -26,6 +26,18 @@ interface AttemptWindow {
  * that account's MFA verification by repeatedly failing it — the same
  * category of trade-off every account-lockout mechanism makes, and
  * strictly better here than leaving TOTP unprotected against brute force.
+ *
+ * Generic (tenantId, userId)-keyed attempt limiter in shape — not specific
+ * to "verify" despite the class name (kept for history/diff-minimalism).
+ * ATLAS 46.28 reuses the exact same shape for MFA setup via a second,
+ * independent instance (see mfaSetupRateLimiter below) rather than
+ * inventing a second rate-limiting mechanism. Both instances are safe
+ * under concurrency by construction: every isLocked()/recordFailure() /
+ * recordSuccess() call in this file's callers is synchronous with no
+ * `await` between the check and the state mutation, so Node's
+ * run-to-completion semantics make each request's check-then-update
+ * atomic relative to other concurrent requests — there is no TOCTOU
+ * window an attacker could race to slip extra attempts through.
  */
 class MfaVerifyRateLimiter {
   private windows = new Map<string, AttemptWindow>();
@@ -58,4 +70,19 @@ class MfaVerifyRateLimiter {
 }
 
 export const mfaVerifyRateLimiter = new MfaVerifyRateLimiter();
+
+/**
+ * ATLAS 46.28 — POST /security/mfa/setup had no rate limiting at all.
+ * Unlike verify (a brute-force-guessing target), setup's abuse surface is
+ * different: it's a MUTATION that silently regenerates and overwrites an
+ * existing enrollment's secret/backup codes on every call, with no
+ * confirmation step. Repeated/scripted calls against the same
+ * (tenantId, userId) could be used to grief a legitimate user (their
+ * authenticator app silently stops matching) or to race a takeover of an
+ * unattended enrollment. Same 5-attempts/15-minute shape as verify, but a
+ * genuinely separate counter — setup abuse and verify brute-forcing
+ * shouldn't share (or reset) each other's lockout state.
+ */
+export const mfaSetupRateLimiter = new MfaVerifyRateLimiter();
+
 export { MAX_ATTEMPTS, LOCKOUT_WINDOW_MS };

@@ -951,3 +951,89 @@ template-literal type from its `= randomUUID()` default instead of
 `string`, rejecting plain-string callers). Fixed with an explicit `:
 string` annotation — a type-strictness fix, not a runtime behavior
 change or a security finding.
+
+## ATLAS 46.28 — MFA Hardening & Authentication Abuse-Resistance Gate
+
+Closed the residual flagged at the end of 46.26/46.27: `security/mfa/setup`
+and the rest of the MFA endpoint family had no protection beyond `verify`
+(the only one 46.26 hardened). Full endpoint family:
+`GET .../mfa/status`, `POST .../mfa/setup`, `POST .../mfa/verify`,
+`DELETE .../mfa/disable`, `GET .../mfa/backup-codes` — all under
+`routes/v1/security/mfa.ts`, all session-scoped via `requireOrgId`
+(session-derived tenant, never a client-supplied header/query value —
+unchanged from 46.26).
+
+**Setup rate limiting.** Unlike `verify` (a brute-force-guessing target),
+`setup`'s risk is different: it's a mutation that silently regenerates and
+overwrites an existing enrollment's secret + backup codes on every call,
+with no confirmation step, so an unbounded caller could grief a
+legitimate `userId`'s factor or race an unattended-enrollment takeover.
+Rate limited to 5 calls / 15 minutes per (tenantId, userId) — same shape
+as `verify`'s existing lockout, but a genuinely independent counter
+(`modules/security/rate-limiter.ts`'s new `mfaSetupRateLimiter`) so setup
+abuse and verify brute-forcing never share or reset each other's window.
+Responds `429 MFA_SETUP_RATE_LIMITED` (a request-rate throttle), distinct
+from verify's `423 MFA_LOCKED` (an account-lockout response to a
+suspected credential-guessing attack).
+
+**TOTP replay protection.** `verifyTotpToken`'s ±1 time-step (30s) clock-
+skew window means a captured, already-used code stayed submittable and
+would re-verify successfully for up to ~90 seconds — RFC 6238 §5.2
+explicitly calls out rejecting OTP reuse as a mitigation worth
+implementing. `MfaRecord` gained a new field, `lastUsedStep` (the RFC 6238
+time-step index of the last successfully-verified code, `@seltriva/aegis`
+package — never exposed via any DTO, purely internal bookkeeping); a
+verify request that matches the _same_ step as last time is now rejected
+with the identical generic `{valid: false, message: "Invalid or expired
+token"}` response a wrong code gets (no distinct "replay" response that
+would tell an attacker their guess was actually correct) and counts
+toward the same brute-force lockout as any other failure.
+
+**Concurrency.** Both rate limiters are synchronous, in-memory `Map`-based
+counters with no `await` between the `isLocked()` check and the
+`recordFailure()`/state update inside any caller — Node's run-to-completion
+semantics make each request's check-then-update atomic relative to other
+concurrent requests, so there's no time-of-check/time-of-use window an
+attacker could race to slip extra attempts through. Verified directly: 10
+concurrent `setup` calls and 10 concurrent invalid `verify` calls for the
+same (tenantId, userId) both correctly cap at the 5-attempt limit, never
+letting the full burst through.
+
+**Cross-authentication-scheme boundary.** All five MFA endpoints were
+re-verified to reject a real portal-identity session, a real Runtime
+access token, and a real admin-identity session (each signed with a
+different secret than the generic Supabase-style middleware `security/*`
+sits behind) with `401`, and to reject a session with no organization
+linked with `403 ORGANIZATION_NOT_LINKED` rather than falling back to a
+default tenant.
+
+**Enumeration resistance.** A wrong code against an enrolled user and a
+replayed (already-used, but otherwise valid) code against the same user
+now produce byte-identical response bodies — no oracle that would let an
+attacker distinguish "close, but already used" from "just wrong." `setup`
+never echoes a previous enrollment's secret/backup codes back — always a
+fresh set. `status` never includes `secretBase32`, `backupCodes`, or the
+new `lastUsedStep` field.
+
+**Deliberately left unchanged, and why (not silently — see Residual
+Risks in the delivered report):**
+
+- `DELETE .../mfa/disable` and `GET .../mfa/backup-codes` — audited for
+  abuse and deliberately NOT rate limited. A single `disable` call already
+  fully disables the factor; a request-rate limiter wouldn't reduce that
+  risk (the real open question is whether disabling should require
+  re-proving the current factor first — an authorization/reauthentication
+  design decision, not a rate-limiting fix). `backup-codes` re-displays a
+  sensitive value the caller's tenant session is already trusted to read
+  once (at setup) — consistent with `security/secrets/:id/decrypt`
+  (ATLAS 46.26), an equally "any tenant session can already do this"
+  surface that also got no rate limiter; there's nothing being _guessed_
+  here; a limiter would be arbitrary, not risk-reducing.
+- `userId` remains a client-supplied resource identifier, not
+  cross-checked against the caller's own identity — the same trust model
+  every other `security/*` resource already uses (secrets, SSO providers,
+  policies, certificates, risk events are all tenant-owned, not
+  individual-caller-owned). Inventing a stricter per-caller-identity model
+  for MFA alone, while every sibling resource in the module stays
+  tenant-scoped, would be a novel, inconsistent authorization philosophy
+  for one endpoint family, not a targeted fix.

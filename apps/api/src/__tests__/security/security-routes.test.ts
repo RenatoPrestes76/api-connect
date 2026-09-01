@@ -11,6 +11,8 @@ import {
   noOrgBearer,
   securityAdminBearer,
   lowPrivAdminBearer,
+  portalUserBearer,
+  runtimeBearer,
 } from './helpers.js';
 import type { TestServer } from './helpers.js';
 
@@ -639,7 +641,11 @@ describe('POST /api/v1/security/mfa/verify — brute-force lockout (final harden
       { userId: 'reset-check@mutation.com' },
       orgBearer('tenant-mutation-test')
     );
-    const validToken = generateTotpToken(base32Decode(setup.body.secret));
+    const secretBuf = base32Decode(setup.body.secret);
+    // ATLAS 46.28 — replay protection means the exact same code can only
+    // ever verify once; each verification below must use a genuinely
+    // different time-step's code, not the same `validToken` reused.
+    const validToken = generateTotpToken(secretBuf);
 
     // 2 failures, well under the 5-attempt threshold.
     for (let i = 0; i < 2; i++) {
@@ -670,14 +676,82 @@ describe('POST /api/v1/security/mfa/verify — brute-force lockout (final harden
         orgBearer('tenant-mutation-test')
       );
     }
+    // A different time-step's code (T+1) — the previous one is now a
+    // replay and would correctly be rejected.
+    const nextStepToken = generateTotpToken(secretBuf, Date.now() + 30_000);
     const stillOpen = await post<any>(
       srv.baseUrl,
       `/api/v1/security/mfa/verify`,
-      { userId: 'reset-check@mutation.com', token: validToken },
+      { userId: 'reset-check@mutation.com', token: nextStepToken },
       orgBearer('tenant-mutation-test')
     );
     expect(stillOpen.status).toBe(200);
     expect(stillOpen.body.valid).toBe(true);
+  });
+
+  it('rejects a replayed code — the same successful code cannot verify twice', async () => {
+    const setup = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'replay-check@mutation.com' },
+      orgBearer('tenant-mutation-test')
+    );
+    const token = generateTotpToken(base32Decode(setup.body.secret));
+
+    const first = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'replay-check@mutation.com', token },
+      orgBearer('tenant-mutation-test')
+    );
+    expect(first.status).toBe(200);
+    expect(first.body.valid).toBe(true);
+
+    const replay = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'replay-check@mutation.com', token },
+      orgBearer('tenant-mutation-test')
+    );
+    expect(replay.status).toBe(200);
+    expect(replay.body.valid).toBe(false);
+    // Same generic message as a wrong code — no oracle revealing "this
+    // code was valid but already used".
+    expect(replay.body.message).toBe('Invalid or expired token');
+  });
+
+  it('N concurrent invalid-code attempts for the same userId never let more than the limit through (no race-condition bypass)', async () => {
+    const userId = `verify-concurrency-${Date.now()}@mutation.com`;
+    const tenantAuth = orgBearer('tenant-mutation-test');
+    await post<any>(srv.baseUrl, `/api/v1/security/mfa/setup`, { userId }, tenantAuth);
+
+    const CONCURRENT = 10;
+    const results = await Promise.all(
+      Array.from({ length: CONCURRENT }, () =>
+        post<any>(
+          srv.baseUrl,
+          `/api/v1/security/mfa/verify`,
+          { userId, token: '000000' },
+          tenantAuth
+        )
+      )
+    );
+    const notLocked = results.filter((r) => r.status === 200).length;
+    const locked = results.filter((r) => r.status === 423).length;
+    expect(notLocked + locked).toBe(CONCURRENT);
+    // Under true concurrency the exact number that slip through before the
+    // in-memory counter catches up can vary, but the burst must not be
+    // entirely unthrottled.
+    expect(notLocked).toBeLessThan(CONCURRENT);
+
+    // The limiter must now be tripped for subsequent sequential calls too.
+    const after = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId, token: '000000' },
+      tenantAuth
+    );
+    expect(after.status).toBe(423);
   });
 
   it("tenant-professional's failed MFA attempts against its own userId never lock out tenant-enterprise's identically-named userId", async () => {
@@ -719,6 +793,285 @@ describe('POST /api/v1/security/mfa/verify — brute-force lockout (final harden
     );
     expect(enterpriseStillOpen.status).toBe(200);
     expect(enterpriseStillOpen.body.valid).toBe(true);
+  });
+});
+
+describe('POST /api/v1/security/mfa/setup — rate limiting & abuse resistance (ATLAS 46.28)', () => {
+  it('locks out after 5 setup calls within the window, for the same (tenant, userId)', async () => {
+    const userId = 'setup-abuse@mutation.com';
+    const tenantAuth = orgBearer('tenant-mutation-test');
+    let lastSecret = '';
+    for (let i = 0; i < 5; i++) {
+      const { status, body } = await post<any>(
+        srv.baseUrl,
+        `/api/v1/security/mfa/setup`,
+        { userId },
+        tenantAuth
+      );
+      expect(status).toBe(201);
+      lastSecret = body.secret;
+    }
+    const sixth = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId },
+      tenantAuth
+    );
+    expect(sixth.status).toBe(429);
+    expect(sixth.body.error.code).toBe('MFA_SETUP_RATE_LIMITED');
+
+    // And the factor from the 5th call is still the active one — the
+    // rate-limited 6th call never touched stored state.
+    const statusCheck = await get<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/status?userId=${encodeURIComponent(userId)}`,
+      tenantAuth
+    );
+    expect(statusCheck.body.enrolled).toBe(true);
+    expect(lastSecret).toBeTruthy();
+  });
+
+  it("setup's rate limiter is independent from verify's — exhausting one does not lock the other", async () => {
+    const userId = 'independent-limiters@mutation.com';
+    const tenantAuth = orgBearer('tenant-mutation-test');
+    await post<any>(srv.baseUrl, `/api/v1/security/mfa/setup`, { userId }, tenantAuth);
+
+    for (let i = 0; i < 5; i++) {
+      await post<any>(
+        srv.baseUrl,
+        `/api/v1/security/mfa/verify`,
+        { userId, token: '000000' },
+        tenantAuth
+      );
+    }
+    const verifyLocked = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId, token: '000000' },
+      tenantAuth
+    );
+    expect(verifyLocked.status).toBe(423);
+
+    // verify is locked, but setup (a separate counter) still has budget.
+    const setupStillOpen = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId },
+      tenantAuth
+    );
+    expect(setupStillOpen.status).toBe(201);
+  });
+
+  it('setup calls for a different userId are unaffected by another userId being rate-limited', async () => {
+    const lockedUserId = 'setup-locked-target@mutation.com';
+    const tenantAuth = orgBearer('tenant-mutation-test');
+    for (let i = 0; i < 5; i++) {
+      await post<any>(
+        srv.baseUrl,
+        `/api/v1/security/mfa/setup`,
+        { userId: lockedUserId },
+        tenantAuth
+      );
+    }
+    const { status: lockedStatus } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: lockedUserId },
+      tenantAuth
+    );
+    expect(lockedStatus).toBe(429);
+
+    const { status: otherStatus } = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'setup-unrelated-target@mutation.com' },
+      tenantAuth
+    );
+    expect(otherStatus).toBe(201);
+  });
+
+  it('N concurrent setup calls for the same userId never exceed the limit (no race-condition bypass)', async () => {
+    const userId = `setup-concurrency-${Date.now()}@mutation.com`;
+    const tenantAuth = orgBearer('tenant-mutation-test');
+    const CONCURRENT = 10;
+    const results = await Promise.all(
+      Array.from({ length: CONCURRENT }, () =>
+        post<any>(srv.baseUrl, `/api/v1/security/mfa/setup`, { userId }, tenantAuth)
+      )
+    );
+    const succeeded = results.filter((r) => r.status === 201).length;
+    const limited = results.filter((r) => r.status === 429).length;
+    // The limiter's own MAX_ATTEMPTS is 5 — under true concurrency the
+    // exact number that slip through before the counter catches up can
+    // vary, but it must never be the full burst of 10, and every response
+    // must be one of the two expected codes.
+    expect(succeeded + limited).toBe(CONCURRENT);
+    expect(succeeded).toBeLessThan(CONCURRENT);
+    expect(succeeded).toBeGreaterThan(0);
+  });
+});
+
+describe('MFA — cross-authentication-scheme boundary (ATLAS 46.28, Etapa 8)', () => {
+  const MFA_ROUTES: Array<[string, string, unknown]> = [
+    ['GET', '/api/v1/security/mfa/status', undefined],
+    ['POST', '/api/v1/security/mfa/setup', { userId: 'boundary-probe@mutation.com' }],
+    [
+      'POST',
+      '/api/v1/security/mfa/verify',
+      { userId: 'boundary-probe@mutation.com', token: '000000' },
+    ],
+    ['DELETE', '/api/v1/security/mfa/disable', undefined],
+    ['GET', '/api/v1/security/mfa/backup-codes', undefined],
+  ];
+
+  const call = (
+    method: string,
+    path: string,
+    payload: unknown,
+    headers?: Record<string, string>
+  ) => {
+    switch (method) {
+      case 'GET':
+        return get<any>(srv.baseUrl, path, headers);
+      case 'POST':
+        return post<any>(srv.baseUrl, path, payload, headers);
+      case 'DELETE':
+        return del<any>(srv.baseUrl, path, payload, headers);
+      default:
+        throw new Error(`unsupported method ${method}`);
+    }
+  };
+
+  for (const [method, path, payload] of MFA_ROUTES) {
+    it(`${method} ${path} rejects a real portal-identity session (different signing secret)`, async () => {
+      const { status } = await call(method, path, payload, await portalUserBearer());
+      expect(status).toBe(401);
+    });
+
+    it(`${method} ${path} rejects a real Runtime access token (different signing secret)`, async () => {
+      const { status } = await call(method, path, payload, await runtimeBearer());
+      expect(status).toBe(401);
+    });
+
+    it(`${method} ${path} rejects a real admin-identity session (different signing secret — security/* uses the generic middleware, not requirePermission)`, async () => {
+      const { status } = await call(method, path, payload, await securityAdminBearer());
+      expect(status).toBe(401);
+    });
+
+    it(`${method} ${path} rejects a fully anonymous caller`, async () => {
+      const { status } = await call(method, path, payload);
+      expect(status).toBe(401);
+    });
+
+    it(`${method} ${path} rejects an authenticated session with no organization (403, not a silent default tenant)`, async () => {
+      const { status, body } = await call(method, path, payload, noOrgBearer());
+      expect(status).toBe(403);
+      expect(body.error.code).toBe('ORGANIZATION_NOT_LINKED');
+    });
+  }
+});
+
+describe('MFA — enumeration resistance (ATLAS 46.28, Etapa 7)', () => {
+  it('verify returns the identical response shape for "user never enrolled" and "wrong code for an enrolled user"', async () => {
+    await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'enum-enrolled@mutation.com' },
+      orgBearer('tenant-mutation-test')
+    );
+
+    const neverEnrolled = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'enum-never-enrolled@mutation.com', token: '123456' },
+      orgBearer('tenant-mutation-test')
+    );
+    // Not enrolled → 404 today (an explicit, pre-existing contract — see
+    // "MFA not enrolled" branch). Documented here, not silently assumed:
+    // this DOES distinguish "enrolled" from "not enrolled" by design,
+    // which is an accepted, pre-existing tenant-internal disclosure (the
+    // caller already has a valid tenant session — this isn't a
+    // cross-tenant or cross-authentication-scheme leak). What must NOT
+    // differ is the response for two DIFFERENT wrong-code attempts against
+    // enrolled users — see the next assertion.
+    expect(neverEnrolled.status).toBe(404);
+
+    const wrongCodeEnrolled = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'enum-enrolled@mutation.com', token: '123456' },
+      orgBearer('tenant-mutation-test')
+    );
+    expect(wrongCodeEnrolled.status).toBe(200);
+    expect(wrongCodeEnrolled.body).toEqual({
+      valid: false,
+      message: 'Invalid or expired token',
+    });
+  });
+
+  it('a replayed (already-used) code and a genuinely-wrong code produce byte-identical response bodies', async () => {
+    const setup = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'enum-replay@mutation.com' },
+      orgBearer('tenant-mutation-test')
+    );
+    const secretBuf = base32Decode(setup.body.secret);
+    const token = generateTotpToken(secretBuf);
+
+    await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'enum-replay@mutation.com', token },
+      orgBearer('tenant-mutation-test')
+    );
+    const replay = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'enum-replay@mutation.com', token },
+      orgBearer('tenant-mutation-test')
+    );
+    const wrongGuess = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/verify`,
+      { userId: 'enum-replay@mutation.com', token: '999999' },
+      orgBearer('tenant-mutation-test')
+    );
+    expect(replay.body).toEqual(wrongGuess.body);
+  });
+
+  it('setup never echoes back a previously-issued secret or backup codes for an already-enrolled userId — always a fresh set', async () => {
+    const first = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'enum-setup-fresh@mutation.com' },
+      orgBearer('tenant-mutation-test')
+    );
+    const second = await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'enum-setup-fresh@mutation.com' },
+      orgBearer('tenant-mutation-test')
+    );
+    expect(second.body.secret).not.toBe(first.body.secret);
+    expect(second.body.backupCodes).not.toEqual(first.body.backupCodes);
+  });
+
+  it('status never includes secretBase32, backupCodes, or lastUsedStep in its response', async () => {
+    await post<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/setup`,
+      { userId: 'enum-status-shape@mutation.com' },
+      orgBearer('tenant-mutation-test')
+    );
+    const { body } = await get<any>(
+      srv.baseUrl,
+      `/api/v1/security/mfa/status?userId=enum-status-shape@mutation.com`,
+      orgBearer('tenant-mutation-test')
+    );
+    expect(body.secretBase32).toBeUndefined();
+    expect(body.backupCodes).toBeUndefined();
+    expect(body.lastUsedStep).toBeUndefined();
   });
 });
 

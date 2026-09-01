@@ -246,6 +246,7 @@ class SecurityStore {
       ],
       enrolledAt: isoNow(-90),
       lastUsedAt: isoNow(-1),
+      lastUsedStep: null,
     };
     const professionalMfa: MfaRecord = {
       tenantId: 'tenant-professional',
@@ -257,6 +258,7 @@ class SecurityStore {
       trustedDevices: [],
       enrolledAt: isoNow(-45),
       lastUsedAt: isoNow(-5),
+      lastUsedStep: null,
     };
     const communityMfa: MfaRecord = {
       tenantId: 'tenant-community',
@@ -268,6 +270,7 @@ class SecurityStore {
       trustedDevices: [],
       enrolledAt: null,
       lastUsedAt: null,
+      lastUsedStep: null,
     };
     for (const rec of [enterpriseMfa, professionalMfa, communityMfa]) {
       this.mfaRecords.set(`${rec.tenantId}:${rec.userId}`, rec);

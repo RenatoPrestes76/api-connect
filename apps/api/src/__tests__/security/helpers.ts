@@ -6,6 +6,8 @@ import { authMiddleware } from '../../middleware/auth.js';
 import { registerSecurityRoutes } from '../../routes/v1/security/index.js';
 import { adminIdentityStore } from '../../modules/admin-identity/admin-identity-store.js';
 import { signAdminAccessToken } from '../../modules/admin-identity/jwt.js';
+import { signPortalSessionToken } from '../../modules/portal-identity/jwt.js';
+import { signRuntimeAccessToken } from '../../modules/runtime-registration/runtime-jwt.js';
 
 export interface TestServer {
   server: Server;
@@ -90,6 +92,27 @@ export async function securityAdminBearer(): Promise<Record<string, string>> {
     role: 'ATLAS_ADMIN',
     name: user.name,
     email: user.email,
+  });
+  return { Authorization: `Bearer ${token}` };
+}
+
+/** A real portal-identity session token — different signing secret than the generic middleware expects. */
+export async function portalUserBearer(): Promise<Record<string, string>> {
+  const token = await signPortalSessionToken({
+    sub: randomUUID(),
+    organizationId: randomUUID(),
+    role: 'OWNER',
+    name: 'Test Portal User',
+    email: 'portal-user@test.atlasconnect.internal',
+  });
+  return { Authorization: `Bearer ${token}` };
+}
+
+/** A real Runtime access token — different signing secret than the generic middleware expects. */
+export async function runtimeBearer(): Promise<Record<string, string>> {
+  const token = await signRuntimeAccessToken({
+    runtimeId: randomUUID(),
+    organizationId: randomUUID(),
   });
   return { Authorization: `Bearer ${token}` };
 }

@@ -58,6 +58,16 @@ export interface MfaRecord {
   trustedDevices: TrustedDevice[];
   enrolledAt: string | null;
   lastUsedAt: string | null;
+  /**
+   * ATLAS 46.28 — the RFC 6238 time-step (30s window index) of the last
+   * successfully-verified TOTP code, or null if none yet. A captured code
+   * is valid for its whole time-step (and the verifier's ±1 clock-skew
+   * window), so without this, the exact same code could be replayed
+   * repeatedly within that window and verify successfully every time.
+   * Never expose this field via any DTO — it's purely internal replay
+   * bookkeeping.
+   */
+  lastUsedStep: number | null;
 }
 
 export interface TrustedDevice {
