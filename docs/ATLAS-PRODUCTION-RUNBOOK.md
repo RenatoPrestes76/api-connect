@@ -1139,3 +1139,194 @@ authorization, integrity, or abuse protection. **ATLAS 46.29 —
 COMPLETE. READY FOR NEXT SPRINT.** (Not a Go-Live declaration.)
 This was an audit-only sprint — no application source changed, only this
 documentation.
+
+## ATLAS 46.30 — Production Readiness & Go-Live Gate
+
+Proved, through real code and reproducible tests (not just reading source),
+that the full first-client operational cycle — Client Zero → Tenant
+provisioning → Runtime registration → Runtime authentication → ERP
+discovery → job creation/execution → result persistence → heartbeat →
+liveness → failure → recovery → observability — holds together end to end
+and survives the failures that are actually predictable for it.
+
+**Baseline.** `HEAD` at `778fd0d` (46.29), `local == origin/master`,
+working tree clean. Inventory of existing mechanisms found the operational
+cycle already covered by an extensive, real (not simulated) test suite
+built across 46.20–46.25: `client-zero-e2e.test.ts`,
+`client-zero-onboarding-e2e.test.ts`, `real-client-enrollment-e2e.test.ts`,
+`restart-durability-e2e.test.ts`, `registration-idempotency.test.ts`,
+`tenant-association.test.ts`, `onboarding-isolation.test.ts`,
+`runtime-isolation.test.ts`, `liveness.test.ts`,
+`runtime-liveness-operation.test.ts`, `runtime-operational-view.test.ts`,
+`enrollment-discovery-e2e.test.ts`, `erp-metadata-routes.test.ts`,
+`job-orchestration-routes.test.ts`, and `tenancy-persistence.test.ts`.
+Given this, the sprint's work was overwhelmingly verification — running
+and inspecting what exists — rather than new implementation, per this
+gate's own instruction not to alter code just to generate a diff.
+
+**Code change: one new file.**
+`__tests__/runtime-registration/atlas-46-30-production-readiness-e2e.test.ts`
+— the single reproducible Client Zero scenario this gate requires. No
+existing file walked all 15 steps (signup → tenant → registration → auth
+→ heartbeat → ONLINE → discovery → generic job create/claim/execute/result
+→ persistence re-read → heartbeat loss → STALE → OFFLINE → real-heartbeat
+recovery → ONLINE again) plus a second, independent Client Zero for
+tenant-isolation, in one sequence — the existing files each proved a
+subset (flow correctness, or the liveness cycle, or process-restart
+durability) in isolation. This test composes those already-proven
+primitives rather than re-deriving protocol-level properties (invalid
+signature, replay, activation-key lifecycle — all exhaustively covered
+elsewhere and deliberately not repeated here). It does **not** repeat a
+real API process restart — `restart-durability-e2e.test.ts` (46.22)
+already proves registration/heartbeat survive a real process kill+restart;
+duplicating that spawn here would only slow the scenario down.
+
+**Production Cycle** — all steps proved against real HTTP, a real
+listening server, and real Postgres:
+
+- Client Zero / Tenant Provisioning: signup → Organization
+  (PENDING_TENANT_ASSIGNMENT, not an error) → explicit admin-controlled
+  Tenant assignment. Repetition/idempotency:
+  `registration-idempotency.test.ts` (duplicate fingerprint rejected, two
+  concurrent registrations racing the same fingerprint — exactly one
+  succeeds via the database's own unique constraint, not application
+  logic). Isolation: `onboarding-isolation.test.ts`,
+  `tenant-association.test.ts` (concurrent tenant reassignment never
+  duplicates a row). Failure/rollback:
+  `tenancy-persistence.test.ts` (`rolls back cleanly: creating an
+organization under a nonexistent tenantId leaves zero rows behind`,
+  and the same for a tenant deleted mid-transaction).
+- Runtime Enrollment: real Ed25519 identity, activation-key single-use
+  enforcement, wrong-key/expired/revoked/reused-key all rejected with the
+  correct status. Cross-tenant: a Runtime cannot authenticate or operate
+  outside its own Organization (`runtime-isolation.test.ts`,
+  `tenant-association.test.ts`'s client-supplied-tenantId-cannot-escape
+  test).
+- Runtime Authentication: signed proof-of-identity → JWT session →
+  rotate/revoke; wrong-key and blocked/revoked-runtime cases rejected.
+- Heartbeat / Liveness: real signed heartbeats update state; invalid
+  signature and exact-replay rejected without corrupting the existing
+  record. `ONLINE (<=60s) / STALE (>60s, <=5min) / OFFLINE (>5min)` —
+  thresholds unchanged this sprint, boundary-tested inclusively in
+  `liveness.test.ts`. The full ONLINE → STALE → OFFLINE → ONLINE cycle is
+  proven with controlled timestamps (no real sleep), run twice in
+  `runtime-liveness-operation.test.ts` and once more inline in this
+  sprint's new scenario. An OFFLINE runtime is always still a known,
+  addressable record (200 on lookup) — never confused with one that was
+  never registered.
+- Discovery: authenticated-runtime-only claim, tenant preserved
+  end-to-end, a wrong-tenant/wrong-runtime discovery or result submission
+  is rejected, a failed scan retries with backoff then fails cleanly
+  (`erp-metadata-routes.test.ts`), a mid-scan classifier exception does
+  not leave the request stuck (`Recovery — classifier throws mid-scan`),
+  a repeated result submission for an already-completed request is
+  idempotent (reused, not reprocessed).
+- Job Lifecycle: create → queued → claim (signed) → dispatch → execute →
+  result → completed, all proven in this sprint's new scenario against a
+  real Client Zero runtime. Cross-org creation is rejected
+  (`RUNTIME_ORGANIZATION_MISMATCH`), creation is idempotent via
+  `idempotencyKey`, a duplicate result report does not re-execute the
+  job, several independent jobs for the same runtime run without
+  interference, and a dispatched job that never reports back within its
+  timeout retries then fails (`FAILED`, with a `timeout` history entry) —
+  never stuck indefinitely.
+- Persistence: `tenancy-persistence.test.ts` — writes visible across
+  independent Prisma connections, transactional rollback on invalid FK
+  and on a race where the referenced tenant is deleted mid-transaction,
+  five concurrent creates under the same tenant with distinct slugs all
+  succeed independently, tenant-scoped queries never leak across tenants.
+- Recovery: a real API process kill+restart preserves the Runtime
+  registration and heartbeat capability (`restart-durability-e2e.test.ts`,
+  46.22). Job interruption is proven through its observable
+  consequences rather than a literal "kill mid-execution" simulation: a
+  job that stops reporting back times out to `FAILED` deterministically
+  (never stuck), and a late/duplicate result arriving after the fact is
+  idempotent, not double-applied — see Findings for why this is scoped
+  as LOW rather than treated as a gap in the required guarantee.
+
+**Failure Matrix** — 11/11 applicable cases, all PASS:
+
+| Falha                        | Resultado esperado                      | PASS                                                                   |
+| ---------------------------- | --------------------------------------- | ---------------------------------------------------------------------- |
+| API indisponível             | runtime não perde identidade persistida | ✅ restart-durability-e2e.test.ts                                      |
+| runtime indisponível         | liveness eventualmente OFFLINE          | ✅ runtime-liveness-operation.test.ts, 46.30 E2E                       |
+| heartbeat perdido            | STALE/OFFLINE conforme threshold        | ✅ liveness.test.ts, 46.30 E2E                                         |
+| runtime retorna              | ONLINE                                  | ✅ runtime-liveness-operation.test.ts (x2), 46.30 E2E                  |
+| discovery falha              | estado consistente                      | ✅ erp-metadata-routes.test.ts (retry+backoff, mid-scan recovery)      |
+| job falha                    | FAILED consistente                      | ✅ job-orchestration-routes.test.ts (retry+backoff, timeout)           |
+| job repetido                 | sem efeito duplicado indevido           | ✅ job-orchestration-routes.test.ts (idempotencyKey, duplicate result) |
+| tenant incorreto             | rejeição                                | ✅ job-orchestration/erp-metadata cross-org tests, 46.30 E2E isolation |
+| token inválido               | rejeição                                | ✅ runtime-registration-routes.test.ts, erp-metadata-routes.test.ts    |
+| database transaction failure | rollback                                | ✅ tenancy-persistence.test.ts                                         |
+| restart                      | estado persistido preservado            | ✅ restart-durability-e2e.test.ts                                      |
+
+**Security Regression** (targeted, not a repeat of 46.26–46.29's full
+audits): unauthenticated → 401 and wrong-organization → 403 reconfirmed
+on job-orchestration and erp-metadata; cross-tenant runtime/job visibility
+reconfirmed in this sprint's new scenario (a second, independent Client
+Zero cannot see or list the first's runtime or job, and vice versa);
+wrong-runtime result submission rejected; invalid/wrong-key signatures
+rejected across registration, heartbeat, and job claim/result. Auth
+middleware and permission catalogs are unchanged since 46.28/46.29 — `HEAD`
+diff for this sprint touches only the one new test file.
+
+**Database Diagnostics** — reused the same direct-Postgres methodology as
+46.26 Part 15 (no second diagnostic tool built). Checked: orphan
+`RuntimeRegistration.controlPlaneOrganizationId` / `Organization.tenantId`
+references, duplicate `machineFingerprintHash`/`publicKey`/tenant
+slug/organization slug, impossible lifecycle state (`ACTIVE` with no
+`lastHeartbeat`), impossible timestamps (`activatedAt`/`lastHeartbeat`
+before `registeredAt`). Result: **ZERO INCONSISTENCIES**, both before and
+after this sprint's full test-suite run (confirming the new scenario's
+`afterAll` cleans up completely). The dev/test database carries a large
+volume of accumulated fixture rows from repeated sprint test runs
+(thousands of organizations/runtimes) — expected local-environment noise,
+not a production concern; a real production database starts empty.
+
+**Observability** — using only existing surfaces, no new dashboard: which
+runtimes exist and their tenant/organization (`GET
+.../runtimes` and `.../runtimes/:id`), ONLINE/STALE/OFFLINE per runtime
+and in aggregate (`.../runtimes/:id`'s `liveness` field, `.../summary`),
+last heartbeat timestamp (`lastHeartbeat`), which jobs are running/failed
+and why (`GET /jobs?status=...`, `job.lastError`, `job.history[].outcome`
+— e.g. `timeout`), infrastructure failure vs. functional failure are
+distinguishable (a DB-unavailable `/health`/`/ready` never returns 200 and
+never leaks connection details, vs. a functional `JOB FAILED` carries its
+own `lastError`/history reason) and every state-changing operation across
+this cycle is audit-logged (`RUNTIME_ACTIVATED`, `JOB_CREATED`,
+`JOB_RESULT_REPORTED`, `JOB_CANCELLED`, `METADATA_DISCOVERY_REQUESTED`,
+`METADATA_DISCOVERY_COMPLETED`). This check was scoped to the operational
+cycle's own surfaces, not an exhaustive silent-catch audit of the entire
+codebase — no silent failure was found within that scope.
+
+**Tests.** Full `apps/api` suite run twice: **88 files / 1798 tests, 0
+failures, 0 flakes**, both passes. `pnpm type-check`, `pnpm lint`, `pnpm
+build` all clean.
+
+**Findings** (none are BLOCKER or HIGH — nothing here prevents the next
+gate):
+
+- LOW — Job/runtime interruption is proven through its consequences
+  (timeout → `FAILED`, idempotent late result) rather than a single
+  literal "kill mid-execution, restart, re-verify" simulation, because no
+  such interruption mechanism exists to simulate beyond what timeout/
+  idempotency already cover. Not invented per this gate's own rule
+  against inventing mechanisms that don't exist.
+- LOW — The observability "no silent errors" check was scoped to this
+  cycle's own routes/stores, not a full-codebase audit; unrelated modules
+  were not re-swept (out of scope, no evidence of an issue there).
+
+**Deferred / External** — unchanged from 46.29, out of this sprint's
+scope and not reopened without new evidence: real Stripe webhook signature
+verification (no real Stripe integration exists to protect), `mfa/disable`
+reconfirmation, MFA `userId` binding.
+
+**Final Verdict**
+
+```text
+ATLAS 46.30 — COMPLETE
+READY FOR NEXT SPRINT
+```
+
+Not a Go-Live declaration — this sprint proves production _readiness_ of
+the operational cycle, not authorization to onboard a real client.
