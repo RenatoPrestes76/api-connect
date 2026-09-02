@@ -2304,3 +2304,50 @@ not, close that gap by itself; it closes cleanly by confirming, with
 real evidence rather than assumption, exactly what remains external.
 Not GO-LIVE, and not a claim that production validation has occurred —
 it has not, because there is no production to validate against yet.
+
+## ATLAS 46.35 — Production Provisioning & Go-Live Gate
+
+Re-checked for any change in external infrastructure since 46.34: none
+found. `render.yaml` still only a specification; no real
+`.onrender.com` reference anywhere; `docs/ATLAS-PRODUCTION-DOMAIN.md`
+still `RESERVED / NOT YET REGISTERED`; no new provider config
+(`fly.toml`, `railway.json`, monitoring/alerting integration) found
+anywhere in the repository. **No real cloud deployment exists.**
+
+Per this sprint's own governing principle — prepare the ground, never
+fabricate the infrastructure itself — the deliverable is
+`docs/deployment/production-first-deployment.md`'s new **Production
+Deployment Contract**: an explicit REPOSITORY CONTROLLED / EXTERNAL
+INFRASTRUCTURE CONTROLLED split, a full environment-variable
+classification table (REQUIRED/OPTIONAL/SECRET/PUBLIC/GENERATED/
+PROVIDER-SPECIFIC), and a Go-Live Decision Gate table covering all 25
+gates this sprint's own template specifies. No application code changed
+— nothing about authentication, authorization, tenant isolation, Runtime
+Registration, Heartbeat, Discovery, or Job execution was touched, per
+this sprint's explicit instruction not to re-do already-closed work.
+
+Regression reconfirmed on the current `HEAD` (which now includes
+`f903297`'s Control Plane demo-seeding race-safety fix, made between
+46.34 and this sprint): `pnpm type-check`/`lint`/`build` clean; full
+suite twice via the exact CI command
+(`turbo run test --filter=@seltriva/api`): **91 files / 1802 tests, 0
+failures, 0 flakes**, both times — the fifth consecutive sprint
+(46.31–46.35) at this exact baseline. Docker `--no-cache` rebuild,
+production boot (`NODE_ENV=production`, full secret set), `/health`/
+`/ready` both 200, and graceful shutdown (`docker stop` → real SIGTERM →
+exit code 0) all reconfirmed against the current `HEAD`.
+
+**Final Verdict**
+
+```text
+ATLAS 46.35 — COMPLETE WITH RESERVATIONS
+```
+
+`GO-LIVE READY` cannot be honestly declared — not because anything this
+repository controls has failed, but because the one remaining dependency
+(a real cloud deployment) categorically cannot be created from inside a
+repository. The reservation is identical to 46.33/46.34's, restated with
+a more explicit contract rather than newly discovered: hosting account,
+managed database, domain registration, TLS, backup, and monitoring all
+require a human with external account/billing/registrar access to act
+next. Not GO-LIVE.

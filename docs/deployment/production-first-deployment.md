@@ -14,12 +14,13 @@ full history and evidence behind each item.
 **Never put real secret values in this file, in commits, or in any
 `.env.example`.**
 
-## Deployment Status (as of ATLAS 46.34)
+## Deployment Status (as of ATLAS 46.35)
 
 Checked directly — not assumed — via `docs/ATLAS-PRODUCTION-DOMAIN.md`'s
 own status line, a search for any real `.onrender.com` reference in this
 repository, and `render.yaml`'s content. Result: **no real cloud
-deployment exists yet.**
+deployment exists yet** — unchanged since 46.34; no external action
+occurred between these two sprints that could have changed it.
 
 ```text
 Deployment date:      N/A — no deployment has occurred
@@ -37,7 +38,56 @@ Rollback status:      Documented below (conceptual); undrillable without product
 
 Every item above will be updated with real, observed values the moment a
 real deployment exists — see `docs/ATLAS-PRODUCTION-RUNBOOK.md`'s ATLAS
-46.34 section for the full evidence trail behind this status.
+46.34/46.35 sections for the full evidence trail behind this status.
+
+## Production Deployment Contract — Repository vs. External Infrastructure
+
+A single, explicit split, so the next action is never ambiguous about
+whose responsibility it is:
+
+**REPOSITORY CONTROLLED — already done, verified repeatedly (46.30–46.35),
+not this sprint's work to redo:**
+
+- Application code, build (`pnpm build`), and the production Docker image
+  (`docker/Dockerfile.api`) — reproducible from a genuinely clean
+  `--no-cache` build.
+- Prisma schema and both migrations (additive-only).
+- Fail-loud startup validation (`services/production-secrets.ts`) —
+  refuses to boot in `NODE_ENV=production` with any required secret or
+  an unsafe CORS config missing.
+- Health/readiness semantics (`/health`, `/ready`) — including detecting
+  a real, mid-life database outage, not just a cold-start failure.
+- Graceful shutdown (real `SIGTERM` → clean exit, verified via a real
+  container and `docker stop`).
+- Authentication, authorization, tenant isolation, runtime authorization
+  — proven via the full test suite and the local/containerized Client
+  Zero acceptance flow.
+- The deployment procedure itself (this document) and the smoke-test
+  harness (`scripts/atlas-production-readiness.mjs`, `ATLAS_BASE_URL`-
+  driven).
+
+**EXTERNAL INFRASTRUCTURE CONTROLLED — genuinely outside this
+repository's reach, requires a human with account/billing/registrar
+access:**
+
+- A hosting platform account and an actual provisioned service (Render
+  or otherwise) — `render.yaml` is a specification a provider would
+  build from, not evidence one exists.
+- A real, managed PostgreSQL instance and its `DATABASE_URL`.
+- Domain registration for `atlasappruntime.com.br` and DNS records
+  pointing its subdomains at whatever the hosting/frontend platforms
+  assign.
+- TLS/HTTPS certificates (typically automatic once a real domain is
+  attached to a real platform service — not something this repository
+  configures).
+- Real secret values loaded into the platform's own secret manager.
+- A managed backup/restore offering, a monitoring/alerting platform, and
+  a live rollback drill — all meaningless without the above existing
+  first.
+
+Nothing in the second list can be provisioned from within this
+repository. Per this sprint's own governing principle, none of it was
+fabricated, simulated, or marked `PASS` in its absence.
 
 ## Pré-requisitos
 
@@ -67,6 +117,35 @@ real deployment exists — see `docs/ATLAS-PRODUCTION-RUNBOOK.md`'s ATLAS
 - **Runtime enrollment**: no additional configuration beyond the secrets
   above — activation keys are issued per-organization through the admin
   API at runtime, not provisioned ahead of time.
+
+### Environment variable classification
+
+| Variable                                   | Class                                   | Required?                          | Consumed by                                      |
+| ------------------------------------------ | --------------------------------------- | ---------------------------------- | ------------------------------------------------ |
+| `DATABASE_URL`                             | SECRET, PROVIDER-SPECIFIC               | Required (all envs)                | `packages/config`                                |
+| `API_SECRET_KEY`                           | SECRET                                  | Required (all envs)                | `packages/config`                                |
+| `NODE_ENV`                                 | PUBLIC                                  | Optional (default `development`)   | everywhere                                       |
+| `API_PORT`                                 | PUBLIC                                  | Optional (default `3001`)          | `packages/config`                                |
+| `LOG_LEVEL`                                | PUBLIC                                  | Optional (default `info`)          | `@seltriva/logger`                               |
+| `CORS_ALLOWED_ORIGINS`                     | PUBLIC (values are origins, not secret) | Required in production (fail-loud) | `http/router.ts`                                 |
+| `ADMIN_JWT_SECRET`                         | SECRET, GENERATED                       | Required in production (fail-loud) | `modules/admin-identity/jwt.ts`                  |
+| `PORTAL_JWT_SECRET`                        | SECRET, GENERATED                       | Required in production (fail-loud) | `modules/portal-identity/jwt.ts`                 |
+| `RUNTIME_JWT_SECRET`                       | SECRET, GENERATED                       | Required in production (fail-loud) | `modules/runtime-registration/runtime-jwt.ts`    |
+| `RUNTIME_CERT_SECRET`                      | SECRET, GENERATED                       | Required in production (fail-loud) | `modules/runtime-registration/certificate.ts`    |
+| `CONNECTOR_PACKAGE_SECRET`                 | SECRET, GENERATED                       | Required in production (fail-loud) | `modules/connectors/package-integrity.ts`        |
+| `MESSAGE_DELIVERY_SECRET`                  | SECRET, GENERATED                       | Required in production (fail-loud) | `modules/message-delivery/message-signature.ts`  |
+| `SUPABASE_JWT_SECRET`                      | SECRET, GENERATED                       | Required in production (fail-loud) | `middleware/auth.ts`                             |
+| `ATLAS_MASTER_KEY`                         | SECRET, GENERATED (64 hex chars)        | Required in production (fail-loud) | `@seltriva/aegis` crypto.ts                      |
+| `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | SECRET (password), PUBLIC (email)       | Optional (dev-only defaults)       | `modules/admin-identity/admin-identity-store.ts` |
+| `ANTHROPIC_API_KEY`                        | SECRET, PROVIDER-SPECIFIC (Anthropic)   | Optional (demo fallback if unset)  | `routes/v1/copilot/*`                            |
+| `REDIS_URL`                                | PUBLIC/PROVIDER-SPECIFIC                | Not read by any application code   | provisioned in `docker-compose.yml` only         |
+
+`GENERATED` means the value has no external identity of its own —
+generate a fresh, random one per environment (e.g.
+`openssl rand -hex 32` for the 64-hex-char ones) rather than reusing the
+value from `.env.example` or any other environment. None of the above
+have real values anywhere in this repository — `apps/api/.env.example`
+documents names only.
 
 ## Ordem recomendada
 
@@ -176,7 +255,7 @@ exists to prevent.
 
 ```text
 [ ] Repository clean
-[x] Correct commit (ATLAS 46.33, local == origin/master)
+[x] Correct commit (ATLAS 46.35, local == origin/master)
 [x] Tests green (91 files / 1802 tests, 0 failures, 0 flakes, x2)
 [x] Build green
 [x] Docker build green (--no-cache, genuinely clean)
@@ -205,6 +284,47 @@ exists to prevent.
 ```
 
 Checked items above mean "proven in a real, local/containerized
-environment, repeatedly, through 46.30–46.33" — re-running the same
+environment, repeatedly, through 46.30–46.35" — re-running the same
 checks against the real deployed URL is still required before trusting a
 real client on it.
+
+## Go-Live Decision Gate (as of ATLAS 46.35)
+
+`PASS` requires real, observed evidence — a local/containerized proof is
+not substituted for a cloud one. `EXTERNAL/DEFERRED` means the gate
+depends on infrastructure this repository does not control and cannot
+provision itself.
+
+| Gate                  | Status                                 | Evidence                                                                                               |
+| --------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Repository            | PASS                                   | `local == origin/master`, working tree clean except two pre-existing files with zero real diff         |
+| Tests                 | PASS                                   | 91 files / 1802 tests, 0 failures, 0 flakes, x2, via the exact CI test-job command                     |
+| Type-check            | PASS                                   | `pnpm type-check` clean                                                                                |
+| Lint                  | PASS                                   | `pnpm lint` clean                                                                                      |
+| Build                 | PASS                                   | `pnpm build` clean                                                                                     |
+| Docker                | PASS                                   | `docker build --no-cache` clean, genuinely zero reused layers                                          |
+| Production boot       | PASS                                   | Real container, `NODE_ENV=production`, full secret set, boots and serves                               |
+| Production URL        | EXTERNAL/DEFERRED                      | No cloud deployment exists                                                                             |
+| DNS                   | EXTERNAL/DEFERRED                      | `atlasappruntime.com.br` confirmed unregistered via direct lookup                                      |
+| HTTPS                 | EXTERNAL/DEFERRED                      | No domain attached to any service                                                                      |
+| Database (production) | EXTERNAL/DEFERRED                      | No managed Postgres instance provisioned                                                               |
+| Authentication        | PASS (local/containerized only)        | Full suite; not yet proven against a real deployment                                                   |
+| Authorization         | PASS (local/containerized only)        | Full suite; not yet proven against a real deployment                                                   |
+| Tenant isolation      | PASS (local/containerized only)        | Full suite; not yet proven against a real deployment                                                   |
+| Runtime               | PASS (local/containerized only)        | Full suite; not yet proven against a real deployment                                                   |
+| Heartbeat             | PASS (local/containerized only)        | Full suite; not yet proven against a real deployment                                                   |
+| Discovery             | PASS (local/containerized only)        | Full suite; not yet proven against a real deployment                                                   |
+| First Job             | PASS (local/containerized only)        | Full suite; not yet proven against a real deployment                                                   |
+| Persistence           | PASS (local/containerized only)        | Full suite; not yet proven against a real deployment                                                   |
+| CORS                  | PASS (local/containerized only)        | Allowlist + production fail-loud verified; real frontend origin not yet known                          |
+| Backup                | EXTERNAL/DEFERRED                      | Depends on a database provider not yet chosen                                                          |
+| Restore               | EXTERNAL/DEFERRED                      | Same                                                                                                   |
+| Monitoring            | EXTERNAL/DEFERRED                      | No platform chosen                                                                                     |
+| Alerting              | EXTERNAL/DEFERRED                      | Same                                                                                                   |
+| Rollback              | EXTERNAL/DEFERRED (drill)              | Procedure documented above; undrillable without a live deployment                                      |
+| Client Zero           | EXTERNAL/DEFERRED (against production) | Proven repeatedly in local/containerized environments (46.30–46.35); not yet against a real deployment |
+
+**Verdict: `ATLAS — GO-LIVE READY` cannot be declared.** Every gate this
+repository controls is `PASS`; every remaining gate requires an account,
+credential, domain registration, or provider choice that does not exist
+and was not fabricated to close this table artificially.
