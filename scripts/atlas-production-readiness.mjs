@@ -38,6 +38,36 @@ const [API_URL, API_URL_SOURCE] = apiUrlArg
     ? [process.env.ATLAS_BASE_URL, 'ATLAS_BASE_URL']
     : ['http://localhost:3001', 'default (no --api-url or ATLAS_BASE_URL set)'];
 
+/**
+ * ATLAS 46.37 — Phase 8: this script must never let a LOCAL target be
+ * mistaken for PRODUCTION when read back from its own output. Classified
+ * from the URL alone — no guessing beyond what the hostname itself says.
+ */
+function classifyEnvironment(url) {
+  let hostname;
+  try {
+    hostname = new URL(url).hostname;
+  } catch {
+    return 'UNKNOWN';
+  }
+  const isLocal =
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '0.0.0.0' ||
+    hostname === '::1' ||
+    /^192\.168\./.test(hostname) ||
+    /^10\./.test(hostname) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(hostname);
+  if (isLocal) return 'LOCAL';
+  if (hostname === 'api.atlasappruntime.com.br' || hostname.endsWith('.atlasappruntime.com.br')) {
+    return 'PRODUCTION';
+  }
+  return 'STAGING'; // a real, remote, non-local host, just not the official domain (e.g. a raw *.onrender.com URL)
+}
+
+const TARGET_ENV = classifyEnvironment(API_URL);
+const PRODUCTION_FLAG = process.argv.includes('--production');
+
 /** @type {{name: string, ok: boolean, detail: string}[]} */
 const results = [];
 
@@ -261,7 +291,18 @@ function checkProductionBuild() {
 }
 
 async function main() {
-  console.log(`\nATLAS Production Readiness — target: ${API_URL} (source: ${API_URL_SOURCE})\n`);
+  console.log(`\nATLAS Production Readiness — target: ${API_URL} (source: ${API_URL_SOURCE})`);
+  console.log(`Target environment: ${TARGET_ENV}\n`);
+
+  if (PRODUCTION_FLAG && TARGET_ENV === 'LOCAL') {
+    console.log(
+      '--production was passed but the target resolves to a local/private address. ' +
+        'Refusing to treat localhost/Docker-local as production.\n'
+    );
+    console.log('ATLAS PRODUCTION READINESS: BLOCKED (local target rejected under --production)');
+    process.exitCode = 1;
+    return;
+  }
 
   checkProductionBuild();
   await checkEnvironment();

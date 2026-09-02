@@ -89,6 +89,31 @@ Nothing in the second list can be provisioned from within this
 repository. Per this sprint's own governing principle, none of it was
 fabricated, simulated, or marked `PASS` in its absence.
 
+## Automation Commands (ATLAS 46.37)
+
+Every command below is real, tested against a real local/containerized
+environment as part of building it, and fail-loud by design: a missing
+external requirement is reported as `EXTERNAL/DEFERRED` or `BLOCKED`,
+never silently as `PASS`. None fabricates a provider, URL, or credential.
+
+| Command                                                                                                             | Purpose                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm production:preflight [-- --production] [-- --base-url=<url>]`                                                 | Checks repository/build/environment/database/hosting/domain/HTTPS/application readiness before any deploy is attempted. `--production` additionally refuses a local database or base URL.                                                                                                                      |
+| `pnpm production:deploy -- --production`                                                                            | Orchestrates preflight → build → deploy (via the active `ProductionProvider`) → health/readiness → smoke test. Stops at the first failed step; never proceeds to Client Zero automatically.                                                                                                                    |
+| `pnpm production:migrate -- --production --yes`                                                                     | Safety-gated `prisma migrate deploy` wrapper — requires both flags explicitly, refuses a local `DATABASE_URL`, never exposes `reset`/destructive commands.                                                                                                                                                     |
+| `pnpm production:domain`                                                                                            | DNS resolution check for `atlasappruntime.com.br` / `api.atlasappruntime.com.br` — a real lookup, never `/etc/hosts` or an assumed result.                                                                                                                                                                     |
+| `pnpm production:client-zero -- --production` (needs `ATLAS_BASE_URL`, `ATLAS_ADMIN_EMAIL`, `ATLAS_ADMIN_PASSWORD`) | Automates signup → tenant → activation key (plain HTTP) → runtime registration/heartbeat/discovery/job (via the existing, unmodified `runAtlasRuntimeClient` orchestrator in `apps/agent`, invoked through a thin CLI wrapper — no signing logic duplicated). Refuses a local base URL or missing credentials. |
+| `pnpm production:verify [-- --base-url=<url>]`                                                                      | The final gate — runs every check above and prints the Go-Live decision table (see below). Only ever prints `GO-LIVE READY` when every critical gate is genuinely `PASS`.                                                                                                                                      |
+| `pnpm production:rollback -- --production --yes`                                                                    | Identifies current/previous deployment via `ProductionProvider.rollback()`; reports `EXTERNAL/DEFERRED` honestly when no provider exists rather than simulating.                                                                                                                                               |
+
+**`ProductionProvider`** (`scripts/production/provider.mjs`) is the
+interface (`validate`/`deploy`/`getDeploymentUrl`/`getDeploymentStatus`/
+`rollback`) the commands above program against. Today only `NullProvider`
+exists — it answers every method honestly with `EXTERNAL/DEFERRED`
+rather than simulating a provider. A real implementation (e.g. for
+Render) can be added later without changing any of the orchestration
+scripts above.
+
 ## Pré-requisitos
 
 - **GitHub**: this repository, `master` branch, CI configured

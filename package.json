@@ -31,7 +31,14 @@
     "validate": "pnpm lint && pnpm type-check && pnpm format:check",
     "prepare": "husky",
     "env:validate": "node scripts/validate-env.js",
-    "readiness:check": "node scripts/atlas-production-readiness.mjs"
+    "readiness:check": "node scripts/atlas-production-readiness.mjs",
+    "production:preflight": "node scripts/production/preflight.mjs",
+    "production:deploy": "node scripts/production/deploy.mjs",
+    "production:migrate": "node scripts/production/migrate.mjs",
+    "production:verify": "node scripts/production/verify.mjs",
+    "production:client-zero": "node scripts/production/client-zero.mjs",
+    "production:rollback": "node scripts/production/rollback.mjs",
+    "production:domain": "node scripts/production/domain.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",

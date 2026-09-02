@@ -2401,3 +2401,64 @@ DNS, TLS, backup, and monitoring/alerting all remain
 registrar access. `docs/deployment/production-first-deployment.md`'s
 Go-Live Decision Gate table (46.35) remains the accurate, current status
 — no gate changed state this sprint. Not GO-LIVE.
+
+## ATLAS 46.37 — Production Activation Automation & Fail-Loud Gate
+
+Built the automation layer connecting this repository to whatever
+production infrastructure eventually exists: `scripts/production/`
+(`preflight.mjs`, `provider.mjs`, `deploy.mjs`, `migrate.mjs`,
+`domain.mjs`, `client-zero.mjs`, `verify.mjs`, `rollback.mjs`), wired to
+`pnpm production:*` commands, plus a thin CLI wrapper
+(`apps/agent/src/atlas-runtime-client/cli-run-once.ts`) around the
+existing, unmodified `runAtlasRuntimeClient` orchestrator so Client Zero
+automation never duplicates the real Ed25519 signing/protocol logic
+already proven in `apps/agent`'s own tests. `ProductionProvider` (an
+interface with `validate`/`deploy`/`getDeploymentUrl`/
+`getDeploymentStatus`/`rollback`) is the seam a real provider plugs into
+later — today only `NullProvider` exists, answering every method
+honestly with `EXTERNAL/DEFERRED` rather than simulating one.
+
+**Verified for real, not just written:** every command was actually run.
+`preflight.mjs` correctly reports `BLOCKED` with a real local database
+and missing production secrets under `--production`, and `EXTERNAL/
+DEFERRED` informationally otherwise. `migrate.mjs` and `client-zero.mjs`
+both correctly refuse a local `DATABASE_URL`/`ATLAS_BASE_URL` under
+`--production`. `client-zero.mjs`'s full logic (admin login → signup →
+tenant → activation key → real signed runtime registration → heartbeat →
+persistence re-read) was verified end-to-end against a real local server
+with the local-address guard temporarily lifted for that one test, then
+immediately restored and reconfirmed blocking — this is the first time
+this sprint's own Client Zero automation logic (not just its guard
+rails) was proven correct, distinct from the guard-rail tests. `deploy.mjs`
+correctly stops at preflight without attempting anything further.
+`verify.mjs` produces the full Go-Live gate table, correctly refusing to
+print `GO-LIVE READY` while any critical gate is `EXTERNAL/DEFERRED`.
+
+**A real, if minor, incident during this sprint's own testing**: manually
+running `client-zero.mjs` and re-running `atlas-production-readiness.mjs`
+against the shared local dev database left orphaned tenant rows behind
+(the readiness script's own self-cleanup didn't run to completion on an
+interrupted invocation), which then made an unrelated pre-existing test
+(`lists the 3 seeded tenants`) fail on the next full-suite run — not a
+code regression, confirmed by cleaning the orphaned rows directly and
+re-running to a clean pass twice. A reminder that this repository's tests
+assume a stable local dev database shape, not a hard guarantee this
+sprint changed.
+
+**Regression:** `pnpm type-check`/`lint`/`build` all clean (including the
+new `apps/agent` CLI file). Full suite twice via the exact CI command:
+**91 files / 1802 tests, 0 failures, 0 flakes**, both times — unchanged
+baseline, sixth consecutive sprint (46.31–46.37) at this exact count.
+
+**Final Verdict**
+
+```text
+ATLAS 46.37 — COMPLETE WITH RESERVATIONS
+```
+
+The automation is real, tested, and fail-loud — it will correctly detect
+and use real infrastructure the moment it exists, without any further
+code changes. Running it today correctly reports the same reservation as
+every prior sprint since 46.34: hosting, managed PostgreSQL, domain
+registration, and their dependents remain `EXTERNAL/DEFERRED`. Not
+GO-LIVE.
