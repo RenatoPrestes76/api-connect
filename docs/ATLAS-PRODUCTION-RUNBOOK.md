@@ -2145,3 +2145,162 @@ caught a real bug within it — a concrete demonstration of why
 `CI REAL EXECUTION` stayed classified `EXTERNAL/DEFERRED` rather than
 assumed, and why the same discipline should apply to the real deployment
 this repository is now otherwise ready for.
+
+## ATLAS 46.34 — First Real Cloud Deployment & Production Validation Gate
+
+**No real cloud deployment exists.** This is the central, load-bearing
+finding of this sprint, established from real evidence rather than
+assumed either way:
+
+- `docs/ATLAS-PRODUCTION-DOMAIN.md` states, in its own status line,
+  `RESERVED / NOT YET REGISTERED`, and explicitly: "nothing here assumes
+  DNS resolves, a certificate exists, or the API is publicly reachable."
+- No concrete `<something>.onrender.com` URL exists anywhere in this
+  repository — every reference is either a `<PLACEHOLDER>` or the
+  `api.atlasappruntime.com.br` name the domain would eventually point
+  _at_, never a resolvable address today.
+- `render.yaml` defines a service (`seltriva-api`) but that is a
+  deployment _specification_ Render would build from if and when a
+  Render account/service is actually connected to this repository — it
+  is not evidence a service is running.
+- `atlasappruntime.com.br` was re-confirmed unregistered via a direct DNS
+  lookup (`getaddrinfo ENOTFOUND`) as part of 46.30–46.33; not repeated
+  again here since nothing about domain registration could have changed
+  from this repository's own actions.
+
+Per this sprint's own rule — "não inventar URL" / "se não existir URL
+pública verificável: REAL DEPLOYMENT URL = EXTERNAL/DEFERRED, e NÃO
+simular o teste" — no production URL was guessed, no health check was
+run against any placeholder or assumed hostname, and no phase requiring
+a live cloud endpoint was simulated against `localhost` and reported as
+if it were the real thing. Every phase from Health through Rollback in
+this gate's own structure depends on a live URL that does not exist, and
+is recorded below exactly as `EXTERNAL/DEFERRED` — not attempted, not
+faked.
+
+### What was still real, verifiable work
+
+**Phase 20 — production does not depend on this developer's machine.**
+Audited by inspection, not assumption: `apps/api/src/index.ts` and
+`server.ts` contain no hardcoded local filesystem paths, no
+`process.cwd()` dependency, and no reference to Docker Desktop or any
+local-only tooling. `render.yaml` has zero `volumes`/bind-mount entries
+and never invokes `docker-compose` — it is a standalone `runtime: docker`
+
+- `dockerfilePath` specification that a real Render build would execute
+  independently, from its own infrastructure, against a freshly cloned
+  copy of `master`. `docker-compose.yml`'s dev-mode bind mounts
+  (`./apps/api:/app/apps/api`) exist solely for local development
+  convenience and are never referenced by the production path. This
+  developer's machine has been in the loop throughout 46.30–46.34 only
+  because no real deployment exists yet to validate against instead — the
+  architecture itself has no such dependency once one does.
+
+**Phase 21 — local regression, including via the exact CI-equivalent
+path.** `pnpm type-check`/`lint`/`build` all clean. Full `apps/api` suite
+run twice via `turbo run test --filter=@seltriva/api` (the literal
+command CI's `test` job runs, not a proxy for it): **91 files / 1802
+tests, 0 failures, 0 flakes**, both times. `docker build --no-cache`
+(genuinely zero reused layers) succeeded; the resulting image booted in
+`NODE_ENV=production` with a full, real secret set, `/health` and
+`/ready` both 200 against the real dev Postgres, and `docker stop` (real
+SIGTERM) exited cleanly (code 0) in ~1.3s. Fail-loud (missing required
+secrets → non-zero exit, port never opens) reconfirmed via the existing
+automated `production-fail-loud.test.ts`, which exercises the same real
+image.
+
+**Phase 22 — final security sweep.** No tracked `.env` files, no `BEGIN
+PRIVATE KEY`/`BEGIN RSA PRIVATE KEY` literals, no hardcoded
+real-looking API keys (`sk-`/`AKIA`/`ghp_` patterns), no
+`Access-Control-Allow-Credentials` anywhere, no `Authorization`/`Bearer`
+value ever passed to the structured logger. Tenant isolation, runtime
+authorization, authentication, and CORS all reconfirmed passing as part
+of the full suite in Phase 21 — not re-derived from scratch, since
+nothing in the authorization/tenancy code changed since 46.32/46.33
+(the only change since 46.33 was `f903297`'s fix to demo-data seeding
+race safety under concurrent test workers, unrelated to authorization).
+
+### Deployment Date / Commit / Production URL
+
+```text
+Deployment date:      N/A — no deployment has occurred
+Deployment commit:    N/A
+Production URL:       EXTERNAL/DEFERRED — none exists
+Official API domain:  EXTERNAL/DEFERRED — atlasappruntime.com.br unregistered
+```
+
+### Real Production Validation
+
+Every row below requires a live production URL. None exists, so none
+was attempted — each is `EXTERNAL/DEFERRED`, not `PASS`, not simulated
+against `localhost`:
+
+| Check                                                                      | Result                                                   |
+| -------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Health (real URL)                                                          | EXTERNAL/DEFERRED                                        |
+| Readiness (real URL)                                                       | EXTERNAL/DEFERRED                                        |
+| Database (real production instance)                                        | EXTERNAL/DEFERRED                                        |
+| Authentication (real URL)                                                  | EXTERNAL/DEFERRED                                        |
+| Authorization (real URL)                                                   | EXTERNAL/DEFERRED                                        |
+| Tenant isolation (real URL)                                                | EXTERNAL/DEFERRED                                        |
+| Runtime / Heartbeat / Discovery / First Job (real URL)                     | EXTERNAL/DEFERRED                                        |
+| Persistence (real URL)                                                     | EXTERNAL/DEFERRED                                        |
+| CORS (real origin)                                                         | EXTERNAL/DEFERRED                                        |
+| Smoke test (`ATLAS_BASE_URL`)                                              | EXTERNAL/DEFERRED                                        |
+| Client Zero (real URL)                                                     | EXTERNAL/DEFERRED                                        |
+| HTTPS / TLS                                                                | EXTERNAL/DEFERRED                                        |
+| Official domain (DNS/HTTPS/health/ready/CORS via `atlasappruntime.com.br`) | EXTERNAL/DEFERRED — confirmed unregistered               |
+| Deployment version/commit traceability                                     | EXTERNAL/DEFERRED — no deployment to identify            |
+| Production logging review                                                  | EXTERNAL/DEFERRED — no production logs exist             |
+| Restart under real platform control                                        | EXTERNAL/DEFERRED                                        |
+| Backup / Restore                                                           | EXTERNAL/DEFERRED — depends on hosting/database provider |
+| Monitoring / Alerting                                                      | EXTERNAL/DEFERRED — no platform chosen                   |
+| Rollback drill                                                             | EXTERNAL/DEFERRED — no production to drill against       |
+
+All of the above were proven in a real, local/containerized environment
+across 46.30–46.34 (Client Zero, tenant isolation, auth, CORS,
+persistence, health/readiness including real-outage detection, graceful
+shutdown, fail-loud) — that is a necessary but not sufficient condition
+for the same properties holding against a real cloud deployment, and is
+not substituted for one here.
+
+### Findings
+
+No CRITICAL, HIGH, or MEDIUM findings this sprint — this was a
+verification sprint against infrastructure that does not yet exist, not
+a sprint that touched application behavior.
+
+- **LOW** — this sprint's own local regression is now the fourth
+  consecutive sprint (46.31–46.34) to report the identical 91 files /
+  1802 tests baseline with zero drift, which is itself a positive signal
+  of stability, not a finding requiring action.
+
+### External / Deferred
+
+| Item                                            | Reason                                                  |
+| ----------------------------------------------- | ------------------------------------------------------- |
+| Production URL                                  | No cloud deployment exists                              |
+| Official domain (`atlasappruntime.com.br`)      | Confirmed unregistered                                  |
+| Hosting platform account/service                | Not provisioned                                         |
+| Real production database                        | Not provisioned                                         |
+| HTTPS/TLS on a real domain                      | No domain attached to any service                       |
+| Real backup/restore                             | Depends on hosting/database provider once chosen        |
+| Monitoring/alerting                             | No platform chosen                                      |
+| Rollback drill                                  | No production to drill against                          |
+| Deployment version/commit traceability endpoint | No deployment exists to identify; revisit once one does |
+
+### Final Verdict
+
+```text
+ATLAS 46.34 — COMPLETE WITH RESERVATIONS
+```
+
+Consistent with 46.31–46.33's classification of the same underlying
+fact: nothing this repository controls is broken, and everything
+provable without a live deployment has been proven, repeatedly. The
+reservation is singular and unchanged — a real cloud deployment does not
+exist yet. This sprint did not, and per its own explicit rules could
+not, close that gap by itself; it closes cleanly by confirming, with
+real evidence rather than assumption, exactly what remains external.
+Not GO-LIVE, and not a claim that production validation has occurred —
+it has not, because there is no production to validate against yet.

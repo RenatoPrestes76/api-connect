@@ -14,6 +14,31 @@ full history and evidence behind each item.
 **Never put real secret values in this file, in commits, or in any
 `.env.example`.**
 
+## Deployment Status (as of ATLAS 46.34)
+
+Checked directly — not assumed — via `docs/ATLAS-PRODUCTION-DOMAIN.md`'s
+own status line, a search for any real `.onrender.com` reference in this
+repository, and `render.yaml`'s content. Result: **no real cloud
+deployment exists yet.**
+
+```text
+Deployment date:      N/A — no deployment has occurred
+Deployment commit:    N/A
+Production URL:       EXTERNAL/DEFERRED — none exists
+Official API domain:  EXTERNAL/DEFERRED — atlasappruntime.com.br unregistered
+Health result:        EXTERNAL/DEFERRED — no URL to check
+Readiness result:     EXTERNAL/DEFERRED — no URL to check
+Smoke test result:    EXTERNAL/DEFERRED — no URL to point ATLAS_BASE_URL at
+Client Zero result:   EXTERNAL/DEFERRED — no URL to run it against
+Backup status:        EXTERNAL/DEFERRED — no database provider chosen
+Monitoring status:    EXTERNAL/DEFERRED — no platform chosen
+Rollback status:      Documented below (conceptual); undrillable without production
+```
+
+Every item above will be updated with real, observed values the moment a
+real deployment exists — see `docs/ATLAS-PRODUCTION-RUNBOOK.md`'s ATLAS
+46.34 section for the full evidence trail behind this status.
+
 ## Pré-requisitos
 
 - **GitHub**: this repository, `master` branch, CI configured
