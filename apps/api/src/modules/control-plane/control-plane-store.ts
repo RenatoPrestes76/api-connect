@@ -16,6 +16,15 @@ import type {
 } from './types.js';
 import { tenancyRepository } from './tenancy.repository.js';
 
+/** Narrow check for a Prisma unique-constraint violation (P2002) on a slug
+ * column — same detection shape as tenancy.repository.ts's
+ * isPrismaNotFoundError (P2025) and runtime-registration.repository.ts's
+ * uniqueConstraintTarget (P2002), without importing @prisma/client's
+ * runtime error class. */
+function isUniqueSlugConflict(err: unknown): boolean {
+  return Boolean(err && typeof err === 'object' && (err as { code?: string }).code === 'P2002');
+}
+
 let _instance: ControlPlaneStore | null = null;
 
 /**
@@ -745,12 +754,41 @@ export class ControlPlaneStore {
     // this can't unconditionally re-create on every boot: a second `pnpm
     // dev` would either duplicate rows or hit the unique(slug) constraint.
     // "Get existing or create" makes it safe to run on every startup.
+    //
+    // ATLAS 46.33 — that find-then-create is a check-then-act race, not
+    // atomic: two separate PROCESSES (not just calls within one process —
+    // ready()'s promise memoization already covers that) each calling
+    // ensureTenant/ensureOrganization for the same fixed demo slug against
+    // a freshly-migrated, previously-empty database can both see "not
+    // found" before either has committed its insert, and the loser
+    // crashes with a raw P2002 instead of returning the winner's row.
+    // Invisible in this repo's own long-lived local dev Postgres (these
+    // rows have existed since the first time anything ever ran against
+    // it, so `find` always wins), but real and reproducible in CI: a
+    // brand-new database, migrated fresh, with multiple vitest worker
+    // processes each importing control-plane-store.ts (and therefore each
+    // running this exact seed) concurrently — confirmed directly from a
+    // real GitHub Actions run failing with `Unique constraint failed on
+    // the fields: (slug)` in `prisma.tenant.create()`. Catching the
+    // conflict and re-reading is the correct fix (not a lock, not
+    // serializing seeding) — the loser doesn't need to have won, it just
+    // needs the row that did.
     const ensureTenant = async (input: {
       name: string;
       slug: string;
       primaryContactEmail?: string;
-    }): Promise<Tenant> =>
-      (await tenancyRepository.findTenantBySlug(input.slug)) ?? this.createTenant(input);
+    }): Promise<Tenant> => {
+      const existing = await tenancyRepository.findTenantBySlug(input.slug);
+      if (existing) return existing;
+      try {
+        return await this.createTenant(input);
+      } catch (err) {
+        if (!isUniqueSlugConflict(err)) throw err;
+        const winner = await tenancyRepository.findTenantBySlug(input.slug);
+        if (winner) return winner;
+        throw err;
+      }
+    };
 
     // Pre-existing orgs (Postgres, prior process) still need their default
     // workspace re-materialized in THIS process's memory — createOrganization
@@ -767,7 +805,18 @@ export class ControlPlaneStore {
         this.ensureDefaultWorkspace(existing);
         return existing;
       }
-      return this.createOrganization(input);
+      try {
+        const org = await this.createOrganization(input);
+        return org;
+      } catch (err) {
+        if (!isUniqueSlugConflict(err)) throw err;
+        const winner = await tenancyRepository.findOrganizationBySlug(input.slug);
+        if (winner) {
+          this.ensureDefaultWorkspace(winner);
+          return winner;
+        }
+        throw err;
+      }
     };
 
     // Tenants
