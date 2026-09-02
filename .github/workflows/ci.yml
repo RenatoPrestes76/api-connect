@@ -118,6 +118,18 @@ jobs:
         # source — dist/ is gitignored, so it must exist before `pnpm test`.
         run: pnpm build
 
+      - name: Build production Docker image
+        # ATLAS 46.32 — graceful-shutdown.test.ts and
+        # production-fail-loud.test.ts exercise the real production image
+        # (not source, not the bare dist/ artifact) to prove SIGTERM is
+        # handled gracefully and the secrets gate actually refuses to boot
+        # — both need genuine POSIX signal delivery and a real container,
+        # not a source-level simulation. Tagged exactly
+        # atlas-api:docker-test, which both tests look for and skip
+        # cleanly (not a failure) if absent — this step is what makes them
+        # actually run here instead of skip.
+        run: docker build -f docker/Dockerfile.api -t atlas-api:docker-test .
+
       - name: Run test suite
         run: pnpm test
 

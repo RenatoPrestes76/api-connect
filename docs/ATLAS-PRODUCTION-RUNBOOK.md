@@ -1659,3 +1659,279 @@ infrastructure, not just re-read source. What remains before an actual
 first client is exclusively external/platform-dependent (DNS, a live
 Render/Vercel deployment, managed backups) — nothing left is a code gap
 this repository controls.
+
+## ATLAS 46.32 — Production Deployment Gate
+
+Turned 46.31's local/containerized readiness into a reproducible,
+auditable deployment artifact: reconfirmed the Docker fix survives a
+genuinely clean (`--no-cache`) rebuild, closed two real gaps 46.31 didn't
+reach (graceful shutdown under a _real_ SIGTERM, and an automated —
+not just manual — proof that the production secret gate actually refuses
+to boot), and extended the existing smoke-check script into a proper
+deployment harness. No business features; no external infrastructure
+invented.
+
+### Docker reproducibility (Phase 2)
+
+Rebuilt the image with `--no-cache` — zero reused layers, a genuine
+from-scratch build, not a cache artifact of 46.31's fix — and it built and
+booted identically: `/health`/`/ready` both 200 against a freshly-migrated
+database, Docker's own `HEALTHCHECK` reports `healthy`. Confirms 46.31's
+fix is durable, not incidental to one machine's cache state.
+
+### Health/Readiness (Phase 3)
+
+`pingDB()` (46.31) reconfirmed correct — no change needed. `REDIS_URL` is
+still provisioned in `docker-compose.yml`/`.env.example` and still read by
+no application code. Per this gate's explicit instruction, **not** turned
+into a required dependency just because the variable exists — kept exactly
+as-is. **LOW/DEFERRED**, unchanged from 46.31: either wire it up when
+something actually needs it, or remove the unused provisioning; not this
+sprint's call to make either way.
+
+Added `production-fail-loud.test.ts` — 46.31 verified the production
+secret gate manually (interactively, while root-causing the Docker
+blocker); nothing captured it as a repeatable test. This does, against the
+real image: `NODE_ENV=production` with required secrets missing exits
+non-zero, logs `Refusing to start in production`, and never opens the
+port; the mirror case (a complete, valid secret set) boots and serves.
+
+**Secondary finding surfaced while writing that test**, not something this
+sprint set out to look for: with an _unreachable_ `DATABASE_URL`,
+`ControlPlaneStore`'s own eager, unguarded startup seeding (a real Prisma
+query fired independently of `main()`'s carefully-ordered secret checks)
+throws first and wins the race — a raw, unformatted Prisma stack trace
+reaches the log instead of `assertProductionSecretsConfigured`'s clean
+message. The exit code is still correctly non-zero either way (the
+container still correctly never becomes healthy), and no secret value is
+ever printed by either path — so this doesn't change any pass/fail
+verdict, but the diagnostic quality is worse than intended if both
+problems coincide. **MEDIUM**, recorded in Findings, not fixed —
+untangling `ControlPlaneStore`'s eager seeding from request-time
+initialization is a real refactor, out of scope for a sprint that isn't
+meant to introduce architecture changes.
+
+### Graceful shutdown (Phase 4)
+
+`index.ts` already had a real handler (`SIGTERM`/`SIGINT` ->
+`server.close()` -> `disconnectDB()` -> `process.exit(0)`, 10s forced-exit
+fallback) — but nothing precisely proved it takes the graceful path rather
+than the forced one. The obvious test — spawn the built artifact,
+`child.kill('SIGTERM')` — turned out to be the wrong tool: on Windows
+(this repo's primary dev environment), Node's SIGTERM emulation doesn't
+reliably reach a registered `process.on('SIGTERM')` handler, so that
+approach can't distinguish "handled gracefully" from "just got killed."
+`graceful-shutdown.test.ts` instead uses a real container and `docker
+stop`, which sends a genuine POSIX SIGTERM regardless of host OS —
+confirmed directly: exit code 0, `Received SIGTERM`/`API server stopped`
+in the logs, in well under a second, comfortably inside the 10s window.
+
+### Migration deployment safety (Phase 5)
+
+Unchanged: both migrations remain additive-only; no destructive migration
+exists. No automated migration step exists in the deploy path — `docker
+build`/the container `CMD` never run `prisma migrate deploy`, and
+`render.yaml` has no pre-deploy hook — this is the same gap 46.31
+identified and is still a manual operator step (see the First Client
+Operating Procedure in 46.31's section above, steps 1–3, and
+Troubleshooting's `relation "X" does not exist` entry). Not invented here:
+no Render-specific pre-deploy YAML feature was assumed without evidence
+in this repository.
+
+### Database safety (Phase 6)
+
+No schema, transaction, or isolation code changed this sprint. Re-proved
+via the full suite (below) rather than re-derived: tenant isolation,
+Client Zero, runtime registration, and transactional rollback tests all
+still pass, unchanged.
+
+### CORS / production configuration (Phase 7)
+
+Reconfirmed consistent across `render.yaml`, `.env.example`,
+`scripts/validate-env.js`, `docker/Dockerfile.api`, `.github/workflows/ci.yml`,
+and `services/production-secrets.ts` — all closed in 46.31, no drift
+found. `CORS_ALLOWED_ORIGINS` still fails loud in production; no
+`Access-Control-Allow-Credentials` anywhere (confirmed by a fresh grep,
+Phase 14). No `.env` file is tracked in git (only `.env.example`, which
+holds no real values).
+
+### CI production gate (Phase 8)
+
+`.github/workflows/ci.yml`'s `test` job (added 46.31) now also builds the
+real production image (`docker build -f docker/Dockerfile.api -t
+atlas-api:docker-test .`) before `pnpm test`, so `graceful-shutdown.test.ts`
+and `production-fail-loud.test.ts` actually run there instead of skipping
+— both look for that exact tag and skip cleanly, not falsely-pass, if it's
+absent. **This sprint has no `gh` CLI or other GitHub Actions access in
+this environment — the workflow's YAML is validated locally (parses, job
+graph is correct) but its actual execution on a live runner has not been
+observed.** Recorded honestly, not claimed:
+
+```text
+CI REAL EXECUTION — EXTERNAL / DEFERRED
+```
+
+Recommended follow-up: confirm the `test` job passes on the Actions run
+this sprint's push triggers.
+
+### Deployment smoke test harness (Phase 9)
+
+Extended `scripts/atlas-production-readiness.mjs` (46.20) rather than
+building a second script — it already checked exactly what this phase
+asks for (build artifact, environment, migrations, `/health`, `/ready`,
+authentication, persistence + tenant isolation, CORS) against a live,
+already-running instance, self-cleaning, non-destructive. Added
+`ATLAS_BASE_URL` env-var support (`--api-url` still takes precedence if
+both are given) — no domain is ever hardcoded, and the effective target
+plus which source it came from is always printed first, so a real
+deployment target can never be silently confused with the `localhost`
+dev default. Verified with a real local run: correctly targets, correctly
+reports PASS/BLOCKED per check.
+
+### Backup / restore boundary (Phase 11)
+
+Unchanged from 46.31 — reconfirmed, not re-derived: the only backup/
+restore code in this repository (`routes/v1/ha/backups.ts`, `restore.ts`,
+`modules/ha/backup-service.ts`/`ha-store.ts`) is an in-memory DR-dashboard
+simulation, not real `pg_dump`/`pg_restore` against the actual database.
+
+```text
+BACKUP/RESTORE REAL — EXTERNAL / DEFERRED
+```
+
+To be validated once a real production database exists (not before, and
+not simulated in its place):
+
+- Automated backup schedule and retention policy (depends on the hosting
+  platform's managed Postgres offering once provisioned).
+- A real restore actually executed against a non-production copy, not
+  just assumed to work because a backup file exists.
+- Point-in-time recovery, if the platform offers it.
+- Documented, dated evidence of at least one successful test restore
+  before it's trusted for a real incident.
+
+### First Deployment Checklist (Phase 12)
+
+For the first real deployment. Items outside this repository's control
+stay unchecked here by design — checking them prematurely would be the
+inaccuracy this gate exists to prevent.
+
+**Infrastructure**
+
+- [ ] DNS configured (`atlasappruntime.com.br` / `api.atlasappruntime.com.br`
+      — confirmed unregistered as of 46.31/46.32, real DNS lookup, not
+      assumed)
+- [ ] API URL configured
+- [ ] TLS/HTTPS active
+- [ ] Database provisioned (managed Postgres, not the local dev container)
+- [ ] Secrets configured (all 8 in the Environment Contract table above,
+      real production values, never the dev fallbacks)
+- [ ] CORS configured (`CORS_ALLOWED_ORIGINS` set to the real frontend
+      origin(s))
+- [ ] Redis decision confirmed (still unused by application code as of
+      this sprint — either provision it because something now needs it,
+      or don't provision it at all; don't provision it "just in case")
+
+**Application**
+
+- [x] Docker image builds — verified, reproducibly, `--no-cache`
+- [x] Application boots (`NODE_ENV=production`, full secret set) — verified
+- [x] Health — verified, including real mid-life-outage detection
+- [x] Readiness — verified, same
+- [ ] Migrations applied against the real production database (manual
+      step — see Phase 5 above; not automated in this pipeline)
+- [ ] Smoke tests run against the real deployed URL
+      (`ATLAS_BASE_URL=<real-url> node scripts/atlas-production-readiness.mjs`)
+
+**Client Zero**
+
+- [x] Tenant — verified (46.30 E2E, reconfirmed passing this sprint)
+- [x] Runtime — verified
+- [x] Authentication — verified
+- [x] Heartbeat — verified
+- [x] Discovery — verified
+- [x] First job — verified
+- [x] Persistence — verified
+
+(All six checked here mean "proven in a real, local/containerized
+environment" — re-running the same acceptance flow against the real
+deployed URL once it exists is still the operator's job before trusting a
+real client on it.)
+
+**Operations**
+
+- [ ] Logs — structured logger confirmed never leaking secrets/stack
+      traces to clients (verified); a real log aggregation destination is
+      a platform decision, not made here
+- [ ] Backup — EXTERNAL/DEFERRED, see above
+- [x] Rollback — mechanism documented (platform-native prior-deploy
+      redeploy); not drillable without a live deployment
+- [ ] Monitoring — no monitoring/alerting platform integration exists in
+      this repository; not invented here
+- [ ] Incident procedure — Troubleshooting section above covers known
+      failure signatures; a full on-call/incident process is an
+      operational decision, not a code artifact
+
+### Tests
+
+Full `apps/api` suite run twice, independently: **91 files / 1802 tests,
+0 failures, 0 flakes**, both passes (89 files / 1799 tests carried over
+from 46.31, plus this sprint's 2 new Docker-based integration files —
+`graceful-shutdown.test.ts` (1 test), `production-fail-loud.test.ts` (2
+tests); `db-real-outage-recovery.test.ts` is unchanged from 46.31 — net
++2 files / +3 tests). `pnpm type-check`, `pnpm lint`, `pnpm build` all
+clean. `pnpm install --frozen-lockfile` confirmed reproducible.
+
+### Findings
+
+- **MEDIUM** — an unreachable `DATABASE_URL` in production can let
+  `ControlPlaneStore`'s eager startup seeding crash first with a raw,
+  unformatted Prisma stack trace instead of the clean
+  `assertProductionSecretsConfigured` message, if both conditions
+  coincide. Exit code is still correctly non-zero either way; no secret
+  value is ever printed. Not fixed — a real architectural untangling,
+  out of scope for this sprint.
+- **MEDIUM** — no automated migration step in the deploy pipeline
+  (unchanged from 46.31); still a manual, documented operator step.
+- **LOW** — `REDIS_URL` still provisioned but unused by any application
+  code (unchanged from 46.31) — informational, deliberately not acted on
+  per this sprint's own instruction.
+- **LOW** — CI's `docker build`/`test` job execution has not been
+  observed on a live GitHub Actions run in this environment (no `gh` CLI
+  access) — recommend confirming on the push this sprint triggers.
+
+No CRITICAL or HIGH findings. Final sweep (Phase 14): no `.env` files
+tracked in git, no `Access-Control-Allow-Credentials` anywhere, no
+`.only`/masking `.skip` in any test file (the three new Docker-based
+tests use `describe.skip` only as an environment-capability guard,
+identical in shape to 46.31's `db-real-outage-recovery.test.ts`), no new
+secrets/tokens/credentials in logs or error responses, one pre-existing
+`TODO` comment (`middleware/auth.ts`) describing an already-correctly-
+`NODE_ENV==='development'`-gated dev shortcut — reviewed, confirmed safe,
+not touched.
+
+### External / Deferred
+
+| Item                                                          | Status                                              |
+| ------------------------------------------------------------- | --------------------------------------------------- |
+| DNS (`atlasappruntime.com.br` / `api.atlasappruntime.com.br`) | EXTERNAL/DEFERRED — confirmed unregistered          |
+| Live Render/Vercel deployment                                 | EXTERNAL/DEFERRED — not provisioned                 |
+| CI real execution on a live Actions run                       | EXTERNAL/DEFERRED — no access from this environment |
+| Real backup/restore                                           | EXTERNAL/DEFERRED — depends on hosting platform     |
+| Live rollback drill                                           | EXTERNAL/DEFERRED — no production to drill against  |
+| Monitoring/alerting integration                               | EXTERNAL/DEFERRED — no platform chosen              |
+| Stripe integration                                            | EXTERNAL/DEFERRED — unchanged, not created          |
+
+### Final Verdict
+
+```text
+ATLAS 46.32 — COMPLETE WITH RESERVATIONS
+READY FOR DEPLOYMENT WITH EXTERNAL GATES
+```
+
+Every technical gate this repository controls passed, including two that
+had never been automated before this sprint (real-SIGTERM graceful
+shutdown, real-container production fail-loud). What remains is entirely
+external — DNS, a live platform deployment, real managed backups, and
+confirming this sprint's own CI change actually runs green — none of
+which this sprint can execute or fake from here. Not GO-LIVE.

@@ -8,6 +8,14 @@
  * and the production build artifact, then prints a single verdict line.
  *
  * Usage: node scripts/atlas-production-readiness.mjs [--api-url=http://localhost:3001]
+ * or:    ATLAS_BASE_URL=https://api.example.com node scripts/atlas-production-readiness.mjs
+ *
+ * ATLAS 46.32 — Phase 9's deployment smoke harness: --api-url takes
+ * precedence if both are given, then ATLAS_BASE_URL, then the localhost
+ * dev default. Never hardcodes a real domain — the target is always
+ * caller-supplied. Which one is actually in effect is always printed, so
+ * a real deployment target is never silently confused with the local
+ * fallback.
  *
  * Exit code 0 + "ATLAS PRODUCTION READINESS: PASS" only if every check
  * passes. Any critical failure exits 1 with "...: BLOCKED" — this script
@@ -24,7 +32,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..');
 
 const apiUrlArg = process.argv.find((a) => a.startsWith('--api-url='));
-const API_URL = apiUrlArg ? apiUrlArg.slice('--api-url='.length) : 'http://localhost:3001';
+const [API_URL, API_URL_SOURCE] = apiUrlArg
+  ? [apiUrlArg.slice('--api-url='.length), '--api-url']
+  : process.env.ATLAS_BASE_URL
+    ? [process.env.ATLAS_BASE_URL, 'ATLAS_BASE_URL']
+    : ['http://localhost:3001', 'default (no --api-url or ATLAS_BASE_URL set)'];
 
 /** @type {{name: string, ok: boolean, detail: string}[]} */
 const results = [];
@@ -249,7 +261,7 @@ function checkProductionBuild() {
 }
 
 async function main() {
-  console.log(`\nATLAS Production Readiness — target: ${API_URL}\n`);
+  console.log(`\nATLAS Production Readiness — target: ${API_URL} (source: ${API_URL_SOURCE})\n`);
 
   checkProductionBuild();
   await checkEnvironment();
