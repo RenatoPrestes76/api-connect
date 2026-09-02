@@ -1,4 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npx turbo run build --filter=@seltriva/admin"
+  "buildCommand": "npx turbo run build --filter=@seltriva/admin",
+  "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" != \"master\" ]; then exit 0; fi; npx turbo-ignore"
 }
