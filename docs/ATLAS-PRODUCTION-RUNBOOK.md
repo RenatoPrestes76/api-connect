@@ -2351,3 +2351,53 @@ a more explicit contract rather than newly discovered: hosting account,
 managed database, domain registration, TLS, backup, and monitoring all
 require a human with external account/billing/registrar access to act
 next. Not GO-LIVE.
+
+## ATLAS 46.36 — Infrastructure Activation & First Deployment Gate
+
+Mission: activate the external infrastructure 46.35 left pending, and
+execute a real first deployment against it. Infrastructure discovery
+(Phase 1), performed fresh rather than assumed carried-over from 46.35:
+
+- `render.yaml` unchanged (0 diff since 46.35) — still a specification,
+  not evidence of a provisioned service.
+- No new provider config anywhere in the repository
+  (`fly.toml`/`railway.json`/AWS config/etc.) — none found.
+- `.vercel/project.json`'s linkage is unchanged and, as previously noted,
+  does not by itself prove any app is actively deployed and serving.
+- No `.env`/`.env.local` file is tracked by git (confirmed via
+  `git ls-files`) — the ones that exist locally on this machine are
+  correctly gitignored, never committed, and were not read or exposed as
+  part of this check.
+
+**Result: no real cloud infrastructure exists — identical finding to
+46.34 and 46.35.** Per this sprint's own explicit instruction for this
+exact case ("SE A INFRAESTRUTURA NÃO EXISTIR... não ficar criando código
+indefinidamente... registrar exatamente o bloqueio; finalizar"), no
+Phases 2–15 action was taken — each depends on a hosting account,
+managed database, domain registration, or provider credential that does
+not exist and was not fabricated. Nothing was deployed; no URL was
+invented; `localhost`/Docker-local was not presented as production
+anywhere in this sprint.
+
+**Regression:** per this sprint's own Regression Policy — "se não houver
+alterações de código relevantes: não repetir a bateria completa sem
+necessidade" — no code changed this sprint (infrastructure activation
+requires access this environment doesn't have; there was nothing to fix
+or build), so the 91-file/1802-test full suite was not re-run a sixth
+consecutive time without cause. `git status`/`git diff` reviewed before
+this commit; 0 secrets, 0 credentials, 0 private keys, 0 tracked `.env`
+files.
+
+**Final Verdict**
+
+```text
+ATLAS 46.36 — COMPLETE WITH RESERVATIONS
+```
+
+Identical reservation to 46.34/46.35, reconfirmed rather than newly
+discovered: hosting account, managed PostgreSQL, domain registration,
+DNS, TLS, backup, and monitoring/alerting all remain
+`EXTERNAL/DEFERRED`, requiring a human with external account/billing/
+registrar access. `docs/deployment/production-first-deployment.md`'s
+Go-Live Decision Gate table (46.35) remains the accurate, current status
+— no gate changed state this sprint. Not GO-LIVE.
