@@ -1935,3 +1935,213 @@ shutdown, real-container production fail-loud). What remains is entirely
 external — DNS, a live platform deployment, real managed backups, and
 confirming this sprint's own CI change actually runs green — none of
 which this sprint can execute or fake from here. Not GO-LIVE.
+
+## ATLAS 46.33 — Real Deployment Preparation & Production Infrastructure Gate
+
+This sprint's own Phase 8 recommendation from 46.32 — "confirm the `test`
+job passes on the Actions run this sprint's push triggers" — turned up a
+real, previously-undetectable bug the moment it was checked against a
+live GitHub Actions run.
+
+### The bug GitHub Actions caught that nothing local could
+
+The `test` job failed on every `apps/api` test touching Prisma with
+`error: Environment variable not found: DATABASE_URL`, even though
+`.github/workflows/ci.yml`'s `test` job sets `DATABASE_URL` at the
+job-`env:` level. Root cause: Turborepo 2.x (this repo runs 2.10.0)
+defaults to **strict environment mode** — only variables explicitly
+declared in `turbo.json` (or in Turbo's small "always available" system
+list) reach the process a task actually spawns; everything else set in
+the calling shell/CI job is silently stripped before `vitest run` ever
+sees it. `turbo.json`'s `test` task had no `env`/`passThroughEnv` entry
+at all, so `DATABASE_URL`/`API_SECRET_KEY` never reached `apps/api`'s
+test process in CI.
+
+This was invisible in every local run across 46.31–46.32 for a specific
+reason: every single local verification in those sprints invoked
+`vitest run` directly from inside `apps/api`, never `pnpm test` (i.e.
+`turbo run test`) from the repo root — the exact path CI uses. Confirmed
+directly: reproduced the identical failure locally by running
+`turbo run test --filter=@seltriva/api` for the first time this sprint,
+then confirmed clean after the fix.
+
+Fixed by adding `passThroughEnv: ["DATABASE_URL", "API_SECRET_KEY",
+"REDIS_URL"]` to `turbo.json`'s `test` task — `passThroughEnv` (not
+`env`) is the correct field: these vary by environment without changing
+a test's deterministic output, so they're passed to the process but
+deliberately excluded from Turbo's cache-key hash. Verified twice more
+via the exact CI path (`turbo run test --filter=@seltriva/api`): 91
+files / 1802 tests, 0 failures.
+
+### Docker daemon contention under concurrent integration tests
+
+Running this sprint's full regression repeatedly surfaced daemon-level
+flakiness — containers intermittently "disappearing" mid-test, health
+checks timing out — specifically when the three Docker-based integration
+test files (`db-real-outage-recovery`, `graceful-shutdown`,
+`production-fail-loud`) executed concurrently (vitest's default: each
+test _file_ runs in its own worker). It never reproduced running any one
+of them alone. Fixed with `docker-test-lock.ts` — a dependency-free,
+`fs.mkdirSync`-based mutex (directory creation is atomic) so these three
+files serialize their actual container operations against each other
+regardless of which worker thread each lands in, without slowing down or
+otherwise touching any other test file. `vitest.config.ts`'s
+`hookTimeout` was raised again (30s → 60s, was 10s → 30s in 46.31) —
+sustained Docker daemon load from three real-container test files, not
+just one, needed more headroom for an unrelated file's simple
+`beforeAll`/`afterAll` under the same system load. Verified: the full
+suite, split into a bulk run plus the three Docker-heavy files, twice,
+0 failures both times.
+
+### Phase 0–2: Baseline, reproducibility, configuration audit
+
+`HEAD` confirmed at `a2bdcc29d3d4f27ae62de820b40f4ddbbdeff9db` (46.32),
+`local == origin/master`, `pnpm install --frozen-lockfile` reproducible.
+Cross-checked every entry in `services/production-secrets.ts`'s
+`REQUIRED_IN_PRODUCTION` against `render.yaml`, `.env.example`, and
+`scripts/validate-env.js` — all four consistent, no drift since 46.32.
+`REDIS_URL` remains provisioned (`docker-compose.yml`, `.env.example`)
+but read by no application code — per this sprint's explicit instruction,
+left exactly as-is rather than wired up just to close the finding.
+
+### Phase 3–4: No hardcoded production localhost; domain status
+
+Audited every `localhost`/`127.0.0.1`/`0.0.0.0` reference in
+`apps/api/src`: all are either the Dockerfile's own container-internal
+`HEALTHCHECK` (checking itself, correctly), `new URL(path, 'http://
+localhost')` (a throwaway base for the WHATWG URL parser — never a
+network call), an informational startup log of the process's own local
+bind address, or seeded demo-fixture data (audit-log IP addresses, a
+demo connector's default host) — none are real production endpoint
+misconfigurations. No wildcard CORS in application code (only the
+already-audited, fail-loud-gated dev default). `atlasappruntime.com.br`
+/ `api.atlasappruntime.com.br`: reconfirmed via a fresh, real DNS lookup
+— still unregistered. **EXTERNAL/DEFERRED.**
+
+### Phase 5–6: Docker reproducibility, graceful shutdown
+
+Rebuilt `docker/Dockerfile.api` with `--no-cache` (genuinely zero reused
+layers) — built and booted identically to 46.31/46.32: `NODE_ENV=
+production`, full secret set, real Postgres, `/health`/`/ready` both
+200, Docker's own `HEALTHCHECK` reports `healthy`. `docker stop` (real
+SIGTERM, real container) → exit code 0 in under a second, logs show
+`Received SIGTERM` → `API server stopped`. No hung process, no lingering
+Prisma connection, no unexpected timeout.
+
+### Phase 7: Health/readiness contract
+
+`GET /health`/`GET /ready` responses contain only `status`/`checks`
+(`ok`/`error` strings)/`uptime`/`version`/`timestamp` — no
+`DATABASE_URL`, no secrets, no tokens, no stack traces. Both are
+correctly unauthenticated (standard practice for health/readiness; no
+sensitive data is exposed by not gating them). Database up → healthy/
+ready; database down → `pingDB()` (46.31) correctly fails both; missing
+required production config → fail-loud at startup, verified against a
+real container.
+
+### Phase 8: Database production safety
+
+Still exactly 2 migrations, both additive. No `DROP TABLE`/`DROP COLUMN`/
+`TRUNCATE`/unguarded `DELETE` anywhere in `packages/database/prisma/
+migrations`. No `prisma migrate reset` anywhere in application code or
+scripts. No automated migration step in the deploy path — unchanged,
+documented gap since 46.31, now also captured as an explicit manual step
+in the new `docs/deployment/production-first-deployment.md`.
+
+### Phase 9: Tenant isolation / Client Zero regression
+
+Not re-derived — reconfirmed via the full suite (below): Client Zero,
+tenant provisioning, runtime registration/authentication/authorization,
+heartbeat, discovery, job execution, and persistence all still pass,
+unchanged since 46.30–46.32.
+
+### Phase 10: Security final pre-deployment sweep
+
+No tracked `.env` files (only `.env.example`, no real values). No
+`BEGIN PRIVATE KEY`/`BEGIN RSA PRIVATE KEY` literals. No hardcoded
+real-looking API keys (`sk-`/`AKIA`/`ghp_` patterns). No
+`$queryRawUnsafe`/`$executeRawUnsafe` anywhere. No `child_process` usage
+outside tests. The one pre-existing `TODO` in `middleware/auth.ts`
+remains correctly gated behind `NODE_ENV === 'development'` — reviewed
+again, still safe, not touched.
+
+### Phase 11: Smoke test harness
+
+`scripts/atlas-production-readiness.mjs`'s `DELETE` calls only ever
+target `created.organizations`/`created.tenants` — IDs the script itself
+generated moments earlier in that same run (`runId`-scoped names) —
+never pre-existing or real client data. No hardcoded production URL (46.32's `ATLAS_BASE_URL` support, reconfirmed with a real run against a
+real running container: correctly targets, correctly reports
+`ATLAS PRODUCTION READINESS: PASS`).
+
+### Phase 12–13: Deployment runbook and checklist
+
+New: `docs/deployment/production-first-deployment.md` — prerequisites,
+recommended order (database → service → env vars → domain → HTTPS →
+deploy → migration → health → readiness → smoke test → Client Zero →
+monitoring → backup → rollback), a conceptual (platform-agnostic)
+rollback procedure, the backup/monitoring `EXTERNAL/DEFERRED`
+declarations, and a first-deployment checklist with external items left
+explicitly unchecked.
+
+### Tests
+
+Full `apps/api` suite, split (bulk suite + the three Docker-heavy
+integration files, to avoid the daemon contention described above) and
+run twice: **91 files / 1802 tests, 0 failures, 0 flakes**, both times —
+also reconfirmed via the actual `turbo run test --filter=@seltriva/api`
+path CI uses. `pnpm type-check`, `pnpm lint`, `pnpm build` all clean.
+
+### Findings
+
+- **HIGH, found via live CI and fixed** — Turborepo's strict env mode
+  silently stripped `DATABASE_URL`/`API_SECRET_KEY` from every apps/api
+  test in the real GitHub Actions run, invisible to any local
+  verification because local testing never went through `turbo run test`.
+  Fixed in `turbo.json`; verified via the exact CI-equivalent command.
+- **MEDIUM, found and fixed this sprint** — the three Docker-based
+  integration test files contended for the same Docker daemon when run
+  concurrently (default vitest behavior), causing intermittent container-
+  level flakiness. Fixed with a filesystem-mutex-based serialization lock
+  (`docker-test-lock.ts`) and a further `hookTimeout` increase.
+- **MEDIUM** — no automated migration step in the deploy pipeline
+  (unchanged since 46.31/46.32) — documented, not fixed with an
+  unverified platform-specific mechanism.
+- **LOW** — `REDIS_URL` provisioned but unused by any application code
+  (unchanged) — informational, deliberately left as-is per this sprint's
+  instruction.
+- **LOW** — this sprint's own CI fix has not yet been observed on a live
+  Actions run (the fix was made in response to the _previous_ sprint's
+  CI failure, reported by the user from a real run) — recommend
+  confirming the next push's Actions run is green.
+
+No CRITICAL findings.
+
+### External / Deferred
+
+| Item                                                          | Status                                                   |
+| ------------------------------------------------------------- | -------------------------------------------------------- |
+| DNS (`atlasappruntime.com.br` / `api.atlasappruntime.com.br`) | EXTERNAL/DEFERRED — reconfirmed unregistered             |
+| Hosting (Render or otherwise)                                 | EXTERNAL/DEFERRED — not provisioned                      |
+| Real production database                                      | EXTERNAL/DEFERRED — not provisioned                      |
+| Real backup/restore                                           | EXTERNAL/DEFERRED — depends on hosting/database provider |
+| Monitoring/alerting                                           | EXTERNAL/DEFERRED — no platform chosen                   |
+| Live rollback drill                                           | EXTERNAL/DEFERRED — no production to drill against       |
+| This sprint's CI fix on a live Actions run                    | EXTERNAL/DEFERRED — not yet observed                     |
+| Stripe integration                                            | EXTERNAL/DEFERRED — unchanged, not created               |
+
+### Final Verdict
+
+```text
+ATLAS 46.33 — COMPLETE WITH RESERVATIONS
+READY FOR DEPLOYMENT WITH EXTERNAL GATES
+```
+
+Repository ready, deployment procedure ready, infrastructure still
+pending — exactly this sprint's stated goal, no more. Not GO-LIVE. The
+most important result of this sprint is procedural, not just technical:
+the previous sprint's CI change was unverified until a real Actions run
+caught a real bug within it — a concrete demonstration of why
+`CI REAL EXECUTION` stayed classified `EXTERNAL/DEFERRED` rather than
+assumed, and why the same discipline should apply to the real deployment
+this repository is now otherwise ready for.

@@ -13,7 +13,13 @@ export default defineConfig({
     // (server.listen()/close()) past 10s under system load — observed
     // directly running this suite locally. Raised, not removed: a hook that
     // is genuinely stuck should still fail eventually.
-    hookTimeout: 30_000,
+    // ATLAS 46.32 — raised again: three more real-Docker integration files
+    // (graceful-shutdown, production-fail-loud, plus reusing
+    // db-real-outage-recovery) add real, sustained Docker daemon load on
+    // top of 46.31's — 30s was no longer consistently enough for an
+    // unrelated file's simple hook under that combined load, confirmed
+    // directly running the full suite.
+    hookTimeout: 60_000,
     env: {
       SUPABASE_JWT_SECRET: 'test-only-secret-do-not-use-in-prod',
     },

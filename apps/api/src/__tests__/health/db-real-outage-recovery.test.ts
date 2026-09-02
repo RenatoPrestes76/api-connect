@@ -3,6 +3,7 @@ import { execFile, spawn, type ChildProcess } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { withDockerLock } from './docker-test-lock.js';
 
 const execFileAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -113,80 +114,88 @@ d(
       await execFileAsync('docker', ['rm', '-f', CONTAINER]).catch(() => undefined);
     }, 30_000);
 
-    it('healthy at boot -> reports degraded/not_ready DURING a real outage -> recovers once the database returns', async () => {
-      await execFileAsync('docker', ['rm', '-f', CONTAINER]).catch(() => undefined);
-      await execFileAsync('docker', [
-        'run',
-        '-d',
-        '--name',
-        CONTAINER,
-        '-e',
-        'POSTGRES_USER=seltriva',
-        '-e',
-        'POSTGRES_PASSWORD=seltriva_dev_password',
-        '-e',
-        'POSTGRES_DB=seltriva_connect',
-        '-p',
-        `${DB_PORT}:5432`,
-        'postgres:16-alpine',
-      ]);
-      await waitForPgReady();
-      await execFileAsync(
-        process.platform === 'win32' ? 'npx.cmd' : 'npx',
-        ['prisma', 'migrate', 'deploy'],
-        {
-          cwd: DATABASE_DIR,
-          env: { ...process.env, DATABASE_URL: DB_URL },
-          shell: process.platform === 'win32',
-        }
-      );
+    it(
+      'healthy at boot -> reports degraded/not_ready DURING a real outage -> recovers once the database returns',
+      async () =>
+        withDockerLock(async () => {
+          await execFileAsync('docker', ['rm', '-f', CONTAINER]).catch(() => undefined);
+          await execFileAsync('docker', [
+            'run',
+            '-d',
+            '--name',
+            CONTAINER,
+            '-e',
+            'POSTGRES_USER=seltriva',
+            '-e',
+            'POSTGRES_PASSWORD=seltriva_dev_password',
+            '-e',
+            'POSTGRES_DB=seltriva_connect',
+            '-p',
+            `${DB_PORT}:5432`,
+            'postgres:16-alpine',
+          ]);
+          await waitForPgReady();
+          await execFileAsync(
+            process.platform === 'win32' ? 'npx.cmd' : 'npx',
+            ['prisma', 'migrate', 'deploy'],
+            {
+              cwd: DATABASE_DIR,
+              env: { ...process.env, DATABASE_URL: DB_URL },
+              shell: process.platform === 'win32',
+            }
+          );
 
-      apiProcess = spawn(process.execPath, [DIST_ENTRY], {
-        env: {
-          ...process.env,
-          DATABASE_URL: DB_URL,
-          API_PORT: String(API_PORT),
-          NODE_ENV: 'development',
-        },
-        stdio: 'pipe',
-      });
+          apiProcess = spawn(process.execPath, [DIST_ENTRY], {
+            env: {
+              ...process.env,
+              DATABASE_URL: DB_URL,
+              API_PORT: String(API_PORT),
+              NODE_ENV: 'development',
+            },
+            stdio: 'pipe',
+          });
 
-      const bootHealthy = await waitForHealthField((b) => b.status === 'healthy', 20_000);
-      expect(
-        bootHealthy,
-        'expected the API to boot healthy against the fresh container'
-      ).not.toBeNull();
-      expect(bootHealthy!.status).toBe(200);
-      const readyRes = await fetch(`${BASE_URL}/ready`);
-      const readyBody = (await readyRes.json()) as { status: string };
-      expect(readyRes.status).toBe(200);
-      expect(readyBody.status).toBe('ready');
+          const bootHealthy = await waitForHealthField((b) => b.status === 'healthy', 45_000);
+          expect(
+            bootHealthy,
+            'expected the API to boot healthy against the fresh container'
+          ).not.toBeNull();
+          expect(bootHealthy!.status).toBe(200);
+          const readyRes = await fetch(`${BASE_URL}/ready`);
+          const readyBody = (await readyRes.json()) as { status: string };
+          expect(readyRes.status).toBe(200);
+          expect(readyBody.status).toBe('ready');
 
-      await execFileAsync('docker', ['stop', CONTAINER]);
+          await execFileAsync('docker', ['stop', CONTAINER]);
 
-      const degraded = await waitForHealthField((b) => b.checks.database === 'error', 30_000);
-      expect(
-        degraded,
-        'expected /health to eventually detect the real, stopped database'
-      ).not.toBeNull();
-      expect(degraded!.status).toBe(503);
-      expect(degraded!.body.status).toBe('degraded');
+          const degraded = await waitForHealthField((b) => b.checks.database === 'error', 30_000);
+          expect(
+            degraded,
+            'expected /health to eventually detect the real, stopped database'
+          ).not.toBeNull();
+          expect(degraded!.status).toBe(503);
+          expect(degraded!.body.status).toBe('degraded');
 
-      const notReadyRes = await fetch(`${BASE_URL}/ready`);
-      const notReadyBody = (await notReadyRes.json()) as {
-        status: string;
-        checks: { database: string };
-      };
-      expect(notReadyRes.status).toBe(503);
-      expect(notReadyBody.status).toBe('not_ready');
-      expect(notReadyBody.checks.database).toBe('error');
+          const notReadyRes = await fetch(`${BASE_URL}/ready`);
+          const notReadyBody = (await notReadyRes.json()) as {
+            status: string;
+            checks: { database: string };
+          };
+          expect(notReadyRes.status).toBe(503);
+          expect(notReadyBody.status).toBe('not_ready');
+          expect(notReadyBody.checks.database).toBe('error');
 
-      await execFileAsync('docker', ['start', CONTAINER]);
-      await waitForPgReady();
+          await execFileAsync('docker', ['start', CONTAINER]);
+          await waitForPgReady();
 
-      const recovered = await waitForHealthField((b) => b.status === 'healthy', 30_000);
-      expect(recovered, 'expected /health to recover once the database came back').not.toBeNull();
-      expect(recovered!.status).toBe(200);
-    }, 150_000);
+          const recovered = await waitForHealthField((b) => b.status === 'healthy', 30_000);
+          expect(
+            recovered,
+            'expected /health to recover once the database came back'
+          ).not.toBeNull();
+          expect(recovered!.status).toBe(200);
+        }),
+      600_000
+    );
   }
 );

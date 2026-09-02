@@ -14,7 +14,24 @@
     "type-check": {
       "dependsOn": ["^build"]
     },
-    "test": {},
+    "test": {
+      // ATLAS 46.33 — Turborepo 2.x defaults to strict env mode: only vars
+      // explicitly listed here (or in the global "always available" set)
+      // reach the actual test process, everything else set in the calling
+      // shell/CI job is stripped. Confirmed directly by a real GitHub
+      // Actions run: `pnpm test` failed every apps/api test touching
+      // Prisma with "Environment variable not found: DATABASE_URL", even
+      // though .github/workflows/ci.yml's `test` job sets it at the
+      // job-env level — turbo silently dropped it before spawning
+      // vitest. Never reproduced locally in this sprint's own testing
+      // because every local run in this session invoked `vitest` directly
+      // from within apps/api, bypassing `turbo run test` (and therefore
+      // this filtering) entirely. `passThroughEnv` (not `env`) is the
+      // correct field for these: they affect runtime connectivity, not
+      // the task's deterministic output, so they shouldn't factor into
+      // the cache key.
+      "passThroughEnv": ["DATABASE_URL", "API_SECRET_KEY", "REDIS_URL"]
+    },
     "test:coverage": {
       "outputs": ["coverage/**"]
     },
