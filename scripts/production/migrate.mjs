@@ -25,6 +25,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkMigrationStatus } from './migration-status.mjs';
 
 const execFileAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -82,18 +83,13 @@ async function main() {
   }
 
   console.log('Checking migration status before applying anything...');
-  try {
-    const { stdout: statusBefore } = await execFileAsync(
-      process.platform === 'win32' ? 'npx.cmd' : 'npx',
-      ['prisma', 'migrate', 'status'],
-      { cwd: path.join(REPO_ROOT, 'packages/database'), env: process.env, shell: process.platform === 'win32' }
-    );
-    console.log(statusBefore.trim());
-  } catch (err) {
-    console.log(`BLOCKED: could not read migration status: ${err instanceof Error ? err.message : err}`);
+  const statusBefore = await checkMigrationStatus(REPO_ROOT);
+  if (statusBefore.state !== 'PASS') {
+    console.log(`BLOCKED: could not read migration status: ${statusBefore.detail}`);
     process.exitCode = 1;
     return;
   }
+  console.log(statusBefore.detail);
 
   console.log('\nApplying migrations (prisma migrate deploy — additive/versioned only)...');
   try {

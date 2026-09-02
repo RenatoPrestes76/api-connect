@@ -1,16 +1,25 @@
 #!/usr/bin/env node
 /**
- * ATLAS 46.37 — Production Activation Automation & Fail-Loud Gate.
+ * ATLAS 46.37/46.38 — Production Activation Automation & Fail-Loud Gate /
+ * Production Infrastructure Handoff & Go-Live Lock.
  *
- * `production:deploy` — orchestrates the full deployment sequence:
+ * `production:deploy` — orchestrates the full deployment sequence, in the
+ * conceptual order the 46.38 provider-neutral deployment contract
+ * requires:
  *
- *   preflight -> build -> deploy (via ProductionProvider) -> wait
- *   -> health -> readiness -> migration verification -> smoke test
+ *   PRECHECK -> BUILD -> MIGRATION (status only) -> DEPLOY -> HEALTH
+ *   -> READINESS -> SMOKE
  *
- * Any failed step stops the sequence — it never proceeds to Client Zero
- * (that's a separate command, `production:client-zero`, deliberately not
- * chained here) with a deployment/health/readiness/database failure
- * upstream.
+ * Any failed or not-actually-executed step stops the sequence and is
+ * reported as such — a step is never reported PASS unless it actually
+ * ran. This command never applies migrations itself (that remains the
+ * separate, explicit, --production --yes gated `production:migrate`); it
+ * only reads and reports migration status, so an operator can see
+ * pending migrations before choosing to run that command.
+ *
+ * It also never proceeds to Client Zero (`production:client-zero`,
+ * deliberately not chained here) on a deployment/health/readiness
+ * failure upstream.
  *
  * Usage:
  *   node scripts/production/deploy.mjs --production
@@ -20,6 +29,7 @@ import { promisify } from 'node:util';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getActiveProvider } from './provider.mjs';
+import { checkMigrationStatus } from './migration-status.mjs';
 
 const execFileAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -48,7 +58,7 @@ async function main() {
     return;
   }
 
-  step('1/6 Preflight');
+  step('1/7 Precheck (preflight)');
   const preflightOk = await runNode('scripts/production/preflight.mjs', ['--production']);
   if (!preflightOk) {
     console.log('\nSTOPPED at preflight — see failures above. Deployment not attempted.');
@@ -56,20 +66,38 @@ async function main() {
     return;
   }
 
-  step('2/6 Build');
+  step('2/7 Build');
   try {
     await execFileAsync(process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm', ['build'], {
       cwd: REPO_ROOT,
       shell: process.platform === 'win32',
     });
-    console.log('Build: PASS');
+    console.log('Build: PASS (executed)');
   } catch (err) {
-    console.log(`Build: FAIL — ${err instanceof Error ? err.message : err}`);
+    console.log(`Build: FAIL (executed) — ${err instanceof Error ? err.message : err}`);
     process.exitCode = 1;
     return;
   }
 
-  step('3/6 Deploy (via ProductionProvider)');
+  step('3/7 Migration status (read-only — does not apply anything)');
+  const migrationStatus = await checkMigrationStatus(REPO_ROOT);
+  if (migrationStatus.state !== 'PASS') {
+    console.log(`Migration status: NOT VERIFIABLE (executed, failed) — ${migrationStatus.detail}`);
+    console.log('STOPPED — cannot deploy without being able to read migration status against the target database.');
+    process.exitCode = 1;
+    return;
+  }
+  console.log(migrationStatus.detail);
+  if (migrationStatus.pendingMigrations) {
+    console.log(
+      '\nMigration status: PENDING (executed) — this deploy will NOT apply them. ' +
+        'Run `pnpm production:migrate --production --yes` explicitly, separately, before or after deploying.'
+    );
+  } else {
+    console.log('\nMigration status: UP TO DATE (executed)');
+  }
+
+  step('4/7 Deploy (via ProductionProvider)');
   const provider = getActiveProvider();
   const validation = await provider.validate();
   console.log(`Provider validate(): ${validation.state} — ${validation.detail}`);
@@ -90,10 +118,10 @@ async function main() {
     return;
   }
 
-  step('4/6 Wait for deployment + Health/Readiness');
+  step('5/7 Health + 6/7 Readiness');
   const url = await provider.getDeploymentUrl();
   if (!url) {
-    console.log('No deployment URL available from provider — cannot proceed to health/readiness.');
+    console.log('No deployment URL available from provider — cannot proceed to health/readiness (not verifiable).');
     process.exitCode = 1;
     return;
   }
@@ -102,11 +130,8 @@ async function main() {
     '--production',
   ]);
 
-  step('5/6 Migration verification');
-  console.log('See production:migrate — not run automatically as part of deploy (explicit, separate, confirmation-gated command by design).');
-
-  step('6/6 Production smoke test');
-  console.log(smokeOk ? 'Smoke test: PASS' : 'Smoke test: FAIL');
+  step('7/7 Production smoke test');
+  console.log(smokeOk ? 'Smoke test: PASS (executed)' : 'Smoke test: FAIL (executed)');
   process.exitCode = smokeOk ? 0 : 1;
 }
 

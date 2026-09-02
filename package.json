@@ -38,7 +38,8 @@
     "production:verify": "node scripts/production/verify.mjs",
     "production:client-zero": "node scripts/production/client-zero.mjs",
     "production:rollback": "node scripts/production/rollback.mjs",
-    "production:domain": "node scripts/production/domain.mjs"
+    "production:domain": "node scripts/production/domain.mjs",
+    "production:dry-run": "node scripts/production/dry-run.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",

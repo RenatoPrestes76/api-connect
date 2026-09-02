@@ -1,0 +1,249 @@
+{
+  "$schema": "atlas-go-live-checklist-v1",
+  "generatedBy": "ATLAS 46.38 — Production Infrastructure Handoff & Go-Live Lock",
+  "generatedAt": "2026-09-02",
+  "statusValues": ["READY", "EXTERNAL_REQUIRED", "BLOCKED", "NOT_APPLICABLE"],
+  "note": "No external gate may be automatically marked READY. A gate is READY only when this repository has real, checkable evidence (a passing test, a real command output, a verified file) — never because documentation describes an intention.",
+  "categories": [
+    "CODE",
+    "BUILD",
+    "DATABASE",
+    "HOSTING",
+    "DOMAIN",
+    "DNS",
+    "TLS",
+    "SECRETS",
+    "AUTH",
+    "AUTHZ",
+    "TENANT_ISOLATION",
+    "RUNTIME",
+    "CLIENT_ZERO",
+    "BACKUP",
+    "MONITORING",
+    "ALERTING",
+    "ROLLBACK",
+    "SMOKE_TEST"
+  ],
+  "gates": [
+    {
+      "id": "code-clean-head",
+      "descrição": "Repository is at a clean, committed HEAD (no uncommitted modifications to tracked files)",
+      "categoria": "CODE",
+      "required": true,
+      "owner": "Engineering",
+      "status": "READY",
+      "evidence": "git status --short clean at time of writing; verified by production:verify's Repository gate",
+      "blocking": true
+    },
+    {
+      "id": "code-typecheck-lint-clean",
+      "descrição": "Type-check and lint pass across the whole monorepo",
+      "categoria": "CODE",
+      "required": true,
+      "owner": "Engineering",
+      "status": "READY",
+      "evidence": "pnpm type-check / pnpm lint — reconfirmed every sprint since 46.19",
+      "blocking": true
+    },
+    {
+      "id": "build-artifact-present",
+      "descrição": "pnpm build produces a real apps/api/dist/index.js artifact",
+      "categoria": "BUILD",
+      "required": true,
+      "owner": "Engineering",
+      "status": "READY",
+      "evidence": "checked by preflight.mjs's Repository gate and verify.mjs's Build gate",
+      "blocking": true
+    },
+    {
+      "id": "build-docker-image-reproducible",
+      "descrição": "docker build --no-cache produces a container that boots, passes /health and /ready, and shuts down cleanly on SIGTERM",
+      "categoria": "BUILD",
+      "required": true,
+      "owner": "Engineering",
+      "status": "READY",
+      "evidence": "docker/Dockerfile.api verified end-to-end (46.31–46.34); graceful-shutdown.test.ts confirms clean exit via real docker stop",
+      "blocking": true
+    },
+    {
+      "id": "database-managed-postgres-provisioned",
+      "descrição": "A real managed PostgreSQL instance exists with a production DATABASE_URL",
+      "categoria": "DATABASE",
+      "required": true,
+      "owner": "Infrastructure",
+      "status": "EXTERNAL_REQUIRED",
+      "evidence": "Only local dev Postgres exists; no managed instance provisioned",
+      "blocking": true
+    },
+    {
+      "id": "database-migrations-additive-only",
+      "descrição": "All Prisma migrations are additive/versioned, safe to apply to a real database",
+      "categoria": "DATABASE",
+      "required": true,
+      "owner": "Engineering",
+      "status": "READY",
+      "evidence": "2 migrations in packages/database/prisma/migrations/, zero DROP/TRUNCATE/DELETE statements (grep-confirmed every sprint)",
+      "blocking": true
+    },
+    {
+      "id": "hosting-service-provisioned",
+      "descrição": "A real hosting service is running the built Docker image",
+      "categoria": "HOSTING",
+      "required": true,
+      "owner": "Infrastructure",
+      "status": "EXTERNAL_REQUIRED",
+      "evidence": "render.yaml is a specification only; no RENDER_SERVICE_ID / running service detected by preflight.mjs",
+      "blocking": true
+    },
+    {
+      "id": "domain-registered",
+      "descrição": "atlasappruntime.com.br is registered and owned",
+      "categoria": "DOMAIN",
+      "required": true,
+      "owner": "Infrastructure",
+      "status": "EXTERNAL_REQUIRED",
+      "evidence": "Real DNS lookup confirms the domain does not resolve (reconfirmed every sprint via scripts/production/domain.mjs)",
+      "blocking": true
+    },
+    {
+      "id": "dns-records-configured",
+      "descrição": "DNS records for atlasappruntime.com.br and api.atlasappruntime.com.br point at the real hosting target",
+      "categoria": "DNS",
+      "required": true,
+      "owner": "Infrastructure",
+      "status": "EXTERNAL_REQUIRED",
+      "evidence": "Cannot exist before domain registration",
+      "blocking": true
+    },
+    {
+      "id": "tls-https-active",
+      "descrição": "A valid TLS certificate serves the official domains over HTTPS, with HTTP redirecting to HTTPS",
+      "categoria": "TLS",
+      "required": true,
+      "owner": "Infrastructure",
+      "status": "EXTERNAL_REQUIRED",
+      "evidence": "Depends on hosting + DNS existing first",
+      "blocking": true
+    },
+    {
+      "id": "secrets-generated-and-loaded",
+      "descrição": "All 8 production-required secrets are freshly generated and loaded into the hosting platform's secret manager",
+      "categoria": "SECRETS",
+      "required": true,
+      "owner": "Infrastructure / Security",
+      "status": "EXTERNAL_REQUIRED",
+      "evidence": "See docs/deployment/production-environment-contract.md — Required section; no real values exist anywhere in this repository",
+      "blocking": true
+    },
+    {
+      "id": "auth-fail-loud-verified",
+      "descrição": "The process refuses to boot in production mode when a required secret is missing",
+      "categoria": "AUTH",
+      "required": true,
+      "owner": "Engineering",
+      "status": "READY",
+      "evidence": "production-fail-loud.test.ts — real Docker container boot, refuses without full secret set (46.32, reconfirmed since)",
+      "blocking": true
+    },
+    {
+      "id": "authz-permission-gating-tested",
+      "descrição": "Role/permission-based authorization is enforced and regression-tested",
+      "categoria": "AUTHZ",
+      "required": true,
+      "owner": "Engineering",
+      "status": "READY",
+      "evidence": "ops/* permission gating regression suite (46.27), part of the standing 91/1802 test baseline",
+      "blocking": true
+    },
+    {
+      "id": "tenant-isolation-regression-green",
+      "descrição": "Cross-tenant access is impossible and covered by regression tests",
+      "categoria": "TENANT_ISOLATION",
+      "required": true,
+      "owner": "Engineering",
+      "status": "READY",
+      "evidence": "control-plane tenant isolation tests + the 46.30 dual-Client-Zero isolation scenario, part of the standing test baseline",
+      "blocking": true
+    },
+    {
+      "id": "runtime-registration-heartbeat-discovery-proven",
+      "descrição": "Runtime registration, heartbeat, discovery, and first-job execution work end-to-end",
+      "categoria": "RUNTIME",
+      "required": true,
+      "owner": "Engineering",
+      "status": "READY",
+      "evidence": "atlas-46-30-production-readiness-e2e.test.ts (full local cycle) + production:client-zero run end-to-end against a real local server (46.37)",
+      "blocking": true
+    },
+    {
+      "id": "client-zero-real-production-run",
+      "descrição": "production:client-zero executed successfully against the real production URL with real admin credentials",
+      "categoria": "CLIENT_ZERO",
+      "required": true,
+      "owner": "Operations",
+      "status": "EXTERNAL_REQUIRED",
+      "evidence": "Only run against a local server so far; requires a real ATLAS_BASE_URL + real admin credentials, which do not exist yet",
+      "blocking": true
+    },
+    {
+      "id": "backup-real-provider-mechanism",
+      "descrição": "A real, provider-level backup mechanism is configured for the production database",
+      "categoria": "BACKUP",
+      "required": true,
+      "owner": "Infrastructure",
+      "status": "EXTERNAL_REQUIRED",
+      "evidence": "modules/ha/backup-service.ts is a local JSON-snapshot tool for dev/testing, not a substitute for a managed provider's backup mechanism",
+      "blocking": false
+    },
+    {
+      "id": "monitoring-platform-configured",
+      "descrição": "Uptime, health, readiness, error-rate, and latency monitoring is configured against the real production URL",
+      "categoria": "MONITORING",
+      "required": true,
+      "owner": "Operations",
+      "status": "EXTERNAL_REQUIRED",
+      "evidence": "No monitoring platform chosen or configured",
+      "blocking": false
+    },
+    {
+      "id": "alerting-rules-configured",
+      "descrição": "Alerting is configured for API unavailability, readiness failure, database failure, runtime offline, and job failure",
+      "categoria": "ALERTING",
+      "required": true,
+      "owner": "Operations",
+      "status": "EXTERNAL_REQUIRED",
+      "evidence": "No alerting platform chosen or configured",
+      "blocking": false
+    },
+    {
+      "id": "rollback-provider-mechanism-available",
+      "descrição": "A real provider-level rollback mechanism exists and has been exercised at least once",
+      "categoria": "ROLLBACK",
+      "required": true,
+      "owner": "Infrastructure",
+      "status": "EXTERNAL_REQUIRED",
+      "evidence": "scripts/production/rollback.mjs's NullProvider honestly reports EXTERNAL/DEFERRED — no real provider exists to roll back with",
+      "blocking": false
+    },
+    {
+      "id": "smoke-test-dry-run-passes",
+      "descrição": "The deployment pipeline's own structure and fail-loud protections pass a dry run",
+      "categoria": "SMOKE_TEST",
+      "required": true,
+      "owner": "Engineering",
+      "status": "READY",
+      "evidence": "pnpm production:dry-run — DRY_RUN_ONLY, all checks passed (46.38)",
+      "blocking": true
+    },
+    {
+      "id": "smoke-test-against-real-production",
+      "descrição": "scripts/atlas-production-readiness.mjs passes against the real production URL",
+      "categoria": "SMOKE_TEST",
+      "required": true,
+      "owner": "Operations",
+      "status": "EXTERNAL_REQUIRED",
+      "evidence": "No real production URL exists to run this against yet",
+      "blocking": true
+    }
+  ]
+}

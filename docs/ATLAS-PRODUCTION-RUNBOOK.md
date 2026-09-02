@@ -2462,3 +2462,121 @@ code changes. Running it today correctly reports the same reservation as
 every prior sprint since 46.34: hosting, managed PostgreSQL, domain
 registration, and their dependents remain `EXTERNAL/DEFERRED`. Not
 GO-LIVE.
+
+## ATLAS 46.38 — Production Infrastructure Handoff & Go-Live Lock
+
+The last sprint of exclusively technical preparation before real
+infrastructure entry. No simulation, no localhost-as-production, no
+invented credentials/DNS/database/HTTPS/hosting/monitoring — this sprint
+only locks down configuration, closes one real gap in the deployment
+pipeline, and produces the handoff artifacts an operator needs once
+external infrastructure exists.
+
+**New artifacts:**
+
+- `docs/deployment/production-environment-contract.md` — consolidates
+  every environment variable into Required / Required for Client Zero /
+  Optional / External, with a closing section citing the fail-loud
+  guarantee as verified (not assumed) via the real container boots from
+  46.31–46.37.
+- `docs/deployment/production-readiness-inventory.md` — a verifiable
+  inventory across Aplicação/Segurança/Operação (all READY, backed by
+  file/test evidence) and Infraestrutura externa (every item honestly
+  `EXTERNAL_REQUIRED`, nothing `BLOCKED`).
+- `docs/deployment/go-live-checklist.json` — machine-readable, 22 gates
+  across the 18 required categories (CODE, BUILD, DATABASE, HOSTING,
+  DOMAIN, DNS, TLS, SECRETS, AUTH, AUTHZ, TENANT_ISOLATION, RUNTIME,
+  CLIENT_ZERO, BACKUP, MONITORING, ALERTING, ROLLBACK, SMOKE_TEST). No
+  external-infrastructure gate is marked `READY`.
+- `docs/deployment/external-infrastructure-handoff.md` — the operational
+  handoff: exactly what Hosting/PostgreSQL/Domain/DNS/TLS/Secrets/
+  Monitoring/Alerting must look like before the first real deploy.
+
+**One real gap found and closed:** `scripts/production/deploy.mjs`'s
+"Migration verification" step was a static `console.log` comment, not a
+real check — it never actually queried migration status, which conflicts
+with this sprint's own rule that no step may be reported without having
+actually run. Fixed by extracting a shared `checkMigrationStatus()`
+helper (`scripts/production/migration-status.mjs`, read-only —
+`prisma migrate status`, never `deploy`/`reset`) used by both
+`migrate.mjs` (which already had this check) and `deploy.mjs` (which
+didn't). `deploy.mjs` was also reordered to the sprint's exact conceptual
+chain — PRECHECK → BUILD → MIGRATION → DEPLOY → HEALTH → READINESS →
+SMOKE — and every step's log line now says whether it was actually
+`(executed)` or genuinely not verifiable, rather than leaving that
+implicit. `verify.mjs` had one small inconsistency fixed too: its
+"COMPLETE WITH RESERVATIONS" line was hardcoded to a stale sprint number
+while its sibling success line ("GO-LIVE READY") wasn't — both are now
+evergreen, since this script outlives any one sprint.
+
+**New: `pnpm production:dry-run`** (`scripts/production/dry-run.mjs`) —
+Phase 4's realistic dry-run mode. Never contacts real infrastructure and
+never prints `PRODUCTION_READY`; its one and only terminal state is
+`DRY_RUN_ONLY`. It really invokes (with a cloned, controlled env — never
+mutating the actual process env) `preflight.mjs`, `migrate.mjs`,
+`rollback.mjs`, `client-zero.mjs`, and
+`scripts/atlas-production-readiness.mjs` to _prove_ — not just read the
+source and assume — that every fail-loud protection this repository
+depends on actually fires: local `DATABASE_URL` refusal, localhost
+`--base-url` refusal, missing-production-secret refusal, the
+`--production --yes` mutation-confirmation gates on `migrate`/`rollback`,
+`rollback.mjs`'s honest `EXTERNAL/DEFERRED` (never simulated), and
+`client-zero.mjs`'s honest `EXTERNAL/DEFERRED` when prerequisites are
+absent. Also checks structural facts: all 9 production scripts +
+`migration-status.mjs` exist, all 8 `production:*` commands (including
+itself) are registered in `package.json`, `deploy.mjs`'s step order
+matches the required chain verbatim, and the 9 production-required
+secrets are declared identically in `preflight.mjs` and the new
+environment contract doc. First real run: **12/12 checks PASS**.
+
+**Verified for real, not just written (this sprint's own re-verification,
+after the `deploy.mjs`/`migrate.mjs`/`verify.mjs` edits above):**
+
+- `docker build --no-cache -f docker/Dockerfile.api .` — genuinely
+  zero-cache rebuild succeeded; the resulting image was booted with a
+  full real secret set and `NODE_ENV=production`, `/health` and `/ready`
+  both returned `200`, then the container was stopped and the test image
+  removed.
+- `production:client-zero` re-run end-to-end against a real local server
+  (admin login → tenant → activation key → real Ed25519-signed runtime
+  registration → heartbeat ACTIVE → persistence re-read, liveness=ONLINE)
+  with the local-address guard temporarily lifted for that one
+  invocation, then immediately restored and reconfirmed blocking (`git
+diff` on the file showed no residual change) — same verified-then-
+  reverted pattern as 46.37, re-proving the flow still works after this
+  sprint's changes even though `client-zero.mjs` itself wasn't touched.
+  The one tenant row this created (`cz-auto-*`) was deleted immediately
+  after, leaving the shared dev database exactly as it was found.
+- `production:preflight`, `production:verify`, and `production:dry-run`
+  all re-run locally and produce the expected, honest output (`BLOCKED`
+  pre-commit due to real uncommitted changes on the Repository gate in
+  `verify.mjs` — resolved by this sprint's own commit below;
+  `EXTERNAL/DEFERRED` for every infrastructure item; `DRY_RUN_ONLY` never
+  `PRODUCTION_READY`).
+
+**Regression:** `pnpm type-check`/`lint`/`build` all clean. `prisma
+validate` clean. Full suite via the exact CI command: **91 files / 1802
+tests, 0 failures** — unchanged baseline, seventh consecutive sprint
+(46.31–46.38) at this exact count. The standing security grep sweep
+(tracked `.env` files, private keys, API-key-shaped strings, wildcard-
+with-credentials CORS, `git diff --check`) stayed clean.
+
+**Final Verdict**
+
+```text
+ATLAS 46.38 — COMPLETE
+```
+
+CODE + AUTOMATION READY. PRODUCTION INFRASTRUCTURE EXTERNAL REQUIRED.
+Every gap this sprint set out to close inside the repository's own
+control is closed: the environment contract is locked and documented,
+the deployment pipeline's migration step is now a real check instead of
+a comment, a realistic dry-run mode exists and passes, a machine-readable
+Go-Live checklist exists with no external gate marked `READY`, and the
+external-infrastructure handoff document tells whoever provisions real
+infrastructure exactly what to set up and where. Nothing was fabricated:
+hosting, managed PostgreSQL, domain registration, DNS, TLS, real secrets,
+backup, monitoring, and alerting all remain `EXTERNAL_REQUIRED`, exactly
+as every sprint since 46.34 has found. The next step is not another
+development sprint — it is real external infrastructure entry and the
+first real Go-Live.

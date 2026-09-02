@@ -210,7 +210,7 @@ async function main() {
     console.log('ATLAS — GO-LIVE READY');
     process.exitCode = 0;
   } else {
-    console.log('ATLAS 46.37 — COMPLETE WITH RESERVATIONS');
+    console.log('ATLAS — COMPLETE WITH RESERVATIONS');
     console.log(
       'Critical gates still EXTERNAL/DEFERRED: ' +
         criticalResults

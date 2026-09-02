@@ -105,6 +105,7 @@ never silently as `PASS`. None fabricates a provider, URL, or credential.
 | `pnpm production:client-zero -- --production` (needs `ATLAS_BASE_URL`, `ATLAS_ADMIN_EMAIL`, `ATLAS_ADMIN_PASSWORD`) | Automates signup → tenant → activation key (plain HTTP) → runtime registration/heartbeat/discovery/job (via the existing, unmodified `runAtlasRuntimeClient` orchestrator in `apps/agent`, invoked through a thin CLI wrapper — no signing logic duplicated). Refuses a local base URL or missing credentials. |
 | `pnpm production:verify [-- --base-url=<url>]`                                                                      | The final gate — runs every check above and prints the Go-Live decision table (see below). Only ever prints `GO-LIVE READY` when every critical gate is genuinely `PASS`.                                                                                                                                      |
 | `pnpm production:rollback -- --production --yes`                                                                    | Identifies current/previous deployment via `ProductionProvider.rollback()`; reports `EXTERNAL/DEFERRED` honestly when no provider exists rather than simulating.                                                                                                                                               |
+| `pnpm production:dry-run` (ATLAS 46.38)                                                                             | Validates the whole pipeline's structure and fail-loud protections — command existence/order, precondition consistency, local-DB/localhost/missing-secret refusal, mutation-confirmation gates — without contacting real infrastructure. Always reports `DRY_RUN_ONLY`, never `PRODUCTION_READY`.              |
 
 **`ProductionProvider`** (`scripts/production/provider.mjs`) is the
 interface (`validate`/`deploy`/`getDeploymentUrl`/`getDeploymentStatus`/
@@ -113,6 +114,24 @@ exists — it answers every method honestly with `EXTERNAL/DEFERRED`
 rather than simulating a provider. A real implementation (e.g. for
 Render) can be added later without changing any of the orchestration
 scripts above.
+
+## Production Infrastructure Handoff (ATLAS 46.38)
+
+Three artifacts produced by ATLAS 46.38 supersede/consolidate parts of
+the sections below and should be read alongside them:
+
+- [`production-environment-contract.md`](production-environment-contract.md)
+  — the authoritative environment-variable classification (Required /
+  Required for Client Zero / Optional / External).
+- [`production-readiness-inventory.md`](production-readiness-inventory.md)
+  — a verifiable inventory of Aplicação/Segurança/Operação (all READY)
+  vs. Infraestrutura externa (all honestly `EXTERNAL_REQUIRED`).
+- [`go-live-checklist.json`](go-live-checklist.json) — the same gates as
+  the table below, in a machine-readable form.
+- [`external-infrastructure-handoff.md`](external-infrastructure-handoff.md)
+  — the operational handoff: exactly what Hosting/PostgreSQL/Domain/DNS/
+  TLS/Secrets/Monitoring/Alerting must look like before the first real
+  deploy.
 
 ## Pré-requisitos
 
