@@ -32,6 +32,8 @@ function userAgent(ctx: RouteContext): string {
 export function registerAdminIdentityRoutes(router: Router): void {
   // ─── POST /admin/auth/login ────────────────────────────────────────────
   router.post('/admin/auth/login', async (ctx: RouteContext, res: ServerResponse) => {
+    await adminIdentityStore.ready;
+
     const body = parseBody(LoginBodySchema, ctx, res, {
       status: 400,
       code: 'MISSING_FIELDS',

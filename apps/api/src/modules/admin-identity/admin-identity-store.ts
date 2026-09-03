@@ -1,6 +1,7 @@
 import { randomUUID, createHash } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { createLogger } from '@seltriva/logger';
+import { prisma } from '../../services/prisma.js';
 import type {
   AdminRole,
   AdminRoleName,
@@ -24,6 +25,20 @@ const SEED_ADMIN_EMAIL = process.env['SEED_ADMIN_EMAIL'] ?? 'admin@atlasconnect.
  */
 const SEED_ADMIN_TEMP_PASSWORD = process.env['SEED_ADMIN_PASSWORD'] ?? 'root102030';
 
+/**
+ * Vitest runs test files in parallel worker processes by default, and this
+ * whole suite already shares one real Postgres instance across all of them
+ * (Sprint 46.19 onward — no in-memory DB fallback). Persisting the admin
+ * user under a fixed, well-known email would turn it into GLOBAL shared
+ * mutable state across every test file/worker, exactly the kind of
+ * cross-test interference the pre-existing (pure in-memory, one isolated
+ * copy per process) design never had to worry about. Tests don't exercise
+ * restart-durability at all, so there's nothing to gain from persisting
+ * there — keep the exact previous in-memory-only behavior under Vitest,
+ * persist for real everywhere else (including a real local `pnpm dev`).
+ */
+const PERSIST_ADMIN_IDENTITY = !process.env['VITEST'];
+
 const logger = createLogger('admin-identity');
 
 let _instance: AdminIdentityStore | null = null;
@@ -37,9 +52,21 @@ export class AdminIdentityStore {
   private loginAttempts: LoginAttemptRecord[] = [];
   private auditLog: AdminAuditEntry[] = [];
 
+  /**
+   * Resolves once the super admin has been loaded from (or written to) the
+   * database — see seedSuperAdmin()'s own header comment for why this
+   * exists. Callers that need the identity to be fully ready before their
+   * first request (index.ts's boot sequence) await this.
+   */
+  readonly ready: Promise<void>;
+
   private constructor() {
     this.seedRolesAndPermissions();
-    this.seedSuperAdmin();
+    this.ready = this.seedSuperAdmin().catch((err) => {
+      logger.error('Admin identity seed failed — falling back to a transient in-memory admin', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
   }
 
   static getInstance(): AdminIdentityStore {
@@ -62,20 +89,98 @@ export class AdminIdentityStore {
     }
   }
 
-  private seedSuperAdmin(): void {
+  /**
+   * ATLAS — admin login recovery incident. Roles/permissions above stay
+   * in-memory (deterministic IDs from constants, never mutated at runtime —
+   * nothing to persist), but the admin USER used to be recreated from
+   * scratch on every process boot too, with a brand-new random UUID and the
+   * seed password. That's fine for a long-running process, but this repo's
+   * apps/api can restart at any time (a redeploy, a crash, or — on a free
+   * hosting plan — simply going idle and spinning back up), and every
+   * restart silently invalidated every existing session (the JWT's `sub`
+   * no longer matched any in-memory user) and reverted any password change
+   * back to the seed default. Fixed by loading the real admin's id/hash/
+   * status from `AtlasAdminUser` (a table that already existed in the
+   * Prisma schema but was never wired up) if one exists, and only creating
+   * a fresh row — with a real, persisted id — when it doesn't. The roles
+   * still need a matching DB row for AtlasAdminUser.roleId's foreign key
+   * to resolve, so those get upserted here too, idempotently.
+   */
+  private async seedSuperAdmin(): Promise<void> {
+    if (!PERSIST_ADMIN_IDENTITY) {
+      const role = this.getRoleByName('SUPER_ADMIN');
+      if (!role) throw new Error('SUPER_ADMIN role failed to seed');
+      const now = new Date().toISOString();
+      this.users.push({
+        id: randomUUID(),
+        name: 'Atlas Super Admin',
+        email: SEED_ADMIN_EMAIL,
+        passwordHash: bcrypt.hashSync(SEED_ADMIN_TEMP_PASSWORD, 12),
+        roleId: role.id,
+        status: 'active',
+        mfaEnabled: false,
+        mustChangePassword: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+      return;
+    }
+
+    for (const role of this.roles) {
+      await prisma.atlasAdminRole.upsert({
+        where: { id: role.id },
+        update: {},
+        create: { id: role.id, name: role.name, description: role.description, isSystem: true },
+      });
+    }
+
     const role = this.getRoleByName('SUPER_ADMIN');
     if (!role) throw new Error('SUPER_ADMIN role failed to seed');
+
+    const existing = await prisma.atlasAdminUser.findUnique({ where: { email: SEED_ADMIN_EMAIL } });
+    if (existing) {
+      // A real admin already exists — including one that already changed
+      // its own password. Load it as-is; never overwrite it with the seed
+      // default.
+      this.users.push({
+        id: existing.id,
+        name: existing.name,
+        email: existing.email,
+        passwordHash: existing.passwordHash,
+        roleId: existing.roleId,
+        status: existing.status as AdminUserRecord['status'],
+        mfaEnabled: existing.mfaEnabled,
+        mustChangePassword: existing.mustChangePassword,
+        lastLogin: existing.lastLogin?.toISOString(),
+        createdAt: existing.createdAt.toISOString(),
+        updatedAt: existing.updatedAt.toISOString(),
+      });
+      return;
+    }
+
     const now = new Date().toISOString();
+    // Synchronous hash is acceptable here — this runs once at process boot, not per-request.
+    const passwordHash = bcrypt.hashSync(SEED_ADMIN_TEMP_PASSWORD, 12);
+    const created = await prisma.atlasAdminUser.create({
+      data: {
+        name: 'Atlas Super Admin',
+        email: SEED_ADMIN_EMAIL,
+        passwordHash,
+        roleId: role.id,
+        status: 'active',
+        mfaEnabled: false,
+        mustChangePassword: true,
+      },
+    });
     this.users.push({
-      id: randomUUID(),
-      name: 'Atlas Super Admin',
-      email: SEED_ADMIN_EMAIL,
-      // Synchronous hash is acceptable here — this runs once at process boot, not per-request.
-      passwordHash: bcrypt.hashSync(SEED_ADMIN_TEMP_PASSWORD, 12),
-      roleId: role.id,
-      status: 'active',
-      mfaEnabled: false,
-      mustChangePassword: true,
+      id: created.id,
+      name: created.name,
+      email: created.email,
+      passwordHash: created.passwordHash,
+      roleId: created.roleId,
+      status: created.status as AdminUserRecord['status'],
+      mfaEnabled: created.mfaEnabled,
+      mustChangePassword: created.mustChangePassword,
       createdAt: now,
       updatedAt: now,
     });
@@ -160,6 +265,18 @@ export class AdminIdentityStore {
     if (!user) return;
     user.lastLogin = new Date().toISOString();
     user.updatedAt = user.lastLogin;
+    if (!PERSIST_ADMIN_IDENTITY) return;
+    // Write-through, best-effort — the in-memory update above is what the
+    // rest of this request cycle actually relies on; a failed DB write
+    // here shouldn't fail the login itself.
+    prisma.atlasAdminUser
+      .update({ where: { id: userId }, data: { lastLogin: new Date() } })
+      .catch((err: unknown) => {
+        logger.error('Failed to persist admin lastLogin', {
+          userId,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      });
   }
 
   setPassword(userId: string, passwordHash: string): void {
@@ -168,6 +285,22 @@ export class AdminIdentityStore {
     user.passwordHash = passwordHash;
     user.mustChangePassword = false;
     user.updatedAt = new Date().toISOString();
+    if (!PERSIST_ADMIN_IDENTITY) return;
+    // Write-through, best-effort — see recordLogin()'s comment. A failed
+    // write here is the one case genuinely worth surfacing (the whole
+    // point of this method is to survive a restart), so this logs loudly,
+    // but still doesn't throw: the in-memory password change already
+    // succeeded and this request should still report success to the
+    // caller — a transient DB hiccup shouldn't make a real password
+    // change look like it failed.
+    prisma.atlasAdminUser
+      .update({ where: { id: userId }, data: { passwordHash, mustChangePassword: false } })
+      .catch((err: unknown) => {
+        logger.error(
+          'Failed to persist admin password change — it WILL revert on the next restart',
+          { userId, error: err instanceof Error ? err.message : String(err) }
+        );
+      });
   }
 
   // ─── Sessions (refresh tokens) ────────────────────────────────────────────

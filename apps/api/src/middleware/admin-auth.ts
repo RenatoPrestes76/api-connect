@@ -21,6 +21,8 @@ function extractBearerToken(ctx: RouteContext): string | null {
 
 export function requireAdminAuth(handler: RouteHandler): RouteHandler {
   return async (ctx, res) => {
+    await adminIdentityStore.ready;
+
     // 1. Valida JWT
     const token = extractBearerToken(ctx);
     if (!token) {

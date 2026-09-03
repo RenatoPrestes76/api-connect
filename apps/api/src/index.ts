@@ -9,6 +9,7 @@ import {
   assertProductionSecretsConfigured,
   assertProductionCorsConfigured,
 } from './services/production-secrets.js';
+import { adminIdentityStore } from './modules/admin-identity/admin-identity-store.js';
 
 const logger = createLogger('api');
 
@@ -38,6 +39,12 @@ async function main(): Promise<void> {
       logger.warn('Database unavailable — running with in-memory stores only', { error: msg });
     }
   }
+
+  // Wait for the admin identity seed (loads the real admin from the
+  // database, or creates it — see admin-identity-store.ts) before accepting
+  // requests, so the very first login attempt after a restart never races
+  // an in-flight DB read.
+  await adminIdentityStore.ready;
 
   // Start HTTP server
   const server = createApiServer();
