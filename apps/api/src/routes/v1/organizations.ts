@@ -3,6 +3,41 @@ import type { RouteContext } from '../../http/router.js';
 import { json, apiError, paginated } from '../../http/router.js';
 import { OrganizationService } from '../../services/organization.service.js';
 
+/**
+ * ATLAS master audit — this whole file sits behind only the generic
+ * Supabase-style authMiddleware (any authenticated user/API key, any
+ * organization), with no per-route wrapper. `:id`-scoped handlers below
+ * used to fetch/mutate/list-members-of ANY organization by guessing/
+ * enumerating its id — a real cross-tenant BOLA on a genuinely
+ * Prisma-backed model (unlike most of this codebase's in-memory demo
+ * stores), confirmed to leak member emails/display names via
+ * getOrgMembers. Fixed by requiring the caller's session-derived
+ * ctx.orgId to match the requested :id for every single-resource
+ * operation. `listOrganizations`/`createOrganization` are deliberately
+ * left as-is here — they have no "self" to scope to (list-all/create-new
+ * are inherently cross-tenant or pre-tenant operations), and the actual
+ * intended access model for them cannot be determined without auditing
+ * apps/cloud's own authorization layer, which is a separate product
+ * outside this audit's scope — flagged as a residual risk instead of
+ * guessed at.
+ */
+function assertOwnOrganization(ctx: RouteContext, res: ServerResponse, id: string): boolean {
+  if (!ctx.orgId) {
+    apiError(
+      res,
+      'Authenticated session has no associated organization',
+      403,
+      'ORGANIZATION_NOT_LINKED'
+    );
+    return false;
+  }
+  if (ctx.orgId !== id) {
+    apiError(res, 'Organization not found', 404, 'NOT_FOUND');
+    return false;
+  }
+  return true;
+}
+
 // GET /api/v1/organizations
 export async function listOrganizations(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const page = Number(ctx.query.get('page') ?? '1');
@@ -20,6 +55,7 @@ export async function getOrganization(ctx: RouteContext, res: ServerResponse): P
     apiError(res, 'Missing id', 400, 'BAD_REQUEST');
     return;
   }
+  if (!assertOwnOrganization(ctx, res, id)) return;
 
   const org = await OrganizationService.findById(id);
   if (!org) {
@@ -63,6 +99,8 @@ export async function updateOrganization(ctx: RouteContext, res: ServerResponse)
     return;
   }
 
+  if (!assertOwnOrganization(ctx, res, id)) return;
+
   const body = ctx.body as Record<string, unknown> | undefined;
   if (!body) {
     apiError(res, 'Body required', 400, 'BAD_REQUEST');
@@ -91,6 +129,7 @@ export async function deleteOrganization(ctx: RouteContext, res: ServerResponse)
     apiError(res, 'Missing id', 400, 'BAD_REQUEST');
     return;
   }
+  if (!assertOwnOrganization(ctx, res, id)) return;
 
   const org = await OrganizationService.findById(id);
   if (!org) {
@@ -109,6 +148,7 @@ export async function listOrgWorkspaces(ctx: RouteContext, res: ServerResponse):
     apiError(res, 'Missing id', 400, 'BAD_REQUEST');
     return;
   }
+  if (!assertOwnOrganization(ctx, res, id)) return;
 
   const workspaces = await OrganizationService.getWorkspaces(id);
   json(res, { data: workspaces, meta: { total: workspaces.length } });
@@ -121,6 +161,7 @@ export async function listOrgMembers(ctx: RouteContext, res: ServerResponse): Pr
     apiError(res, 'Missing id', 400, 'BAD_REQUEST');
     return;
   }
+  if (!assertOwnOrganization(ctx, res, id)) return;
 
   const members = await OrganizationService.getMembers(id);
   json(res, { data: members, meta: { total: members.length } });

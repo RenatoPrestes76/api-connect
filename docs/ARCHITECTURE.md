@@ -1,376 +1,192 @@
-# Architecture Guide
-
-## System Overview
-
-Seltriva Connect is built as a modern, scalable enterprise platform using a monorepo architecture. This document outlines the system design, component relationships, and architectural decisions.
-
-## Core Architecture
-
-### Monorepo Structure
-
-The project is organized as a Turborepo with pnpm workspaces:
-
-```
-Apps (User-facing applications)
-├── Cloud (Dashboard & Management)
-├── API (Backend Services)
-├── Studio (Developer Interface)
-├── Agent (Automation Engine)
-└── Docs (Documentation)
-
-Packages (Shared Libraries)
-├── UI (Component Library)
-├── Database (Prisma ORM)
-├── Auth (Supabase)
-├── Config (Configuration)
-├── Logger (Logging)
-├── Types (Shared Types)
-├── Shared (Utilities)
-├── Drivers (Integrations)
-├── SDK (Client Library)
-└── AI (ML/AI Tools)
-```
-
-### Technology Stack
-
-| Layer        | Technology              | Purpose                   |
-| ------------ | ----------------------- | ------------------------- |
-| **Frontend** | Next.js 15, React 19    | Server-rendered UIs       |
-| **Styling**  | Tailwind CSS, shadcn/ui | Enterprise UI components  |
-| **Backend**  | Node.js, Express        | API services              |
-| **Database** | Supabase, PostgreSQL    | Data persistence          |
-| **ORM**      | Prisma                  | Type-safe database access |
-| **Auth**     | Supabase Auth           | Authentication            |
-| **Build**    | Turborepo, pnpm         | Monorepo management       |
-| **DevOps**   | Docker, GitHub Actions  | Deployment & CI/CD        |
-
-## Package Organization
-
-### Apps
-
-#### Cloud (`apps/cloud`)
-
-- **Purpose**: Main dashboard and management interface
-- **Technology**: Next.js, React
-- **Dependencies**: ui, types, config, logger
-- **Port**: 3000 (development)
-
-#### API (`apps/api`)
-
-- **Purpose**: Core backend API services
-- **Technology**: Node.js
-- **Dependencies**: database, types, logger, config
-- **Port**: 3001 (development)
-
-#### Studio (`apps/studio`)
-
-- **Purpose**: Development and testing interface
-- **Technology**: Next.js, React
-- **Dependencies**: ui, types, config, sdk
-- **Port**: 3002 (development)
-
-#### Agent (`apps/agent`)
-
-- **Purpose**: Autonomous task processing and workflow automation
-- **Technology**: Node.js
-- **Dependencies**: database, types, ai, logger, config
-- **Port**: 3003 (development)
-
-#### Docs (`apps/docs`)
-
-- **Purpose**: Platform documentation and guides
-- **Technology**: Next.js, React
-- **Dependencies**: ui
-- **Port**: 3004 (development)
-
-### Packages
-
-#### UI (`packages/ui`)
-
-- **Purpose**: Reusable React component library
-- **Foundation**: shadcn/ui + Radix UI
-- **Styling**: Tailwind CSS
-- **Exports**: Components, hooks, utilities
-- **Consumers**: All apps
-
-#### Database (`packages/database`)
-
-- **Purpose**: Data layer with Prisma ORM
-- **Responsibilities**: Schema management, migrations, client
-- **Prisma Schema**: `prisma/schema.prisma`
-- **Consumers**: API, Agent
-
-#### Auth (`packages/auth`)
-
-- **Purpose**: Authentication and authorization
-- **Provider**: Supabase
-- **Responsibilities**: User auth, session management
-- **Consumers**: Cloud, API, Studio
-
-#### Config (`packages/config`)
-
-- **Purpose**: Environment and configuration management
-- **Responsibilities**: Env validation, config loading
-- **Consumers**: All packages
-
-#### Logger (`packages/logger`)
-
-- **Purpose**: Structured logging utility
-- **Responsibilities**: Log formatting, levels, outputs
-- **Consumers**: All packages
-
-#### Types (`packages/types`)
-
-- **Purpose**: Shared TypeScript type definitions
-- **Responsibilities**: Domain types, interfaces, enums
-- **Consumers**: All packages
-
-#### Shared (`packages/shared`)
-
-- **Purpose**: Utility functions and helpers
-- **Responsibilities**: Common functions, validators
-- **Consumers**: All packages
-
-#### Drivers (`packages/drivers`)
-
-- **Purpose**: External service integrations
-- **Responsibilities**: Provider integrations, connectors
-- **Consumers**: API, Agent
-
-#### SDK (`packages/sdk`)
-
-- **Purpose**: Client library for API integration
-- **Responsibilities**: API client, types, utilities
-- **Consumers**: Cloud, Studio
-
-#### AI (`packages/ai`)
-
-- **Purpose**: AI/ML integrations and utilities
-- **Responsibilities**: LLM integration, processing
-- **Consumers**: Agent, API
-
-## Data Flow
-
-### Request Flow (Cloud App)
-
-```
-User Request
-    ↓
-Next.js App (Cloud)
-    ↓
-API Handler / Server Component
-    ↓
-SDK Client
-    ↓
-API Backend (apps/api)
-    ↓
-Database Layer (Prisma)
-    ↓
-PostgreSQL (Supabase)
-```
-
-### Background Processing
-
-```
-Triggered Event
-    ↓
-Queue / Event Emitter
-    ↓
-Agent Service (apps/agent)
-    ↓
-AI Processing (packages/ai)
-    ↓
-Database Update
-    ↓
-Cache Invalidation
-```
-
-## Dependency Management
-
-### Workspace Dependencies
-
-Apps and packages depend on shared libraries using workspace protocol:
-
-```json
-{
-  "dependencies": {
-    "@seltriva/types": "workspace:*",
-    "@seltriva/logger": "workspace:*"
-  }
-}
-```
-
-### Dependency Rules
-
-1. **No circular dependencies** - Use dependency injection
-2. **Unidirectional** - Inner packages don't depend on outer apps
-3. **Clear boundaries** - Respect package responsibilities
-4. **Type safety** - Always import from packages, not internal files
-
-## Build Process
-
-### Development
-
-```
-pnpm dev
-    ↓
-Turborepo watches all packages
-    ↓
-Hot Module Reloading (HMR) per app
-    ↓
-Incremental compilation
-```
-
-### Production Build
-
-```
-pnpm build
-    ↓
-Dependency graph analysis
-    ↓
-Parallel compilation
-    ↓
-Optimization and minification
-    ↓
-Artifact output to dist/
-```
-
-## Configuration Hierarchy
-
-### TypeScript (`tsconfig.json`)
-
-- Root configuration with strict mode
-- App/package configs extend root
-- Path aliases for imports
-
-### ESLint (`.eslintrc.cjs`)
-
-- Shared rules at root
-- Overrides per file type
-- Turbo-aware linting
-
-### Prettier (`.prettierrc.json`)
-
-- Single format config
-- Applied across all files
-- Integrated with ESLint
-
-## Database Schema
-
-### Prisma Setup
-
-- Schema file: `packages/database/prisma/schema.prisma`
-- Migrations: `packages/database/prisma/migrations/`
-- Client generation: `pnpm db:generate`
-- Schema push: `pnpm db:push`
-
-### Database Provider
-
-- PostgreSQL via Supabase
-- Connection: `DATABASE_URL` env variable
-- Automatic client generation
-
-## CI/CD Pipeline
-
-### GitHub Actions
-
-#### CI Workflow (`.github/workflows/ci.yml`)
-
-- Triggers on push and PR
-- Runs lint, type-check, build
-- Runs security audit
-- Caches dependencies
-
-#### Format Workflow (`.github/workflows/format.yml`)
-
-- Auto-fixes code style
-- Commits formatting changes
-- Runs on main branch
-
-## Error Handling
-
-### Logging Strategy
-
-- Structured JSON logs
-- Log levels: debug, info, warn, error
-- Context and stack traces
-- Performance metrics
-
-### Error Recovery
-
-- Graceful degradation
-- Retry mechanisms
-- Fallback handlers
-- User-friendly messages
-
-## Performance Optimization
-
-### Build Optimization
-
-- Code splitting
-- Tree shaking
-- Minification
-- Compression
-
-### Runtime Optimization
-
-- Caching strategy
-- Database query optimization
-- Component memoization
-- Lazy loading
-
-## Security Considerations
-
-### API Security
-
-- Authentication required
-- Authorization checks
-- Input validation
-- Rate limiting
-
-### Data Security
-
-- Encrypted connections
-- Environment variable secrets
-- No credentials in code
-- Audit logging
-
-## Testing Strategy
-
-### Unit Tests
-
-- Located near implementation
-- Run with `pnpm test`
-- Minimum 80% coverage target
-
-### Integration Tests
-
-- API endpoint testing
-- Database integration
-- External service mocking
-
-### E2E Tests
-
-- User workflow testing
-- Cross-browser compatibility
-- Performance testing
-
-## Deployment Architecture
-
-### Services
-
-| Service  | Technology | Environment |
-| -------- | ---------- | ----------- |
-| Cloud    | Vercel     | Serverless  |
-| API      | Docker     | Container   |
-| Agent    | Docker     | Container   |
-| Database | Supabase   | Managed     |
-| Cache    | Redis      | Optional    |
-
-## Future Considerations
-
-- Microservices decomposition
-- GraphQL API layer
-- Real-time features (WebSocket)
-- Event streaming
-- Multi-region deployment
+# Atlas — Architecture
+
+Rewritten by the ATLAS Master Documentation & Security Audit. The
+previous version of this file (preserved in git history) described a
+generic "Seltriva Connect" starter architecture (Express backend, a
+5-app monorepo, Redis as an active cache layer, an 80% coverage target)
+that had already drifted far from the real system by the time of this
+audit — it never mentioned `apps/admin`, described a backend framework
+this codebase doesn't use, and stated a coverage target that was never
+formalized in tooling. Everything below is verified against the current
+codebase, not carried over from the previous version.
+
+## What Atlas is
+
+Atlas is a multi-tenant platform-connection product: customers register
+an on-premise **Atlas Runtime** (an Ed25519-authenticated agent process)
+against Atlas's **Control Plane**, which then discovers the customer's
+ERP database schema, maps it to a canonical business model, and executes
+governed read/write operations against it on the customer's behalf — all
+without Atlas's own backend ever holding a direct network path to the
+customer's ERP. The backend also hosts a large operational surface
+(security/compliance dashboards, fleet management, billing, an
+AI-assisted workflow builder, and more) built up incrementally across
+many prior "ATLAS N.NN" sprints, at varying levels of real persistence —
+see the "Persistence Reality" table below, which is this document's most
+important contribution.
+
+**Scope boundary, stated explicitly per this audit's own instructions**:
+Atlas = `apps/api` (backend), `apps/admin` (Control Plane staff UI),
+`apps/agent` (the Runtime client). `apps/cloud` is a separate product
+(own database `seltriva_cloud`, own Prisma schema subset, own Vercel
+deployment) that happens to share this monorepo and the `@seltriva/*`
+package namespace — referenced here only where it clarifies a real
+architectural fact (e.g. why two overlapping Prisma schemas exist), never
+audited as part of Atlas itself. `apps/web`, `apps/studio`,
+`apps/developer-portal`, `apps/docs`, `apps/runtime-installer` are
+Atlas-adjacent frontends/tools of varying completeness, out of this
+audit's route/module-level scope.
+
+## Monorepo structure (verified)
+
+- **Package manager / build**: pnpm workspaces + Turborepo.
+  `pnpm-workspace.yaml`: `apps/*`, `packages/*`, `connectors/*`.
+- **Apps** (9): `admin`, `agent`, `api`, `cloud`, `developer-portal`,
+  `docs`, `runtime-installer`, `studio`, `web`.
+- **Packages** (33 under `packages/`, plus `connectors/erp-provider`):
+  shared libraries — identity/crypto (`aegis`), governance, HA-adjacent
+  primitives (`titan`), billing, connector SDK/registry, database
+  adapters, AI/semantic engines, and the plugin-authoring toolchain
+  (`plugin-sdk`, `cli`, `generator`, `templates`, `validator`).
+- **`apps/api`**: the real backend. A persistent Node process (custom
+  HTTP router in `http/router.ts` — **not Express**, despite the
+  previous architecture doc's claim), 37 business-logic modules under
+  `src/modules/`, 267 route files under `src/routes/v1/` plus a handful
+  registered directly in `src/server.ts`. Deployed via
+  `docker/Dockerfile.api` — architecturally incompatible with serverless
+  (WebSocket hub, leader-election, autoscaler, in-memory state), so it
+  runs on a persistent-process host (Docker), never Vercel.
+
+## Technology stack (verified, corrected)
+
+| Layer                      | Technology                                                                       | Evidence                                                                                                                                                    |
+| -------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend HTTP               | Custom router (`apps/api/src/http/router.ts`)                                    | No `express` dependency in `apps/api/package.json`                                                                                                          |
+| Backend runtime            | Node.js (persistent process)                                                     | `docker/Dockerfile.api`, `apps/api/src/index.ts`                                                                                                            |
+| Database                   | PostgreSQL via Prisma                                                            | `packages/database/prisma/schema.prisma`, 2 real migrations                                                                                                 |
+| Cache                      | **Not actually used**                                                            | `REDIS_URL` is provisioned in `docker-compose.yml` for local dev but read by zero application code — confirmed by repo-wide grep, reconfirmed in this audit |
+| Auth                       | 5 independent mechanisms (generic Supabase-style, admin, portal, runtime, agent) | See `docs/api/API-CATALOG.md`'s "Global authentication architecture"                                                                                        |
+| Frontend (admin/web/cloud) | Next.js 15, React 19                                                             | `pnpm-workspace.yaml`'s catalog                                                                                                                             |
+| CI/CD                      | GitHub Actions (`ci.yml`, `format.yml`)                                          | `.github/workflows/`                                                                                                                                        |
+| Container runtime          | Docker                                                                           | `docker/Dockerfile.api`, `docker-compose.yml`                                                                                                               |
+
+## Persistence reality — the 37 business-logic modules
+
+The single most important architectural fact this audit surfaced: of the
+37 modules under `apps/api/src/modules/`, **only 3 touch Postgres**.
+Every other module is a fully-functional, route-wired, in-memory
+singleton — not dead code, not a stub, but not durable across a process
+restart either. This table is the ground truth; do not infer persistence
+from a module's name or from the existence of a same-named Prisma model
+(29 of the schema's 41 models have zero runtime consumer — see
+`docs/database/DATABASE-DOCUMENTATION.md`).
+
+| Module                 | Persistence                                                                           | Module                        | Persistence                                            |
+| ---------------------- | ------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------ |
+| `control-plane`        | **Postgres** (Tenant, Organization only)                                              | `job-orchestration`           | In-memory                                              |
+| `runtime-registration` | **Postgres** (RuntimeRegistration)                                                    | `helios`                      | In-memory                                              |
+| `erp-integration`      | **Postgres** (ErpIntegration)                                                         | `marketplace`                 | In-memory                                              |
+| `admin-identity`       | **Partial** (AtlasAdminUser + AtlasAdminRole only — fixed in this audit, see SEC-001) | `message-delivery`            | In-memory                                              |
+| `security`             | In-memory                                                                             | `observatory`                 | In-memory                                              |
+| `ha`                   | In-memory (+ real disk-backed backup files)                                           | `onboarding`                  | In-memory (fully simulated "provisioning")             |
+| `governance`           | In-memory                                                                             | `operations`                  | In-memory                                              |
+| `erp-connectivity`     | In-memory                                                                             | `orchestrator`                | In-memory                                              |
+| `erp-metadata`         | In-memory                                                                             | `portal`                      | In-memory                                              |
+| `fleet-ops`            | In-memory                                                                             | `portal-identity`             | In-memory (links to real Postgres via `control-plane`) |
+| `gateway`              | In-memory                                                                             | `prometheus`                  | In-memory                                              |
+| `ai-copilot`           | In-memory                                                                             | `query-execution`             | In-memory                                              |
+| `billing`              | In-memory                                                                             | `query-planner`               | In-memory                                              |
+| `canonical-model`      | In-memory                                                                             | `regions`                     | In-memory                                              |
+| `chaos`                | In-memory                                                                             | `release`                     | In-memory                                              |
+| `connector-management` | In-memory                                                                             | `runtime-connector-execution` | In-memory                                              |
+| `connectors`           | In-memory                                                                             | `semantic-mapping`            | In-memory                                              |
+| `titan`                | In-memory                                                                             | `sql-generator`               | In-memory                                              |
+| `workflow-builder`     | In-memory (templates only — see below)                                                |                               |                                                        |
+
+**Practical consequence**: every in-memory module resets to its seed/demo
+data on every `apps/api` restart. This is a deliberate, documented,
+repo-wide convention (`docs/ATLAS-46.19-CONTROL-PLANE-PERSISTENCE.md`) —
+build the module with an in-memory store first, wire real Prisma
+persistence in a dedicated migration sprint, per module, as needed — not
+an oversight. It is, however, a fact anyone operating Atlas in production
+needs to know explicitly, which is exactly why this audit surfaces it
+here rather than leaving it implicit.
+
+## Real pipelines confirmed end-to-end
+
+Three genuine, connected multi-module pipelines were traced and verified
+(not just individually plausible modules):
+
+1. **ERP schema → SQL execution pipeline**: `erp-metadata` (schema
+   discovery) → `semantic-mapping` (business-entity classification) →
+   `canonical-model` (approved business model) → `query-planner`
+   (validated intent) → `sql-generator` (dialect-specific SQL, 7
+   dialects) → `query-execution` (dispatch to Runtime, retry/timeout,
+   result pagination). Each stage does distinct, non-overlapping work;
+   confirmed via direct import-chain inspection, not inferred from
+   naming.
+2. **Runtime enrollment → operation pipeline**: `runtime-registration`
+   (Ed25519 identity + activation key) → heartbeat/liveness → job
+   dispatch (`job-orchestration`, `message-delivery`,
+   `runtime-connector-execution`) → result reporting with idempotency and
+   replay protection throughout.
+3. **Fleet observability pipeline**: `fleet-ops` decorates
+   `control-plane`'s `Agent`/`Deployment` records with heartbeats, health
+   snapshots, alerts, and deployment-job orchestration — it owns no
+   runtime data of its own.
+
+## Naming/ownership overlaps (real, not bugs — documented so they aren't mistaken for one)
+
+- **Three unrelated "agent"/"runtime" concepts** coexist: `AtlasAgent`
+  (legacy Runtime Installer flow, `packages/agent-provisioning`), the
+  real-Postgres `Agent` model (`control-plane`'s fleet concept, fixed for
+  tenant isolation in this audit), and `RuntimeRegistration` (the Ed25519
+  canonical Runtime, `runtime-registration`). No code links them.
+- **`modules/workflow-builder`** only owns a template catalog and version
+  history — the actual AI-plan-generation and simulation logic lives in
+  the `@seltriva/workflow-builder` package and `modules/orchestrator`,
+  reached directly by `routes/v1/workflow-builder/{plan,simulate}.ts`,
+  bypassing `wb-store.ts` entirely.
+- **`modules/titan`** backs `/v1/ops/*` routes; there is no
+  `/v1/titan/*` route surface — module name and route surface don't
+  match.
+- **`modules/prometheus`** is an internal code-name for an AI-ops
+  dashboard, unrelated to the real Prometheus monitoring product — no
+  scrape endpoint, no PromQL; its "copilot" is a keyword-matched
+  canned-response router, not an LLM call.
+- **Two Prisma schemas exist** — `packages/database/prisma/schema.prisma`
+  (41 models, `apps/api`'s source of truth) and
+  `apps/cloud/prisma/schema.prisma` (28 models, a manually-maintained
+  subset, against `apps/cloud`'s own separate database). Confirmed: every
+  model name in the `cloud` schema also exists in the `database` schema;
+  no reverse drift found in a name-level comparison. This is
+  `apps/cloud`-scoped technical debt, not an Atlas concern, mentioned
+  here only for completeness.
+
+## Deployment topology
+
+- `apps/api`: Docker container, `docker/Dockerfile.api`, deployed via
+  Render (per `render.yaml`) or any equivalent host that can run an
+  arbitrary Docker image and keep a persistent process alive.
+- `apps/admin`, `apps/web`, `apps/cloud`, `apps/studio`, `apps/docs`: each
+  its own Vercel project (Next.js serverless), proxying to `apps/api` via
+  server-side Next.js API routes for anything requiring the backend's
+  own session/JWT secrets.
+- `apps/agent`: distributed as an installable client (`runtime-installer`
+  bootstraps it), runs on customer infrastructure, never inside Atlas's
+  own hosting.
+- Full production-readiness state (what's real infrastructure vs. still
+  external-required) is tracked separately and continuously in
+  `docs/deployment/production-first-deployment.md` and
+  `docs/deployment/go-live-checklist.json` — not duplicated here.
+
+## Security architecture summary
+
+See `docs/security/SECURITY-AUDIT.md` for the full audit. In summary: 5
+independent authentication mechanisms (generic/admin/portal/runtime/
+agent), 2 tenant-scoping primitives with an explicit safe/unsafe
+distinction documented in the code itself (`requireOrgId` vs.
+`requireTenantId`), Ed25519 request signing for the highest-trust Runtime
+write path, envelope encryption (AES-256-GCM via `@seltriva/aegis`) for
+ERP credentials and connector secrets, and a real, currently-passing
+138+-test cross-tenant isolation suite.

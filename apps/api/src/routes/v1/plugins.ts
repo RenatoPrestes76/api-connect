@@ -4,6 +4,35 @@ import { json, apiError, paginated } from '../../http/router.js';
 import { prisma } from '../../services/prisma.js';
 import type { PluginStatus } from '@prisma/client';
 
+/**
+ * ATLAS master audit — the three `:orgId`-scoped handlers below used to
+ * resolve `orgId` as `ctx.params['orgId'] ?? ctx.orgId`, letting a
+ * client-supplied URL param override the caller's real, session-derived
+ * organization with no ownership check at all — any authenticated user
+ * could list/install/uninstall plugins for ANY organization by id. Fixed
+ * by requiring the URL's :orgId to match the caller's own ctx.orgId;
+ * the URL param is kept only because these routes are also mounted
+ * directly under /api/v1/organizations/:orgId/plugins* (server.ts), not
+ * because a client is allowed to pick a different org than its own.
+ */
+function resolveOwnOrgId(ctx: RouteContext, res: ServerResponse): string | null {
+  const paramOrgId = ctx.params['orgId'];
+  if (!ctx.orgId) {
+    apiError(
+      res,
+      'Authenticated session has no associated organization',
+      403,
+      'ORGANIZATION_NOT_LINKED'
+    );
+    return null;
+  }
+  if (paramOrgId && paramOrgId !== ctx.orgId) {
+    apiError(res, 'Organization not found', 404, 'NOT_FOUND');
+    return null;
+  }
+  return ctx.orgId;
+}
+
 // GET /api/v1/plugins
 export async function listPlugins(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const page = Number(ctx.query.get('page') ?? '1');
@@ -87,11 +116,8 @@ export async function getPlugin(ctx: RouteContext, res: ServerResponse): Promise
 
 // GET /api/v1/organizations/:orgId/plugins
 export async function listInstalledPlugins(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const orgId = ctx.params['orgId'] ?? ctx.orgId;
-  if (!orgId) {
-    apiError(res, 'Organization ID required', 400, 'BAD_REQUEST');
-    return;
-  }
+  const orgId = resolveOwnOrgId(ctx, res);
+  if (!orgId) return;
 
   const installed = await prisma.organizationPlugin.findMany({
     where: { organizationId: orgId },
@@ -115,11 +141,11 @@ export async function listInstalledPlugins(ctx: RouteContext, res: ServerRespons
 
 // POST /api/v1/organizations/:orgId/plugins/:pluginId/install
 export async function installPlugin(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const orgId = ctx.params['orgId'] ?? ctx.orgId;
+  const orgId = resolveOwnOrgId(ctx, res);
   const { pluginId } = ctx.params;
 
   if (!orgId || !pluginId) {
-    apiError(res, 'Organization ID and Plugin ID required', 400, 'BAD_REQUEST');
+    if (orgId) apiError(res, 'Plugin ID required', 400, 'BAD_REQUEST');
     return;
   }
 
@@ -158,11 +184,11 @@ export async function installPlugin(ctx: RouteContext, res: ServerResponse): Pro
 
 // DELETE /api/v1/organizations/:orgId/plugins/:pluginId
 export async function uninstallPlugin(ctx: RouteContext, res: ServerResponse): Promise<void> {
-  const orgId = ctx.params['orgId'] ?? ctx.orgId;
+  const orgId = resolveOwnOrgId(ctx, res);
   const { pluginId } = ctx.params;
 
   if (!orgId || !pluginId) {
-    apiError(res, 'Organization ID and Plugin ID required', 400, 'BAD_REQUEST');
+    if (orgId) apiError(res, 'Plugin ID required', 400, 'BAD_REQUEST');
     return;
   }
 

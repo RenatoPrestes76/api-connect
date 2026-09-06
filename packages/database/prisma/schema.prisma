@@ -178,11 +178,15 @@ model ActivationToken {
 // ─── ATLAS CONTROL PLANE — ADMIN IDENTITY (Sprint 46.2) ───────────────────────
 //
 // Identity, RBAC, session, and audit tables for the Atlas Control Plane admin
-// portal (apps/admin) — distinct from AtlasAgent identity above. Declared here
-// as the durable schema; the running app currently backs this with an
-// in-memory store (see apps/api/src/modules/admin-identity), matching this
-// repo's convention of shipping feature-sprint modules DB-schema-first and
-// wiring real Prisma persistence in a dedicated migration sprint.
+// portal (apps/admin) — distinct from AtlasAgent identity above.
+// AtlasAdminUser and AtlasAdminRole are persisted for real (see
+// apps/api/src/modules/admin-identity/admin-identity-store.ts) — fixed after a
+// production incident where in-memory storage caused admin session/password
+// loss on every restart. AtlasAdminSession, AtlasLoginAttempt, and
+// AtlasAdminAuditLog remain in-memory by design for now, to avoid introducing
+// shared mutable state across Vitest's parallel test workers (see
+// PERSIST_ADMIN_IDENTITY in admin-identity-store.ts); migrating them to
+// Postgres is tracked as GAP-04.
 
 model AtlasAdminRole {
   id          String  @id @default(cuid())

@@ -4,11 +4,51 @@ import { json, apiError, paginated } from '../../http/router.js';
 import { AgentService } from '../../services/agent.service.js';
 import type { AgentStatus } from '@prisma/client';
 
+/**
+ * ATLAS master audit — same class of BOLA as organizations.ts: `:id`
+ * handlers below used to fetch/mutate/list-heartbeats-of ANY agent by id
+ * (a real, Prisma-backed model with hostname/ipAddress/telemetry) with no
+ * check that it belongs to the caller's own organization. Fixed by
+ * verifying `agent.organizationId === ctx.orgId` after every lookup,
+ * matching the "404, not 403, on mismatch" convention already used
+ * elsewhere in this codebase (e.g. billing/invoices.ts) so a caller can't
+ * distinguish "doesn't exist" from "exists but isn't yours".
+ */
+function assertOwnAgent(
+  ctx: RouteContext,
+  res: ServerResponse,
+  agent: { organizationId: string } | null
+): boolean {
+  if (!ctx.orgId) {
+    apiError(
+      res,
+      'Authenticated session has no associated organization',
+      403,
+      'ORGANIZATION_NOT_LINKED'
+    );
+    return false;
+  }
+  if (!agent || agent.organizationId !== ctx.orgId) {
+    apiError(res, 'Agent not found', 404, 'NOT_FOUND');
+    return false;
+  }
+  return true;
+}
+
 // GET /api/v1/agents
 export async function listAgents(ctx: RouteContext, res: ServerResponse): Promise<void> {
+  if (!ctx.orgId) {
+    apiError(
+      res,
+      'Authenticated session has no associated organization',
+      403,
+      'ORGANIZATION_NOT_LINKED'
+    );
+    return;
+  }
   const page = Number(ctx.query.get('page') ?? '1');
   const pageSize = Math.min(Number(ctx.query.get('pageSize') ?? '20'), 100);
-  const organizationId = ctx.query.get('organizationId') ?? ctx.orgId;
+  const organizationId = ctx.orgId;
   const environmentId = ctx.query.get('environmentId') ?? undefined;
   const status = ctx.query.get('status') as AgentStatus | null;
 
@@ -31,10 +71,7 @@ export async function getAgent(ctx: RouteContext, res: ServerResponse): Promise<
   }
 
   const agent = await AgentService.findById(id);
-  if (!agent) {
-    apiError(res, 'Agent not found', 404, 'NOT_FOUND');
-    return;
-  }
+  if (!assertOwnAgent(ctx, res, agent)) return;
 
   json(res, { data: agent });
 }
@@ -43,18 +80,22 @@ export async function getAgent(ctx: RouteContext, res: ServerResponse): Promise<
 export async function registerAgent(ctx: RouteContext, res: ServerResponse): Promise<void> {
   const body = ctx.body as Record<string, unknown> | undefined;
 
-  if (!body?.organizationId || !body?.environmentId || !body?.name || !body?.version) {
+  if (!ctx.orgId) {
     apiError(
       res,
-      'organizationId, environmentId, name and version are required',
-      400,
-      'VALIDATION_ERROR'
+      'Authenticated session has no associated organization',
+      403,
+      'ORGANIZATION_NOT_LINKED'
     );
+    return;
+  }
+  if (!body?.environmentId || !body?.name || !body?.version) {
+    apiError(res, 'environmentId, name and version are required', 400, 'VALIDATION_ERROR');
     return;
   }
 
   const agent = await AgentService.register({
-    organizationId: body['organizationId'] as string,
+    organizationId: ctx.orgId,
     environmentId: body['environmentId'] as string,
     name: body['name'] as string,
     version: body['version'] as string,
@@ -77,6 +118,9 @@ export async function agentHeartbeat(ctx: RouteContext, res: ServerResponse): Pr
     apiError(res, 'Missing id', 400, 'BAD_REQUEST');
     return;
   }
+
+  const existing = await AgentService.findById(id);
+  if (!assertOwnAgent(ctx, res, existing)) return;
 
   const body = ctx.body as Record<string, unknown> | undefined;
   const status = (body?.['status'] as AgentStatus) ?? 'ONLINE';
@@ -103,6 +147,9 @@ export async function getAgentHeartbeats(ctx: RouteContext, res: ServerResponse)
     return;
   }
 
+  const agent = await AgentService.findById(id);
+  if (!assertOwnAgent(ctx, res, agent)) return;
+
   const limit = Math.min(Number(ctx.query.get('limit') ?? '10'), 100);
   const heartbeats = await AgentService.getRecentHeartbeats(id, limit);
   json(res, { data: heartbeats, meta: { total: heartbeats.length } });
@@ -117,10 +164,7 @@ export async function retireAgent(ctx: RouteContext, res: ServerResponse): Promi
   }
 
   const agent = await AgentService.findById(id);
-  if (!agent) {
-    apiError(res, 'Agent not found', 404, 'NOT_FOUND');
-    return;
-  }
+  if (!assertOwnAgent(ctx, res, agent)) return;
 
   await AgentService.retire(id);
   json(res, { success: true });
