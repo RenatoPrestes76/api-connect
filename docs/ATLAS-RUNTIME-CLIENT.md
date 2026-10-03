@@ -42,6 +42,47 @@ agent's own config, `AGENT_DATA_DIR_ENV_VAR` / defaults to
 `~/.seltriva/agent`). The private key never leaves that file and is never
 transmitted or logged — only the public key is sent, at registration.
 
+## Database access requirements (read-only enforcement)
+
+The Runtime must never write to a customer's ERP database. This is enforced
+in two independent layers — if either one alone were disabled or had a bug,
+the other still holds:
+
+1. **In-process:** `executor.ts` never holds a reference to the raw
+   `PostgresDriver` — it's always wrapped in `@seltriva/database-sdk`'s
+   `ReadOnlyAdapter` before `connect()` is ever called. `ReadOnlyAdapter.execute()`
+   inspects the query's `type` and throws `ReadOnlyViolationError` for
+   anything other than `SELECT` — `INSERT`/`UPDATE`/`DELETE`/`RAW` never reach
+   the underlying connection, let alone the database. See
+   `packages/database-sdk/src/adapters/read-only-adapter.ts` and its test
+   suite (`packages/database-sdk/src/__tests__/read-only-adapter.test.ts`),
+   which proves each blocked query type never results in a call to the
+   database driver.
+2. **Database-level (operational requirement, not enforced by this repo):**
+   `ATLAS_SCAN_DB_USER` (and, for a real customer ERP, whatever credential
+   the Runtime is configured with) **must** be a dedicated database role
+   that only has `SELECT` privileges — never a superuser/admin/application
+   account. This is the layer that still protects the ERP if the
+   `ReadOnlyAdapter` wrapper were ever bypassed, removed, or had a bug.
+
+   For Postgres, create a role like this before connecting the Runtime to a
+   real customer database:
+
+   ```sql
+   CREATE ROLE atlas_readonly WITH LOGIN PASSWORD '...';
+   GRANT CONNECT ON DATABASE erp_database TO atlas_readonly;
+   GRANT USAGE ON SCHEMA public TO atlas_readonly;
+   GRANT SELECT ON ALL TABLES IN SCHEMA public TO atlas_readonly;
+   -- So tables created *after* this grant are still read-only to the role:
+   ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO atlas_readonly;
+   ```
+
+   For other engines (MySQL/SQL Server/Oracle/Firebird — supported by
+   `@seltriva/database-sdk`'s other drivers, but not yet wired into
+   `executor.ts`, see the audit report), grant the equivalent read-only role
+   (`GRANT SELECT` only; no `INSERT`/`UPDATE`/`DELETE`/`EXECUTE` on stored
+   procedures that mutate data) before onboarding a customer on that engine.
+
 ## Protocol summary (see the audit doc for the full trace)
 
 ```

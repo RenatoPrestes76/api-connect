@@ -37,13 +37,26 @@ describe('loadOrCreateIdentity', () => {
     expect(second.fingerprint).toBe(first.fingerprint);
   });
 
-  it('the persisted file on disk contains the private key in plain PEM (protection is non-transmission, not encryption-at-rest)', () => {
+  it('the persisted file on disk never contains the private key in plain PEM — it is encrypted at rest', () => {
     const dir = tempDataDir();
-    const identity = loadOrCreateIdentity(dir);
+    loadOrCreateIdentity(dir);
     const raw = readFileSync(join(dir, 'atlas-runtime-identity.json'), 'utf-8');
-    const parsed = JSON.parse(raw) as { privateKeyPem: string };
-    expect(parsed.privateKeyPem).toBe(identity.privateKeyPem);
-    expect(raw).toContain('BEGIN PRIVATE KEY');
+    const parsed = JSON.parse(raw) as {
+      encryptedPrivateKey: { scheme: string; ciphertext: string };
+    };
+    expect(raw).not.toContain('BEGIN PRIVATE KEY');
+    expect(parsed.encryptedPrivateKey.ciphertext).not.toContain('BEGIN PRIVATE KEY');
+    expect(parsed.encryptedPrivateKey.scheme).toBe(
+      process.platform === 'win32' ? 'dpapi' : 'aes-256-gcm-local'
+    );
+  });
+
+  it('decrypts back to the exact same private key on a fresh load from disk', () => {
+    const dir = tempDataDir();
+    const original = loadOrCreateIdentity(dir);
+    const reloaded = loadOrCreateIdentity(dir);
+    expect(reloaded.privateKeyPem).toBe(original.privateKeyPem);
+    expect(reloaded.privateKeyPem).toContain('BEGIN PRIVATE KEY');
   });
 });
 

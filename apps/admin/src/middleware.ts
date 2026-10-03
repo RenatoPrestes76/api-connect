@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import { getAdminJwtSecret } from './lib/jwt-secret';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env['ADMIN_JWT_SECRET'] ?? 'atlas-admin-dev-secret-change-in-prod'
-);
+const JWT_SECRET = new TextEncoder().encode(getAdminJwtSecret());
 const LOGIN_PATH = '/login';
 const SESSION_COOKIE = 'admin_session';
 

@@ -7,10 +7,21 @@
  * sent to Atlas (only the public key is, at registration) and never
  * logged — every log line in this module and its callers must reference
  * `identity.runtimeId`/`identity.publicKeyPem` only.
+ *
+ * The private key is encrypted at rest (DPAPI on Windows, AES-256-GCM with
+ * a local key file elsewhere — see `security/credential-encryption.ts`)
+ * before it's written to disk. Everywhere else in this module and its
+ * callers, `AtlasRuntimeIdentity.privateKeyPem` is the decrypted, in-memory
+ * PEM string — only the on-disk JSON shape changed.
  */
 import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { mkdirSync, existsSync, readFileSync, writeFileSync, chmodSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import {
+  encryptSecret,
+  decryptSecret,
+  type EncryptedSecret,
+} from '../security/credential-encryption.js';
 
 export interface AtlasRuntimeIdentity {
   /** Set once /runtime/register succeeds; absent for a not-yet-enrolled identity. */
@@ -19,6 +30,14 @@ export interface AtlasRuntimeIdentity {
   privateKeyPem: string;
   /** Machine fingerprint sent at registration — stable across restarts, derived once. */
   fingerprint: string;
+}
+
+/** On-disk shape — the private key is only ever persisted encrypted. */
+interface PersistedIdentityFile {
+  runtimeId: string | null;
+  publicKeyPem: string;
+  fingerprint: string;
+  encryptedPrivateKey: EncryptedSecret;
 }
 
 function identityFilePath(dataDir: string): string {
@@ -52,7 +71,13 @@ export function loadOrCreateIdentity(dataDir: string): AtlasRuntimeIdentity {
 
   if (existsSync(filePath)) {
     const raw = readFileSync(filePath, 'utf-8');
-    return JSON.parse(raw) as AtlasRuntimeIdentity;
+    const persisted = JSON.parse(raw) as PersistedIdentityFile;
+    return {
+      runtimeId: persisted.runtimeId,
+      publicKeyPem: persisted.publicKeyPem,
+      fingerprint: persisted.fingerprint,
+      privateKeyPem: decryptSecret(persisted.encryptedPrivateKey, dataDir),
+    };
   }
 
   const { publicKeyPem, privateKeyPem } = generateKeyPair();
@@ -68,15 +93,21 @@ export function loadOrCreateIdentity(dataDir: string): AtlasRuntimeIdentity {
 
 /**
  * Persists the identity (e.g. after registration fills in `runtimeId`).
- * Best-effort `chmod 0600` on POSIX — Windows has no equivalent file-mode
- * concept, so this is a no-op there rather than a hard requirement; the
- * private key's real protection is that it's never transmitted, not file
- * permissions alone.
+ * The private key is encrypted before it touches disk (DPAPI on Windows,
+ * AES-256-GCM locally otherwise — see `security/credential-encryption.ts`);
+ * file-mode (`chmod 0600`, best-effort on POSIX, no-op on Windows) is a
+ * second, independent layer, not the primary protection anymore.
  */
 export function persistIdentity(dataDir: string, identity: AtlasRuntimeIdentity): void {
   mkdirSync(dataDir, { recursive: true });
   const filePath = identityFilePath(dataDir);
-  writeFileSync(filePath, JSON.stringify(identity, null, 2), 'utf-8');
+  const persisted: PersistedIdentityFile = {
+    runtimeId: identity.runtimeId,
+    publicKeyPem: identity.publicKeyPem,
+    fingerprint: identity.fingerprint,
+    encryptedPrivateKey: encryptSecret(identity.privateKeyPem, dataDir),
+  };
+  writeFileSync(filePath, JSON.stringify(persisted, null, 2), 'utf-8');
   try {
     chmodSync(filePath, 0o600);
   } catch {

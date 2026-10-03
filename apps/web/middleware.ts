@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import { getHubJwtSecret } from '@/lib/jwt-secret';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env['HUB_JWT_SECRET'] ?? 'atlas-hub-dev-secret-change-in-prod'
-);
+const JWT_SECRET = new TextEncoder().encode(getHubJwtSecret());
 const LOGIN_PATH = '/login';
 
 /** Routes that are accessible without authentication. */

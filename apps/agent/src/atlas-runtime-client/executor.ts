@@ -10,8 +10,15 @@
  * env vars (see docs/ATLAS-RUNTIME-CLIENT.md) — the introspection result
  * itself is genuine, only the *choice of target* is a stand-in for a real
  * ERP connection.
+ *
+ * The driver is wrapped in `ReadOnlyAdapter` before anything else touches
+ * it: `PostgresDriver.execute()` is a general-purpose method capable of
+ * running any query type, including writes, and this module must never
+ * hold a reference to the unwrapped driver — see docs/ATLAS-RUNTIME-
+ * CLIENT.md's "Database access requirements" section for the full policy
+ * (this in-process guard plus a database-level read-only ERP user).
  */
-import { PostgresDriver, type DatabaseSchema } from '@seltriva/database-sdk';
+import { PostgresDriver, ReadOnlyAdapter, type DatabaseSchema } from '@seltriva/database-sdk';
 
 export interface ScanTargetConfig {
   host: string;
@@ -23,15 +30,17 @@ export interface ScanTargetConfig {
 }
 
 export async function executeDiscoveryScan(target: ScanTargetConfig): Promise<DatabaseSchema> {
-  const driver = new PostgresDriver({
-    host: target.host,
-    port: target.port,
-    database: target.database,
-    username: target.username,
-    password: target.password,
-    ssl: target.ssl ?? false,
-    timeout: 10_000,
-  });
+  const driver = new ReadOnlyAdapter(
+    new PostgresDriver({
+      host: target.host,
+      port: target.port,
+      database: target.database,
+      username: target.username,
+      password: target.password,
+      ssl: target.ssl ?? false,
+      timeout: 10_000,
+    })
+  );
 
   await driver.connect();
   try {

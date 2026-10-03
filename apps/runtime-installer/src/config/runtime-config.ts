@@ -1,6 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { RuntimeCredentials } from '../activation/registration.js';
+import {
+  encryptSecret,
+  decryptSecret,
+  type EncryptedSecret,
+} from '../security/credential-encryption.js';
 
 export interface RuntimeConfig {
   runtimeId: string;
@@ -18,7 +23,16 @@ export interface RuntimeConfig {
   installedAt: string;
 }
 
+/** On-disk shape — `runtimeToken` is only ever persisted encrypted. */
+type PersistedRuntimeConfig = Omit<RuntimeConfig, 'runtimeToken'> & {
+  encryptedRuntimeToken: EncryptedSecret;
+};
+
 const CONFIG_FILE = 'runtime.json';
+
+function configDir(runtimeRoot: string): string {
+  return path.join(runtimeRoot, 'config');
+}
 
 export function writeRuntimeConfig(
   runtimeRoot: string,
@@ -32,21 +46,30 @@ export function writeRuntimeConfig(
     connectorType: string;
   }
 ): void {
-  const config: RuntimeConfig = {
-    ...credentials,
+  const { runtimeToken, ...restCredentials } = credentials;
+  const dir = configDir(runtimeRoot);
+  const persisted: PersistedRuntimeConfig = {
+    ...restCredentials,
     ...meta,
     installedAt: new Date().toISOString(),
+    encryptedRuntimeToken: encryptSecret(runtimeToken, dir),
   };
 
-  const configPath = path.join(runtimeRoot, 'config', CONFIG_FILE);
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2), { encoding: 'utf8', mode: 0o600 });
+  const configPath = path.join(dir, CONFIG_FILE);
+  fs.writeFileSync(configPath, JSON.stringify(persisted, null, 2), {
+    encoding: 'utf8',
+    mode: 0o600,
+  });
 }
 
 export function readRuntimeConfig(runtimeRoot: string): RuntimeConfig | null {
-  const configPath = path.join(runtimeRoot, 'config', CONFIG_FILE);
+  const dir = configDir(runtimeRoot);
+  const configPath = path.join(dir, CONFIG_FILE);
   if (!fs.existsSync(configPath)) return null;
   try {
-    return JSON.parse(fs.readFileSync(configPath, 'utf8')) as RuntimeConfig;
+    const persisted = JSON.parse(fs.readFileSync(configPath, 'utf8')) as PersistedRuntimeConfig;
+    const { encryptedRuntimeToken, ...rest } = persisted;
+    return { ...rest, runtimeToken: decryptSecret(encryptedRuntimeToken, dir) };
   } catch {
     return null;
   }

@@ -1,6 +1,7 @@
 // ─── Adapter interfaces ────────────────────────────────────────────────────────
 export type { DatabaseAdapter, DatabaseHealth, HealthStatus } from './adapters/database-adapter.js';
 export { SqlAdapter } from './adapters/sql-adapter.js';
+export { ReadOnlyAdapter } from './adapters/read-only-adapter.js';
 
 // ─── Health ────────────────────────────────────────────────────────────────────
 export type {
@@ -112,4 +113,5 @@ export {
   TransactionError,
   SchemaError,
   DriverNotSupportedError,
+  ReadOnlyViolationError,
 } from './errors/database-errors.js';

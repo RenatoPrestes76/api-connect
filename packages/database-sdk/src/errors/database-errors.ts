@@ -55,3 +55,9 @@ export class DriverNotSupportedError extends DatabaseError {
     super(`Database driver "${driverName}" is not supported`, cause);
   }
 }
+
+export class ReadOnlyViolationError extends DatabaseError {
+  constructor(public readonly queryType: string) {
+    super(`Read-only driver: refused to execute a '${queryType}' query. Only SELECT is allowed.`);
+  }
+}

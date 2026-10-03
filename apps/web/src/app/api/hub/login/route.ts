@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { SignJWT } from 'jose';
+import { getHubJwtSecret } from '@/lib/jwt-secret';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env['HUB_JWT_SECRET'] ?? 'atlas-hub-dev-secret-change-in-prod'
-);
+const JWT_SECRET = new TextEncoder().encode(getHubJwtSecret());
 
 // Demo credential store — replace with real user DB lookup
 const DEMO_USERS: Record<string, { password: string; role: string; name: string }> = {
