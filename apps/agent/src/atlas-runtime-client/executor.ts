@@ -39,6 +39,10 @@ export async function executeDiscoveryScan(target: ScanTargetConfig): Promise<Da
       password: target.password,
       ssl: target.ssl ?? false,
       timeout: 10_000,
+      // Third, database-level layer — see docs/ATLAS-RUNTIME-CLIENT.md's
+      // "Database access requirements": even if a write somehow reached
+      // execute(), Postgres itself rejects it in a read-only transaction.
+      readOnlySession: true,
     })
   );
 

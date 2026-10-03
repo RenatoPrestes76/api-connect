@@ -65,6 +65,30 @@ const UPDATE_QUERY: UpdateQuery = {
 const DELETE_QUERY: DeleteQuery = { type: 'DELETE', table: 'produtos', where: [] };
 const RAW_QUERY: RawQuery = { type: 'RAW', sql: 'DELETE FROM produtos' };
 
+// Adversarial RAW payloads: each looks read-only-ish (or is syntactically a
+// SELECT) at a glance, but has a write side effect. None of these can be
+// expressed through the typed Query AST (SelectQuery has no `into`/
+// `forUpdate` field, and RawQuery.sql is one opaque string) — they only
+// exist to prove the policy of "RAW is rejected outright, never pattern-
+// matched against SQL text" actually holds for the exact attacks that
+// pattern-matching ("does it start with SELECT/WITH?") would miss.
+const CTE_DELETE_QUERY: RawQuery = {
+  type: 'RAW',
+  sql: 'WITH deleted AS (DELETE FROM produtos RETURNING *) SELECT * FROM deleted',
+};
+const SELECT_INTO_QUERY: RawQuery = {
+  type: 'RAW',
+  sql: 'SELECT * INTO backup_produtos FROM produtos',
+};
+const SELECT_FOR_UPDATE_QUERY: RawQuery = {
+  type: 'RAW',
+  sql: 'SELECT * FROM produtos WHERE id = 1 FOR UPDATE',
+};
+const STACKED_STATEMENTS_QUERY: RawQuery = {
+  type: 'RAW',
+  sql: 'SELECT 1; DROP TABLE produtos;',
+};
+
 describe('ReadOnlyAdapter', () => {
   let tracking: ReturnType<typeof makeTrackingPgPool>;
   let adapter: ReadOnlyAdapter;
@@ -103,6 +127,26 @@ describe('ReadOnlyAdapter', () => {
 
   it('blocks RAW queries too — free-text SQL can hide a write and is never vetted as safe', async () => {
     await expect(adapter.execute(RAW_QUERY)).rejects.toThrow(ReadOnlyViolationError);
+    expect(tracking.queries).toHaveLength(0);
+  });
+
+  it('blocks a CTE whose body is a DELETE, even though the outer statement is a SELECT', async () => {
+    await expect(adapter.execute(CTE_DELETE_QUERY)).rejects.toThrow(ReadOnlyViolationError);
+    expect(tracking.queries).toHaveLength(0);
+  });
+
+  it('blocks SELECT ... INTO (creates and populates a new table — a write disguised as a SELECT)', async () => {
+    await expect(adapter.execute(SELECT_INTO_QUERY)).rejects.toThrow(ReadOnlyViolationError);
+    expect(tracking.queries).toHaveLength(0);
+  });
+
+  it('blocks SELECT ... FOR UPDATE (takes row locks on the customer ERP — a liveness risk even without a write)', async () => {
+    await expect(adapter.execute(SELECT_FOR_UPDATE_QUERY)).rejects.toThrow(ReadOnlyViolationError);
+    expect(tracking.queries).toHaveLength(0);
+  });
+
+  it('blocks multiple ";"-stacked statements (a harmless-looking SELECT hiding a second, destructive statement)', async () => {
+    await expect(adapter.execute(STACKED_STATEMENTS_QUERY)).rejects.toThrow(ReadOnlyViolationError);
     expect(tracking.queries).toHaveLength(0);
   });
 

@@ -39,6 +39,10 @@ export class PostgresDriver extends SqlAdapter implements SchemaReader {
       password: this._config.password,
       ssl: this._config.ssl,
       connectionTimeoutMillis: this._config.timeout,
+      // Startup parameter, applied by Postgres to every connection the
+      // pool opens (not a session SET on one checked-out client) — see
+      // DriverConfig.readOnlySession's doc comment.
+      ...(this._config.readOnlySession ? { options: '-c default_transaction_read_only=on' } : {}),
     });
     const client = await this._pool.connect();
     (client as pg.PoolClient).release();
