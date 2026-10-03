@@ -54,7 +54,7 @@ describe('AES-256-GCM local fallback (platform-independent)', () => {
 
 describe('DPAPI (Windows only)', () => {
   it.skipIf(process.platform !== 'win32')(
-    'round-trips a secret through real Windows DPAPI (CurrentUser scope)',
+    'round-trips a secret through real Windows DPAPI (LocalMachine scope)',
     () => {
       const ciphertext = _internal.dpapiProtect(Buffer.from('atlas-runtime-private-key', 'utf-8'));
       expect(ciphertext.toString('base64')).not.toContain('atlas-runtime-private-key');

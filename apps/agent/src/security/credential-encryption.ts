@@ -8,10 +8,22 @@
  *
  * On Windows (the target client OS — see apps/runtime-installer's
  * `service/windows-service.ts`) this shells out to
- * `System.Security.Cryptography.ProtectedData` (DPAPI, `CurrentUser`
- * scope) via PowerShell — the OS-native mechanism for "encrypt this for
- * the current Windows user, with no key of our own to manage or lose".
- * No native npm dependency needed.
+ * `System.Security.Cryptography.ProtectedData` (DPAPI) via PowerShell —
+ * the OS-native mechanism, no native npm dependency needed. Scope is
+ * `LocalMachine`, not `CurrentUser`: the Runtime runs as a Windows
+ * service (LocalSystem or a dedicated service account), while whatever
+ * wrote the identity/config file first (an interactive install, or the
+ * service's own first run under its own account) may not be the same
+ * Windows user token that later reads it back. `CurrentUser`-scoped
+ * ciphertext is only decryptable by the exact account that encrypted it —
+ * `LocalMachine` is decryptable by any process on this machine, which is
+ * the correct trade for "installer writes, service account reads".
+ *
+ * The secret itself is never passed as a PowerShell command-line argument
+ * (visible to other processes/users via the process list, e.g. `Get-
+ * Process`, Task Manager's command-line column, or Sysmon/Event ID 4688)
+ * — it's written to the child process's stdin instead, and the script
+ * only ever appears in argv as a fixed, secret-independent string.
  *
  * On any other OS (the installer also supports Linux — see
  * `service/linux-service.ts`) there is no DPAPI equivalent available
@@ -42,31 +54,37 @@ const AES_TAG_LENGTH = 16;
 
 // ─── DPAPI (Windows only) ───────────────────────────────────────────────────
 
-function runPowerShell(script: string): string {
+/** `LocalMachine`, not `CurrentUser` — see the module comment above for why. */
+const DPAPI_SCOPE = 'LocalMachine';
+
+/** The secret travels over stdin; `script` itself never depends on secret bytes. */
+function runPowerShell(script: string, stdinInput: string): string {
   return execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
     encoding: 'utf-8',
+    input: stdinInput,
   }).trim();
 }
 
-/** `plaintextB64` is interpolated into the script — safe, base64's alphabet has no PowerShell-special characters. */
 function dpapiProtect(plaintext: Buffer): Buffer {
   const script = [
     'Add-Type -AssemblyName System.Security',
-    `$bytes = [Convert]::FromBase64String('${plaintext.toString('base64')}')`,
-    '$protected = [System.Security.Cryptography.ProtectedData]::Protect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)',
+    '$b64 = [Console]::In.ReadToEnd().Trim()',
+    '$bytes = [Convert]::FromBase64String($b64)',
+    `$protected = [System.Security.Cryptography.ProtectedData]::Protect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::${DPAPI_SCOPE})`,
     '[Convert]::ToBase64String($protected)',
   ].join('; ');
-  return Buffer.from(runPowerShell(script), 'base64');
+  return Buffer.from(runPowerShell(script, plaintext.toString('base64')), 'base64');
 }
 
 function dpapiUnprotect(ciphertext: Buffer): Buffer {
   const script = [
     'Add-Type -AssemblyName System.Security',
-    `$bytes = [Convert]::FromBase64String('${ciphertext.toString('base64')}')`,
-    '$plain = [System.Security.Cryptography.ProtectedData]::Unprotect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)',
+    '$b64 = [Console]::In.ReadToEnd().Trim()',
+    '$bytes = [Convert]::FromBase64String($b64)',
+    `$plain = [System.Security.Cryptography.ProtectedData]::Unprotect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::${DPAPI_SCOPE})`,
     '[Convert]::ToBase64String($plain)',
   ].join('; ');
-  return Buffer.from(runPowerShell(script), 'base64');
+  return Buffer.from(runPowerShell(script, ciphertext.toString('base64')), 'base64');
 }
 
 // ─── AES-256-GCM fallback (non-Windows) ─────────────────────────────────────
@@ -143,4 +161,5 @@ export const _internal = {
   aesEncrypt,
   aesDecrypt,
   loadOrCreateLocalKey,
+  DPAPI_SCOPE,
 };
