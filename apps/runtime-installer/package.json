@@ -16,10 +16,12 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@seltriva/activation": "workspace:*"
+    "@seltriva/activation": "workspace:*",
+    "node-windows": "^1.0.0-beta.8"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
+    "@types/node-windows": "^0.1.6",
     "@vitest/coverage-v8": "^2.1.8",
     "typescript": "^5.4.5",
     "vitest": "^2.1.8"

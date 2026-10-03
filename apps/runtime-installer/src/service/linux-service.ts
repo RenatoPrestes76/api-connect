@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import path from 'node:path';
 import { execSync } from 'node:child_process';
 
 const SERVICE_NAME = 'atlas-runtime';
@@ -9,11 +8,25 @@ export interface LinuxServiceOptions {
   runtimeRoot: string;
   autoStart: boolean;
   user?: string;
+  /** Absolute path to the agent's compiled daemon entrypoint — see config/directory-setup.ts's agentEntrypointPath(). */
+  scriptPath: string;
+  /** ATLAS_API_URL / ATLAS_ORGANIZATION_CODE / ATLAS_ACTIVATION_KEY / ATLAS_RUNTIME_DATA_DIR — see apps/agent/src/cli/bin.ts. */
+  env: Record<string, string>;
 }
 
 export function installLinuxService(opts: LinuxServiceOptions): void {
-  const binPath = path.join(opts.runtimeRoot, 'atlas-runtime');
-  const unit = buildUnitFile(binPath, opts.runtimeRoot, opts.user);
+  // `ExecStart` previously pointed at a literal `atlas-runtime` binary
+  // that no build step in this repo ever produced (docs/ATLAS-AUDIT-
+  // REPORT.md) — systemd execs this directly (unlike the Windows SCM, it
+  // doesn't need the target to speak any special protocol), so pointing
+  // it at the real Node entrypoint is enough to make this genuinely work.
+  const unit = buildUnitFile(
+    process.execPath,
+    opts.scriptPath,
+    opts.runtimeRoot,
+    opts.env,
+    opts.user
+  );
 
   fs.writeFileSync(UNIT_PATH, unit, { encoding: 'utf8', mode: 0o644 });
   execSync('systemctl daemon-reload', { stdio: 'pipe' });
@@ -54,8 +67,19 @@ export function linuxServiceExists(): boolean {
   return fs.existsSync(UNIT_PATH);
 }
 
-function buildUnitFile(binPath: string, runtimeRoot: string, user?: string): string {
+function buildUnitFile(
+  nodeExecPath: string,
+  scriptPath: string,
+  runtimeRoot: string,
+  env: Record<string, string>,
+  user?: string
+): string {
   const userLine = user ? `User=${user}\n` : '';
+  // systemd needs one Environment= per variable — a single `export`-
+  // style line isn't supported by this directive.
+  const envLines = Object.entries(env)
+    .map(([name, value]) => `Environment=${name}=${value}`)
+    .join('\n');
   return (
     [
       '[Unit]',
@@ -65,9 +89,10 @@ function buildUnitFile(binPath: string, runtimeRoot: string, user?: string): str
       '',
       '[Service]',
       'Type=simple',
-      `ExecStart=${binPath}`,
+      `ExecStart=${nodeExecPath} ${scriptPath}`,
       `WorkingDirectory=${runtimeRoot}`,
       userLine.trimEnd(),
+      envLines,
       'Restart=on-failure',
       'RestartSec=10s',
       'StandardOutput=append:/var/log/atlas-runtime.log',

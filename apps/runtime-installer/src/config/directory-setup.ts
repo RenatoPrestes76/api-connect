@@ -9,6 +9,10 @@ export const RUNTIME_DIRS = [
   'connectors',
   'updates',
   'temp',
+  // Where the daemon (apps/agent/src/cli/bin.ts) persists its own state —
+  // the Ed25519 identity file and the offline-queue SQLite database.
+  // Deliberately separate from this installer's own 'config'/'cache'.
+  'agent-data',
 ] as const;
 
 export type RuntimeDir = (typeof RUNTIME_DIRS)[number];
@@ -29,4 +33,14 @@ export function getDefaultRuntimeRoot(): string {
 
 export function runtimeDir(runtimeRoot: string, dir: RuntimeDir): string {
   return path.join(runtimeRoot, dir);
+}
+
+/** Where the deployed apps/agent bundle lives under the runtime root — see agent-bundle.ts. */
+export function agentBundleDir(runtimeRoot: string): string {
+  return path.join(runtimeRoot, 'agent');
+}
+
+/** The real daemon entrypoint the Windows service / systemd unit execs — see apps/agent/src/cli/bin.ts. */
+export function agentEntrypointPath(runtimeRoot: string): string {
+  return path.join(agentBundleDir(runtimeRoot), 'dist', 'cli', 'bin.js');
 }

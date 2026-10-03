@@ -18,12 +18,16 @@ export interface ServiceOptions {
   runtimeRoot: string;
   autoStart: boolean;
   user?: string;
+  /** Absolute path to the agent's compiled daemon entrypoint — see config/directory-setup.ts's agentEntrypointPath(). */
+  scriptPath: string;
+  /** ATLAS_API_URL / ATLAS_ORGANIZATION_CODE / ATLAS_ACTIVATION_KEY / ATLAS_RUNTIME_DATA_DIR — see apps/agent/src/cli/bin.ts. */
+  env: Record<string, string>;
 }
 
 export class ServiceManager {
   constructor(private readonly _platform: Platform) {}
 
-  install(opts: ServiceOptions): void {
+  async install(opts: ServiceOptions): Promise<void> {
     switch (this._platform) {
       case 'windows':
         return installWindowsService(opts);
@@ -58,10 +62,10 @@ export class ServiceManager {
     }
   }
 
-  uninstall(): void {
+  async uninstall(opts: { scriptPath: string }): Promise<void> {
     switch (this._platform) {
       case 'windows':
-        return uninstallWindowsService();
+        return uninstallWindowsService(opts);
       case 'linux':
         return uninstallLinuxService();
       default:

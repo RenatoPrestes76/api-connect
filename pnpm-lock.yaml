@@ -711,6 +711,9 @@ importers:
       '@types/node':
         specifier: ^20.14.0
         version: 20.19.43
+      '@types/node-windows':
+        specifier: ^0.1.6
+        version: 0.1.6
       '@vitest/coverage-v8':
         specifier: ^2.1.8
         version: 2.1.9(vitest@2.1.9(@types/node@20.19.43)(happy-dom@20.14.0)(lightningcss@1.33.0))
@@ -3833,6 +3836,9 @@ packages:
 
   '@types/node-cron@3.0.11':
     resolution: {integrity: sha512-0ikrnug3/IyneSHqCBeslAhlK2aBfYek1fGo4bP4QnZPmiqSGRK+Oy7ZMisLWkesffJvQ1cqAcBnJC+8+nxIAg==}
+
+  '@types/node-windows@0.1.6':
+    resolution: {integrity: sha512-vbjaBtsF23Nprkw8rQFwskWzv5l6grWbUerYBHHjY/hqp/vIBAPGVQnr3dqsd75SwCQIAoZeBr/b+AbFFV/LfQ==}
 
   '@types/node@20.19.43':
     resolution: {integrity: sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA==}
@@ -10151,6 +10157,10 @@ snapshots:
       '@types/node': 20.19.43
 
   '@types/node-cron@3.0.11': {}
+
+  '@types/node-windows@0.1.6':
+    dependencies:
+      '@types/node': 20.19.43
 
   '@types/node@20.19.43':
     dependencies:

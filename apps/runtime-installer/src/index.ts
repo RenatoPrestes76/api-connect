@@ -19,8 +19,10 @@ import {
   ensureRuntimeDirectories,
   getDefaultRuntimeRoot,
   runtimeDir,
+  agentEntrypointPath,
 } from './config/directory-setup.js';
 import { writeRuntimeConfig, runtimeConfigExists } from './config/runtime-config.js';
+import { installAgentBundle } from './agent-bundle.js';
 import { ServiceManager } from './service/service-manager.js';
 import { runHealthCheck } from './health/health-checker.js';
 import { Logger } from './logs/logger.js';
@@ -128,10 +130,31 @@ async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Prom
 
   // ── Step 3: Install service ──────────────────────────────────────────────
   if (wizard.installService) {
+    process.stdout.write('  Copying the Atlas runtime agent...\n');
+    try {
+      installAgentBundle(runtimeRoot);
+    } catch (err) {
+      const message = (err as Error).message;
+      process.stderr.write(`\n  Could not install the agent bundle: ${message}\n\n`);
+      logger.error('installer.log', `Agent bundle install failed: ${message}`);
+      process.exit(1);
+    }
+
     process.stdout.write('  Installing system service...\n');
+    const scriptPath = agentEntrypointPath(runtimeRoot);
     const svc = new ServiceManager(platform);
     try {
-      svc.install({ runtimeRoot, autoStart: wizard.autoStart });
+      await svc.install({
+        runtimeRoot,
+        autoStart: wizard.autoStart,
+        scriptPath,
+        env: {
+          ATLAS_API_URL: wizard.apiBaseUrl,
+          ATLAS_ORGANIZATION_CODE: wizard.organizationCode,
+          ATLAS_ACTIVATION_KEY: wizard.atlasActivationKey,
+          ATLAS_RUNTIME_DATA_DIR: runtimeDir(runtimeRoot, 'agent-data'),
+        },
+      });
       logger.info('installer.log', 'Service installed successfully');
       if (wizard.autoStart) {
         svc.start();
@@ -187,7 +210,7 @@ async function runUninstallCommand(runtimeRoot: string): Promise<void> {
 
   if (svc.exists()) {
     try {
-      svc.uninstall();
+      await svc.uninstall({ scriptPath: agentEntrypointPath(runtimeRoot) });
       process.stdout.write('  Service removed.\n');
     } catch (err) {
       process.stderr.write(`  Warning: ${(err as Error).message}\n`);
