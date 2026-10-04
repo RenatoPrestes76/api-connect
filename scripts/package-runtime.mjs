@@ -57,11 +57,22 @@ async function main() {
   rmSync(OUT, { recursive: true, force: true });
   mkdirSync(OUT, { recursive: true });
 
+  // Plain `tsc` never deletes a dist/*.js file whose source .ts was
+  // removed, and turbo's cache then happily replays that stale dist/
+  // forever (the input hash doesn't change just because we deleted a
+  // leftover file by hand once) — this bit us for real: a package built
+  // right after removing apps/runtime-installer/src/activation/ still
+  // shipped the old compiled activation/*.js. Deleting dist/ ourselves
+  // first (not relying on tsc or turbo to do it) and forcing past the
+  // cache closes both paths to a stale build leaking into the package.
+  rmSync(join(ROOT, 'apps/agent/dist'), { recursive: true, force: true });
+  rmSync(join(ROOT, 'apps/runtime-installer/dist'), { recursive: true, force: true });
+
   console.log('\n[1/5] Building apps/agent and its workspace dependencies...');
-  run('npx turbo run build --filter=@seltriva/agent');
+  run('npx turbo run build --filter=@seltriva/agent --force');
 
   console.log('\n[2/5] Building apps/runtime-installer and its workspace dependencies...');
-  run('npx turbo run build --filter=@seltriva/runtime-installer');
+  run('npx turbo run build --filter=@seltriva/runtime-installer --force');
 
   console.log(
     `\n[3/5] Deploying apps/runtime-installer (production deps only) to ${INSTALLER_DEPLOY_DIR}...`
