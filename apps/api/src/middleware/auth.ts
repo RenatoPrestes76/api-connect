@@ -57,7 +57,6 @@ const PUBLIC_PATHS = new Set([
   '/api/v1/live',
   '/ready',
   '/api/v1/ready',
-  '/api/v1/activate',
   '/api/v1/provision',
   '/api/v1/heartbeat',
   '/api/v1/sync-status',

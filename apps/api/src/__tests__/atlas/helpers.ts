@@ -18,7 +18,6 @@ import {
   InMemoryHeartbeatRecordRepository,
   InMemorySyncRecordRepository,
 } from '@seltriva/agent-observability';
-import { InMemoryActivationTokenRepository } from '@seltriva/activation';
 
 const FUTURE = new Date(Date.now() + 86_400_000);
 
@@ -30,7 +29,6 @@ export interface TestAtlasServer {
   accessTokenRepo: InMemoryAgentAccessTokenRepository;
   heartbeatRepo: InMemoryHeartbeatRecordRepository;
   syncRepo: InMemorySyncRecordRepository;
-  activationTokenRepo: InMemoryActivationTokenRepository;
 }
 
 export async function startTestServer(): Promise<TestAtlasServer> {
@@ -39,7 +37,6 @@ export async function startTestServer(): Promise<TestAtlasServer> {
   const accessTokenRepo = new InMemoryAgentAccessTokenRepository();
   const heartbeatRepo = new InMemoryHeartbeatRecordRepository();
   const syncRepo = new InMemorySyncRecordRepository();
-  const activationTokenRepo = new InMemoryActivationTokenRepository();
 
   const router = new Router();
   router.use(authMiddleware);
@@ -50,7 +47,6 @@ export async function startTestServer(): Promise<TestAtlasServer> {
     accessTokenRepo,
     heartbeatRepo,
     syncRepo,
-    activationTokenRepo,
   });
 
   const server = createServer((req, res) => router.dispatch(req, res));
@@ -66,7 +62,6 @@ export async function startTestServer(): Promise<TestAtlasServer> {
     accessTokenRepo,
     heartbeatRepo,
     syncRepo,
-    activationTokenRepo,
   };
 }
 

@@ -16,7 +16,6 @@ import {
   InMemoryHeartbeatRecordRepository,
   InMemorySyncRecordRepository,
 } from '@seltriva/agent-observability';
-import { InMemoryActivationTokenRepository } from '@seltriva/activation';
 
 export interface TestAdminServer {
   server: Server;
@@ -24,24 +23,22 @@ export interface TestAdminServer {
   agentRepo: InMemoryAtlasAgentRepository;
   heartbeatRepo: InMemoryHeartbeatRecordRepository;
   syncRepo: InMemorySyncRecordRepository;
-  activationTokenRepo: InMemoryActivationTokenRepository;
 }
 
 export async function startAdminServer(): Promise<TestAdminServer> {
   const agentRepo = new InMemoryAtlasAgentRepository();
   const heartbeatRepo = new InMemoryHeartbeatRecordRepository();
   const syncRepo = new InMemorySyncRecordRepository();
-  const activationTokenRepo = new InMemoryActivationTokenRepository();
 
   const router = new Router();
-  registerAdminRoutes(router, { agentRepo, heartbeatRepo, syncRepo, activationTokenRepo });
+  registerAdminRoutes(router, { agentRepo, heartbeatRepo, syncRepo });
 
   const server = createServer((req, res) => router.dispatch(req, res));
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const addr = server.address() as { port: number };
   const baseUrl = `http://127.0.0.1:${addr.port}`;
 
-  return { server, baseUrl, agentRepo, heartbeatRepo, syncRepo, activationTokenRepo };
+  return { server, baseUrl, agentRepo, heartbeatRepo, syncRepo };
 }
 
 export async function stopServer(server: Server): Promise<void> {

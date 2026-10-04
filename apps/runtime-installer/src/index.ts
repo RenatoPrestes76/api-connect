@@ -4,7 +4,6 @@
  *
  * Usage:
  *   atlas-install                        # interactive wizard
- *   atlas-install --token ATLAS-XXXX-… # skip token prompt
  *   atlas-install --api-url https://…  # override API base URL
  *   atlas-install --runtime-root /opt/… # override install directory
  *   atlas-install health                 # run health check only
@@ -13,8 +12,7 @@
 
 import process from 'node:process';
 import { runSetupWizard } from './wizard/setup-wizard.js';
-import { registerRuntime, RegistrationError } from './activation/registration.js';
-import { getMachineId, detectPlatform } from './utils/platform.js';
+import { detectPlatform } from './utils/platform.js';
 import {
   ensureRuntimeDirectories,
   getDefaultRuntimeRoot,
@@ -22,7 +20,6 @@ import {
   agentEntrypointPath,
   runtimeNodeExecPath,
 } from './config/directory-setup.js';
-import { writeRuntimeConfig, runtimeConfigExists } from './config/runtime-config.js';
 import { installAgentBundle, installNodeRuntime } from './agent-bundle.js';
 import { ServiceManager } from './service/service-manager.js';
 import { runHealthCheck } from './health/health-checker.js';
@@ -73,65 +70,28 @@ async function main(): Promise<void> {
 // ─── Install command ──────────────────────────────────────────────────────────
 
 async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Promise<void> {
-  if (runtimeConfigExists(runtimeRoot)) {
+  const platform = detectPlatform();
+  const svc = new ServiceManager(platform);
+
+  if (svc.exists()) {
     process.stderr.write(
-      `\n  This machine already has an Atlas runtime configured at:\n` +
-        `    ${runtimeRoot}\n\n` +
+      `\n  This machine already has an Atlas runtime service installed.\n\n` +
         `  To reinstall, uninstall first: atlas-install uninstall\n\n`
     );
     process.exit(1);
   }
 
-  const wizard = await runSetupWizard({
-    token: flag('--token'),
-    apiBaseUrl: apiBaseUrl,
-  });
+  const wizard = await runSetupWizard({ apiBaseUrl });
 
   closeInterface();
 
   ensureRuntimeDirectories(runtimeRoot);
 
   const logger = new Logger(runtimeDir(runtimeRoot, 'logs'));
-  const platform = detectPlatform();
-  const machineId = getMachineId();
 
-  // ── Step 1: Register with the control plane ──────────────────────────────
-  process.stdout.write('\n  Registering runtime with the Atlas control plane...\n');
-  logger.info('installer.log', `Starting registration for machine ${machineId}`);
-
-  let credentials;
-  try {
-    credentials = await registerRuntime({
-      activationToken: wizard.activationToken,
-      name: wizard.name,
-      hostname: wizard.hostname,
-      machineId,
-      version: VERSION,
-      connectorType: wizard.connectorType,
-      apiBaseUrl: wizard.apiBaseUrl,
-    });
-  } catch (err) {
-    const message = err instanceof RegistrationError ? err.message : String(err);
-    process.stderr.write(`\n  Registration failed: ${message}\n\n`);
-    logger.error('installer.log', `Registration failed: ${message}`);
-    process.exit(1);
-  }
-
-  // ── Step 2: Write runtime.json ───────────────────────────────────────────
-  process.stdout.write('  Writing runtime configuration...\n');
-  writeRuntimeConfig(runtimeRoot, credentials, {
-    apiBaseUrl: wizard.apiBaseUrl,
-    name: wizard.name,
-    hostname: wizard.hostname,
-    machineId,
-    version: VERSION,
-    connectorType: wizard.connectorType,
-  });
-  logger.info('installer.log', `Runtime config written to ${runtimeRoot}/config/runtime.json`);
-
-  // ── Step 3: Install service ──────────────────────────────────────────────
+  // ── Step 1: Copy the agent bundle ────────────────────────────────────────
   if (wizard.installService) {
-    process.stdout.write('  Copying the Atlas runtime agent...\n');
+    process.stdout.write('\n  Copying the Atlas runtime agent...\n');
     try {
       installAgentBundle(runtimeRoot);
     } catch (err) {
@@ -160,9 +120,9 @@ async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Prom
       }
     }
 
+    // ── Step 2: Install service ────────────────────────────────────────────
     process.stdout.write('  Installing system service...\n');
     const scriptPath = agentEntrypointPath(runtimeRoot);
-    const svc = new ServiceManager(platform);
     try {
       await svc.install({
         runtimeRoot,
@@ -190,16 +150,19 @@ async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Prom
   }
 
   // ── Done ─────────────────────────────────────────────────────────────────
+  // There is no runtimeId to report here — registration with Atlas (the
+  // real Ed25519 protocol, apps/agent/src/atlas-runtime-client/) happens
+  // lazily on the daemon's first start, not synchronously during install.
   process.stdout.write('\n');
   process.stdout.write('  Installation complete!\n');
   process.stdout.write('  ─────────────────────────────────────\n');
-  process.stdout.write(`  Runtime ID:  ${credentials.runtimeId}\n`);
-  process.stdout.write(`  Company ID:  ${credentials.companyId}\n`);
-  process.stdout.write(`  Environment: ${credentials.environment}\n`);
-  process.stdout.write(`  Config:      ${runtimeRoot}/config/runtime.json\n`);
+  process.stdout.write(`  Name:        ${wizard.name}\n`);
+  process.stdout.write(`  Hostname:    ${wizard.hostname}\n`);
+  process.stdout.write(`  Environment: ${wizard.environment}\n`);
+  process.stdout.write(`  Runtime root: ${runtimeRoot}\n`);
   process.stdout.write('  ─────────────────────────────────────\n\n');
 
-  logger.info('installer.log', `Installation complete. runtimeId=${credentials.runtimeId}`);
+  logger.info('installer.log', `Installation complete at ${runtimeRoot}`);
   logger.close();
 }
 
@@ -254,7 +217,6 @@ Usage:
   atlas-install uninstall          Remove the system service
 
 Options:
-  --token <token>         Activation token (ATLAS-XXXX-XXXX-XXXX)
   --api-url <url>         API base URL (default: https://api.seltriva.com)
   --runtime-root <path>   Installation directory
   --version               Print version

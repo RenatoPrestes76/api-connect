@@ -24,7 +24,6 @@
     "ws": "^8.18.0",
     "zod": "^3.23.8",
     "@prisma/client": "^5.12.0",
-    "@seltriva/activation": "workspace:*",
     "@seltriva/agent-identity": "workspace:*",
     "@seltriva/agent-observability": "workspace:*",
     "@seltriva/agent-provisioning": "workspace:*",

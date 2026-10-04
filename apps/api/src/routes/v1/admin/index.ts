@@ -4,8 +4,6 @@ import type {
   HeartbeatRecordRepository,
   SyncRecordRepository,
 } from '@seltriva/agent-observability';
-import type { ActivationTokenRepository } from '@seltriva/activation';
-import { ActivationTokenService } from '@seltriva/activation';
 import {
   createListAgentsHandler,
   createGetAgentHandler,
@@ -15,23 +13,15 @@ import {
   createDeleteAgentHandler,
 } from './agents.js';
 import { createDashboardMetricsHandler, createDashboardActivityHandler } from './dashboard.js';
-import {
-  createActivationTokenHandler,
-  listActivationTokensHandler,
-  deleteActivationTokenHandler,
-} from './activation-tokens.js';
 
 export interface AdminInfrastructureDeps {
   agentRepo: AtlasAgentRepository;
   heartbeatRepo: HeartbeatRecordRepository;
   syncRepo: SyncRecordRepository;
-  activationTokenRepo: ActivationTokenRepository;
 }
 
 export function registerAdminRoutes(router: Router, deps: AdminInfrastructureDeps): void {
-  const { agentRepo, heartbeatRepo, syncRepo, activationTokenRepo } = deps;
-
-  const activationService = new ActivationTokenService(activationTokenRepo);
+  const { agentRepo, heartbeatRepo, syncRepo } = deps;
 
   // Agent admin
   router.get('/admin/agents', createListAgentsHandler(agentRepo));
@@ -50,9 +40,4 @@ export function registerAdminRoutes(router: Router, deps: AdminInfrastructureDep
     '/admin/dashboard/activity',
     createDashboardActivityHandler(agentRepo, syncRepo, heartbeatRepo)
   );
-
-  // Activation tokens
-  router.post('/admin/activation-tokens', createActivationTokenHandler(activationService));
-  router.get('/admin/activation-tokens', listActivationTokensHandler(activationService));
-  router.delete('/admin/activation-tokens/:id', deleteActivationTokenHandler(activationService));
 }

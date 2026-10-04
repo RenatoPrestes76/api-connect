@@ -271,9 +271,6 @@ importers:
       '@prisma/client':
         specifier: ^5.12.0
         version: 5.22.0(prisma@5.22.0)
-      '@seltriva/activation':
-        specifier: workspace:*
-        version: link:../../packages/activation
       '@seltriva/aegis':
         specifier: workspace:*
         version: link:../../packages/aegis
@@ -701,9 +698,6 @@ importers:
 
   apps/runtime-installer:
     dependencies:
-      '@seltriva/activation':
-        specifier: workspace:*
-        version: link:../../packages/activation
       node-windows:
         specifier: ^1.0.0-beta.8
         version: 1.0.0-beta.8
@@ -887,21 +881,6 @@ importers:
       '@seltriva/database-sdk':
         specifier: workspace:*
         version: link:../../packages/database-sdk
-    devDependencies:
-      '@types/node':
-        specifier: ^20.14.0
-        version: 20.19.43
-      '@vitest/coverage-v8':
-        specifier: ^2.1.8
-        version: 2.1.9(vitest@2.1.9(@types/node@20.19.43)(happy-dom@20.14.0)(lightningcss@1.33.0))
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
-      vitest:
-        specifier: ^2.1.8
-        version: 2.1.9(@types/node@20.19.43)(happy-dom@20.14.0)(lightningcss@1.33.0)
-
-  packages/activation:
     devDependencies:
       '@types/node':
         specifier: ^20.14.0
