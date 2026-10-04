@@ -19,12 +19,17 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-/** A fake node-windows Service that lets the test fire whichever event it wants. */
+/** A fake node-windows Service that lets the test fire whichever event it wants, and records what it was constructed with. */
 function fakeLib(
-  behavior: (svc: EventEmitter & { install: () => void; uninstall: () => void }) => void
+  behavior: (svc: EventEmitter & { install: () => void; uninstall: () => void }) => void,
+  capturedOpts?: { value?: Record<string, unknown> }
 ): () => Promise<WindowsServiceLib> {
   return async () => ({
     Service: class extends EventEmitter {
+      constructor(opts: Record<string, unknown>) {
+        super();
+        if (capturedOpts) capturedOpts.value = opts;
+      }
       install() {
         behavior(this as never);
       }
@@ -50,6 +55,22 @@ describe('installWindowsService', () => {
   it('resolves when node-windows emits "alreadyinstalled" (idempotent re-run)', async () => {
     const loadLib = fakeLib((svc) => svc.emit('alreadyinstalled'));
     await expect(installWindowsService(opts, { loadLib })).resolves.toBeUndefined();
+  });
+
+  it('passes execPath through to node-windows, so the service runs the bundled node.exe, not any system Node', async () => {
+    const captured: { value?: Record<string, unknown> } = {};
+    const loadLib = fakeLib((svc) => svc.emit('install'), captured);
+    await installWindowsService({ ...opts, execPath: 'C:\\atlas\\runtime\\node.exe' }, { loadLib });
+    expect(captured.value?.['execPath']).toBe('C:\\atlas\\runtime\\node.exe');
+  });
+
+  it('configures an auto-restart policy so the wrapper relaunches the daemon on crash', async () => {
+    const captured: { value?: Record<string, unknown> } = {};
+    const loadLib = fakeLib((svc) => svc.emit('install'), captured);
+    await installWindowsService(opts, { loadLib });
+    expect(captured.value?.['maxRestarts']).toBeGreaterThan(0);
+    expect(captured.value?.['wait']).toBeGreaterThan(0);
+    expect(captured.value?.['grow']).toBeGreaterThan(0);
   });
 
   it('rejects when node-windows emits "error"', async () => {

@@ -9,6 +9,14 @@ export interface WindowsServiceOptions {
   scriptPath: string;
   /** ATLAS_API_URL / ATLAS_ORGANIZATION_CODE / ATLAS_ACTIVATION_KEY / ATLAS_RUNTIME_DATA_DIR — see apps/agent/src/cli/bin.ts. */
   env: Record<string, string>;
+  /**
+   * Absolute path to the bundled, checksum-verified node.exe this
+   * installer ships with (see scripts/download-node-runtime.mjs) — the
+   * wrapper execs THIS binary, not whatever (if anything) is on the
+   * target machine's own PATH. Omit only for a dev/test install that
+   * deliberately relies on a pre-installed system Node.
+   */
+  execPath?: string;
 }
 
 /** Minimal surface of `node-windows`'s `Service` actually used here — kept narrow so it's easy to fake in tests. */
@@ -18,12 +26,27 @@ export interface WindowsServiceLib {
     description?: string;
     script: string;
     env?: Array<{ name: string; value: string }>;
+    execPath?: string;
+    maxRestarts?: number;
+    wait?: number;
+    grow?: number;
   }) => {
     install(): void;
     uninstall(): void;
     on(event: string, cb: (...args: unknown[]) => void): void;
   };
 }
+
+/**
+ * node-windows' wrapper restarts the child `node <script>` process on
+ * crash up to `maxRestarts` times, waiting `wait` seconds the first time
+ * and growing that wait by `grow` (a fraction, e.g. 0.5 = +50%) each
+ * subsequent restart. There is no literal "restart forever" option in
+ * this library — 999 is a practical stand-in for "always restart" (no
+ * realistic crash-loop scenario burns through 999 attempts before an
+ * operator notices and intervenes).
+ */
+const RESTART_POLICY = { maxRestarts: 999, wait: 2, grow: 0.5 };
 
 /**
  * Real Windows service registration via `node-windows`. A plain `sc.exe
@@ -62,6 +85,8 @@ export async function installWindowsService(
     description: SERVICE_DESCRIPTION,
     script: opts.scriptPath,
     env: toEnvArray(opts.env),
+    execPath: opts.execPath,
+    ...RESTART_POLICY,
   });
 
   await new Promise<void>((resolve, reject) => {

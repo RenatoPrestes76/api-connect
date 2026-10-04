@@ -22,6 +22,8 @@ export interface ServiceOptions {
   scriptPath: string;
   /** ATLAS_API_URL / ATLAS_ORGANIZATION_CODE / ATLAS_ACTIVATION_KEY / ATLAS_RUNTIME_DATA_DIR — see apps/agent/src/cli/bin.ts. */
   env: Record<string, string>;
+  /** Windows only — absolute path to the bundled node.exe (see windows-service.ts's WindowsServiceOptions.execPath doc). Ignored on Linux. */
+  execPath?: string;
 }
 
 export class ServiceManager {

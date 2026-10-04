@@ -20,9 +20,10 @@ import {
   getDefaultRuntimeRoot,
   runtimeDir,
   agentEntrypointPath,
+  runtimeNodeExecPath,
 } from './config/directory-setup.js';
 import { writeRuntimeConfig, runtimeConfigExists } from './config/runtime-config.js';
-import { installAgentBundle } from './agent-bundle.js';
+import { installAgentBundle, installNodeRuntime } from './agent-bundle.js';
 import { ServiceManager } from './service/service-manager.js';
 import { runHealthCheck } from './health/health-checker.js';
 import { Logger } from './logs/logger.js';
@@ -140,6 +141,25 @@ async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Prom
       process.exit(1);
     }
 
+    // Windows only — makes the service self-sufficient: it runs the
+    // bundled, checksum-verified node.exe (scripts/download-node-
+    // runtime.mjs), never whatever (if anything) is on the target
+    // machine's own PATH. Linux keeps using the system `node` that ran
+    // this installer (process.execPath, via linux-service.ts).
+    let execPath: string | undefined;
+    if (platform === 'windows') {
+      process.stdout.write('  Copying the bundled Node.js runtime...\n');
+      try {
+        installNodeRuntime(runtimeRoot);
+        execPath = runtimeNodeExecPath(runtimeRoot);
+      } catch (err) {
+        const message = (err as Error).message;
+        process.stderr.write(`\n  Could not install the bundled Node runtime: ${message}\n\n`);
+        logger.error('installer.log', `Node runtime install failed: ${message}`);
+        process.exit(1);
+      }
+    }
+
     process.stdout.write('  Installing system service...\n');
     const scriptPath = agentEntrypointPath(runtimeRoot);
     const svc = new ServiceManager(platform);
@@ -148,6 +168,7 @@ async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Prom
         runtimeRoot,
         autoStart: wizard.autoStart,
         scriptPath,
+        execPath,
         env: {
           ATLAS_API_URL: wizard.apiBaseUrl,
           ATLAS_ORGANIZATION_CODE: wizard.organizationCode,

@@ -2,7 +2,12 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { installAgentBundle, AgentBundleNotFoundError } from '../agent-bundle.js';
+import {
+  installAgentBundle,
+  AgentBundleNotFoundError,
+  installNodeRuntime,
+  NodeRuntimeNotFoundError,
+} from '../agent-bundle.js';
 
 const dirs: string[] = [];
 function tempDir(): string {
@@ -28,5 +33,16 @@ describe('installAgentBundle', () => {
     const runtimeRoot = tempDir();
     expect(() => installAgentBundle(runtimeRoot)).toThrow(AgentBundleNotFoundError);
     expect(() => installAgentBundle(runtimeRoot)).toThrow(/Agent bundle not found at/);
+  });
+});
+
+describe('installNodeRuntime', () => {
+  it('throws NodeRuntimeNotFoundError when no bundled node.exe ships alongside the installer', () => {
+    // Same reasoning as installAgentBundle above — run from source, there
+    // is no sibling "runtime/node.exe" (that only exists in a real
+    // scripts/package-runtime.mjs distributable).
+    const runtimeRoot = tempDir();
+    expect(() => installNodeRuntime(runtimeRoot)).toThrow(NodeRuntimeNotFoundError);
+    expect(() => installNodeRuntime(runtimeRoot)).toThrow(/Bundled node\.exe not found at/);
   });
 });
