@@ -20,6 +20,7 @@ import { dirname, join } from 'node:path';
 import {
   encryptSecret,
   decryptSecret,
+  restrictToSystemAndAdministrators,
   type EncryptedSecret,
 } from '../security/credential-encryption.js';
 
@@ -95,8 +96,9 @@ export function loadOrCreateIdentity(dataDir: string): AtlasRuntimeIdentity {
  * Persists the identity (e.g. after registration fills in `runtimeId`).
  * The private key is encrypted before it touches disk (DPAPI on Windows,
  * AES-256-GCM locally otherwise — see `security/credential-encryption.ts`);
- * file-mode (`chmod 0600`, best-effort on POSIX, no-op on Windows) is a
- * second, independent layer, not the primary protection anymore.
+ * file-mode (`chmod 0600`, best-effort on POSIX, no-op on Windows) and the
+ * Windows ACL restriction below are both a second, independent layer, not
+ * the primary protection.
  */
 export function persistIdentity(dataDir: string, identity: AtlasRuntimeIdentity): void {
   mkdirSync(dataDir, { recursive: true });
@@ -118,4 +120,7 @@ export function persistIdentity(dataDir: string, identity: AtlasRuntimeIdentity)
   } catch {
     // same as above
   }
+  // No-op on non-Windows; on Windows, restricts to SYSTEM + Administrators
+  // only — a standard VM user must not be able to open this file.
+  restrictToSystemAndAdministrators(filePath);
 }

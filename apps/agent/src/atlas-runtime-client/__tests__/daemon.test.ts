@@ -2,6 +2,22 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
+// See run.test.ts's identical mock for why: the real icacls restriction
+// (proven separately, for real, in security/__tests__/credential-
+// encryption.test.ts) locks this file to SYSTEM + Administrators, which
+// in production is never a problem (the daemon always runs as one
+// consistent account, LocalSystem by default) but would block even a
+// plain re-read of an already-persisted identity under vitest's
+// unprivileged/UAC-filtered test account. This test is about daemon
+// scheduling, not ACL enforcement.
+vi.mock('../../security/credential-encryption.js', async () => {
+  const actual = await vi.importActual<typeof import('../../security/credential-encryption.js')>(
+    '../../security/credential-encryption.js'
+  );
+  return { ...actual, restrictToSystemAndAdministrators: () => {} };
+});
+
 import { startDaemon, type DaemonConfig, type DaemonLogger } from '../daemon.js';
 import { persistIdentity, type AtlasRuntimeIdentity } from '../identity.js';
 import type { schedule as cronSchedule, ScheduledTask } from 'node-cron';

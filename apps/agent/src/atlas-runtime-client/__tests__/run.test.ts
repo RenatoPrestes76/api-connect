@@ -2,6 +2,25 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
+// `ensureRegistered` below does loadOrCreateIdentity (write #1) then, on a
+// fresh identity, registerRuntime + persistIdentity (write #2) — both
+// within one call this test doesn't control the middle of. In production
+// both writes are the same account (whatever runs the daemon, LocalSystem
+// by default), which `restrictToSystemAndAdministrators`'s real icacls
+// call always grants, so write #2 never actually hits the restriction
+// there. Under vitest's unprivileged/UAC-filtered test account it would,
+// with no way to reset ACLs between the two internal writes — this test
+// is about registration orchestration, not ACL enforcement (which has
+// its own real, non-mocked proof in security/__tests__/credential-
+// encryption.test.ts), so the OS side effect is mocked out here.
+vi.mock('../../security/credential-encryption.js', async () => {
+  const actual = await vi.importActual<typeof import('../../security/credential-encryption.js')>(
+    '../../security/credential-encryption.js'
+  );
+  return { ...actual, restrictToSystemAndAdministrators: () => {} };
+});
+
 import {
   ensureRegistered,
   runHeartbeatCycle,

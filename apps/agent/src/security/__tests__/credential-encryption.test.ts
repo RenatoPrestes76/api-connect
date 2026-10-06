@@ -1,8 +1,14 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { encryptSecret, decryptSecret, _internal } from '../credential-encryption.js';
+import { execFileSync } from 'node:child_process';
+import {
+  encryptSecret,
+  decryptSecret,
+  restrictToSystemAndAdministrators,
+  _internal,
+} from '../credential-encryption.js';
 
 const dirs: string[] = [];
 function tempDataDir(): string {
@@ -94,5 +100,78 @@ describe('encryptSecret / decryptSecret (platform-dispatching public API)', () =
       ciphertext: Buffer.from('not-the-real-ciphertext').toString('base64'),
     };
     expect(() => decryptSecret(tampered, dir)).toThrow();
+  });
+});
+
+/** Lists each ACE's identity as a SID string (locale/display-name independent). */
+function aclSids(filePath: string): string[] {
+  const output = execFileSync(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      `(Get-Acl '${filePath}').Access | ForEach-Object { $_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value }`,
+    ],
+    { encoding: 'utf-8' }
+  );
+  return output.trim().split(/\r?\n/).filter(Boolean);
+}
+
+describe('restrictToSystemAndAdministrators (Windows only)', () => {
+  it.skipIf(process.platform !== 'win32')(
+    "removes the current user's own ACE and leaves only SYSTEM + Administrators, via real icacls",
+    () => {
+      const dir = tempDataDir();
+      const filePath = join(dir, 'identity-acl-test.json');
+      writeFileSync(filePath, '{}', 'utf-8');
+
+      // Before: NTFS inheritance grants the current Windows user's own
+      // account SID direct access — this is the exact exposure the fix
+      // closes (a standard user on this same machine could otherwise
+      // just open the file). Identified by SID, not by username string
+      // matching, since the temp path itself also contains the username.
+      const currentUserSid = execFileSync(
+        'powershell.exe',
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          '([System.Security.Principal.WindowsIdentity]::GetCurrent()).User.Value',
+        ],
+        { encoding: 'utf-8' }
+      ).trim();
+      expect(aclSids(filePath)).toContain(currentUserSid);
+
+      restrictToSystemAndAdministrators(filePath);
+
+      try {
+        const afterSids = aclSids(filePath);
+        // The current user's own account SID is no longer a grantee...
+        expect(afterSids).not.toContain(currentUserSid);
+        // ...and SYSTEM (S-1-5-18) + Administrators (S-1-5-32-544) are —
+        // by well-known SID, not a locale-specific display name.
+        expect(afterSids).toContain('S-1-5-18');
+        expect(afterSids).toContain('S-1-5-32-544');
+        expect(afterSids).toHaveLength(2);
+      } finally {
+        // Restore access so afterEach's rmSync can clean up this temp
+        // dir — this dev account's own process is unelevated even
+        // though it's an Administrators member, so without this the
+        // ACL this test just proved matches real-world standard-user
+        // lockout would also lock this same cleanup out.
+        execFileSync('icacls.exe', [filePath, '/grant', `*${currentUserSid}:F`], {
+          stdio: 'ignore',
+        });
+      }
+    }
+  );
+
+  it('is a no-op on non-Windows (never throws, never blocks identity persistence)', () => {
+    if (process.platform === 'win32') return;
+    const dir = tempDataDir();
+    const filePath = join(dir, 'identity-acl-test.json');
+    writeFileSync(filePath, '{}', 'utf-8');
+    expect(() => restrictToSystemAndAdministrators(filePath)).not.toThrow();
   });
 });

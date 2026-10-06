@@ -116,7 +116,15 @@ jobs:
         # A handful of integration tests (restart-durability-e2e,
         # db-real-outage-recovery) exercise the real dist/ artifact, not
         # source — dist/ is gitignored, so it must exist before `pnpm test`.
-        run: pnpm build
+        # --force: this runner starts from a clean checkout today (no
+        # .turbo cache persisted between runs), so a stale dist/ can't
+        # currently leak in here — but it did on a long-lived local dev
+        # machine (scripts/package-runtime.mjs, same root cause: plain
+        # tsc never deletes a dist/*.js whose source .ts was removed, and
+        # turbo's cache then happily replays that stale dist/ forever).
+        # --force makes this build immune to that regardless of whether
+        # CI ever gains turbo caching (local/remote) later.
+        run: pnpm build --force
 
       - name: Build production Docker image
         # ATLAS 46.32 — graceful-shutdown.test.ts and

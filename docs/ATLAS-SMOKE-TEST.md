@@ -142,6 +142,40 @@ Get-Content "C:\ProgramData\Seltriva\Atlas\agent-data\atlas-runtime-identity.jso
 provando que o registro (que exige ler a chave privada pra assinar) já
 aconteceu sob a conta do serviço.
 
+### 4b. Um usuário comum da VM não consegue abrir esse arquivo
+
+Além da criptografia DPAPI, o arquivo em si tem a ACL do NTFS restrita a
+`SYSTEM` + `Administradores` (`restrictToSystemAndAdministrators` em
+`apps/agent/src/security/credential-encryption.ts`) — um usuário padrão,
+sem privilégio administrativo, não deve conseguir nem abrir o arquivo
+(não é só "não consegue decifrar"; o sistema de arquivos já bloqueia a
+leitura).
+
+1. Crie (ou use) uma conta Windows **padrão, sem privilégio de
+   administrador** na mesma VM:
+   ```powershell
+   net user atlas-standard-test "SenhaTeste123!" /add
+   ```
+2. Faça login nessa conta (RDP de outra máquina, ou `runas` sem elevação,
+   ou troque de usuário na própria VM) e tente ler o arquivo:
+   ```powershell
+   Get-Content "C:\ProgramData\Seltriva\Atlas\agent-data\atlas-runtime-identity.json"
+   ```
+3. Confira a ACL efetiva de qualquer conta (não precisa estar logado nela):
+   ```powershell
+   icacls "C:\ProgramData\Seltriva\Atlas\agent-data\atlas-runtime-identity.json"
+   ```
+
+**Esperado:**
+
+- No passo 2, a conta padrão recebe **"Acesso negado"** — nunca o
+  conteúdo do arquivo.
+- No passo 3, a lista mostra só `NT AUTHORITY\SYSTEM` e
+  `BUILTIN\Administrators`(F) como concedidos — nenhuma outra conta
+  (nem a `atlas-standard-test`, nem "Users"/"Authenticated Users"
+  herdados) aparece.
+- Ao final, remova a conta de teste: `net user atlas-standard-test /delete`.
+
 ---
 
 ## 5. Heartbeat chega na nuvem
@@ -246,16 +280,17 @@ deve esgotar num teste manual).
 
 Preencha ao executar:
 
-| Item                            | Resultado     | Observações |
-| ------------------------------- | ------------- | ----------- |
-| 1. Instalar                     | ☐ OK ☐ Falhou |             |
-| 2. Serviço sobe                 | ☐ OK ☐ Falhou |             |
-| 3. Sobrevive a reboot           | ☐ OK ☐ Falhou |             |
-| 4. Lê credenciais do instalador | ☐ OK ☐ Falhou |             |
-| 5. Heartbeat chega na nuvem     | ☐ OK ☐ Falhou |             |
-| 6. Fila reenvia sem duplicar    | ☐ OK ☐ Falhou |             |
-| 7. Reinicia após kill           | ☐ OK ☐ Falhou |             |
-| 8. Desinstala sem lixo          | ☐ OK ☐ Falhou |             |
+| Item                                | Resultado     | Observações |
+| ----------------------------------- | ------------- | ----------- |
+| 1. Instalar                         | ☐ OK ☐ Falhou |             |
+| 2. Serviço sobe                     | ☐ OK ☐ Falhou |             |
+| 3. Sobrevive a reboot               | ☐ OK ☐ Falhou |             |
+| 4. Lê credenciais do instalador     | ☐ OK ☐ Falhou |             |
+| 4b. Usuário comum não lê credencial | ☐ OK ☐ Falhou |             |
+| 5. Heartbeat chega na nuvem         | ☐ OK ☐ Falhou |             |
+| 6. Fila reenvia sem duplicar        | ☐ OK ☐ Falhou |             |
+| 7. Reinicia após kill               | ☐ OK ☐ Falhou |             |
+| 8. Desinstala sem lixo              | ☐ OK ☐ Falhou |             |
 
 ## Nota sobre o protocolo de ativação antigo
 

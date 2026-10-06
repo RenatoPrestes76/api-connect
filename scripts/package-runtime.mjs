@@ -25,7 +25,12 @@ import { execSync } from 'node:child_process';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { downloadNodeRuntime, assertAbiMatches, NODE_RUNTIME_VERSION } from './download-node-runtime.mjs';
+import {
+  downloadNodeRuntime,
+  assertAbiMatches,
+  verifyBetterSqlite3UnderRuntime,
+  NODE_RUNTIME_VERSION,
+} from './download-node-runtime.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const OUT = join(ROOT, process.argv[2] ?? 'dist-runtime-package');
@@ -49,8 +54,8 @@ function run(cmd) {
 }
 
 async function main() {
-  // Fail before doing any (slow) build work if this environment's Node
-  // isn't ABI-compatible with the pinned runtime — see that function's
+  // Fail before any (slow) build work if this build machine's Node isn't
+  // ABI-compatible with the pinned bundled runtime — see that function's
   // own doc comment for why this matters specifically for better-sqlite3.
   assertAbiMatches();
 
@@ -68,20 +73,20 @@ async function main() {
   rmSync(join(ROOT, 'apps/agent/dist'), { recursive: true, force: true });
   rmSync(join(ROOT, 'apps/runtime-installer/dist'), { recursive: true, force: true });
 
-  console.log('\n[1/5] Building apps/agent and its workspace dependencies...');
+  console.log('\n[1/6] Building apps/agent and its workspace dependencies...');
   run('npx turbo run build --filter=@seltriva/agent --force');
 
-  console.log('\n[2/5] Building apps/runtime-installer and its workspace dependencies...');
+  console.log('\n[2/6] Building apps/runtime-installer and its workspace dependencies...');
   run('npx turbo run build --filter=@seltriva/runtime-installer --force');
 
   console.log(
-    `\n[3/5] Deploying apps/runtime-installer (production deps only) to ${INSTALLER_DEPLOY_DIR}...`
+    `\n[3/6] Deploying apps/runtime-installer (production deps only) to ${INSTALLER_DEPLOY_DIR}...`
   );
   // Deploys into OUT directly — OUT is still empty at this point, so this
   // is a valid pnpm deploy target.
   run(`pnpm --filter=@seltriva/runtime-installer deploy --prod "${INSTALLER_DEPLOY_DIR}"`);
 
-  console.log(`\n[4/5] Deploying apps/agent (production deps only) to ${AGENT_DEPLOY_DIR}...`);
+  console.log(`\n[4/6] Deploying apps/agent (production deps only) to ${AGENT_DEPLOY_DIR}...`);
   // agent-bundle.ts resolves the bundled agent as a sibling of the
   // installer's own deployed root (<installerRoot>/agent) — see
   // apps/runtime-installer/src/agent-bundle.ts's bundledAgentSourceDir().
@@ -90,10 +95,25 @@ async function main() {
   // having other content already (dist/, node_modules/, ...) is fine.
   run(`pnpm --filter=@seltriva/agent deploy --prod "${AGENT_DEPLOY_DIR}"`);
 
-  console.log(`\n[5/5] Downloading the pinned Node.js v${NODE_RUNTIME_VERSION} runtime (win-x64)...`);
+  console.log(`\n[5/6] Downloading the pinned Node.js v${NODE_RUNTIME_VERSION} runtime (win-x64)...`);
   // bundledNodeRuntimeSourceDir() resolves this as a sibling of the
   // installer's own deployed root too (<installerRoot>/runtime).
-  await downloadNodeRuntime(join(INSTALLER_DEPLOY_DIR, 'runtime'));
+  const nodeExePath = await downloadNodeRuntime(join(INSTALLER_DEPLOY_DIR, 'runtime'));
+
+  // `assertAbiMatches()` above already guaranteed this build machine's
+  // Node is ABI-compatible with the bundled runtime, so `pnpm deploy`
+  // resolved the right better-sqlite3 binary — this is the actual proof,
+  // require()-ing it under the bundled node.exe itself, not this
+  // machine's Node.
+  console.log(`\n[6/6] Verifying better-sqlite3 under the bundled Node ${NODE_RUNTIME_VERSION} runtime...`);
+  verifyBetterSqlite3UnderRuntime(
+    nodeExePath,
+    AGENT_DEPLOY_DIR,
+    join(OUT, '.better-sqlite3-verify.sqlite')
+  );
+  rmSync(join(OUT, '.better-sqlite3-verify.sqlite'), { force: true });
+  rmSync(join(OUT, '.better-sqlite3-verify.sqlite-wal'), { force: true });
+  rmSync(join(OUT, '.better-sqlite3-verify.sqlite-shm'), { force: true });
 
   if (!existsSync(join(INSTALLER_DEPLOY_DIR, 'dist', 'index.js'))) {
     throw new Error(

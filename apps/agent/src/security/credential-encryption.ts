@@ -87,6 +87,32 @@ function dpapiUnprotect(ciphertext: Buffer): Buffer {
   return Buffer.from(runPowerShell(script, ciphertext.toString('base64')), 'base64');
 }
 
+/**
+ * Restricts `filePath`'s NTFS ACL to SYSTEM and Administrators only —
+ * defense-in-depth alongside DPAPI, not a replacement for it: the
+ * LocalMachine-scoped ciphertext is already useless off this machine, but
+ * without this a standard, non-admin user on the SAME machine could still
+ * open the file and read the DPAPI blob (not the plaintext, but still
+ * more exposure than necessary). Uses well-known SIDs (S-1-5-18 = SYSTEM,
+ * S-1-5-32-544 = Administrators) instead of localized account names,
+ * since "Administrators"/"SYSTEM" as display strings don't exist on
+ * non-English Windows installs. Best-effort: a failure here must not
+ * block identity persistence, the same posture as the chmod(0600) calls
+ * elsewhere in this module and in identity.ts.
+ */
+export function restrictToSystemAndAdministrators(filePath: string): void {
+  if (process.platform !== 'win32') return;
+  try {
+    execFileSync(
+      'icacls.exe',
+      [filePath, '/inheritance:r', '/grant:r', '*S-1-5-18:F', '*S-1-5-32-544:F'],
+      { stdio: 'ignore' }
+    );
+  } catch {
+    // best-effort — see doc comment above.
+  }
+}
+
 // ─── AES-256-GCM fallback (non-Windows) ─────────────────────────────────────
 
 function localKeyPath(dataDir: string): string {
