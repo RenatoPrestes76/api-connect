@@ -4,9 +4,14 @@ import {
   promptWithDefault,
   promptYesNo,
   promptChoice,
+  promptPassword,
 } from '../utils/readline-utils.js';
+import { testErpConnection, type ErpConnectionTarget } from '../erp-connection/connection-test.js';
 
 export type Environment = 'production' | 'staging' | 'development';
+
+/** Only 'postgres' has a real, automatic connectivity/read-only check (connection-test.ts) — see its own doc comment for why. */
+const SUPPORTED_DB_TYPES: string[] = ['postgres'];
 
 export interface WizardResult {
   name: string;
@@ -19,14 +24,17 @@ export interface WizardResult {
   /** The Ed25519 runtime-registration protocol's credentials — see apps/agent/src/atlas-runtime-client/. What the real daemon (apps/agent/src/cli/bin.ts, run by the service this wizard installs) actually authenticates with. */
   organizationCode: string;
   atlasActivationKey: string;
+  /** Undefined if the operator chose to skip ERP configuration during install (can be done later by re-running a config step — not yet implemented, see docs/ATLAS-RUNTIME-CLIENT.md). */
+  erpConnection?: ErpConnectionTarget;
 }
 
 const DEFAULT_API_URL = 'https://api.seltriva.com';
+const DEFAULT_PG_PORT = 5432;
 
 export async function runSetupWizard(opts: { apiBaseUrl?: string }): Promise<WizardResult> {
   banner();
 
-  step(1, 5, 'Runtime identity');
+  step(1, 6, 'Runtime identity');
 
   const name = await promptRequired(
     '  Runtime name (e.g. "Production SQL 01"): ',
@@ -43,12 +51,12 @@ export async function runSetupWizard(opts: { apiBaseUrl?: string }): Promise<Wiz
 
   const connectorType = await promptWithDefault('  Connector type', 'generic');
 
-  step(2, 5, 'API connection');
+  step(2, 6, 'API connection');
 
   const apiBaseUrl =
     opts.apiBaseUrl ?? (await promptWithDefault('  API base URL', DEFAULT_API_URL));
 
-  step(3, 5, 'Atlas runtime enrollment');
+  step(3, 6, 'Atlas runtime enrollment');
   const organizationCode = await promptRequired(
     '  Organization code: ',
     '  Organization code is required.'
@@ -58,14 +66,17 @@ export async function runSetupWizard(opts: { apiBaseUrl?: string }): Promise<Wiz
     '  Atlas activation key is required.'
   );
 
-  step(4, 5, 'Service installation');
+  step(4, 6, 'ERP database connection');
+  const erpConnection = await collectErpConnection();
+
+  step(5, 6, 'Service installation');
 
   const installService = await promptYesNo('  Install as a system service?', true);
   const autoStart = installService
     ? await promptYesNo('  Start service automatically on boot?', true)
     : false;
 
-  step(5, 5, 'Confirm');
+  step(6, 6, 'Confirm');
 
   process.stdout.write('\n');
   process.stdout.write('  Summary\n');
@@ -77,6 +88,13 @@ export async function runSetupWizard(opts: { apiBaseUrl?: string }): Promise<Wiz
   process.stdout.write(`  API URL:        ${apiBaseUrl}\n`);
   process.stdout.write(`  Organization:   ${organizationCode}\n`);
   process.stdout.write(`  Atlas key:      ${maskSecret(atlasActivationKey)}\n`);
+  if (erpConnection) {
+    process.stdout.write(
+      `  ERP database:   ${erpConnection.dbType} ${erpConnection.username}@${erpConnection.host}:${erpConnection.port}/${erpConnection.database} (read-only, verified)\n`
+    );
+  } else {
+    process.stdout.write('  ERP database:   not configured (skipped)\n');
+  }
   process.stdout.write(`  Install service: ${installService ? 'yes' : 'no'}\n`);
   if (installService) {
     process.stdout.write(`  Auto-start:     ${autoStart ? 'yes' : 'no'}\n`);
@@ -99,7 +117,71 @@ export async function runSetupWizard(opts: { apiBaseUrl?: string }): Promise<Wiz
     apiBaseUrl,
     organizationCode,
     atlasActivationKey,
+    erpConnection,
   };
+}
+
+// ─── ERP connection step ──────────────────────────────────────────────────────
+
+/**
+ * Collects ERP connection details and validates them via a real
+ * connection + a real-only (no write attempted) privilege check
+ * (connection-test.ts) before accepting them — loops on failure so the
+ * operator can fix a typo or create the missing read-only role without
+ * restarting the whole wizard. Returns undefined if the operator
+ * explicitly opts to skip this (the Runtime will enroll/heartbeat
+ * normally but report any discovery job as failed — see
+ * docs/ATLAS-RUNTIME-CLIENT.md).
+ */
+async function collectErpConnection(): Promise<ErpConnectionTarget | undefined> {
+  const configureNow = await promptYesNo('  Configure the ERP database connection now?', true);
+  if (!configureNow) return undefined;
+
+  for (;;) {
+    const dbType = await promptChoice('  Database type', SUPPORTED_DB_TYPES, 'postgres');
+    const host = await promptRequired('  ERP database host: ', '  Host is required.');
+    const portStr = await promptWithDefault('  ERP database port', String(DEFAULT_PG_PORT));
+    const database = await promptRequired('  ERP database name: ', '  Database name is required.');
+    const username = await promptRequired(
+      '  ERP database username (must be read-only): ',
+      '  Username is required.'
+    );
+    const password = await promptPassword('  ERP database password: ');
+
+    const target: ErpConnectionTarget = {
+      dbType,
+      host,
+      port: Number(portStr) || DEFAULT_PG_PORT,
+      database,
+      username,
+      password,
+    };
+
+    process.stdout.write('\n  Testing connection...\n');
+    const result = await testErpConnection(target);
+
+    if (!result.ok) {
+      process.stdout.write(`  ✗ ${result.error}\n\n`);
+    } else if (!result.readOnly) {
+      process.stdout.write(
+        '  ✗ This user can write to the database. The Atlas Runtime requires a read-only user.\n' +
+          '    Create one with:\n\n'
+      );
+      for (const line of (result.readOnlySetupSql ?? '').split('\n')) {
+        process.stdout.write(`      ${line}\n`);
+      }
+      process.stdout.write('\n');
+    } else {
+      process.stdout.write('  ✓ Connection OK — confirmed read-only.\n\n');
+      return target;
+    }
+
+    const retry = await promptYesNo('  Try again with different connection details?', true);
+    if (!retry) {
+      process.stdout.write('\n  Skipping ERP configuration — you can configure it later.\n\n');
+      return undefined;
+    }
+  }
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

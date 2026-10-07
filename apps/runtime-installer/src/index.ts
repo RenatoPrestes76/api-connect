@@ -19,8 +19,10 @@ import {
   runtimeDir,
   agentEntrypointPath,
   runtimeNodeExecPath,
+  erpConnectionFilePath,
 } from './config/directory-setup.js';
 import { installAgentBundle, installNodeRuntime } from './agent-bundle.js';
+import { writeErpConnection } from './erp-connection/erp-connection-store.js';
 import { ServiceManager } from './service/service-manager.js';
 import { runHealthCheck } from './health/health-checker.js';
 import { Logger } from './logs/logger.js';
@@ -120,6 +122,25 @@ async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Prom
       }
     }
 
+    // ── Step 1.5: Persist the ERP connection, encrypted ─────────────────────
+    // The password is encrypted (DPAPI LocalMachine) and the file
+    // ACL-restricted — see erp-connection-store.ts. Only the FILE PATH
+    // goes into the service's env (ATLAS_ERP_CONNECTION_FILE); unlike
+    // the old ATLAS_SCAN_DB_* approach, no secret ever touches the
+    // WinSW-generated XML (see docs/ATLAS-RUNTIME-CLIENT.md).
+    const erpConnectionFile = erpConnectionFilePath(runtimeRoot);
+    if (wizard.erpConnection) {
+      try {
+        writeErpConnection(erpConnectionFile, wizard.erpConnection);
+        logger.info('installer.log', `ERP connection stored at ${erpConnectionFile}`);
+      } catch (err) {
+        const message = (err as Error).message;
+        process.stderr.write(`\n  Could not store the ERP connection: ${message}\n\n`);
+        logger.error('installer.log', `ERP connection store failed: ${message}`);
+        process.exit(1);
+      }
+    }
+
     // ── Step 2: Install service ────────────────────────────────────────────
     process.stdout.write('  Installing system service...\n');
     const scriptPath = agentEntrypointPath(runtimeRoot);
@@ -134,6 +155,7 @@ async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Prom
           ATLAS_ORGANIZATION_CODE: wizard.organizationCode,
           ATLAS_ACTIVATION_KEY: wizard.atlasActivationKey,
           ATLAS_RUNTIME_DATA_DIR: runtimeDir(runtimeRoot, 'agent-data'),
+          ...(wizard.erpConnection ? { ATLAS_ERP_CONNECTION_FILE: erpConnectionFile } : {}),
         },
       });
       logger.info('installer.log', 'Service installed successfully');
@@ -163,7 +185,7 @@ async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Prom
   process.stdout.write('  ─────────────────────────────────────\n\n');
 
   logger.info('installer.log', `Installation complete at ${runtimeRoot}`);
-  logger.close();
+  await logger.close();
 }
 
 // ─── Health command ───────────────────────────────────────────────────────────

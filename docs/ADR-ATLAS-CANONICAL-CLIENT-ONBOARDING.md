@@ -132,8 +132,11 @@ Customer signs up
           via controlPlaneOrganizationId
   -> Admin issues an activation key
        POST /admin/runtime-registration/activation-keys {organizationCode}
-  -> Customer installs apps/agent, sets ATLAS_API_URL / ATLAS_ORGANIZATION_CODE
-     / ATLAS_ACTIVATION_KEY (+ ATLAS_SCAN_DB_* for real discovery)
+  -> Customer runs apps/runtime-installer's wizard: sets ATLAS_API_URL /
+     ATLAS_ORGANIZATION_CODE / ATLAS_ACTIVATION_KEY, plus the ERP database
+     connection (tested, read-only-checked, then encrypted at rest —
+     ATLAS_ERP_CONNECTION_FILE, not a plaintext ATLAS_SCAN_DB_* env var;
+     see docs/ATLAS-RUNTIME-CLIENT.md, Sprint A2.6)
   -> apps/agent's bootstrap Phase 7 runs the Ed25519 client:
        generates identity -> POST /runtime/register
        -> heartbeat -> ACTIVE

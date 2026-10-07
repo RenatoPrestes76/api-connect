@@ -59,3 +59,8 @@ export function runtimeNodeDir(runtimeRoot: string): string {
 export function runtimeNodeExecPath(runtimeRoot: string): string {
   return path.join(runtimeNodeDir(runtimeRoot), 'node.exe');
 }
+
+/** Where the encrypted ERP connection (erp-connection/erp-connection-store.ts) is written — the daemon reads this via ATLAS_ERP_CONNECTION_FILE, never ATLAS_SCAN_DB_* env vars. */
+export function erpConnectionFilePath(runtimeRoot: string): string {
+  return path.join(runtimeDir(runtimeRoot, 'config'), 'erp-connection.json');
+}

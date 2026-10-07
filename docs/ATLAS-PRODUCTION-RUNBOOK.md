@@ -509,19 +509,24 @@ It only works for this exact `organizationCode`; see "Security" below.
 
 ### 6. Instalação/configuração do Runtime
 
-On the customer's machine, set (see `docs/ATLAS-RUNTIME-CLIENT.md` for the
-full reference):
+Run `apps/runtime-installer`'s wizard on the customer's machine — it
+collects the organization code / activation key (step 2 / step 5 above)
+and the ERP database connection in one pass, tests that connection and
+refuses a writable credential outright, then stores the ERP password
+encrypted at rest (DPAPI `LocalMachine`) and sets the service's env to:
 
 ```
 ATLAS_API_URL=<the real Atlas API base URL>
 ATLAS_ORGANIZATION_CODE=<the internalCode from step 2>
 ATLAS_ACTIVATION_KEY=<the code from step 5>
-ATLAS_SCAN_DB_HOST / _PORT / _NAME / _USER / _PASSWORD=<the customer's ERP database>
+ATLAS_ERP_CONNECTION_FILE=<path the installer wrote — never a raw password env var>
 ```
 
-Then run `apps/agent` (or its bootstrap, if embedded in a larger install).
-The Runtime generates its own Ed25519 identity locally — the private key
-never leaves that machine.
+See `docs/ATLAS-RUNTIME-CLIENT.md`'s "ERP credentials never leave the
+client machine" for why there's no `ATLAS_SCAN_DB_PASSWORD`-shaped env
+var anymore (Sprint A2.6 — it put the password in plain text in the
+Windows service's own XML config). The Runtime generates its own Ed25519
+identity locally — the private key never leaves that machine either.
 
 ### 7. Primeiro heartbeat
 
