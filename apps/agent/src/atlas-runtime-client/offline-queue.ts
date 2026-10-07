@@ -22,6 +22,7 @@ import Database from 'better-sqlite3';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { SubmitResultInput } from './client.js';
+import { restrictToSystemAndAdministrators } from '../security/credential-encryption.js';
 
 export interface PendingResult {
   requestId: string;
@@ -55,6 +56,14 @@ export class OfflineQueue {
         last_error TEXT
       )
     `);
+    // The DDL above is what actually makes SQLite materialize -wal/-shm
+    // (entering WAL mode alone does not — confirmed directly, not
+    // assumed). job results (SubmitResultInput) can carry discovered
+    // schema data, so this file is sensitive the same way identity.json
+    // is — restricted to SYSTEM + Administrators, no-op on non-Windows.
+    for (const suffix of ['', '-wal', '-shm']) {
+      restrictToSystemAndAdministrators(dbPath + suffix);
+    }
   }
 
   /** Idempotent by `payload.requestId` — enqueuing the same job twice replaces the row, never duplicates it. */

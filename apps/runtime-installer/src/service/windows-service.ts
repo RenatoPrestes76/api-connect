@@ -1,4 +1,6 @@
 import { execSync } from 'node:child_process';
+import { dirname, join } from 'node:path';
+import { restrictDirectoryToSystemAndAdministrators } from '../security/credential-encryption.js';
 
 const SERVICE_NAME = 'AtlasRuntime';
 const SERVICE_DESCRIPTION = 'Seltriva Connect Atlas Runtime Agent — heartbeat and sync service.';
@@ -75,6 +77,19 @@ function toEnvArray(env: Record<string, string>): Array<{ name: string; value: s
   return Object.entries(env).map(([name, value]) => ({ name, value }));
 }
 
+/**
+ * Where node-windows/WinSW writes the generated service wrapper — the
+ * XML config (which carries ATLAS_ORGANIZATION_CODE/ATLAS_ACTIVATION_KEY
+ * in plain text, since WinSW has no credential-encryption concept of its
+ * own) and the wrapper's own `*.log` output. Confirmed by reading
+ * node-windows' own lib/daemon.js (`this._directory = path.dirname(
+ * config.script)`, `directory() { return path.join(this._directory,
+ * 'daemon') }`), not guessed.
+ */
+function daemonDirFor(scriptPath: string): string {
+  return join(dirname(scriptPath), 'daemon');
+}
+
 export async function installWindowsService(
   opts: WindowsServiceOptions,
   deps: { loadLib?: () => Promise<WindowsServiceLib> } = {}
@@ -96,6 +111,13 @@ export async function installWindowsService(
     svc.on('error', (err: unknown) => reject(err instanceof Error ? err : new Error(String(err))));
     svc.install();
   });
+
+  // The XML this just wrote carries ATLAS_ACTIVATION_KEY in plain text
+  // (see daemonDirFor's doc comment) — restricted the same as every
+  // other sensitive file. Directory-level + inheritance so the wrapper's
+  // own *.log files (written later, by the service's own account) are
+  // covered too, with no per-file call needed.
+  restrictDirectoryToSystemAndAdministrators(daemonDirFor(opts.scriptPath));
 
   if (!opts.autoStart) {
     // node-windows registers the service with automatic start by

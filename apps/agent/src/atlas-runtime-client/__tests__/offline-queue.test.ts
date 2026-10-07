@@ -1,7 +1,24 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
+// This suite is about queue persistence/idempotency, not ACL enforcement
+// (which has its own real, non-mocked proof in security/__tests__/
+// credential-encryption.test.ts). Several tests here open the same file
+// twice in one process (e.g. "close + reopen"); in production that's
+// always the same account (the daemon, LocalSystem by default), which
+// restrictToSystemAndAdministrators's real icacls call always grants —
+// under vitest's unprivileged/UAC-filtered test account it wouldn't, with
+// no way to reset ACLs between two opens inside the same constructor
+// call. See run.test.ts's identical mock for the same reasoning.
+vi.mock('../../security/credential-encryption.js', async () => {
+  const actual = await vi.importActual<typeof import('../../security/credential-encryption.js')>(
+    '../../security/credential-encryption.js'
+  );
+  return { ...actual, restrictToSystemAndAdministrators: () => {} };
+});
+
 import { OfflineQueue } from '../offline-queue.js';
 import type { SubmitResultInput } from '../client.js';
 

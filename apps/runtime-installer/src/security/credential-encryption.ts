@@ -88,6 +88,48 @@ function dpapiUnprotect(ciphertext: Buffer): Buffer {
   return Buffer.from(runPowerShell(script, ciphertext.toString('base64')), 'base64');
 }
 
+/**
+ * Restricts `filePath`'s NTFS ACL to SYSTEM and Administrators only —
+ * defense-in-depth alongside DPAPI, not a replacement for it. Identical
+ * to apps/agent's `restrictToSystemAndAdministrators` (deliberately
+ * duplicated — see this module's header comment). Uses well-known SIDs
+ * (S-1-5-18 = SYSTEM, S-1-5-32-544 = Administrators), not localized
+ * names. Best-effort: a failure here must not block installation.
+ */
+export function restrictToSystemAndAdministrators(filePath: string): void {
+  if (process.platform !== 'win32') return;
+  try {
+    execFileSync(
+      'icacls.exe',
+      [filePath, '/inheritance:r', '/grant:r', '*S-1-5-18:F', '*S-1-5-32-544:F'],
+      { stdio: 'ignore' }
+    );
+  } catch {
+    // best-effort — see doc comment above.
+  }
+}
+
+/**
+ * Same restriction as `restrictToSystemAndAdministrators`, but for a
+ * directory, with `(OI)(CI)` (object-inherit, container-inherit) so
+ * every file created inside it afterwards — the installer's own log
+ * files, or WinSW's `daemon\*.log` next to the service XML — inherits
+ * the same restriction automatically, with no per-file icacls call
+ * needed at write time.
+ */
+export function restrictDirectoryToSystemAndAdministrators(dirPath: string): void {
+  if (process.platform !== 'win32') return;
+  try {
+    execFileSync(
+      'icacls.exe',
+      [dirPath, '/inheritance:r', '/grant:r', '*S-1-5-18:(OI)(CI)F', '*S-1-5-32-544:(OI)(CI)F'],
+      { stdio: 'ignore' }
+    );
+  } catch {
+    // best-effort — see doc comment above.
+  }
+}
+
 // ─── AES-256-GCM fallback (non-Windows) ─────────────────────────────────────
 
 function localKeyPath(dataDir: string): string {

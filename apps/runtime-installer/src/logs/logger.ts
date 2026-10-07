@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { restrictDirectoryToSystemAndAdministrators } from '../security/credential-encryption.js';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -15,6 +16,12 @@ export class Logger {
   constructor(logDir: string) {
     this._logDir = logDir;
     fs.mkdirSync(logDir, { recursive: true });
+    // Installer/service logs can carry connection errors, hostnames, and
+    // (via _sanitize below) whatever slipped past redaction — restricted
+    // the same as every other sensitive file (SYSTEM + Administrators
+    // only), with inheritance so files rotated/created later stay
+    // restricted without a per-file call.
+    restrictDirectoryToSystemAndAdministrators(logDir);
   }
 
   log(file: LogFile, level: LogLevel, message: string): void {
@@ -35,9 +42,27 @@ export class Logger {
     this.log(file, 'debug', message);
   }
 
-  close(): void {
-    for (const stream of this._handles.values()) stream.end();
+  /**
+   * `stream.end()` is asynchronous — the underlying file write isn't
+   * guaranteed complete when this returns. Previously callers couldn't
+   * await that at all (`close(): void`), which is a real durability gap
+   * (a log line could be lost if the process exits right after calling
+   * this) as well as what made this hard to test deterministically.
+   * Returning a Promise lets a caller that cares (tests; index.ts before
+   * process.exit) await actual completion — fire-and-forget callers are
+   * unaffected.
+   */
+  close(): Promise<void> {
+    const streams = [...this._handles.values()];
     this._handles.clear();
+    return Promise.all(
+      streams.map(
+        (stream) =>
+          new Promise<void>((resolve) => {
+            stream.end(() => resolve());
+          })
+      )
+    ).then(() => undefined);
   }
 
   private _write(file: LogFile, line: string): void {
@@ -46,6 +71,14 @@ export class Logger {
     let stream = this._handles.get(file);
     if (!stream) {
       stream = fs.createWriteStream(filePath, { flags: 'a', encoding: 'utf8' });
+      // An unhandled 'error' event on a stream crashes the process — a
+      // real risk now that the log directory's ACL (see constructor)
+      // could make this fail for an account other than the one that
+      // created it. Logging must never be able to take the installer
+      // down; best-effort fallback to stderr instead.
+      stream.on('error', (err) => {
+        process.stderr.write(`[logger] failed to write ${file}: ${err.message}\n`);
+      });
       this._handles.set(file, stream);
     }
     stream.write(line);
@@ -76,11 +109,25 @@ export class Logger {
     }
   }
 
-  /** Strip runtimeToken and other secret-looking values from log lines. */
+  /**
+   * Strips tokens, passwords, and connection-string-shaped credentials
+   * from log lines — a defense-in-depth net, not the primary guarantee.
+   * The primary guarantee is that nothing in this codebase constructs a
+   * log line from a raw ERP credential or row value in the first place
+   * (see docs/ATLAS-RUNTIME-CLIENT.md's "What the logs never contain").
+   */
   private _sanitize(message: string): string {
-    return message
-      .replace(/"runtimeToken"\s*:\s*"[^"]+"/g, '"runtimeToken":"[REDACTED]"')
-      .replace(/"x-agent-token"\s*:\s*"[^"]+"/gi, '"x-agent-token":"[REDACTED]"')
-      .replace(/ATLAS-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}/g, 'ATLAS-[REDACTED]');
+    return (
+      message
+        .replace(/"runtimeToken"\s*:\s*"[^"]+"/g, '"runtimeToken":"[REDACTED]"')
+        .replace(/"x-agent-token"\s*:\s*"[^"]+"/gi, '"x-agent-token":"[REDACTED]"')
+        .replace(/ATLAS-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}/g, 'ATLAS-[REDACTED]')
+        .replace(
+          /"(password|atlasActivationKey|activationKey)"\s*:\s*"[^"]*"/gi,
+          '"$1":"[REDACTED]"'
+        )
+        // scheme://user:pass@host (any DB connection-string shape)
+        .replace(/:\/\/[^/@\s]+:[^/@\s]+@/g, '://***:***@')
+    );
   }
 }
