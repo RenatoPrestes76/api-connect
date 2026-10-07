@@ -10,8 +10,18 @@ import { testErpConnection, type ErpConnectionTarget } from '../erp-connection/c
 
 export type Environment = 'production' | 'staging' | 'development';
 
+/**
+ * Offered for forward compatibility / operator record-keeping — matches
+ * the engines @seltriva/database-sdk has drivers for. Only
+ * READ_ONLY_CHECK_SUPPORTED_DB_TYPES can actually be verified today; any
+ * other choice is refused immediately in collectErpConnection(), before
+ * the operator types a host/port/username/password for a connection
+ * this installer can't safely vouch for.
+ */
+const SUPPORTED_DB_TYPES: string[] = ['postgres', 'mysql', 'sqlserver', 'oracle', 'firebird'];
+
 /** Only 'postgres' has a real, automatic connectivity/read-only check (connection-test.ts) — see its own doc comment for why. */
-const SUPPORTED_DB_TYPES: string[] = ['postgres'];
+const READ_ONLY_CHECK_SUPPORTED_DB_TYPES: string[] = ['postgres'];
 
 export interface WizardResult {
   name: string;
@@ -133,12 +143,26 @@ export async function runSetupWizard(opts: { apiBaseUrl?: string }): Promise<Wiz
  * normally but report any discovery job as failed — see
  * docs/ATLAS-RUNTIME-CLIENT.md).
  */
-async function collectErpConnection(): Promise<ErpConnectionTarget | undefined> {
+export async function collectErpConnection(): Promise<ErpConnectionTarget | undefined> {
   const configureNow = await promptYesNo('  Configure the ERP database connection now?', true);
   if (!configureNow) return undefined;
 
   for (;;) {
     const dbType = await promptChoice('  Database type', SUPPORTED_DB_TYPES, 'postgres');
+
+    if (!READ_ONLY_CHECK_SUPPORTED_DB_TYPES.includes(dbType)) {
+      process.stdout.write(
+        `\n  ✗ The installer cannot verify "${dbType}" is read-only yet — only postgres has that check today.\n` +
+          '    Accepting this connection without that check would risk an unverified write-capable user, so it is refused.\n\n'
+      );
+      const tryAnother = await promptYesNo('  Try a different database type?', true);
+      if (!tryAnother) {
+        process.stdout.write('\n  Skipping ERP configuration — you can configure it later.\n\n');
+        return undefined;
+      }
+      continue;
+    }
+
     const host = await promptRequired('  ERP database host: ', '  Host is required.');
     const portStr = await promptWithDefault('  ERP database port', String(DEFAULT_PG_PORT));
     const database = await promptRequired('  ERP database name: ', '  Database name is required.');
@@ -165,6 +189,7 @@ async function collectErpConnection(): Promise<ErpConnectionTarget | undefined> 
     } else if (!result.readOnly) {
       process.stdout.write(
         '  ✗ This user can write to the database. The Atlas Runtime requires a read-only user.\n' +
+          `    ${result.readOnlyViolation ?? ''}\n` +
           '    Create one with:\n\n'
       );
       for (const line of (result.readOnlySetupSql ?? '').split('\n')) {
