@@ -1,6 +1,6 @@
 # Atlas Runtime — Roteiro de Smoke Test Manual (VM Windows limpa)
 
-> Sprint A2.5. Este roteiro é para ser executado **à mão**, por uma pessoa, numa
+> Sprint A2.5/A2.6. Este roteiro é para ser executado **à mão**, por uma pessoa, numa
 > VM Windows **sem Node.js pré-instalado** — é exatamente o cenário que o
 > empacotamento autossuficiente (`scripts/package-runtime.mjs`) existe para
 > validar. Nada neste documento foi automatizado; os resultados abaixo não são
@@ -131,6 +131,17 @@ nenhum privilégio de escrita:
 **Esperado:** a linha de `atlas_readonly` nos "Access privileges" mostra
 só `r` (SELECT) — nunca `a`/`w`/`d` (INSERT/UPDATE/DELETE).
 
+**Adicionalmente, crie um segundo usuário, propositalmente gravável** —
+usado só no item 1b (prova de que o instalador recusa um usuário que
+pode escrever), nunca na configuração real do item 1:
+
+```sql
+CREATE ROLE atlas_writer_test WITH LOGIN PASSWORD 'troque-por-uma-senha-forte-2';
+GRANT CONNECT ON DATABASE supermais_erp_test TO atlas_writer_test;
+GRANT USAGE ON SCHEMA public TO atlas_writer_test;
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO atlas_writer_test;
+```
+
 ### 7. Rede: como a VM alcança o banco do micro ERP e a nuvem Atlas (VirtualBox)
 
 Assumindo o adaptador de rede padrão do VirtualBox (**NAT**, não "NAT
@@ -174,13 +185,33 @@ cd C:\caminho\para\dist-runtime-package
 .\runtime\node.exe .\dist\index.js
 ```
 
-Siga o wizard:
+Siga o wizard (6 etapas desde a Sprint A2.6 — a conexão com o ERP agora é
+coletada, testada e criptografada durante a própria instalação, não
+depois):
 
-- Runtime name / Hostname / Ambiente / Connector type: valores à sua escolha
-- API base URL: a URL da sua nuvem Atlas
-- **Organization code** / **Atlas activation key**: os valores do passo 2
-- Install as a system service? **Yes**
-- Start automatically on boot? **Yes**
+- **Etapa 1/6 — Runtime identity:** Runtime name / Hostname / Ambiente /
+  Connector type — valores à sua escolha.
+- **Etapa 2/6 — API connection:** API base URL — a URL da sua nuvem Atlas.
+- **Etapa 3/6 — Atlas runtime enrollment:** Organization code / Atlas
+  activation key — os valores do passo 2 (seção "Antes de começar").
+- **Etapa 4/6 — ERP database connection:**
+  - Configure the ERP database connection now? **Yes**
+  - Database type: `postgres`
+  - ERP database host: `10.0.2.2` (item 7)
+  - ERP database port: `5434` (item 5)
+  - ERP database name: `supermais_erp_test` (item 5)
+  - ERP database username: `atlas_readonly` (item 6)
+  - ERP database password: a senha escolhida no item 6 (input mascarado —
+    aparece como `*` no terminal, nunca em texto puro)
+  - O instalador testa a conexão de verdade e confirma somente leitura
+    (consultando privilégios, sem tentar escrever) antes de aceitar — ver
+    item 1b antes de digitar a credencial real, para ver a recusa
+    acontecer de verdade primeiro.
+- **Etapa 5/6 — Service installation:**
+  - Install as a system service? **Yes**
+  - Start automatically on boot? **Yes**
+- **Etapa 6/6 — Confirm:** confira o resumo (a senha do ERP aparece
+  mascarada em qualquer lugar) e confirme.
 
 **Esperado:**
 
@@ -191,9 +222,48 @@ Siga o wizard:
   instalador funcionou **sem precisar de Node já instalado na VM** — o
   próprio instalador só roda porque você apontou pro `node.exe` empacotado
   no passo acima).
+- `C:\ProgramData\Seltriva\Atlas\config\erp-connection.json` existe —
+  host/porta/banco/usuário em texto claro, mas `encryptedPassword.scheme:
+"dpapi"` — nunca a senha em texto puro (ver item 4b para a prova
+  completa de ACL desse arquivo).
 - `sc query AtlasRuntime` mostra o serviço registrado, `STATE: RUNNING`.
 
 **Se falhar:** confira `C:\ProgramData\Seltriva\Atlas\logs\installer.log`.
+
+---
+
+## 1b. O instalador recusa um usuário com permissão de escrita
+
+Antes de digitar a credencial real do `atlas_readonly` na etapa 4/6
+acima, teste a recusa com o usuário propositalmente gravável do item 6:
+
+1. Na etapa 4/6, quando pedir a senha, digite as credenciais de
+   `atlas_writer_test` (não `atlas_readonly`) em vez da credencial real.
+
+**Esperado:**
+
+```
+Testing connection...
+✗ This user can write to the database. The Atlas Runtime requires a read-only user.
+    Create one with:
+
+      CREATE ROLE atlas_writer_test_readonly WITH LOGIN PASSWORD '...';
+      GRANT CONNECT ON DATABASE supermais_erp_test TO atlas_writer_test_readonly;
+      GRANT USAGE ON SCHEMA public TO atlas_writer_test_readonly;
+      GRANT SELECT ON ALL TABLES IN SCHEMA public TO atlas_writer_test_readonly;
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO atlas_writer_test_readonly;
+
+Try again with different connection details? [Y/n]:
+```
+
+- O instalador **nunca tenta a escrita de verdade** — a recusa vem só de
+  consultar `pg_roles.rolsuper`/`information_schema.role_table_grants`
+  (`apps/runtime-installer/src/erp-connection/connection-test.ts`).
+  Confirme isso também: `SELECT count(*) FROM produtos;` no banco (item
+  5/6) continua `8` (o seed), nunca alterado.
+- Responda **Y** (tentar de novo) e, desta vez, digite as credenciais
+  reais de `atlas_readonly` — o wizard deve aceitar (`✓ Connection OK —
+confirmed read-only.`) e seguir normalmente para a etapa 5/6.
 
 ---
 
@@ -276,71 +346,40 @@ leitura).
    net user atlas-standard-test "SenhaTeste123!" /add
    ```
 2. Faça login nessa conta (RDP de outra máquina, ou `runas` sem elevação,
-   ou troque de usuário na própria VM) e tente ler o arquivo:
+   ou troque de usuário na própria VM) e tente ler os dois arquivos
+   sensíveis que o instalador grava — a identidade Ed25519 **e** (desde a
+   Sprint A2.6) a conexão com o ERP:
    ```powershell
    Get-Content "C:\ProgramData\Seltriva\Atlas\agent-data\atlas-runtime-identity.json"
+   Get-Content "C:\ProgramData\Seltriva\Atlas\config\erp-connection.json"
    ```
 3. Confira a ACL efetiva de qualquer conta (não precisa estar logado nela):
    ```powershell
    icacls "C:\ProgramData\Seltriva\Atlas\agent-data\atlas-runtime-identity.json"
+   icacls "C:\ProgramData\Seltriva\Atlas\config\erp-connection.json"
    ```
 
 **Esperado:**
 
-- No passo 2, a conta padrão recebe **"Acesso negado"** — nunca o
-  conteúdo do arquivo.
-- No passo 3, a lista mostra só `NT AUTHORITY\SYSTEM` e
+- No passo 2, a conta padrão recebe **"Acesso negado"** nos dois
+  arquivos — nunca o conteúdo.
+- No passo 3, as duas listas mostram só `NT AUTHORITY\SYSTEM` e
   `BUILTIN\Administrators`(F) como concedidos — nenhuma outra conta
   (nem a `atlas-standard-test`, nem "Users"/"Authenticated Users"
   herdados) aparece.
 - Ao final, remova a conta de teste: `net user atlas-standard-test /delete`.
 
-### 4c. Configurar o runtime para ler o micro ERP (organização de teste)
+### 4c. Perfil de conexão na nuvem — metadados, nunca a senha
 
-A `organizationCode`/`atlasActivationKey` do passo 2 (seção "Antes de
-começar") já é a organização de teste — isso o wizard já cobriu na
-instalação. O que falta é apontar o runtime para o banco real do item 5:
-isso é feito por variáveis de ambiente (`ATLAS_SCAN_DB_*`, ver
-`apps/agent/src/cli/bin.ts` e `docs/ATLAS-RUNTIME-CLIENT.md`) que o
-wizard **não** pede hoje — não existe campo para isso no instalador, só
-no serviço Windows já instalado.
-
-1. Pare o serviço antes de editar sua configuração:
-   ```powershell
-   Stop-Service AtlasRuntime
-   ```
-2. Edite o XML gerado pelo `node-windows`/WinSW — **não** o `.env`, que
-   não existe para um serviço Windows; o WinSW lê este arquivo a cada
-   início do serviço, então editar + reiniciar é suficiente (nenhuma
-   necessidade de reiniciar a VM):
-   ```powershell
-   notepad "C:\ProgramData\Seltriva\Atlas\agent\dist\cli\daemon\atlasruntime.xml"
-   ```
-3. Adicione estas 5 linhas `<env>` como filhas diretas de `<service>`
-   (ao lado das `<env>` que o instalador já gravou para
-   `ATLAS_API_URL`/`ATLAS_ORGANIZATION_CODE`/etc. — não as remova):
-   ```xml
-   <env name="ATLAS_SCAN_DB_HOST" value="10.0.2.2"/>
-   <env name="ATLAS_SCAN_DB_PORT" value="5434"/>
-   <env name="ATLAS_SCAN_DB_NAME" value="supermais_erp_test"/>
-   <env name="ATLAS_SCAN_DB_USER" value="atlas_readonly"/>
-   <env name="ATLAS_SCAN_DB_PASSWORD" value="troque-por-uma-senha-forte"/>
-   ```
-   (Use o mesmo host/porta confirmados no item 7 e a mesma senha definida
-   no item 6.)
-4. Salve e reinicie o serviço:
-   ```powershell
-   Start-Service AtlasRuntime
-   ```
-
-Separadamente, crie também o **perfil de conexão** no lado da nuvem
-Atlas — é um registro administrativo (nome/host/porta/credencial,
-guardado em `apps/api`), usado para abrir jobs de descoberta; ele **não**
-alimenta automaticamente as variáveis `ATLAS_SCAN_DB_*` do passo acima
-(são dois lugares de configuração hoje, não um só — ver
-`apps/agent/src/atlas-runtime-client/run.ts`: o runtime sempre usa seu
-próprio `scanTarget` local, nunca lê de volta o que está salvo no
-perfil). Mantenha os dois com os mesmos valores:
+Opcional, para o painel administrativo: crie o registro de metadados do
+lado da nuvem Atlas. Note o que **não** tem mais, desde a Sprint A2.6: o
+campo `password` — a nuvem nunca armazena a credencial do ERP, em
+nenhuma forma (ver `docs/ATLAS-RUNTIME-CLIENT.md`, "ERP credentials
+never leave the client machine"). Esse perfil é só rótulo/forma da
+conexão para exibição, e é **independente** do arquivo local
+`erp-connection.json` que o runtime realmente usa (os dois não se
+sincronizam automaticamente — mantenha os valores de host/porta/banco/
+usuário iguais nos dois, à mão):
 
 ```
 POST /erp-connectivity/profiles
@@ -353,23 +392,16 @@ POST /erp-connectivity/profiles
   "host": "10.0.2.2",
   "port": 5434,
   "database": "supermais_erp_test",
-  "username": "atlas_readonly",
-  "password": "troque-por-uma-senha-forte"
+  "username": "atlas_readonly"
 }
 ```
 
 Guarde o `profile.id` retornado — é o `profileId` usado nos itens 7 e 8
 abaixo.
 
-**Esperado:**
-
-```powershell
-Get-Service AtlasRuntime   # Status: Running de novo
-```
-
-e, nos logs (`daemon\*.log`), nenhuma linha `No scan target configured
-on this Runtime` no próximo ciclo de sync — confirma que `ATLAS_SCAN_DB_*`
-foi lido com sucesso.
+**Esperado:** `201`, e o perfil retornado não tem nenhum campo
+`password`/`encryptedCredential`/`hasCredential` — eles não existem mais
+no schema.
 
 ---
 
@@ -484,8 +516,9 @@ O runtime (`apps/agent`) nunca chama nada além de `readSchema()` — não
 existe caminho de escrita no código do daemon para "tentar" diretamente.
 A prova realista para um teste manual é confirmar a camada que
 efetivamente impediria uma escrita **se** algum bug algum dia abrisse
-esse caminho: a role `atlas_readonly` criada no item 6, a mesma que o
-runtime usa de verdade (`ATLAS_SCAN_DB_USER` configurado no item 4c).
+esse caminho: a role `atlas_readonly` criada no item 6, a mesma
+configurada na etapa 4/6 do wizard no item 1 (criptografada em
+`config\erp-connection.json` — ver item 4/4b) e que o runtime de fato usa.
 
 Da VM (ou de qualquer máquina que alcance `10.0.2.2:5434`), conecte **com
 essas mesmas credenciais** e tente escrever:
@@ -565,20 +598,21 @@ deve esgotar num teste manual).
 
 Preencha ao executar:
 
-| Item                                     | Resultado     | Observações |
-| ---------------------------------------- | ------------- | ----------- |
-| 1. Instalar                              | ☐ OK ☐ Falhou |             |
-| 2. Serviço sobe                          | ☐ OK ☐ Falhou |             |
-| 3. Sobrevive a reboot                    | ☐ OK ☐ Falhou |             |
-| 4. Lê credenciais do instalador          | ☐ OK ☐ Falhou |             |
-| 4b. Usuário comum não lê credencial      | ☐ OK ☐ Falhou |             |
-| 4c. Runtime configurado p/ micro ERP     | ☐ OK ☐ Falhou |             |
-| 5. Heartbeat chega na nuvem              | ☐ OK ☐ Falhou |             |
-| 6. Fila reenvia sem duplicar             | ☐ OK ☐ Falhou |             |
-| 7. Leitura ponta a ponta (schema do ERP) | ☐ OK ☐ Falhou |             |
-| 8. Escrita pelo runtime é recusada       | ☐ OK ☐ Falhou |             |
-| 9. Reinicia após kill                    | ☐ OK ☐ Falhou |             |
-| 10. Desinstala sem lixo                  | ☐ OK ☐ Falhou |             |
+| Item                                                 | Resultado     | Observações |
+| ---------------------------------------------------- | ------------- | ----------- |
+| 1. Instalar (inclui etapa 4/6 — ERP connection)      | ☐ OK ☐ Falhou |             |
+| 1b. Instalador recusa usuário gravável               | ☐ OK ☐ Falhou |             |
+| 2. Serviço sobe                                      | ☐ OK ☐ Falhou |             |
+| 3. Sobrevive a reboot                                | ☐ OK ☐ Falhou |             |
+| 4. Lê credenciais do instalador                      | ☐ OK ☐ Falhou |             |
+| 4b. Usuário comum não lê credencial (identity + ERP) | ☐ OK ☐ Falhou |             |
+| 4c. Perfil de conexão na nuvem (sem senha)           | ☐ OK ☐ Falhou |             |
+| 5. Heartbeat chega na nuvem                          | ☐ OK ☐ Falhou |             |
+| 6. Fila reenvia sem duplicar                         | ☐ OK ☐ Falhou |             |
+| 7. Leitura ponta a ponta (schema do ERP)             | ☐ OK ☐ Falhou |             |
+| 8. Escrita pelo runtime é recusada                   | ☐ OK ☐ Falhou |             |
+| 9. Reinicia após kill                                | ☐ OK ☐ Falhou |             |
+| 10. Desinstala sem lixo                              | ☐ OK ☐ Falhou |             |
 
 ## Nota sobre o protocolo de ativação antigo
 
