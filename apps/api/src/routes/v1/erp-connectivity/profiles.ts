@@ -39,8 +39,7 @@ export function registerErpConnectivityProfileRoutes(router: Router): void {
     requirePermission('erp-connectivity.write')(async (ctx: RouteContext, res: ServerResponse) => {
       const body = parseBody(CreateProfileBodySchema, ctx, res);
       if (!body) return;
-      const { runtimeId, organizationId, name, dbType, host, port, database, username, password } =
-        body;
+      const { runtimeId, organizationId, name, dbType, host, port, database, username } = body;
       if (!isSupportedDbType(dbType)) {
         return apiError(res, `Unsupported dbType: ${dbType}`, 422, 'UNSUPPORTED_DB_TYPE');
       }
@@ -55,7 +54,6 @@ export function registerErpConnectivityProfileRoutes(router: Router): void {
         port,
         database,
         username,
-        password,
         additionalParams: body.additionalParams,
       });
       if (!result.ok) {
@@ -108,9 +106,7 @@ export function registerErpConnectivityProfileRoutes(router: Router): void {
       if (!result.ok) return apiError(res, 'Connection profile not found', 404, 'NOT_FOUND');
 
       adminIdentityStore.recordAudit({
-        action: result.credentialRotated
-          ? 'CONNECTION_CREDENTIAL_ROTATED'
-          : 'CONNECTION_STATUS_CHANGED',
+        action: 'CONNECTION_STATUS_CHANGED',
         actorEmail: ctx.adminEmail ?? 'unknown',
         target: id,
       });

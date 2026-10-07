@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { CircuitBreakerRegistry, CircuitOpenError } from '@seltriva/titan';
 import { runtimeRegistrationStore } from '../runtime-registration/runtime-registration-store.js';
-import { encryptCredential, decryptCredential, maskSecretsInText } from './credential-store.js';
+import { maskSecretsInText } from './credential-store.js';
 import {
   DEFAULT_FAILURE_THRESHOLD,
   DEFAULT_CIRCUIT_TIMEOUT_MS,
@@ -11,7 +11,6 @@ import {
 import type {
   ConnectionProfileRecord,
   ConnectionProfileDTO,
-  ConnectionProfileWithCredentialDTO,
   ConnectionHealthRecord,
   DiagnosticsReportRecord,
   CreateConnectionProfileInput,
@@ -76,7 +75,6 @@ export class ErpConnectivityStore {
       port: input.port,
       database: input.database,
       username: input.username,
-      encryptedCredential: encryptCredential(input.password),
       additionalParams: input.additionalParams ?? {},
       status: 'PENDING_VALIDATION',
       createdAt: now,
@@ -113,10 +111,7 @@ export class ErpConnectivityStore {
     });
   }
 
-  updateProfile(
-    id: string,
-    patch: UpdateConnectionProfileInput
-  ): UpdateProfileResult & { credentialRotated?: boolean } {
+  updateProfile(id: string, patch: UpdateConnectionProfileInput): UpdateProfileResult {
     const profile = this.getProfile(id);
     if (!profile) return { ok: false, error: 'PROFILE_NOT_FOUND' };
 
@@ -128,13 +123,8 @@ export class ErpConnectivityStore {
     if (patch.username !== undefined) profile.username = patch.username;
     if (patch.additionalParams !== undefined) profile.additionalParams = patch.additionalParams;
 
-    let credentialRotated = false;
-    if (patch.password !== undefined) {
-      profile.encryptedCredential = encryptCredential(patch.password);
-      credentialRotated = true;
-    }
     profile.updatedAt = new Date().toISOString();
-    return { ok: true, profile, credentialRotated };
+    return { ok: true, profile };
   }
 
   deleteProfile(id: string): DeleteProfileResult {
@@ -146,11 +136,6 @@ export class ErpConnectivityStore {
     this.lastHealthSignature.delete(id);
     this.lastDiagnosticsSignature.delete(id);
     return { ok: true };
-  }
-
-  /** Decrypted credential — only for the Runtime-profiles fetch (its own authenticated JWT session), never logged or persisted elsewhere. */
-  toRuntimeDTO(profile: ConnectionProfileRecord): ConnectionProfileWithCredentialDTO {
-    return { ...this.toDTO(profile), password: decryptCredential(profile.encryptedCredential) };
   }
 
   toDTO(profile: ConnectionProfileRecord): ConnectionProfileDTO {
@@ -165,7 +150,6 @@ export class ErpConnectivityStore {
       port: profile.port,
       database: profile.database,
       username: profile.username,
-      hasCredential: Boolean(profile.encryptedCredential),
       additionalParams: profile.additionalParams,
       status: profile.status,
       createdAt: profile.createdAt,

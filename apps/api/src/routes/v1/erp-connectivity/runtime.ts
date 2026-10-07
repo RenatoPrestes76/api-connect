@@ -1,7 +1,6 @@
 import type { ServerResponse } from 'node:http';
 import type { Router, RouteContext } from '../../../http/router.js';
 import { json, apiError } from '../../../http/router.js';
-import { requireRuntimeAuth } from '../../../middleware/runtime-auth.js';
 import { runtimeRegistrationStore } from '../../../modules/runtime-registration/runtime-registration-store.js';
 import { verifyRequestSignature } from '../../../modules/runtime-registration/signature.js';
 import {
@@ -54,20 +53,15 @@ async function verifySignedRuntimeRequest(
 }
 
 export function registerErpConnectivityRuntimeRoutes(router: Router): void {
-  // ─── GET /erp-connectivity/runtime/profiles ─────────────────────────────
-  // JWT self-service fetch (Sprint 46.7's requireRuntimeAuth) — the one place
-  // the decrypted credential crosses the wire, over the Runtime's own
-  // authenticated session.
-  router.get(
-    '/erp-connectivity/runtime/profiles',
-    requireRuntimeAuth(async (ctx: RouteContext, res: ServerResponse) => {
-      const profiles = erpConnectivityStore.listProfiles({ runtimeId: ctx.runtimeId });
-      json(res, {
-        total: profiles.length,
-        profiles: profiles.map((p) => erpConnectivityStore.toRuntimeDTO(p)),
-      });
-    })
-  );
+  // `GET /erp-connectivity/runtime/profiles` (Sprint 46.7's
+  // requireRuntimeAuth) used to live here — the one place a decrypted ERP
+  // credential crossed the wire, over the Runtime's own authenticated
+  // session. Removed in Sprint A2.6: the Runtime now reads its own ERP
+  // connection from local encrypted storage
+  // (apps/runtime-installer/src/erp-connection/erp-connection-store.ts),
+  // never from the cloud — see docs/ATLAS-RUNTIME-CLIENT.md's "ERP
+  // credentials never leave the client machine". Nothing in apps/agent
+  // ever called this route.
 
   // ─── POST /erp-connectivity/health-report ───────────────────────────────
   router.post('/erp-connectivity/health-report', async (ctx: RouteContext, res: ServerResponse) => {

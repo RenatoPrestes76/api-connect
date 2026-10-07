@@ -18,10 +18,15 @@ export type ConnectionStatus =
 
 // ─── Connection profile ─────────────────────────────────────────────────────
 // apps/api is the control plane — it never dials the customer's ERP database
-// itself (no DB driver dependencies exist in this package, by design). The
-// Atlas Runtime installed at the customer site is the only thing with
-// network access to the ERP, so it fetches its profiles (incl. decrypted
-// credential, over its own JWT session) and reports health/diagnostics back.
+// itself (no DB driver dependencies exist in this package, by design), and
+// (Sprint A2.6) it never holds the ERP credential in any form either — not
+// encrypted, not in memory, not even transiently. The password lives
+// exactly once, encrypted at rest on the customer's own machine (see
+// apps/runtime-installer/src/erp-connection/erp-connection-store.ts and
+// docs/ATLAS-RUNTIME-CLIENT.md's "ERP credentials never leave the client
+// machine"). This profile is connection-shape metadata only — useful for
+// the admin panel to show what a Runtime talks to — plus the health/
+// diagnostics history the Runtime reports back, never a credential fetch.
 
 export interface ConnectionProfileRecord {
   id: string;
@@ -34,8 +39,6 @@ export interface ConnectionProfileRecord {
   port: number;
   database: string;
   username: string;
-  /** Envelope-encrypted (AES-256-GCM) — decrypted only in memory, only for the runtime-profiles fetch. Never serialized to a DTO. */
-  encryptedCredential: string;
   additionalParams: Record<string, string>;
   status: ConnectionStatus;
   createdAt: string;
@@ -53,16 +56,10 @@ export interface ConnectionProfileDTO {
   port: number;
   database: string;
   username: string;
-  hasCredential: boolean;
   additionalParams: Record<string, string>;
   status: ConnectionStatus;
   createdAt: string;
   updatedAt: string;
-}
-
-/** Only surfaced to the owning Runtime, over its authenticated JWT session — the one place plaintext crosses the wire. */
-export interface ConnectionProfileWithCredentialDTO extends ConnectionProfileDTO {
-  password: string;
 }
 
 export interface CreateConnectionProfileInput {
@@ -75,7 +72,6 @@ export interface CreateConnectionProfileInput {
   port: number;
   database: string;
   username: string;
-  password: string;
   additionalParams?: Record<string, string>;
 }
 
@@ -86,8 +82,6 @@ export interface UpdateConnectionProfileInput {
   port?: number;
   database?: string;
   username?: string;
-  /** Presence rotates the stored credential. */
-  password?: string;
   additionalParams?: Record<string, string>;
 }
 

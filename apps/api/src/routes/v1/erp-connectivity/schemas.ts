@@ -7,6 +7,9 @@ import { z } from 'zod';
 // structurally invalid input (missing/wrong-typed), not business-invalid
 // values, matching the "schema validates structure, not business rules"
 // split.
+// No `password` field (Sprint A2.6) — the cloud never stores an ERP
+// credential, in any form. See docs/ATLAS-RUNTIME-CLIENT.md's "ERP
+// credentials never leave the client machine".
 export const CreateProfileBodySchema = z.object({
   runtimeId: z.string().min(1),
   organizationId: z.string().min(1),
@@ -17,7 +20,6 @@ export const CreateProfileBodySchema = z.object({
   port: z.number().int().positive(),
   database: z.string().min(1),
   username: z.string().min(1),
-  password: z.string().min(1),
   additionalParams: z.record(z.string()).optional(),
 });
 
@@ -28,7 +30,6 @@ export const UpdateProfileBodySchema = z.object({
   port: z.number().int().positive().optional(),
   database: z.string().min(1).optional(),
   username: z.string().min(1).optional(),
-  password: z.string().min(1).optional(),
   additionalParams: z.record(z.string()).optional(),
 });
 

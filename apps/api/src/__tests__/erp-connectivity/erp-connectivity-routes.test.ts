@@ -25,7 +25,6 @@ interface ProfileBody {
   profile: {
     id: string;
     status: string;
-    hasCredential: boolean;
     dbType: string;
     [key: string]: unknown;
   };
@@ -57,7 +56,6 @@ async function createProfile(overrides: Partial<Record<string, unknown>> = {}) {
       port: 5432,
       database: 'erp_prod',
       username: 'erp_user',
-      password: 'S3nhaSuperSecreta!',
       ...overrides,
     },
     auth
@@ -88,13 +86,19 @@ describe('GET /erp-connectivity/drivers', () => {
 });
 
 describe('POST /erp-connectivity/profiles — criação de perfil', () => {
-  it('creates a connection profile in PENDING_VALIDATION, never exposing the password', async () => {
+  it('creates a connection profile in PENDING_VALIDATION; the cloud never even accepts a password (Sprint A2.6)', async () => {
     const { created } = await createProfile();
     expect(created.status).toBe(201);
     expect(created.body.profile.status).toBe('PENDING_VALIDATION');
-    expect(created.body.profile.hasCredential).toBe(true);
     expect(created.body.profile['password']).toBeUndefined();
     expect(created.body.profile['encryptedCredential']).toBeUndefined();
+    expect(created.body.profile['hasCredential']).toBeUndefined();
+  });
+
+  it('silently ignores a password field in the request body rather than storing it anywhere', async () => {
+    const { created } = await createProfile({ password: 'this-should-be-dropped' });
+    expect(created.status).toBe(201);
+    expect(JSON.stringify(created.body)).not.toContain('this-should-be-dropped');
   });
 
   it('rejects an unsupported dbType', async () => {
@@ -111,7 +115,6 @@ describe('POST /erp-connectivity/profiles — criação de perfil', () => {
         port: 1,
         database: 'd',
         username: 'u',
-        password: 'p',
       },
       auth
     );
@@ -133,7 +136,6 @@ describe('POST /erp-connectivity/profiles — criação de perfil', () => {
         port: 5432,
         database: 'erp_prod',
         username: 'erp_user',
-        password: 'S3nhaSuperSecreta!',
       },
       auth
     );
@@ -155,7 +157,6 @@ describe('POST /erp-connectivity/profiles — criação de perfil', () => {
         port: '5432',
         database: 'd',
         username: 'u',
-        password: 'p',
       },
       auth
     );
@@ -176,11 +177,9 @@ describe('POST /erp-connectivity/profiles — criação de perfil', () => {
   });
 });
 
-describe('Criptografia das credenciais', () => {
-  it('the admin DTO never exposes the credential; the Runtime JWT fetch decrypts it correctly', async () => {
-    const { runtimeId, keyPair, profileId } = await createProfile({
-      password: 'PlaintextOnlyForRuntime!',
-    });
+describe('ERP credentials never reach the cloud (Sprint A2.6)', () => {
+  it('the admin DTO never exposes a credential — there is no field for one at all', async () => {
+    const { profileId } = await createProfile({ password: 'PlaintextShouldNeverAppear!' });
 
     const adminView = await get<ProfileBody>(
       srv.baseUrl,
@@ -188,52 +187,40 @@ describe('Criptografia das credenciais', () => {
       auth
     );
     expect(adminView.body.profile['password']).toBeUndefined();
+    expect(adminView.body.profile['encryptedCredential']).toBeUndefined();
+    expect(adminView.body.profile['hasCredential']).toBeUndefined();
+    expect(JSON.stringify(adminView.body)).not.toContain('PlaintextShouldNeverAppear!');
+  });
 
+  it('GET /erp-connectivity/runtime/profiles no longer exists — the Runtime never fetches a credential back from the cloud', async () => {
+    const { runtimeId, keyPair } = await createProfile();
     const accessToken = await obtainRuntimeAccessToken(
       srv.baseUrl,
       runtimeId,
       keyPair.privateKeyPem
     );
-    const runtimeView = await get<{ profiles: Array<{ id: string; password: string }> }>(
+    const { status } = await get(
       srv.baseUrl,
       '/erp-connectivity/runtime/profiles',
       bearer(accessToken)
     );
-    expect(runtimeView.status).toBe(200);
-    const match = runtimeView.body.profiles.find((p) => p.id === profileId);
-    expect(match?.password).toBe('PlaintextOnlyForRuntime!');
+    expect(status).toBe(404);
   });
 });
 
-describe('PATCH /erp-connectivity/profiles/:id — rotação de credenciais', () => {
-  it('rotates the credential and the Runtime fetch reflects the new password', async () => {
-    const { runtimeId, keyPair, profileId } = await createProfile();
+describe('PATCH /erp-connectivity/profiles/:id', () => {
+  it('a password field in the PATCH body is silently ignored, never stored anywhere (there is no credential to rotate)', async () => {
+    const { profileId } = await createProfile();
 
     const updated = await patch<ProfileBody>(
       srv.baseUrl,
       `/erp-connectivity/profiles/${profileId}`,
-      { password: 'NovaSenhaRotacionada!' },
+      { password: 'ShouldNeverBeStored!', name: 'ERP Principal (renamed)' },
       auth
     );
     expect(updated.status).toBe(200);
-
-    const accessToken = await obtainRuntimeAccessToken(
-      srv.baseUrl,
-      runtimeId,
-      keyPair.privateKeyPem
-    );
-    const runtimeView = await get<{ profiles: Array<{ id: string; password: string }> }>(
-      srv.baseUrl,
-      '/erp-connectivity/runtime/profiles',
-      bearer(accessToken)
-    );
-    const match = runtimeView.body.profiles.find((p) => p.id === profileId);
-    expect(match?.password).toBe('NovaSenhaRotacionada!');
-
-    const log = adminIdentityStore.getAuditLog({ limit: 500 });
-    expect(
-      log.some((e) => e.action === 'CONNECTION_CREDENTIAL_ROTATED' && e.target === profileId)
-    ).toBe(true);
+    expect(updated.body.profile.name).toBe('ERP Principal (renamed)');
+    expect(JSON.stringify(updated.body)).not.toContain('ShouldNeverBeStored!');
   });
 
   it('rejects a non-numeric port on rotation instead of silently corrupting the profile (Sprint 46.18)', async () => {
@@ -506,7 +493,6 @@ describe('RBAC', () => {
         port: 5432,
         database: 'd',
         username: 'u',
-        password: 'p',
       },
       auditorAuth
     );

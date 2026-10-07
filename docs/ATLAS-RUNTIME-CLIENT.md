@@ -29,12 +29,12 @@ serving different endpoints — this work did not touch the existing one.
 
 Set on the machine running `apps/agent`:
 
-| Env var                                                          | Required                | Purpose                                                                                                                                                                                                                                       |
-| ---------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ATLAS_API_URL`                                                  | Yes (enables this path) | Base URL of the Atlas API, e.g. `https://api.atlasappruntime.com.br` once the domain is live, or `http://localhost:3001` locally. Unset skips this enrollment path entirely — non-fatal, matching the existing `SELTRIVA_CLOUD_URL` gate.     |
-| `ATLAS_ORGANIZATION_CODE`                                        | Yes                     | The tenant's organization code, issued by whoever owns the customer onboarding flow.                                                                                                                                                          |
-| `ATLAS_ACTIVATION_KEY`                                           | Yes                     | A single-use activation key for that organization (`POST /admin/runtime-registration/activation-keys`). Consumed on first successful registration — a restart afterward reuses the persisted identity, not the key.                           |
-| `ATLAS_SCAN_DB_HOST` / `_PORT` / `_NAME` / `_USER` / `_PASSWORD` | Optional                | The real database this Runtime installation scans for discovery jobs. Unset means the Runtime enrolls and heartbeats normally but reports any assigned job as failed with `"No scan target configured on this Runtime"` rather than crashing. |
+| Env var                     | Required                | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| --------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ATLAS_API_URL`             | Yes (enables this path) | Base URL of the Atlas API, e.g. `https://api.atlasappruntime.com.br` once the domain is live, or `http://localhost:3001` locally. Unset skips this enrollment path entirely — non-fatal, matching the existing `SELTRIVA_CLOUD_URL` gate.                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `ATLAS_ORGANIZATION_CODE`   | Yes                     | The tenant's organization code, issued by whoever owns the customer onboarding flow.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `ATLAS_ACTIVATION_KEY`      | Yes                     | A single-use activation key for that organization (`POST /admin/runtime-registration/activation-keys`). Consumed on first successful registration — a restart afterward reuses the persisted identity, not the key.                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `ATLAS_ERP_CONNECTION_FILE` | Optional                | Path to the encrypted ERP connection file `apps/runtime-installer`'s wizard writes (`erp-connection/erp-connection-store.ts`) — see "ERP credentials never leave the client machine" below. Unset means the Runtime enrolls and heartbeats normally but reports any assigned job as failed with `"No scan target configured on this Runtime"` rather than crashing. **Sprint A2.6 removed the old `ATLAS_SCAN_DB_HOST`/`_PORT`/`_NAME`/`_USER`/`_PASSWORD` env vars** — they put the ERP password in plain text in the Windows service's env block (visible in the WinSW-generated XML on disk); this file-based, encrypted-at-rest replacement closes that gap. |
 
 The Runtime's identity (keypair + fingerprint + assigned `runtimeId`) is
 persisted at `<data_dir>/atlas-runtime-identity.json` (`data_dir` is the
@@ -82,6 +82,61 @@ the other still holds:
    `executor.ts`, see the audit report), grant the equivalent read-only role
    (`GRANT SELECT` only; no `INSERT`/`UPDATE`/`DELETE`/`EXECUTE` on stored
    procedures that mutate data) before onboarding a customer on that engine.
+
+3. **Pre-flight, before either layer above ever runs (Sprint A2.6):**
+   `apps/runtime-installer`'s wizard tests the connection and checks this
+   exact condition — `pg_roles.rolsuper` and
+   `information_schema.role_table_grants` for `INSERT`/`UPDATE`/`DELETE`/
+   `TRUNCATE` — **before ever accepting the credential**, via a real
+   connection but zero write attempts
+   (`apps/runtime-installer/src/erp-connection/connection-test.ts`). A
+   writable user is refused outright, with the exact `CREATE ROLE`/`GRANT`
+   SQL printed so the operator can fix it on the spot. This doesn't
+   replace layers 1-2 — a role that's read-only today could be
+   re-granted write access later outside this installer's knowledge — but
+   it stops the single most common real-world failure mode (someone
+   handing the installer an admin/application credential because it was
+   the one they had) before it's ever stored anywhere.
+
+## ERP credentials never leave the client machine
+
+Decision (Sprint A2.6): the ERP database password lives in exactly one
+place — encrypted at rest, on the customer's own machine
+(`apps/runtime-installer/src/erp-connection/erp-connection-store.ts`:
+DPAPI `LocalMachine` on Windows, NTFS-ACL-restricted to SYSTEM +
+Administrators, same as every other sensitive file this Runtime writes).
+It is never sent to, or stored by, the Atlas cloud, in any form —
+encrypted or not.
+
+This replaces an earlier design (still visible in
+`apps/api/src/modules/erp-connectivity/`'s `ConnectionProfile` shape
+before this sprint) where the cloud held an envelope-encrypted copy of
+the credential and exposed it back to the owning Runtime over
+`GET /erp-connectivity/runtime/profiles` — functional, but it meant a
+second place the plaintext password existed (if only ever in memory,
+decrypted on demand) and a second place a compromise could expose it.
+Sprint A2.6 removed that fetch-back endpoint and the `password`/
+`encryptedCredential` fields entirely — see `erp-connectivity`'s
+`types.ts`/`schemas.ts`/`erp-connectivity-store.ts`.
+
+**What the cloud's connection profile holds now** (`POST
+/erp-connectivity/profiles` and friends): `dbType`, a human `name`/
+`erpName` label, `host`/`port`/`database`/`username` (connection shape,
+not secret by themselves — useful for the admin panel to show "this
+Runtime talks to Postgres at 10.0.2.2:5434"), and `status`/health
+history (`PENDING_VALIDATION` / `HEALTHY` / `DEGRADED` / ... — reported
+by the Runtime itself via `POST /erp-connectivity/health-report`, no
+password involved in that report either). **No password, ever.**
+
+**What this means operationally:** the cloud-side profile and the
+Runtime's own `ATLAS_ERP_CONNECTION_FILE` are two independent records of
+the same connection — creating one does not create or update the other.
+Keeping them pointed at the same real database is the operator's
+responsibility (see `docs/ATLAS-SMOKE-TEST.md`'s step 4c), not something
+either side automatically syncs. A future improvement could have the
+Runtime push its own `host`/`port`/`database`/`username` (never the
+password) up to the cloud profile automatically on first connect — not
+implemented yet.
 
 ## Protocol summary (see the audit doc for the full trace)
 
@@ -166,13 +221,20 @@ Standalone, for a one-off check:
 ATLAS_API_URL=http://localhost:3001 \
 ATLAS_ORGANIZATION_CODE=<code> \
 ATLAS_ACTIVATION_KEY=<key> \
-ATLAS_SCAN_DB_HOST=localhost ATLAS_SCAN_DB_PORT=5433 \
-ATLAS_SCAN_DB_NAME=seltriva_connect ATLAS_SCAN_DB_USER=seltriva ATLAS_SCAN_DB_PASSWORD=seltriva_dev_password \
 pnpm --filter=@seltriva/agent start
 ```
 
+That runs the registration/heartbeat path with no scan target (every
+discovery job reports `"No scan target configured"`). To also exercise a
+real scan, point `ATLAS_ERP_CONNECTION_FILE` at a file written by
+`apps/runtime-installer`'s `writeErpConnection()` (normally the wizard
+does this — see `docs/ATLAS-SMOKE-TEST.md`'s step 4c for the real,
+end-to-end way to produce one) rather than hand-writing the JSON: the
+password field is an `EncryptedSecret`, not plain text, so it can't be
+set as a one-line env var the way the old `ATLAS_SCAN_DB_PASSWORD` was.
+
 It also runs automatically as part of `apps/agent`'s existing Phase 7
-bootstrap step whenever the four required env vars above are set.
+bootstrap step whenever the three required env vars above are set.
 
 ## Tests
 
@@ -210,7 +272,9 @@ bootstrap step whenever the four required env vars above are set.
   Runtime should reuse its persisted identity file, not re-register; if the
   identity file was deleted, a fresh activation key is needed.
 - **Every job reports `"No scan target configured on this Runtime"`**: set
-  the five `ATLAS_SCAN_DB_*` variables.
+  `ATLAS_ERP_CONNECTION_FILE` to a file the installer wizard (or
+  `writeErpConnection()` directly) produced — see "ERP credentials never
+  leave the client machine" above.
 - **`INVALID_SIGNATURE`**: almost always means the persisted identity file
   doesn't match what's registered server-side — check nothing regenerated
   `<data_dir>/atlas-runtime-identity.json` between registration and this

@@ -200,7 +200,6 @@ export type AdminAuditAction =
   | 'MESSAGE_REPROCESSED'
   // Secure ERP Connectivity Engine (erp-connectivity module)
   | 'CONNECTION_PROFILE_CREATED'
-  | 'CONNECTION_CREDENTIAL_ROTATED'
   | 'CONNECTION_AUTH_FAILED'
   | 'CONNECTION_RECONNECTED'
   | 'CONNECTION_STATUS_CHANGED'
