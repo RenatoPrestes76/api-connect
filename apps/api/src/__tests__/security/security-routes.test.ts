@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { generateTotpToken, base32Decode } from '@seltriva/aegis';
 import {
   startServer,
@@ -635,58 +635,80 @@ describe('POST /api/v1/security/mfa/verify — brute-force lockout (final harden
   });
 
   it('a successful verification resets the failure counter', async () => {
-    const setup = await post<any>(
-      srv.baseUrl,
-      `/api/v1/security/mfa/setup`,
-      { userId: 'reset-check@mutation.com' },
-      orgBearer('tenant-mutation-test')
-    );
-    const secretBuf = base32Decode(setup.body.secret);
-    // ATLAS 46.28 — replay protection means the exact same code can only
-    // ever verify once; each verification below must use a genuinely
-    // different time-step's code, not the same `validToken` reused.
-    const validToken = generateTotpToken(secretBuf);
-
-    // 2 failures, well under the 5-attempt threshold.
-    for (let i = 0; i < 2; i++) {
-      await post<any>(
+    // Pins the clock so the TOTP step boundary is deterministic. Previously
+    // `validToken` and `nextStepToken` were derived from whatever the real
+    // wall clock happened to read at two different points in the test
+    // (separated by several awaited HTTP round trips); depending on real
+    // elapsed time, that occasionally landed both codes in the same 30s
+    // step, or more than one step apart, flaking whenever the test happened
+    // to straddle a step boundary.
+    // Only Date is faked — leaving setTimeout/setInterval real so the
+    // server's own I/O (DB pool, rate-limiter, keep-alive) keeps working
+    // normally; faking those too caused this test to hang under full-suite
+    // load (verified: full vi.useFakeTimers() passed in isolation but
+    // timed out when this file ran alongside the other 156 tests).
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      const T0 = Date.now();
+      vi.setSystemTime(T0);
+      const setup = await post<any>(
         srv.baseUrl,
-        `/api/v1/security/mfa/verify`,
-        { userId: 'reset-check@mutation.com', token: '111111' },
+        `/api/v1/security/mfa/setup`,
+        { userId: 'reset-check@mutation.com' },
         orgBearer('tenant-mutation-test')
       );
-    }
-    const success = await post<any>(
-      srv.baseUrl,
-      `/api/v1/security/mfa/verify`,
-      { userId: 'reset-check@mutation.com', token: validToken },
-      orgBearer('tenant-mutation-test')
-    );
-    expect(success.status).toBe(200);
-    expect(success.body.valid).toBe(true);
+      const secretBuf = base32Decode(setup.body.secret);
+      // ATLAS 46.28 — replay protection means the exact same code can only
+      // ever verify once; each verification below must use a genuinely
+      // different time-step's code, not the same `validToken` reused.
+      const validToken = generateTotpToken(secretBuf);
 
-    // 2 more failures after the reset — still well under threshold, so this
-    // must NOT be locked out (proves the counter was actually cleared, not
-    // just not-yet-at-5).
-    for (let i = 0; i < 2; i++) {
-      await post<any>(
+      // 2 failures, well under the 5-attempt threshold.
+      for (let i = 0; i < 2; i++) {
+        await post<any>(
+          srv.baseUrl,
+          `/api/v1/security/mfa/verify`,
+          { userId: 'reset-check@mutation.com', token: '111111' },
+          orgBearer('tenant-mutation-test')
+        );
+      }
+      const success = await post<any>(
         srv.baseUrl,
         `/api/v1/security/mfa/verify`,
-        { userId: 'reset-check@mutation.com', token: '222222' },
+        { userId: 'reset-check@mutation.com', token: validToken },
         orgBearer('tenant-mutation-test')
       );
+      expect(success.status).toBe(200);
+      expect(success.body.valid).toBe(true);
+
+      // 2 more failures after the reset — still well under threshold, so this
+      // must NOT be locked out (proves the counter was actually cleared, not
+      // just not-yet-at-5).
+      for (let i = 0; i < 2; i++) {
+        await post<any>(
+          srv.baseUrl,
+          `/api/v1/security/mfa/verify`,
+          { userId: 'reset-check@mutation.com', token: '222222' },
+          orgBearer('tenant-mutation-test')
+        );
+      }
+      // A different time-step's code (T+1) — advance the pinned clock by
+      // exactly one TOTP period, so this is deterministically the next
+      // step: never the same step as `validToken`, never more than one
+      // step away.
+      vi.setSystemTime(T0 + 30_000);
+      const nextStepToken = generateTotpToken(secretBuf);
+      const stillOpen = await post<any>(
+        srv.baseUrl,
+        `/api/v1/security/mfa/verify`,
+        { userId: 'reset-check@mutation.com', token: nextStepToken },
+        orgBearer('tenant-mutation-test')
+      );
+      expect(stillOpen.status).toBe(200);
+      expect(stillOpen.body.valid).toBe(true);
+    } finally {
+      vi.useRealTimers();
     }
-    // A different time-step's code (T+1) — the previous one is now a
-    // replay and would correctly be rejected.
-    const nextStepToken = generateTotpToken(secretBuf, Date.now() + 30_000);
-    const stillOpen = await post<any>(
-      srv.baseUrl,
-      `/api/v1/security/mfa/verify`,
-      { userId: 'reset-check@mutation.com', token: nextStepToken },
-      orgBearer('tenant-mutation-test')
-    );
-    expect(stillOpen.status).toBe(200);
-    expect(stillOpen.body.valid).toBe(true);
   });
 
   it('rejects a replayed code — the same successful code cannot verify twice', async () => {
