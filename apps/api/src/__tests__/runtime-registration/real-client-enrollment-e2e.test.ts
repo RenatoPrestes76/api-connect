@@ -29,6 +29,24 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { prisma } from '../../services/prisma.js';
+import { execFileSync } from 'node:child_process';
+
+/**
+ * `loadOrCreateIdentity` (apps/agent) restricts its identity file's NTFS
+ * ACL to SYSTEM + Administrators on Windows -- in production that's never
+ * a problem (the real daemon always runs as one consistent account,
+ * LocalSystem by default), but it means this same, unprivileged test
+ * process can no longer delete its own temp dir afterward. Reset before
+ * rmSync, same pattern as apps/agent's windows-acl-test-cleanup.ts.
+ */
+function restoreAclForCleanup(dirPath: string): void {
+  if (process.platform !== 'win32') return;
+  try {
+    execFileSync('icacls.exe', [dirPath, '/reset', '/t', '/c', '/q'], { stdio: 'ignore' });
+  } catch {
+    /* best-effort */
+  }
+}
 
 const SCAN_TARGET = {
   host: 'localhost',
@@ -51,6 +69,7 @@ describe('ATLAS 46.20-B — real Runtime client end-to-end against a real Atlas 
 
   afterAll(async () => {
     await srv.close();
+    restoreAclForCleanup(dataDir);
     rmSync(dataDir, { recursive: true, force: true });
     // ATLAS 46.21: registerOrganization() now also links a real Control
     // Plane Organization in Postgres — clean up this file's own slugs.
@@ -183,6 +202,7 @@ describe('ATLAS 46.20-B — real Runtime client end-to-end against a real Atlas 
           )
         ).rejects.toMatchObject({ status: 401, code: 'INVALID_SIGNATURE' });
       } finally {
+        restoreAclForCleanup(dir);
         rmSync(dir, { recursive: true, force: true });
       }
     });
@@ -230,6 +250,7 @@ describe('ATLAS 46.20-B — real Runtime client end-to-end against a real Atlas 
         expect(second.status).toBe(401);
         expect((second.body as { error?: { code: string } }).error?.code).toBe('REPLAY_REJECTED');
       } finally {
+        restoreAclForCleanup(dir);
         rmSync(dir, { recursive: true, force: true });
       }
     });
@@ -270,6 +291,7 @@ describe('ATLAS 46.20-B — real Runtime client end-to-end against a real Atlas 
         expect(res.status).toBe(401);
         expect((res.body as { error?: { code: string } }).error?.code).toBe('REPLAY_REJECTED');
       } finally {
+        restoreAclForCleanup(dir);
         rmSync(dir, { recursive: true, force: true });
       }
     });
@@ -287,6 +309,7 @@ describe('ATLAS 46.20-B — real Runtime client end-to-end against a real Atlas 
           obtainAccessToken(srv.baseUrl, 'rt_does_not_exist', identity.privateKeyPem)
         ).rejects.toMatchObject({ status: 404 });
       } finally {
+        restoreAclForCleanup(dir);
         rmSync(dir, { recursive: true, force: true });
       }
     });
@@ -358,7 +381,9 @@ describe('ATLAS 46.20-B — real Runtime client end-to-end against a real Atlas 
           })
         ).rejects.toMatchObject({ status: 409, code: 'RUNTIME_MISMATCH' });
       } finally {
+        restoreAclForCleanup(dirA);
         rmSync(dirA, { recursive: true, force: true });
+        restoreAclForCleanup(dirB);
         rmSync(dirB, { recursive: true, force: true });
       }
     });

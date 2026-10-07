@@ -12,6 +12,24 @@ import {
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+/**
+ * `loadOrCreateIdentity` (apps/agent) restricts its identity file's NTFS
+ * ACL to SYSTEM + Administrators on Windows -- in production that's never
+ * a problem (the real daemon always runs as one consistent account,
+ * LocalSystem by default), but it means this same, unprivileged test
+ * process can no longer delete its own temp dir afterward. Reset before
+ * rmSync, same pattern as apps/agent's windows-acl-test-cleanup.ts.
+ */
+function restoreAclForCleanup(dirPath: string): void {
+  if (process.platform !== 'win32') return;
+  try {
+    execFileSync('icacls.exe', [dirPath, '/reset', '/t', '/c', '/q'], { stdio: 'ignore' });
+  } catch {
+    /* best-effort */
+  }
+}
 
 /**
  * ATLAS 46.22 — Fase 7: registration-time identity uniqueness, now enforced
@@ -109,9 +127,11 @@ describe('ATLAS 46.22 — registration idempotency and identity uniqueness', () 
           })
         ).rejects.toMatchObject({ status: 409, code: 'FINGERPRINT_DUPLICATE' });
       } finally {
+        restoreAclForCleanup(dir2);
         rmSync(dir2, { recursive: true, force: true });
       }
     } finally {
+      restoreAclForCleanup(dir1);
       rmSync(dir1, { recursive: true, force: true });
     }
   });
@@ -148,9 +168,11 @@ describe('ATLAS 46.22 — registration idempotency and identity uniqueness', () 
           })
         ).rejects.toMatchObject({ status: 409, code: 'PUBLIC_KEY_ALREADY_REGISTERED' });
       } finally {
+        restoreAclForCleanup(dir2);
         rmSync(dir2, { recursive: true, force: true });
       }
     } finally {
+      restoreAclForCleanup(dir1);
       rmSync(dir1, { recursive: true, force: true });
     }
   });
@@ -197,7 +219,9 @@ describe('ATLAS 46.22 — registration idempotency and identity uniqueness', () 
       });
       expect(rowCount).toBe(1);
     } finally {
+      restoreAclForCleanup(dir1);
       rmSync(dir1, { recursive: true, force: true });
+      restoreAclForCleanup(dir2);
       rmSync(dir2, { recursive: true, force: true });
       await prisma.runtimeRegistration.deleteMany({
         where: { hostname: { startsWith: 'idem-race-host-' } },

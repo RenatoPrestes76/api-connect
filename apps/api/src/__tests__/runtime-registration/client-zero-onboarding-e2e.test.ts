@@ -17,6 +17,24 @@ import { executeDiscoveryScan } from '../../../../agent/src/atlas-runtime-client
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+/**
+ * `loadOrCreateIdentity` (apps/agent) restricts its identity file's NTFS
+ * ACL to SYSTEM + Administrators on Windows -- in production that's never
+ * a problem (the real daemon always runs as one consistent account,
+ * LocalSystem by default), but it means this same, unprivileged test
+ * process can no longer delete its own temp dir afterward. Reset before
+ * rmSync, same pattern as apps/agent's windows-acl-test-cleanup.ts.
+ */
+function restoreAclForCleanup(dirPath: string): void {
+  if (process.platform !== 'win32') return;
+  try {
+    execFileSync('icacls.exe', [dirPath, '/reset', '/t', '/c', '/q'], { stdio: 'ignore' });
+  } catch {
+    /* best-effort */
+  }
+}
 
 /**
  * ATLAS 46.24 — Part A/B/M: the single, authoritative canonical onboarding
@@ -68,6 +86,7 @@ describe('ATLAS 46.24 — Client Zero: canonical onboarding, signup through ATHE
     await new Promise<void>((resolve, reject) =>
       server.close((err) => (err ? reject(err) : resolve()))
     );
+    restoreAclForCleanup(dataDir);
     rmSync(dataDir, { recursive: true, force: true });
     // RuntimeRegistration.controlPlaneOrganizationId is onDelete: SetNull,
     // not Cascade — deleting the Organization first would orphan this row

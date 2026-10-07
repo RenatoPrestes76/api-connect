@@ -16,6 +16,24 @@ import { executeDiscoveryScan } from '../../../../agent/src/atlas-runtime-client
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+/**
+ * `loadOrCreateIdentity` (apps/agent) restricts its identity file's NTFS
+ * ACL to SYSTEM + Administrators on Windows -- in production that's never
+ * a problem (the real daemon always runs as one consistent account,
+ * LocalSystem by default), but it means this same, unprivileged test
+ * process can no longer delete its own temp dir afterward. Reset before
+ * rmSync, same pattern as apps/agent's windows-acl-test-cleanup.ts.
+ */
+function restoreAclForCleanup(dirPath: string): void {
+  if (process.platform !== 'win32') return;
+  try {
+    execFileSync('icacls.exe', [dirPath, '/reset', '/t', '/c', '/q'], { stdio: 'ignore' });
+  } catch {
+    /* best-effort */
+  }
+}
 
 /**
  * ATLAS 46.21 — "Client Zero": the full, real, HTTP-driven simulation of
@@ -81,6 +99,7 @@ describe('ATLAS 46.21 — Client Zero: canonical onboarding, end-to-end over rea
     await new Promise<void>((resolve, reject) =>
       server.close((err) => (err ? reject(err) : resolve()))
     );
+    restoreAclForCleanup(dataDir);
     rmSync(dataDir, { recursive: true, force: true });
     // This suite's portal registrations each create a real, Postgres-
     // persisted Control Plane Organization (the whole point of the 46.21
@@ -270,7 +289,9 @@ describe('ATLAS 46.21 — Client Zero: canonical onboarding, end-to-end over rea
           false
         );
       } finally {
+        restoreAclForCleanup(dirA);
         rmSync(dirA, { recursive: true, force: true });
+        restoreAclForCleanup(dirB);
         rmSync(dirB, { recursive: true, force: true });
       }
     });

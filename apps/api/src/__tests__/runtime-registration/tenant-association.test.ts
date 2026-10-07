@@ -9,6 +9,24 @@ import { registerRuntime } from '../../../../agent/src/atlas-runtime-client/clie
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+/**
+ * `loadOrCreateIdentity` (apps/agent) restricts its identity file's NTFS
+ * ACL to SYSTEM + Administrators on Windows — in production that's never
+ * a problem (the real daemon always runs as one consistent account,
+ * LocalSystem by default), but it means this same, unprivileged test
+ * process can no longer delete its own temp dir afterward. Reset before
+ * rmSync, same pattern as apps/agent's windows-acl-test-cleanup.ts.
+ */
+function restoreAclForCleanup(dirPath: string): void {
+  if (process.platform !== 'win32') return;
+  try {
+    execFileSync('icacls.exe', [dirPath, '/reset', '/t', '/c', '/q'], { stdio: 'ignore' });
+  } catch {
+    /* best-effort */
+  }
+}
 
 /**
  * ATLAS 46.22 — Fase 9/10/11: proves the Runtime -> Organization -> Tenant
@@ -249,6 +267,7 @@ describe('ATLAS 46.22 — Runtime -> Organization -> Tenant association', () => 
         })
       ).rejects.toMatchObject({ status: 404, code: 'ORGANIZATION_NOT_FOUND' });
     } finally {
+      restoreAclForCleanup(dir);
       rmSync(dir, { recursive: true, force: true });
     }
   });
@@ -410,6 +429,7 @@ describe('ATLAS 46.22 — Runtime -> Organization -> Tenant association', () => 
       const rawBody = (await rawRes.json()) as { data: { runtimeId: string } };
       runtimeId = rawBody.data.runtimeId;
     } finally {
+      restoreAclForCleanup(dir);
       rmSync(dir, { recursive: true, force: true });
     }
 

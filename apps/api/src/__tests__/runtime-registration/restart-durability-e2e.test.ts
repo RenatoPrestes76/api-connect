@@ -1,5 +1,5 @@
 import { describe, it, expect, afterAll } from 'vitest';
-import { spawn, type ChildProcess } from 'node:child_process';
+import { spawn, type ChildProcess, execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -16,6 +16,23 @@ import {
   submitResult,
 } from '../../../../agent/src/atlas-runtime-client/client.js';
 import { executeDiscoveryScan } from '../../../../agent/src/atlas-runtime-client/executor.js';
+
+/**
+ * `loadOrCreateIdentity` (apps/agent) restricts its identity file's NTFS
+ * ACL to SYSTEM + Administrators on Windows -- in production that's never
+ * a problem (the real daemon always runs as one consistent account,
+ * LocalSystem by default), but it means this same, unprivileged test
+ * process can no longer delete its own temp dir afterward. Reset before
+ * rmSync, same pattern as apps/agent's windows-acl-test-cleanup.ts.
+ */
+function restoreAclForCleanup(dirPath: string): void {
+  if (process.platform !== 'win32') return;
+  try {
+    execFileSync('icacls.exe', [dirPath, '/reset', '/t', '/c', '/q'], { stdio: 'ignore' });
+  } catch {
+    /* best-effort */
+  }
+}
 
 const SCAN_TARGET = {
   host: 'localhost',
@@ -124,6 +141,7 @@ describe('ATLAS 46.22 — Runtime registration survives a real API process resta
   const orgCode = `RESTART${Date.now().toString(36)}`;
 
   afterAll(async () => {
+    restoreAclForCleanup(dataDir);
     rmSync(dataDir, { recursive: true, force: true });
     // The real Prisma rows this test created — clean up by the deterministic
     // slug this run used, leaving every other test file's data untouched.
@@ -217,6 +235,12 @@ describe('ATLAS 46.22 — Runtime registration survives a real API process resta
       // 2 below can reload it from a fresh in-memory `identity` object,
       // proving the CLIENT's own identity survives independently of
       // whatever server process it's currently talking to.
+      //
+      // loadOrCreateIdentity() above already restricted this file's ACL
+      // to SYSTEM + Administrators (Sprint A2.5/A2.6) — reset before this
+      // second write, same reasoning as this file's own
+      // restoreAclForCleanup() doc comment.
+      restoreAclForCleanup(dataDir);
       persistIdentity(dataDir, { ...identity, runtimeId });
 
       // Verify directly in Postgres, not just via the API — proves this
@@ -278,6 +302,7 @@ describe('ATLAS 46.22 — Runtime registration survives a real API process resta
       // 3. The real client (same persisted identity — never regenerated,
       // never re-registered) can still authenticate and heartbeat
       // against the new process.
+      restoreAclForCleanup(dataDir); // see the earlier persistIdentity() call's comment
       const identity = loadOrCreateIdentity(dataDir);
       expect(identity.runtimeId).toBe(runtimeId); // proves the client-side identity file itself was untouched by the server restart
       const heartbeat = await sendHeartbeat(
