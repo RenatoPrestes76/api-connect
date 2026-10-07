@@ -254,10 +254,6 @@ export type {
   Disposable,
 } from './runtime/index';
 
-// ─── Concrete Bootstrap Implementation ───────────────────────────────────
-
-export { AgentBootstrapperImpl, createAgent } from './bootstrap/bootstrapper.js';
-
 // ─── Version ──────────────────────────────────────────────────────────────
 
 export const AGENT_VERSION = '0.1.0' as const;

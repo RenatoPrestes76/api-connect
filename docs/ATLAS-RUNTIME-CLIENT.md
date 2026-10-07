@@ -59,9 +59,9 @@ the other still holds:
    which proves each blocked query type never results in a call to the
    database driver.
 2. **Database-level (operational requirement, not enforced by this repo):**
-   `ATLAS_SCAN_DB_USER` (and, for a real customer ERP, whatever credential
-   the Runtime is configured with) **must** be a dedicated database role
-   that only has `SELECT` privileges — never a superuser/admin/application
+   the ERP credential the Runtime is configured with (via
+   `ATLAS_ERP_CONNECTION_FILE`) **must** be a dedicated database role that
+   only has `SELECT` privileges — never a superuser/admin/application
    account. This is the layer that still protects the ERP if the
    `ReadOnlyAdapter` wrapper were ever bypassed, removed, or had a bug.
 

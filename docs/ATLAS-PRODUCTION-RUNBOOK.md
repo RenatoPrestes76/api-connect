@@ -348,8 +348,9 @@ also Ed25519-signed), the client polls `GET /erp-metadata/runtime/jobs`
 
 **Job execution**: for each claimed job, the client runs a real GENESIS
 (`@seltriva/database-sdk`'s `PostgresDriver`) schema introspection against
-the database configured via `ATLAS_SCAN_DB_*` env vars — no fixture, no
-new ERP engine.
+the database configured via the encrypted ERP connection file
+(`ATLAS_ERP_CONNECTION_FILE`, written by the installer wizard) — no
+fixture, no new ERP engine.
 
 **Result**: `POST /erp-metadata/runtime/result` (Bearer auth) with the real
 introspected schema. Atlas runs it through ATHENA (`DatabaseScanner`)
