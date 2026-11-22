@@ -42,7 +42,7 @@ export class ServiceManager {
     }
   }
 
-  start(): void {
+  async start(): Promise<void> {
     switch (this._platform) {
       case 'windows':
         return startWindowsService();

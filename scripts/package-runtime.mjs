@@ -29,8 +29,10 @@ import {
   downloadNodeRuntime,
   assertAbiMatches,
   verifyBetterSqlite3UnderRuntime,
+  verifyDatabaseDriversResolve,
   NODE_RUNTIME_VERSION,
 } from './download-node-runtime.mjs';
+import { hoistPnpmDeps } from './hoist-pnpm-deps.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const OUT = join(ROOT, process.argv[2] ?? 'dist-runtime-package');
@@ -73,20 +75,20 @@ async function main() {
   rmSync(join(ROOT, 'apps/agent/dist'), { recursive: true, force: true });
   rmSync(join(ROOT, 'apps/runtime-installer/dist'), { recursive: true, force: true });
 
-  console.log('\n[1/6] Building apps/agent and its workspace dependencies...');
+  console.log('\n[1/7] Building apps/agent and its workspace dependencies...');
   run('npx turbo run build --filter=@seltriva/agent --force');
 
-  console.log('\n[2/6] Building apps/runtime-installer and its workspace dependencies...');
+  console.log('\n[2/7] Building apps/runtime-installer and its workspace dependencies...');
   run('npx turbo run build --filter=@seltriva/runtime-installer --force');
 
   console.log(
-    `\n[3/6] Deploying apps/runtime-installer (production deps only) to ${INSTALLER_DEPLOY_DIR}...`
+    `\n[3/7] Deploying apps/runtime-installer (production deps only) to ${INSTALLER_DEPLOY_DIR}...`
   );
   // Deploys into OUT directly — OUT is still empty at this point, so this
   // is a valid pnpm deploy target.
   run(`pnpm --filter=@seltriva/runtime-installer deploy --prod "${INSTALLER_DEPLOY_DIR}"`);
 
-  console.log(`\n[4/6] Deploying apps/agent (production deps only) to ${AGENT_DEPLOY_DIR}...`);
+  console.log(`\n[4/7] Deploying apps/agent (production deps only) to ${AGENT_DEPLOY_DIR}...`);
   // agent-bundle.ts resolves the bundled agent as a sibling of the
   // installer's own deployed root (<installerRoot>/agent) — see
   // apps/runtime-installer/src/agent-bundle.ts's bundledAgentSourceDir().
@@ -95,7 +97,21 @@ async function main() {
   // having other content already (dist/, node_modules/, ...) is fine.
   run(`pnpm --filter=@seltriva/agent deploy --prod "${AGENT_DEPLOY_DIR}"`);
 
-  console.log(`\n[5/6] Downloading the pinned Node.js v${NODE_RUNTIME_VERSION} runtime (win-x64)...`);
+  // ATLAS smoke test (docs/ATLAS-SMOKE-TEST.md) caught this for real:
+  // `pnpm deploy`'s node_modules relies on NTFS junctions for nested
+  // (transitive-only) dependencies like `pg`/`mysql2` — Compress-Archive
+  // silently drops those junctions when zipping this folder for
+  // distribution, so a package that worked perfectly un-zipped on the
+  // build machine failed with "Cannot find package 'pg'" the instant it
+  // was extracted anywhere else. See hoist-pnpm-deps.mjs's own doc
+  // comment for why this is a flat, one-level hoist and not a full
+  // recursive dereference of the tree.
+  console.log('\n[5/7] Hoisting transitive pnpm dependencies to the top level (zip-safe)...');
+  const installerHoisted = hoistPnpmDeps(INSTALLER_DEPLOY_DIR);
+  const agentHoisted = hoistPnpmDeps(AGENT_DEPLOY_DIR);
+  console.log(`  hoisted ${installerHoisted} package(s) in the installer, ${agentHoisted} in the agent`);
+
+  console.log(`\n[6/7] Downloading the pinned Node.js v${NODE_RUNTIME_VERSION} runtime (win-x64)...`);
   // bundledNodeRuntimeSourceDir() resolves this as a sibling of the
   // installer's own deployed root too (<installerRoot>/runtime).
   const nodeExePath = await downloadNodeRuntime(join(INSTALLER_DEPLOY_DIR, 'runtime'));
@@ -105,7 +121,7 @@ async function main() {
   // resolved the right better-sqlite3 binary — this is the actual proof,
   // require()-ing it under the bundled node.exe itself, not this
   // machine's Node.
-  console.log(`\n[6/6] Verifying better-sqlite3 under the bundled Node ${NODE_RUNTIME_VERSION} runtime...`);
+  console.log(`\n[7/7] Verifying better-sqlite3 and every database driver under the bundled Node ${NODE_RUNTIME_VERSION} runtime...`);
   verifyBetterSqlite3UnderRuntime(
     nodeExePath,
     AGENT_DEPLOY_DIR,
@@ -114,6 +130,7 @@ async function main() {
   rmSync(join(OUT, '.better-sqlite3-verify.sqlite'), { force: true });
   rmSync(join(OUT, '.better-sqlite3-verify.sqlite-wal'), { force: true });
   rmSync(join(OUT, '.better-sqlite3-verify.sqlite-shm'), { force: true });
+  verifyDatabaseDriversResolve(nodeExePath, INSTALLER_DEPLOY_DIR, AGENT_DEPLOY_DIR);
 
   if (!existsSync(join(INSTALLER_DEPLOY_DIR, 'dist', 'index.js'))) {
     throw new Error(

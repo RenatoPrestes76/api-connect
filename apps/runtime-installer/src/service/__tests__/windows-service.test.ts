@@ -102,36 +102,124 @@ describe('installWindowsService', () => {
 });
 
 describe('uninstallWindowsService', () => {
+  const noWait = { sleep: vi.fn().mockResolvedValue(undefined) };
+
   it('resolves when node-windows emits "uninstall"', async () => {
     const loadLib = fakeLib((svc) => svc.emit('uninstall'));
     await expect(
-      uninstallWindowsService({ scriptPath: 'C:\\atlas\\agent\\dist\\cli\\bin.js' }, { loadLib })
+      uninstallWindowsService(
+        { scriptPath: 'C:\\atlas\\agent\\dist\\cli\\bin.js' },
+        { loadLib, ...noWait }
+      )
     ).resolves.toBeUndefined();
   });
 
   it('resolves when node-windows emits "alreadyuninstalled"', async () => {
     const loadLib = fakeLib((svc) => svc.emit('alreadyuninstalled'));
     await expect(
-      uninstallWindowsService({ scriptPath: 'C:\\atlas\\agent\\dist\\cli\\bin.js' }, { loadLib })
+      uninstallWindowsService(
+        { scriptPath: 'C:\\atlas\\agent\\dist\\cli\\bin.js' },
+        { loadLib, ...noWait }
+      )
     ).resolves.toBeUndefined();
   });
 
   it('rejects when node-windows emits "error"', async () => {
     const loadLib = fakeLib((svc) => svc.emit('error', new Error('not found')));
     await expect(
-      uninstallWindowsService({ scriptPath: 'C:\\atlas\\agent\\dist\\cli\\bin.js' }, { loadLib })
+      uninstallWindowsService(
+        { scriptPath: 'C:\\atlas\\agent\\dist\\cli\\bin.js' },
+        { loadLib, ...noWait }
+      )
     ).rejects.toThrow('not found');
+  });
+
+  it('stops the service before uninstalling it — a still-running service otherwise leaves its processes alive, holding file locks (confirmed for real during the Sprint A2.6 VM smoke test)', async () => {
+    const { execSync } = await import('node:child_process');
+    const calls: string[] = [];
+    vi.mocked(execSync).mockImplementation((cmd) => {
+      calls.push(String(cmd));
+      return Buffer.from('');
+    });
+    const loadLib = fakeLib((svc) => {
+      calls.push('svc.uninstall()');
+      svc.emit('uninstall');
+    });
+
+    await uninstallWindowsService(
+      { scriptPath: 'C:\\atlas\\agent\\dist\\cli\\bin.js' },
+      { loadLib, ...noWait }
+    );
+
+    expect(calls[0]).toContain('sc.exe stop');
+    expect(calls[1]).toBe('svc.uninstall()');
   });
 });
 
 describe('sc.exe-backed helpers (mocked — never invoke the real sc.exe)', () => {
   it('startWindowsService shells out to sc.exe start', async () => {
     const { execSync } = await import('node:child_process');
-    startWindowsService();
+    await startWindowsService();
     expect(execSync).toHaveBeenCalledWith(
       expect.stringContaining('sc.exe start'),
       expect.anything()
     );
+  });
+
+  it('targets the REAL node-windows-registered service id ("atlasruntime.exe"), not the display name ("AtlasRuntime") — confirmed for real during the Sprint A2.6 VM smoke test: sc.exe start/stop/query AtlasRuntime always fails with error 1060 ("service does not exist"), because node-windows registers the service under name.replace(/[^\\w]/gi,"").toLowerCase() + ".exe"', async () => {
+    const { execSync } = await import('node:child_process');
+    await startWindowsService();
+    expect(execSync).toHaveBeenCalledWith(
+      expect.stringContaining('atlasruntime.exe'),
+      expect.anything()
+    );
+    expect(execSync).not.toHaveBeenCalledWith(
+      expect.stringContaining('sc.exe start AtlasRuntime'),
+      expect.anything()
+    );
+
+    stopWindowsService();
+    expect(execSync).toHaveBeenCalledWith(
+      expect.stringContaining('sc.exe stop atlasruntime.exe'),
+      expect.anything()
+    );
+
+    windowsServiceExists();
+    expect(execSync).toHaveBeenCalledWith(
+      expect.stringContaining('sc.exe query atlasruntime.exe'),
+      expect.anything()
+    );
+  });
+
+  it('retries sc.exe start a few times before giving up, as a cheap safety net for genuine transient SCM delays', async () => {
+    const { execSync } = await import('node:child_process');
+    let calls = 0;
+    vi.mocked(execSync).mockImplementation(() => {
+      calls++;
+      if (calls < 3)
+        throw new Error(
+          'service is marked for deletion' /* real sc.exe error text for this race */
+        );
+      return Buffer.from('');
+    });
+    const sleep = vi.fn().mockResolvedValue(undefined);
+
+    await startWindowsService({ sleep });
+
+    expect(calls).toBe(3);
+    expect(sleep).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws the last error once every retry attempt has failed, instead of retrying forever', async () => {
+    const { execSync } = await import('node:child_process');
+    vi.mocked(execSync).mockImplementation(() => {
+      throw new Error('access denied');
+    });
+    const sleep = vi.fn().mockResolvedValue(undefined);
+
+    await expect(startWindowsService({ sleep })).rejects.toThrow('access denied');
+    expect(execSync).toHaveBeenCalledTimes(3);
+    expect(sleep).toHaveBeenCalledTimes(2);
   });
 
   it('stopWindowsService swallows a failure (service already stopped)', async () => {

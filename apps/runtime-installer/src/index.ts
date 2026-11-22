@@ -160,8 +160,28 @@ async function runInstallCommand(runtimeRoot: string, apiBaseUrl?: string): Prom
       });
       logger.info('installer.log', 'Service installed successfully');
       if (wizard.autoStart) {
-        svc.start();
-        logger.info('installer.log', 'Service started');
+        try {
+          await svc.start();
+          logger.info('installer.log', 'Service started');
+        } catch (startErr) {
+          // The service IS installed at this point — only starting it
+          // failed. Confirmed for real, repeatedly, during the Sprint
+          // A2.6 VM smoke test: `sc.exe start` called from THIS process
+          // right after install() can fail even after retrying for
+          // nearly a minute, yet the exact same command run moments
+          // later from a brand-new shell succeeds immediately — see
+          // startWindowsService()'s own doc comment. The fix is a new
+          // process, not more patience from this one.
+          const message = (startErr as Error).message;
+          process.stderr.write(
+            `\n  Warning: Service installed, but could not start it: ${message}\n`
+          );
+          process.stderr.write(
+            '  This is a known Windows quirk, not a broken install — open a NEW PowerShell/cmd window and run:\n'
+          );
+          process.stderr.write('    Start-Service AtlasRuntime\n\n');
+          logger.warn('installer.log', `Service start failed: ${message}`);
+        }
       }
     } catch (err) {
       const message = (err as Error).message;

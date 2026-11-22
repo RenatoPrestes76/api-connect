@@ -156,6 +156,55 @@ export function verifyBetterSqlite3UnderRuntime(nodeExePath, agentDeployDir, tmp
   console.log(output.trim());
 }
 
+/**
+ * Real end-to-end proof that the hoist in hoist-pnpm-deps.mjs actually
+ * closed the gap it was meant to close (Sprint A2.6 VM smoke test, see
+ * that file's own doc comment): `pg`, `mysql2`, `mssql`, `oracledb`, and
+ * the firebird driver's own dependency are all transitive-only
+ * (@seltriva/database-sdk depends on them, nothing in the installer or
+ * agent does directly), so `pnpm deploy` never gives them a top-level
+ * `node_modules/<pkg>` entry — they only ever existed nested in the
+ * `.pnpm` store, which is exactly what a zipped-and-extracted package
+ * can't rely on. Imports the installer's own connection-test.js (which
+ * imports `pg` directly) and every one of database-sdk's driver files
+ * under the bundled node.exe itself — not this build machine's Node —
+ * failing loudly with the real error if any of them can't resolve,
+ * instead of letting a broken package reach a customer's machine.
+ */
+export function verifyDatabaseDriversResolve(nodeExePath, installerDeployDir, agentDeployDir) {
+  const connectionTestPath = join(installerDeployDir, 'dist', 'erp-connection', 'connection-test.js');
+  const driversDir = join(agentDeployDir, 'node_modules', '@seltriva', 'database-sdk', 'dist', 'drivers');
+  const driverFiles = [
+    'postgres.driver.js',
+    'mysql.driver.js',
+    'sqlserver.driver.js',
+    'oracle.driver.js',
+    'firebird.driver.js',
+  ];
+
+  const script = `
+    const path = require('node:path');
+    const { pathToFileURL } = require('node:url');
+    const targets = [
+      ${JSON.stringify(connectionTestPath)},
+      ...${JSON.stringify(driverFiles)}.map((f) => path.join(${JSON.stringify(driversDir)}, f)),
+    ];
+    (async () => {
+      for (const target of targets) {
+        try {
+          await import(pathToFileURL(target).href);
+        } catch (err) {
+          console.error('FAILED to import ' + target + ': ' + err.message);
+          process.exit(1);
+        }
+      }
+      console.log('OK — ' + targets.length + ' module(s) resolved cleanly (no transitive dep missing)');
+    })();
+  `;
+  const output = execFileSync(nodeExePath, ['-e', script], { encoding: 'utf-8' });
+  console.log(output.trim());
+}
+
 // Allow running standalone: `node scripts/download-node-runtime.mjs [destDir]`
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const destDir = process.argv[2] ?? join(process.cwd(), 'node-runtime');

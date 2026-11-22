@@ -5,6 +5,23 @@ import { restrictDirectoryToSystemAndAdministrators } from '../security/credenti
 const SERVICE_NAME = 'AtlasRuntime';
 const SERVICE_DESCRIPTION = 'Seltriva Connect Atlas Runtime Agent — heartbeat and sync service.';
 
+/**
+ * The actual Windows service name registered with the SCM — NOT
+ * `SERVICE_NAME`. `node-windows` derives its own internal `id` from
+ * `name` via `name.replace(/[^\w]/gi, '').toLowerCase()`, then registers
+ * the service under `<id>.exe` (see node-windows' daemon.js `id`/`_exe`
+ * getters and `winsw.generateXml`'s `id: this._exe`) — there is no
+ * constructor option to override this. Confirmed for real during the
+ * Sprint A2.6 VM smoke test: `sc.exe start AtlasRuntime` always failed
+ * with error 1060 ("service does not exist"), while `sc.exe start
+ * atlasruntime.exe` worked immediately, every time — this naming
+ * mismatch, not a timing race, was the actual root cause of what used to
+ * look like an intermittent "freshly installed service sometimes rejects
+ * sc.exe start" quirk. Every raw `sc.exe`/`net` call MUST target this
+ * name, not `SERVICE_NAME`.
+ */
+const SERVICE_ID = `${SERVICE_NAME.replace(/[^\w]/gi, '').toLowerCase()}.exe`;
+
 export interface WindowsServiceOptions {
   autoStart: boolean;
   /** Absolute path to the agent's compiled daemon entrypoint — see config/directory-setup.ts's agentEntrypointPath(). */
@@ -122,14 +139,33 @@ export async function installWindowsService(
   if (!opts.autoStart) {
     // node-windows registers the service with automatic start by
     // default — demote it if the operator opted out during setup.
-    execSync(`sc.exe config ${SERVICE_NAME} start= demand`, { stdio: 'pipe' });
+    execSync(`sc.exe config ${SERVICE_ID} start= demand`, { stdio: 'pipe' });
   }
 }
 
+/**
+ * Stops the service BEFORE uninstalling it — node-windows' own
+ * `svc.uninstall()` does not reliably do this itself. Confirmed for
+ * real during the Sprint A2.6 VM smoke test: uninstalling a still-
+ * running service correctly removed the SCM entry (`sc.exe query`
+ * reported it gone), but the wrapper and daemon child processes were
+ * BOTH still alive and running afterward, holding file locks on
+ * `agent/node_modules/*` — which then made the NEXT install's own file
+ * copy fail with "file already in use". Stopping first lets the
+ * wrapper's own graceful shutdown (`wrapper.js`'s SIGTERM handler,
+ * which kills its forked child) actually run before anything is torn
+ * down from under it.
+ */
 export async function uninstallWindowsService(
   opts: { scriptPath: string },
-  deps: { loadLib?: () => Promise<WindowsServiceLib> } = {}
+  deps: { loadLib?: () => Promise<WindowsServiceLib>; sleep?: (ms: number) => Promise<void> } = {}
 ): Promise<void> {
+  const sleep =
+    deps.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+
+  stopWindowsService();
+  await sleep(3000);
+
   const { Service } = await (deps.loadLib ?? loadNodeWindows)();
   const svc = new Service({ name: SERVICE_NAME, script: opts.scriptPath });
 
@@ -141,13 +177,45 @@ export async function uninstallWindowsService(
   });
 }
 
-export function startWindowsService(): void {
-  execSync(`sc.exe start ${SERVICE_NAME}`, { stdio: 'pipe' });
+/**
+ * What used to look like an intermittent "freshly created service
+ * sometimes rejects sc.exe start" race (see git history for the long
+ * version of that theory, ruled out piece by piece against a real VM
+ * install) turned out, on closer inspection during the Sprint A2.6 VM
+ * smoke test, to have a much simpler cause: every one of these calls was
+ * targeting the WRONG service name (`SERVICE_NAME`/"AtlasRuntime")
+ * instead of the one node-windows actually registers with the SCM
+ * (`SERVICE_ID`/"atlasruntime.exe" — see that constant's doc comment).
+ * `sc.exe start AtlasRuntime` fails with error 1060 ("service does not
+ * exist") unconditionally, every time, regardless of timing — it was
+ * never going to succeed no matter how long this retried. Retries are
+ * kept as a small, cheap safety net for genuine transient SCM delays,
+ * but the fix that actually matters is using the right name.
+ */
+export async function startWindowsService(
+  deps: { sleep?: (ms: number) => Promise<void> } = {}
+): Promise<void> {
+  const sleep =
+    deps.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+  const maxAttempts = 3;
+  const delayMs = 2000;
+
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      execSync(`sc.exe start ${SERVICE_ID}`, { stdio: 'pipe' });
+      return;
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxAttempts) await sleep(delayMs);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
 export function stopWindowsService(): void {
   try {
-    execSync(`sc.exe stop ${SERVICE_NAME}`, { stdio: 'pipe' });
+    execSync(`sc.exe stop ${SERVICE_ID}`, { stdio: 'pipe' });
   } catch {
     /* service may already be stopped */
   }
@@ -155,7 +223,7 @@ export function stopWindowsService(): void {
 
 export function windowsServiceExists(): boolean {
   try {
-    execSync(`sc.exe query ${SERVICE_NAME}`, { stdio: 'pipe' });
+    execSync(`sc.exe query ${SERVICE_ID}`, { stdio: 'pipe' });
     return true;
   } catch {
     return false;
