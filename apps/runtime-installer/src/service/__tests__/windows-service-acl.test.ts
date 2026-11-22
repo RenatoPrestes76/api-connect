@@ -78,7 +78,14 @@ describe.skipIf(process.platform !== 'win32')(
           scriptPath,
           env: { ATLAS_API_URL: 'https://x', ATLAS_ACTIVATION_KEY: 'super-secret' },
         },
-        { loadLib: fakeLibEmittingInstall() }
+        {
+          loadLib: fakeLibEmittingInstall(),
+          // The fake Service above never does a real sc.exe create, so the
+          // real SCM-registration poll (see windows-service.ts's
+          // waitForServiceRegistration) would never see the service appear.
+          // This test only cares about the ACL side effect that follows it.
+          exists: () => true,
+        }
       );
 
       const sids = aclSids(daemonDir);

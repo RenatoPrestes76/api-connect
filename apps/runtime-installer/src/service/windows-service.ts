@@ -107,9 +107,69 @@ function daemonDirFor(scriptPath: string): string {
   return join(dirname(scriptPath), 'daemon');
 }
 
+/**
+ * node-windows' own `install()` (lib/daemon.js) emits `'install'` after a
+ * HARDCODED, blocking `sleep(2)` — its own source comment admits why:
+ * "winsw.exe immediately responds with nothing, indicating success, even
+ * though it continues processing with the 'install' method". The command
+ * that actually registers the service with the SCM is run through an
+ * elevation wrapper (lib/binaries.js's `elevate()`, via
+ * `bin/elevate/elevate.cmd`), whose own callback can fire once the
+ * elevated run is dispatched, not once it has actually finished. Either
+ * way, node-windows' `'install'` event only proves "the exe/xml files are
+ * on disk and registration was requested" — never that the Service
+ * Control Manager has actually finished registering the service.
+ *
+ * Confirmed for real during the Sprint A2.6 VM smoke test: this,
+ * not a `sc.exe`/service-name problem (see SERVICE_ID above, which is a
+ * separate, already-fixed bug), is the actual root cause behind "the
+ * service sometimes won't start right after install, but the exact same
+ * command typed into a fresh shell a bit later works instantly" — the
+ * fresh shell has no special power, it just comes after enough real time
+ * has passed for the SCM registration to finish in the background.
+ *
+ * Fix: don't trust the event. Poll `sc.exe query` — the SCM itself, the
+ * only real source of truth — until the service is actually queryable,
+ * with a generous bounded timeout, before this function (and therefore
+ * installWindowsService) returns. Every caller downstream (starting the
+ * service right after install) can then trust the service truly exists,
+ * in this same process, with no manual step.
+ */
+async function waitForServiceRegistration(
+  deps: {
+    sleep?: (ms: number) => Promise<void>;
+    nowMs?: () => number;
+    exists?: () => boolean;
+  } = {}
+): Promise<void> {
+  const sleep =
+    deps.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+  const nowMs = deps.nowMs ?? Date.now;
+  const exists = deps.exists ?? windowsServiceExists;
+  const timeoutMs = 60_000;
+  const pollIntervalMs = 1_000;
+  const deadline = nowMs() + timeoutMs;
+
+  while (nowMs() < deadline) {
+    if (exists()) return;
+    await sleep(pollIntervalMs);
+  }
+  throw new Error(
+    `Timed out after ${timeoutMs / 1000}s waiting for the Windows Service Control Manager to ` +
+      `register "${SERVICE_ID}" (node-windows reported installation as done, but "sc.exe query" ` +
+      `still can't find it).`
+  );
+}
+
 export async function installWindowsService(
   opts: WindowsServiceOptions,
-  deps: { loadLib?: () => Promise<WindowsServiceLib> } = {}
+  deps: {
+    loadLib?: () => Promise<WindowsServiceLib>;
+    sleep?: (ms: number) => Promise<void>;
+    nowMs?: () => number;
+    /** Test-only override for the SCM-registration poll — real installs always use the real windowsServiceExists(). */
+    exists?: () => boolean;
+  } = {}
 ): Promise<void> {
   const { Service } = await (deps.loadLib ?? loadNodeWindows)();
   const svc = new Service({
@@ -128,6 +188,8 @@ export async function installWindowsService(
     svc.on('error', (err: unknown) => reject(err instanceof Error ? err : new Error(String(err))));
     svc.install();
   });
+
+  await waitForServiceRegistration(deps);
 
   // The XML this just wrote carries ATLAS_ACTIVATION_KEY in plain text
   // (see daemonDirFor's doc comment) — restricted the same as every

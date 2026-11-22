@@ -97,7 +97,43 @@ describe('installWindowsService', () => {
     const { execSync } = await import('node:child_process');
     const loadLib = fakeLib((svc) => svc.emit('install'));
     await installWindowsService({ ...opts, autoStart: true }, { loadLib });
-    expect(execSync).not.toHaveBeenCalled();
+    expect(execSync).not.toHaveBeenCalledWith(
+      expect.stringContaining('start= demand'),
+      expect.anything()
+    );
+  });
+
+  it("polls sc.exe query (the real SCM) until the service is actually registered, instead of trusting node-windows' own 'install' event — that event fires after a hardcoded, blocking sleep(2) inside node-windows itself (its own source comment admits winsw.exe reports success before it's actually done), which is the real root cause behind 'service won't start right after install, but works from a fresh shell a bit later' (Sprint A2.6 VM smoke test)", async () => {
+    const { execSync } = await import('node:child_process');
+    let queryCalls = 0;
+    vi.mocked(execSync).mockImplementation(() => {
+      queryCalls++;
+      if (queryCalls < 3) throw new Error('service does not exist');
+      return Buffer.from('');
+    });
+    const loadLib = fakeLib((svc) => svc.emit('install'));
+    const sleep = vi.fn().mockResolvedValue(undefined);
+
+    await installWindowsService(opts, { loadLib, sleep });
+
+    expect(queryCalls).toBe(3);
+    expect(sleep).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws a clear, honest error if the SCM never registers the service within the timeout, instead of silently claiming success and leaving the operator to work around it manually', async () => {
+    const { execSync } = await import('node:child_process');
+    vi.mocked(execSync).mockImplementation(() => {
+      throw new Error('service does not exist');
+    });
+    const loadLib = fakeLib((svc) => svc.emit('install'));
+    const sleep = vi.fn().mockResolvedValue(undefined);
+    const schedule = [0, 70_000];
+    let i = 0;
+    const nowMs = () => schedule[Math.min(i++, schedule.length - 1)];
+
+    await expect(installWindowsService(opts, { loadLib, sleep, nowMs })).rejects.toThrow(
+      /Timed out/
+    );
   });
 });
 

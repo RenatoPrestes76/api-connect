@@ -33,6 +33,21 @@ afterEach(() => {
   }
 });
 
+describe('Logger.close', () => {
+  it('returns a real Promise that only resolves once the stream has actually finished flushing to disk — close() used to be void/fire-and-forget, which could lose the last line if the process exited right after calling it', async () => {
+    const dir = tempDir();
+    const logger = new Logger(dir);
+    logger.info('installer.log', 'line before close');
+
+    const result = logger.close();
+    expect(result).toBeInstanceOf(Promise);
+    await result;
+
+    const raw = readFileSync(join(dir, 'installer.log'), 'utf-8');
+    expect(raw).toContain('line before close');
+  });
+});
+
 describe('Logger._sanitize', () => {
   it('redacts a password field before it ever reaches disk', async () => {
     const dir = tempDir();
